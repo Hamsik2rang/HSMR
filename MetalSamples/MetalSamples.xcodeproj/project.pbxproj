@@ -1,0 +1,638 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		111988CB2D4A7628005C9C1E /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988C22D4A7628005C9C1E /* AppDelegate.mm */; };
+		111988CC2D4A7628005C9C1E /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988C42D4A7628005C9C1E /* main.mm */; };
+		111988CD2D4A7628005C9C1E /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988C92D4A7628005C9C1E /* ViewController.mm */; };
+		111988CE2D4A7628005C9C1E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 111988C32D4A7628005C9C1E /* Assets.xcassets */; };
+		111988CF2D4A7628005C9C1E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 111988C62D4A7628005C9C1E /* Main.storyboard */; };
+		111988D22D4A762C005C9C1E /* MetalSamplesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 111988D02D4A762C005C9C1E /* MetalSamplesTests.m */; };
+		111988D62D4A762E005C9C1E /* MetalSamplesUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 111988D32D4A762E005C9C1E /* MetalSamplesUITests.m */; };
+		111988D72D4A762E005C9C1E /* MetalSamplesUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 111988D42D4A762E005C9C1E /* MetalSamplesUITestsLaunchTests.m */; };
+		111988DD2D4A78F9005C9C1E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111988DC2D4A78F9005C9C1E /* AppKit.framework */; };
+		111988DF2D4A7BE6005C9C1E /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111988DE2D4A7BE6005C9C1E /* MetalKit.framework */; };
+		111988E12D4A7BEC005C9C1E /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111988E02D4A7BEC005C9C1E /* Metal.framework */; };
+		111988E22D4A7F74005C9C1E /* Renderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988DA2D4A778D005C9C1E /* Renderer.mm */; };
+		111988E92D4A8A18005C9C1E /* RendererPass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988E82D4A89FE005C9C1E /* RendererPass.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		111988632D4A74DB005C9C1E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 111988452D4A74DA005C9C1E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1119884C2D4A74DA005C9C1E;
+			remoteInfo = MetalSamples;
+		};
+		1119886D2D4A74DB005C9C1E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 111988452D4A74DA005C9C1E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1119884C2D4A74DA005C9C1E;
+			remoteInfo = MetalSamples;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1119884D2D4A74DA005C9C1E /* MetalSamples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalSamples.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		111988622D4A74DB005C9C1E /* MetalSamplesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MetalSamplesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1119886C2D4A74DB005C9C1E /* MetalSamplesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MetalSamplesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		111988C12D4A7628005C9C1E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		111988C22D4A7628005C9C1E /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		111988C32D4A7628005C9C1E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		111988C42D4A7628005C9C1E /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		111988C52D4A7628005C9C1E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		111988C72D4A7628005C9C1E /* MetalSamples.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalSamples.entitlements; sourceTree = "<group>"; };
+		111988C82D4A7628005C9C1E /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		111988C92D4A7628005C9C1E /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
+		111988D02D4A762C005C9C1E /* MetalSamplesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MetalSamplesTests.m; sourceTree = "<group>"; };
+		111988D32D4A762E005C9C1E /* MetalSamplesUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MetalSamplesUITests.m; sourceTree = "<group>"; };
+		111988D42D4A762E005C9C1E /* MetalSamplesUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MetalSamplesUITestsLaunchTests.m; sourceTree = "<group>"; };
+		111988D92D4A777B005C9C1E /* Renderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
+		111988DA2D4A778D005C9C1E /* Renderer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Renderer.mm; sourceTree = "<group>"; };
+		111988DC2D4A78F9005C9C1E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		111988DE2D4A7BE6005C9C1E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		111988E02D4A7BEC005C9C1E /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		111988E72D4A8978005C9C1E /* RendererPass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RendererPass.h; sourceTree = "<group>"; };
+		111988E82D4A89FE005C9C1E /* RendererPass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RendererPass.mm; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1119884A2D4A74DA005C9C1E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111988E12D4A7BEC005C9C1E /* Metal.framework in Frameworks */,
+				111988DF2D4A7BE6005C9C1E /* MetalKit.framework in Frameworks */,
+				111988DD2D4A78F9005C9C1E /* AppKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1119885F2D4A74DB005C9C1E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		111988692D4A74DB005C9C1E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		111988442D4A74DA005C9C1E = {
+			isa = PBXGroup;
+			children = (
+				111988E52D4A88E3005C9C1E /* RendererPass */,
+				1119888E2D4A75F5005C9C1E /* Renderer */,
+				111988CA2D4A7628005C9C1E /* Application */,
+				111988D12D4A762C005C9C1E /* MetalSamplesTests */,
+				111988D52D4A762E005C9C1E /* MetalSamplesUITests */,
+				111988DB2D4A78F9005C9C1E /* Frameworks */,
+				1119884E2D4A74DA005C9C1E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1119884E2D4A74DA005C9C1E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1119884D2D4A74DA005C9C1E /* MetalSamples.app */,
+				111988622D4A74DB005C9C1E /* MetalSamplesTests.xctest */,
+				1119886C2D4A74DB005C9C1E /* MetalSamplesUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1119888E2D4A75F5005C9C1E /* Renderer */ = {
+			isa = PBXGroup;
+			children = (
+				111988DA2D4A778D005C9C1E /* Renderer.mm */,
+				111988D92D4A777B005C9C1E /* Renderer.h */,
+			);
+			path = Renderer;
+			sourceTree = "<group>";
+		};
+		111988CA2D4A7628005C9C1E /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				111988D82D4A7633005C9C1E /* Resources */,
+				111988C12D4A7628005C9C1E /* AppDelegate.h */,
+				111988C22D4A7628005C9C1E /* AppDelegate.mm */,
+				111988C42D4A7628005C9C1E /* main.mm */,
+				111988C82D4A7628005C9C1E /* ViewController.h */,
+				111988C92D4A7628005C9C1E /* ViewController.mm */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		111988D12D4A762C005C9C1E /* MetalSamplesTests */ = {
+			isa = PBXGroup;
+			children = (
+				111988D02D4A762C005C9C1E /* MetalSamplesTests.m */,
+			);
+			path = MetalSamplesTests;
+			sourceTree = "<group>";
+		};
+		111988D52D4A762E005C9C1E /* MetalSamplesUITests */ = {
+			isa = PBXGroup;
+			children = (
+				111988D32D4A762E005C9C1E /* MetalSamplesUITests.m */,
+				111988D42D4A762E005C9C1E /* MetalSamplesUITestsLaunchTests.m */,
+			);
+			path = MetalSamplesUITests;
+			sourceTree = "<group>";
+		};
+		111988D82D4A7633005C9C1E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				111988C32D4A7628005C9C1E /* Assets.xcassets */,
+				111988C62D4A7628005C9C1E /* Main.storyboard */,
+				111988C72D4A7628005C9C1E /* MetalSamples.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		111988DB2D4A78F9005C9C1E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				111988E02D4A7BEC005C9C1E /* Metal.framework */,
+				111988DE2D4A7BE6005C9C1E /* MetalKit.framework */,
+				111988DC2D4A78F9005C9C1E /* AppKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		111988E52D4A88E3005C9C1E /* RendererPass */ = {
+			isa = PBXGroup;
+			children = (
+				111988E72D4A8978005C9C1E /* RendererPass.h */,
+				111988E82D4A89FE005C9C1E /* RendererPass.mm */,
+			);
+			path = RendererPass;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1119884C2D4A74DA005C9C1E /* MetalSamples */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamples" */;
+			buildPhases = (
+				111988492D4A74DA005C9C1E /* Sources */,
+				1119884A2D4A74DA005C9C1E /* Frameworks */,
+				1119884B2D4A74DA005C9C1E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MetalSamples;
+			packageProductDependencies = (
+			);
+			productName = MetalSamples;
+			productReference = 1119884D2D4A74DA005C9C1E /* MetalSamples.app */;
+			productType = "com.apple.product-type.application";
+		};
+		111988612D4A74DB005C9C1E /* MetalSamplesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 111988792D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamplesTests" */;
+			buildPhases = (
+				1119885E2D4A74DB005C9C1E /* Sources */,
+				1119885F2D4A74DB005C9C1E /* Frameworks */,
+				111988602D4A74DB005C9C1E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				111988642D4A74DB005C9C1E /* PBXTargetDependency */,
+			);
+			name = MetalSamplesTests;
+			packageProductDependencies = (
+			);
+			productName = MetalSamplesTests;
+			productReference = 111988622D4A74DB005C9C1E /* MetalSamplesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		1119886B2D4A74DB005C9C1E /* MetalSamplesUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1119887C2D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamplesUITests" */;
+			buildPhases = (
+				111988682D4A74DB005C9C1E /* Sources */,
+				111988692D4A74DB005C9C1E /* Frameworks */,
+				1119886A2D4A74DB005C9C1E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1119886E2D4A74DB005C9C1E /* PBXTargetDependency */,
+			);
+			name = MetalSamplesUITests;
+			packageProductDependencies = (
+			);
+			productName = MetalSamplesUITests;
+			productReference = 1119886C2D4A74DB005C9C1E /* MetalSamplesUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		111988452D4A74DA005C9C1E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					1119884C2D4A74DA005C9C1E = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					111988612D4A74DB005C9C1E = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 1119884C2D4A74DA005C9C1E;
+					};
+					1119886B2D4A74DB005C9C1E = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 1119884C2D4A74DA005C9C1E;
+					};
+				};
+			};
+			buildConfigurationList = 111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "MetalSamples" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 111988442D4A74DA005C9C1E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1119884E2D4A74DA005C9C1E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1119884C2D4A74DA005C9C1E /* MetalSamples */,
+				111988612D4A74DB005C9C1E /* MetalSamplesTests */,
+				1119886B2D4A74DB005C9C1E /* MetalSamplesUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1119884B2D4A74DA005C9C1E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111988CE2D4A7628005C9C1E /* Assets.xcassets in Resources */,
+				111988CF2D4A7628005C9C1E /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		111988602D4A74DB005C9C1E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1119886A2D4A74DB005C9C1E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		111988492D4A74DA005C9C1E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111988E92D4A8A18005C9C1E /* RendererPass.mm in Sources */,
+				111988E22D4A7F74005C9C1E /* Renderer.mm in Sources */,
+				111988CB2D4A7628005C9C1E /* AppDelegate.mm in Sources */,
+				111988CC2D4A7628005C9C1E /* main.mm in Sources */,
+				111988CD2D4A7628005C9C1E /* ViewController.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1119885E2D4A74DB005C9C1E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111988D22D4A762C005C9C1E /* MetalSamplesTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		111988682D4A74DB005C9C1E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111988D62D4A762E005C9C1E /* MetalSamplesUITests.m in Sources */,
+				111988D72D4A762E005C9C1E /* MetalSamplesUITestsLaunchTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		111988642D4A74DB005C9C1E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1119884C2D4A74DA005C9C1E /* MetalSamples */;
+			targetProxy = 111988632D4A74DB005C9C1E /* PBXContainerItemProxy */;
+		};
+		1119886E2D4A74DB005C9C1E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1119884C2D4A74DA005C9C1E /* MetalSamples */;
+			targetProxy = 1119886D2D4A74DB005C9C1E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		111988C62D4A7628005C9C1E /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				111988C52D4A7628005C9C1E /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		111988742D4A74DB005C9C1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		111988752D4A74DB005C9C1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		111988772D4A74DB005C9C1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Application/Resources/MetalSamples.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamples;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		111988782D4A74DB005C9C1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Application/Resources/MetalSamples.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamples;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		1119887A2D4A74DB005C9C1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamplesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MetalSamples.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MetalSamples";
+			};
+			name = Debug;
+		};
+		1119887B2D4A74DB005C9C1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamplesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MetalSamples.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MetalSamples";
+			};
+			name = Release;
+		};
+		1119887D2D4A74DB005C9C1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamplesUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = MetalSamples;
+			};
+			name = Debug;
+		};
+		1119887E2D4A74DB005C9C1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hamsik2rang.MetalSamplesUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = MetalSamples;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "MetalSamples" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				111988742D4A74DB005C9C1E /* Debug */,
+				111988752D4A74DB005C9C1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamples" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				111988772D4A74DB005C9C1E /* Debug */,
+				111988782D4A74DB005C9C1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		111988792D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamplesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1119887A2D4A74DB005C9C1E /* Debug */,
+				1119887B2D4A74DB005C9C1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1119887C2D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamplesUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1119887D2D4A74DB005C9C1E /* Debug */,
+				1119887E2D4A74DB005C9C1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 111988452D4A74DA005C9C1E /* Project object */;
+}
