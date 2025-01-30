@@ -4,34 +4,47 @@
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-
-#import <MetalKit/MetalKit.h>
-#import <Metal/Metal.h>
+#ifndef __RENDERER_H__
+#define __RENDERER_H__
 
 #include <vector>
 
-// A platform-independent renderer class.
-@interface HSInternalDelegate : NSObject<MTKViewDelegate>
+#import <Metal/Metal.h>
+#include "ViewController.h"
 
-@end
-
+class HSRendererPass;
 
 class HSRenderer
 {
 public:
-    HSRenderer();
+    HSRenderer(id<MTLDevice> device);
     ~HSRenderer();
 
-    bool Init(MTKView* mtkView);
+    bool Init(HSView* view);
+
+    void NextFrame();
 
     void Render();
-    
-    MTKView* GetMTKView() { return _view; }
-    HSInternalDelegate* GetDelegate() { return _delegate; }
+
+    void Present(id<MTLDrawable> currentDrawable);
+
+    id<MTLDevice> GetDevice() { return _device; }
+
+    void AddPass(HSRendererPass* pass) { _rendererPasses.push_back(pass); }
+
+    HSView* GetView();
+    static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
 
 private:
-    MTKView* _Nullable _view = nullptr;
-    HSInternalDelegate* _delegate;
-    
-    
+    HSView* _Nonnull _view;
+
+    id<MTLDevice> _device;
+    id<MTLCommandQueue> _commandQueue;
+    id<MTLCommandBuffer> _commandBuffer;
+    id<MTLTexture> _renderTarget[MAX_SUBMIT_INDEX];
+
+    std::vector<HSRendererPass*> _rendererPasses;
+    uint32_t _submitIndex = 0;
 };
+
+#endif

@@ -4,6 +4,8 @@
 //
 //  Created by Yongsik Im on 1/29/25.
 //
+#ifndef __APP_DELEGATE_H__
+#define __APP_DELEGATE_H__
 
 #import <Cocoa/Cocoa.h>
 
@@ -12,3 +14,4 @@
 
 @end
 
+#endif

@@ -21,6 +21,7 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
+    NSLog(@"Terminate!");
 }
 
 
@@ -28,5 +29,9 @@
     return YES;
 }
 
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication*) sender
+{
+    return YES;
+}
 
 @end
