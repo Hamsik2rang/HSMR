@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-               BuildableName = "MetalSamples.app"
+               BuildableName = "MetalSamples"
                BlueprintName = "MetalSamples"
                ReferencedContainer = "container:MetalSamples.xcodeproj">
             </BuildableReference>
@@ -59,7 +59,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/yongsikim/Desktop/Dev/Metal-Graphics-Samples/MetalSamples"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -69,14 +70,14 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-            BuildableName = "MetalSamples.app"
+            BuildableName = "MetalSamples"
             BlueprintName = "MetalSamples"
             ReferencedContainer = "container:MetalSamples.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -86,7 +87,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-            BuildableName = "MetalSamples.app"
+            BuildableName = "MetalSamples"
             BlueprintName = "MetalSamples"
             ReferencedContainer = "container:MetalSamples.xcodeproj">
          </BuildableReference>

@@ -18,9 +18,11 @@ public:
     
     void Configure(id<MTLTexture> renderTarget) override;
     
-    void Execute(id<MTLCommandBuffer> cmdBuffer) override;
+    void Execute(id<MTLRenderCommandEncoder> renderEncoder) override;
     
     void OnAfterRendering() override;
+    
+    void OnGUI() override;
     
 private:
     

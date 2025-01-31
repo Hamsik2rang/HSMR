@@ -12,6 +12,8 @@
 #import <Metal/Metal.h>
 #import <simd/simd.h>
 
+#include "ImGui/imgui.h"
+
 class HSRenderer;
 
 class HSRendererPass
@@ -26,9 +28,11 @@ public:
 
     virtual void Configure(id<MTLTexture> renderTarget) = 0;
 
-    virtual void Execute(id<MTLCommandBuffer> cmdBuffer) = 0;
+    virtual void Execute(id<MTLRenderCommandEncoder> renderEncoder) = 0;
 
     virtual void OnAfterRendering() = 0;
+    
+    virtual void OnGUI() = 0;
 
     virtual void Clear() {}
 
