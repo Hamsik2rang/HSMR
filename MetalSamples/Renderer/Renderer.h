@@ -10,41 +10,60 @@
 #include <vector>
 
 #import <Metal/Metal.h>
-#include "ViewController.h"
+#import <QuartzCore/QuartzCore.h>
+#include <SDL3/SDL.h>
 
 class HSRendererPass;
+
+
+extern std::string hs_get_resource_path(const char* filePath);
 
 class HSRenderer
 {
 public:
-    HSRenderer(id<MTLDevice> device);
+    HSRenderer(SDL_Window* window);
     ~HSRenderer();
 
-    bool Init(HSView* view);
+    bool Init();
 
     void NextFrame();
 
     void Render();
+    
+    void RenderGUI();
 
-    void Present(id<MTLDrawable> currentDrawable);
+    void Present();
 
     id<MTLDevice> GetDevice() { return _device; }
 
     void AddPass(HSRendererPass* pass) { _rendererPasses.push_back(pass); }
 
-    HSView* GetView();
+    void* GetView() {return _view;}
+    
+    void Shutdown();
+    
+    void SetFont(void* font);
+
     static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
 
 private:
-    HSView* _Nonnull _view;
-
+    void renderDockingPanel();
+    
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
     id<MTLCommandBuffer> _commandBuffer;
+    id<MTLRenderCommandEncoder> _renderEncoder;
+    
     id<MTLTexture> _renderTarget[MAX_SUBMIT_INDEX];
+    id<CAMetalDrawable> _currentDrawable;
+    MTLRenderPassDescriptor* _renderPassDescriptor;
 
     std::vector<HSRendererPass*> _rendererPasses;
     uint32_t _submitIndex = 0;
+    SDL_Window* _window;
+    void* _view;
+    CAMetalLayer* _layer;
+    bool _isInitialized = false;
 };
 
 #endif

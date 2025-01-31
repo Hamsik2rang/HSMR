@@ -33,27 +33,20 @@ void HSBasicClearPass::Configure(id<MTLTexture> renderTarget)
     _renderTarget = renderTarget;
 }
 
-void HSBasicClearPass::Execute(id<MTLCommandBuffer> cmdBuffer)
+void HSBasicClearPass::Execute(id<MTLRenderCommandEncoder> renderEncoder)
 {
-    static float r = 0.0f;
-    static float g = 0.0f;
-    static float b = 0.0f;
     
-    g += 0.006f;
-    b += 0.009f;
-    if(g > 1.0f) g = 0.0f;
-    if(b > 1.0f) b = 0.0f;
-    
-    MTLRenderPassDescriptor* rpDesc = _renderer->GetView().currentRenderPassDescriptor;
-    
-    rpDesc.colorAttachments[0].clearColor = MTLClearColorMake(r, g, b, 1.0);
-
-    // Create a render pass and immediately end encoding, causing the drawable to be cleared
-    id<MTLRenderCommandEncoder> renderEncoder = [cmdBuffer renderCommandEncoderWithDescriptor:rpDesc];
-
-    [renderEncoder endEncoding];
 }
 
 void HSBasicClearPass::OnAfterRendering()
 {
+}
+
+void HSBasicClearPass::OnGUI()
+{
+    ImGui::Begin("BasicClearPass");
+    
+    ImGui::Text("It is Basic Clear Pass");
+    
+    ImGui::End();
 }
