@@ -6,7 +6,7 @@
 //
 
 #include "Renderer.h"
-#include "BasicClearPass.h"
+#include "ForwardOpaquePass.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
@@ -95,7 +95,7 @@ int main(int, char**)
 
     HSRenderer* g_renderer = new HSRenderer(window);
     g_renderer->Init();
-    g_renderer->AddPass(new HSBasicClearPass("Basic Clear Pass", g_renderer, 0));
+    g_renderer->AddPass(new HSForwardOpaquePass("ForwardOpaque", g_renderer, 0));
     g_renderer->SetFont(font);
 
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -124,8 +124,6 @@ int main(int, char**)
             g_renderer->NextFrame();
             
             g_renderer->Render(nullptr);
-            
-            g_renderer->RenderGUI();
             
             g_renderer->Present();
         }

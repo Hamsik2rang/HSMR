@@ -26,10 +26,14 @@
 		111989A12D4BCD6C005C9C1E /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111989982D4BCCD1005C9C1E /* AppKit.framework */; };
 		111989A52D4C406E005C9C1E /* imgui.ini in Resources */ = {isa = PBXBuildFile; fileRef = 111989A32D4C406E005C9C1E /* imgui.ini */; };
 		111989AA2D4C4561005C9C1E /* OpenSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 111989A92D4C4561005C9C1E /* OpenSans-Regular.ttf */; };
+		111989C42D51822B005C9C1E /* DebugPass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111989C22D51822B005C9C1E /* DebugPass.mm */; };
+		111989C52D51822B005C9C1E /* ForwardOpaquePass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111989C02D51822B005C9C1E /* ForwardOpaquePass.mm */; };
+		111989CA2D51839A005C9C1E /* Application.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111989C82D51839A005C9C1E /* Application.mm */; };
+		111989CE2D518433005C9C1E /* Scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 111989CC2D518433005C9C1E /* Scene.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1119884D2D4A74DA005C9C1E /* MetalSamples */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MetalSamples; sourceTree = BUILT_PRODUCTS_DIR; };
+		1119884D2D4A74DA005C9C1E /* HSMR */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HSMR; sourceTree = BUILT_PRODUCTS_DIR; };
 		111988C42D4A7628005C9C1E /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		111988D92D4A777B005C9C1E /* Renderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
 		111988DA2D4A778D005C9C1E /* Renderer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Renderer.mm; sourceTree = "<group>"; };
@@ -146,6 +150,17 @@
 		1119899F2D4BCD62005C9C1E /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 		111989A32D4C406E005C9C1E /* imgui.ini */ = {isa = PBXFileReference; lastKnownFileType = text; path = imgui.ini; sourceTree = "<group>"; };
 		111989A92D4C4561005C9C1E /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Regular.ttf"; sourceTree = "<group>"; };
+		111989BF2D51822B005C9C1E /* ForwardOpaquePass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForwardOpaquePass.h; sourceTree = "<group>"; };
+		111989C02D51822B005C9C1E /* ForwardOpaquePass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ForwardOpaquePass.mm; sourceTree = "<group>"; };
+		111989C12D51822B005C9C1E /* DebugPass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugPass.h; sourceTree = "<group>"; };
+		111989C22D51822B005C9C1E /* DebugPass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = DebugPass.mm; sourceTree = "<group>"; };
+		111989C62D5182D0005C9C1E /* ForwardPass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForwardPass.h; sourceTree = "<group>"; };
+		111989C72D51839A005C9C1E /* Application.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Application.h; sourceTree = "<group>"; };
+		111989C82D51839A005C9C1E /* Application.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Application.mm; sourceTree = "<group>"; };
+		111989C92D51839A005C9C1E /* Precompile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Precompile.h; sourceTree = "<group>"; };
+		111989CB2D518433005C9C1E /* Scene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Scene.h; sourceTree = "<group>"; };
+		111989CC2D518433005C9C1E /* Scene.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Scene.cpp; sourceTree = "<group>"; };
+		111989CF2D518447005C9C1E /* Object.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Object.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,13 +190,15 @@
 				111988DB2D4A78F9005C9C1E /* Frameworks */,
 				1119884E2D4A74DA005C9C1E /* Products */,
 				111989A42D4C406E005C9C1E /* Resource */,
+				111989CD2D518433005C9C1E /* Scene */,
+				111989D02D518447005C9C1E /* Object */,
 			);
 			sourceTree = "<group>";
 		};
 		1119884E2D4A74DA005C9C1E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1119884D2D4A74DA005C9C1E /* MetalSamples */,
+				1119884D2D4A74DA005C9C1E /* HSMR */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -198,6 +215,9 @@
 		111988CA2D4A7628005C9C1E /* Application */ = {
 			isa = PBXGroup;
 			children = (
+				111989C72D51839A005C9C1E /* Application.h */,
+				111989C82D51839A005C9C1E /* Application.mm */,
+				111989C92D51839A005C9C1E /* Precompile.h */,
 				111988C42D4A7628005C9C1E /* main.mm */,
 			);
 			path = Application;
@@ -220,6 +240,9 @@
 			children = (
 				111988E72D4A8978005C9C1E /* RendererPass.h */,
 				111988E82D4A89FE005C9C1E /* RendererPass.mm */,
+				111989C32D51822B005C9C1E /* ForwardPass */,
+				111989C12D51822B005C9C1E /* DebugPass.h */,
+				111989C22D51822B005C9C1E /* DebugPass.mm */,
 			);
 			path = RendererPass;
 			sourceTree = "<group>";
@@ -367,12 +390,39 @@
 			path = Resource;
 			sourceTree = "<group>";
 		};
+		111989C32D51822B005C9C1E /* ForwardPass */ = {
+			isa = PBXGroup;
+			children = (
+				111989C62D5182D0005C9C1E /* ForwardPass.h */,
+				111989BF2D51822B005C9C1E /* ForwardOpaquePass.h */,
+				111989C02D51822B005C9C1E /* ForwardOpaquePass.mm */,
+			);
+			path = ForwardPass;
+			sourceTree = "<group>";
+		};
+		111989CD2D518433005C9C1E /* Scene */ = {
+			isa = PBXGroup;
+			children = (
+				111989CB2D518433005C9C1E /* Scene.h */,
+				111989CC2D518433005C9C1E /* Scene.cpp */,
+			);
+			path = Scene;
+			sourceTree = "<group>";
+		};
+		111989D02D518447005C9C1E /* Object */ = {
+			isa = PBXGroup;
+			children = (
+				111989CF2D518447005C9C1E /* Object.h */,
+			);
+			path = Object;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1119884C2D4A74DA005C9C1E /* MetalSamples */ = {
+		1119884C2D4A74DA005C9C1E /* HSMR */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamples" */;
+			buildConfigurationList = 111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "HSMR" */;
 			buildPhases = (
 				111988492D4A74DA005C9C1E /* Sources */,
 				1119884A2D4A74DA005C9C1E /* Frameworks */,
@@ -382,11 +432,11 @@
 			);
 			dependencies = (
 			);
-			name = MetalSamples;
+			name = HSMR;
 			packageProductDependencies = (
 			);
 			productName = MetalSamples;
-			productReference = 1119884D2D4A74DA005C9C1E /* MetalSamples */;
+			productReference = 1119884D2D4A74DA005C9C1E /* HSMR */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -403,7 +453,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "MetalSamples" */;
+			buildConfigurationList = 111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "HSMR" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -417,7 +467,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1119884C2D4A74DA005C9C1E /* MetalSamples */,
+				1119884C2D4A74DA005C9C1E /* HSMR */,
 			);
 		};
 /* End PBXProject section */
@@ -442,7 +492,11 @@
 			files = (
 				111988E92D4A8A18005C9C1E /* RendererPass.mm in Sources */,
 				111988E22D4A7F74005C9C1E /* Renderer.mm in Sources */,
+				111989CA2D51839A005C9C1E /* Application.mm in Sources */,
+				111989CE2D518433005C9C1E /* Scene.cpp in Sources */,
 				111988CC2D4A7628005C9C1E /* main.mm in Sources */,
+				111989C42D51822B005C9C1E /* DebugPass.mm in Sources */,
+				111989C52D51822B005C9C1E /* ForwardOpaquePass.mm in Sources */,
 				111989352D4BC0CC005C9C1E /* imgui_impl_osx.mm in Sources */,
 				111989362D4BC0CC005C9C1E /* imgui_tables.cpp in Sources */,
 				111989372D4BC0CC005C9C1E /* imgui_draw.cpp in Sources */,
@@ -641,7 +695,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "MetalSamples" */ = {
+		111988482D4A74DA005C9C1E /* Build configuration list for PBXProject "HSMR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				111988742D4A74DB005C9C1E /* Debug */,
@@ -650,7 +704,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "MetalSamples" */ = {
+		111988762D4A74DB005C9C1E /* Build configuration list for PBXNativeTarget "HSMR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				111988772D4A74DB005C9C1E /* Debug */,

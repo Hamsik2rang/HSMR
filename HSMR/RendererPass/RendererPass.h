@@ -7,6 +7,8 @@
 //  Created by Yongsik Im on 1/30/25.
 //
 
+#include "Precompile.h"
+
 #include <typeinfo>
 
 #import <Metal/Metal.h>
@@ -19,7 +21,7 @@ class HSRenderer;
 class HSRendererPass
 {
 public:
-    HSRendererPass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
+    HSRendererPass(const char* name, HSRenderer* renderer, uint32 renderingOrder);
     virtual ~HSRendererPass() = default;
 
     virtual void Initialize() = 0;

@@ -7,7 +7,6 @@
 
 #include "Renderer.h"
 #include "RendererPass.h"
-#include "ForwardTrianglePass.h"
 #include "Scene.h"
 
 #include "SDL3/SDL.h"
@@ -99,10 +98,8 @@ void HSRenderer::Render(HSScene* scene)
     }
 
     [_renderEncoder popDebugGroup];
-}
-
-void HSRenderer::RenderGUI()
-{
+    
+    // GUI
     [_renderEncoder pushDebugGroup:@"GUI Rendering"];
 
     ImGui_ImplMetal_NewFrame(_renderPassDescriptor);
@@ -112,11 +109,8 @@ void HSRenderer::RenderGUI()
     ImGui::PushFont(g_guiFont);
     
     renderDockingPanel();
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnGUI();
-    }
+    // ... GUI
+    ImGui::ShowDemoWindow();
 
     ImGui::PopFont();
     
