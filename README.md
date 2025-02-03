@@ -1,2 +1,2 @@
 # HSMR
-HS Metal Renderer - lightweight Renderer using Metal API on MacOS.
+HS Metal Renderer - lightweight Renderer what supports Metal API on MacOS.
