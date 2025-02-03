@@ -10,16 +10,12 @@
 
 #include "ImGui/imgui.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
-#include "ImGui/backends/imgui_impl_metal.h"
 #include "SDL3/SDL.h"
 
 #include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string>
-
-#import <Metal/Metal.h>
-#import <QuartzCore/QuartzCore.h>
 
 std::string hs_get_resource_path(const char* filePath)
 {
@@ -40,7 +36,7 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows -> Metal+SDL3에서 지원 안함
 
     io.IniFilename = hs_get_resource_path("imgui.ini").c_str();
     chmod(io.IniFilename, S_IRWXU);
@@ -125,45 +121,13 @@ int main(int, char**)
                 continue;
             }
             
-            
             g_renderer->NextFrame();
             
-            g_renderer->Render();
+            g_renderer->Render(nullptr);
             
             g_renderer->RenderGUI();
             
             g_renderer->Present();
-//            {
-//                static float f = 0.0f;
-//                static int counter = 0;
-//
-//                ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-//
-//                ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-//                ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-//                ImGui::Checkbox("Another Window", &show_another_window);
-//
-//                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-//                ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-//
-//                if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-//                    counter++;
-//                ImGui::SameLine();
-//                ImGui::Text("counter = %d", counter);
-//
-//                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-//                ImGui::End();
-//            }
-
-            // 3. Show another simple window.
-//            if (show_another_window)
-//            {
-//                ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-//                ImGui::Text("Hello from another window!");
-//                if (ImGui::Button("Close Me"))
-//                    show_another_window = false;
-//                ImGui::End();
-//            }
         }
     }
     //    io.WantSaveIniSettings = true;

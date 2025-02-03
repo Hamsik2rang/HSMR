@@ -11,8 +11,6 @@
 		111988E12D4A7BEC005C9C1E /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 111988E02D4A7BEC005C9C1E /* Metal.framework */; };
 		111988E22D4A7F74005C9C1E /* Renderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988DA2D4A778D005C9C1E /* Renderer.mm */; };
 		111988E92D4A8A18005C9C1E /* RendererPass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988E82D4A89FE005C9C1E /* RendererPass.mm */; };
-		111988ED2D4A8EF5005C9C1E /* ForwardTrianglePass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988EC2D4A8EE9005C9C1E /* ForwardTrianglePass.mm */; };
-		111988F02D4AF0EF005C9C1E /* BasicClearPass.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111988EF2D4AF0EB005C9C1E /* BasicClearPass.mm */; };
 		111989352D4BC0CC005C9C1E /* imgui_impl_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = 111989252D4BC0CC005C9C1E /* imgui_impl_osx.mm */; };
 		111989362D4BC0CC005C9C1E /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1119892F2D4BC0CC005C9C1E /* imgui_tables.cpp */; };
 		111989372D4BC0CC005C9C1E /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1119892D2D4BC0CC005C9C1E /* imgui_draw.cpp */; };
@@ -38,10 +36,6 @@
 		111988E02D4A7BEC005C9C1E /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		111988E72D4A8978005C9C1E /* RendererPass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RendererPass.h; sourceTree = "<group>"; };
 		111988E82D4A89FE005C9C1E /* RendererPass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RendererPass.mm; sourceTree = "<group>"; };
-		111988EB2D4A8ED5005C9C1E /* ForwardTrianglePass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForwardTrianglePass.h; sourceTree = "<group>"; };
-		111988EC2D4A8EE9005C9C1E /* ForwardTrianglePass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ForwardTrianglePass.mm; sourceTree = "<group>"; };
-		111988EE2D4AF0DB005C9C1E /* BasicClearPass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicClearPass.h; sourceTree = "<group>"; };
-		111988EF2D4AF0EB005C9C1E /* BasicClearPass.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BasicClearPass.mm; sourceTree = "<group>"; };
 		111989222D4BC0CC005C9C1E /* imgui_impl_metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_metal.h; sourceTree = "<group>"; };
 		111989232D4BC0CC005C9C1E /* imgui_impl_metal.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = imgui_impl_metal.mm; sourceTree = "<group>"; };
 		111989242D4BC0CC005C9C1E /* imgui_impl_osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imgui_impl_osx.h; sourceTree = "<group>"; };
@@ -224,22 +218,10 @@
 		111988E52D4A88E3005C9C1E /* RendererPass */ = {
 			isa = PBXGroup;
 			children = (
-				111988EA2D4A8ECE005C9C1E /* Triangle */,
 				111988E72D4A8978005C9C1E /* RendererPass.h */,
 				111988E82D4A89FE005C9C1E /* RendererPass.mm */,
 			);
 			path = RendererPass;
-			sourceTree = "<group>";
-		};
-		111988EA2D4A8ECE005C9C1E /* Triangle */ = {
-			isa = PBXGroup;
-			children = (
-				111988EF2D4AF0EB005C9C1E /* BasicClearPass.mm */,
-				111988EE2D4AF0DB005C9C1E /* BasicClearPass.h */,
-				111988EC2D4A8EE9005C9C1E /* ForwardTrianglePass.mm */,
-				111988EB2D4A8ED5005C9C1E /* ForwardTrianglePass.h */,
-			);
-			path = Triangle;
 			sourceTree = "<group>";
 		};
 		1119891F2D4BBFF5005C9C1E /* Thirdparty */ = {
@@ -461,8 +443,6 @@
 				111988E92D4A8A18005C9C1E /* RendererPass.mm in Sources */,
 				111988E22D4A7F74005C9C1E /* Renderer.mm in Sources */,
 				111988CC2D4A7628005C9C1E /* main.mm in Sources */,
-				111988ED2D4A8EF5005C9C1E /* ForwardTrianglePass.mm in Sources */,
-				111988F02D4AF0EF005C9C1E /* BasicClearPass.mm in Sources */,
 				111989352D4BC0CC005C9C1E /* imgui_impl_osx.mm in Sources */,
 				111989362D4BC0CC005C9C1E /* imgui_tables.cpp in Sources */,
 				111989372D4BC0CC005C9C1E /* imgui_draw.cpp in Sources */,

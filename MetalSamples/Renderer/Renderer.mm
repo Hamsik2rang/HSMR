@@ -8,10 +8,14 @@
 #include "Renderer.h"
 #include "RendererPass.h"
 #include "ForwardTrianglePass.h"
+#include "Scene.h"
 
 #include "SDL3/SDL.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
 #include "ImGui/backends/imgui_impl_metal.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 
 
 ImFont* g_guiFont = nullptr;
@@ -62,7 +66,7 @@ void HSRenderer::NextFrame()
     _currentDrawable = [_layer nextDrawable];
 }
 
-void HSRenderer::Render()
+void HSRenderer::Render(HSScene* scene)
 {
     _commandBuffer = [_commandQueue commandBuffer];
 
