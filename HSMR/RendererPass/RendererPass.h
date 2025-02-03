@@ -16,13 +16,15 @@
 
 #include "ImGui/imgui.h"
 
-class HSRenderer;
+HS_NS_BEGIN
 
-class HSRendererPass
+class Renderer;
+
+class RendererPass
 {
 public:
-    HSRendererPass(const char* name, HSRenderer* renderer, uint32 renderingOrder);
-    virtual ~HSRendererPass() = default;
+    RendererPass(const char* name, Renderer* renderer, uint32 renderingOrder);
+    virtual ~RendererPass() = default;
 
     virtual void Initialize() = 0;
     
@@ -45,9 +47,11 @@ public:
     uint32_t renderingOrder;
 
 protected:
-    HSRenderer* _renderer;
+    Renderer* _renderer;
     bool _isExecutable = true;
     size_t _submitIndex;
 };
+
+HS_NS_END
 
 #endif

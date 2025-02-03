@@ -8,39 +8,41 @@
 #include "ForwardOpaquePass.h"
 #include "Renderer.h"
 
-id<MTLTexture> _renderTarget;
+HS_NS_BEGIN
 
-HSForwardOpaquePass::HSForwardOpaquePass(const char* name, HSRenderer* renderer, uint32_t renderingOrder)
-    : HSForwardPass(name, renderer, renderingOrder)
+ForwardOpaquePass::ForwardOpaquePass(const char* name, Renderer* renderer, uint32_t renderingOrder)
+    : ForwardPass(name, renderer, renderingOrder)
 {
 }
 
-HSForwardOpaquePass::~HSForwardOpaquePass()
+ForwardOpaquePass::~ForwardOpaquePass()
 {
 }
 
-void HSForwardOpaquePass::Initialize()
+void ForwardOpaquePass::Initialize()
 {
 }
 
-void HSForwardOpaquePass::Finalize()
+void ForwardOpaquePass::Finalize()
 {
 }
 
-void HSForwardOpaquePass::OnBeforeRendering(uint32_t submitIndex)
+void ForwardOpaquePass::OnBeforeRendering(uint32_t submitIndex)
 {
     _submitIndex = submitIndex;
 }
 
-void HSForwardOpaquePass::Configure(id<MTLTexture> renderTarget)
+void ForwardOpaquePass::Configure(id<MTLTexture> renderTarget)
 {
-    _renderTarget = renderTarget;
+    _currentRenderTarget = renderTarget;
 }
 
-void HSForwardOpaquePass::Execute(id<MTLRenderCommandEncoder> renderEncoder)
+void ForwardOpaquePass::Execute(id<MTLRenderCommandEncoder> renderEncoder)
 {
 }
 
-void HSForwardOpaquePass::OnAfterRendering()
+void ForwardOpaquePass::OnAfterRendering()
 {
 }
+
+HS_NS_END

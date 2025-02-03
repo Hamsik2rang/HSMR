@@ -6,31 +6,32 @@
 //
 #include "DebugPass.h"
 
+HS_NS_BEGIN
 
-
-void HSDebugPass::Initialize() {
+void DebugPass::Initialize() {
     return;
 }
 
-void HSDebugPass::Finalize()
+void DebugPass::Finalize()
 {
     
 }
 
-void HSDebugPass::OnBeforeRendering(uint32_t submitIndex) { 
+void DebugPass::OnBeforeRendering(uint32_t submitIndex) { 
     return;
 }
 
 
-void HSDebugPass::Configure(id<MTLTexture> renderTarget) {
+void DebugPass::Configure(id<MTLTexture> renderTarget) {
     return;
 }
 
-void HSDebugPass::Execute(id<MTLRenderCommandEncoder> renderEncoder) {
+void DebugPass::Execute(id<MTLRenderCommandEncoder> renderEncoder) {
     return;
 }
 
-void HSDebugPass::OnAfterRendering() {
+void DebugPass::OnAfterRendering() {
     return;
 }
 
+HS_NS_END
