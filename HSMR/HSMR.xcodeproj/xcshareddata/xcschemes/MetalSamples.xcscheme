@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-               BuildableName = "MetalSamples"
-               BlueprintName = "MetalSamples"
-               ReferencedContainer = "container:MetalSamples.xcodeproj">
+               BuildableName = "HSMR"
+               BlueprintName = "HSMR"
+               ReferencedContainer = "container:HSMR.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "111988612D4A74DB005C9C1E"
                BuildableName = "MetalSamplesTests.xctest"
                BlueprintName = "MetalSamplesTests"
-               ReferencedContainer = "container:MetalSamples.xcodeproj">
+               ReferencedContainer = "container:HSMR.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -49,7 +49,7 @@
                BlueprintIdentifier = "1119886B2D4A74DB005C9C1E"
                BuildableName = "MetalSamplesUITests.xctest"
                BlueprintName = "MetalSamplesUITests"
-               ReferencedContainer = "container:MetalSamples.xcodeproj">
+               ReferencedContainer = "container:HSMR.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-            BuildableName = "MetalSamples"
-            BlueprintName = "MetalSamples"
-            ReferencedContainer = "container:MetalSamples.xcodeproj">
+            BuildableName = "HSMR"
+            BlueprintName = "HSMR"
+            ReferencedContainer = "container:HSMR.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -87,9 +87,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1119884C2D4A74DA005C9C1E"
-            BuildableName = "MetalSamples"
-            BlueprintName = "MetalSamples"
-            ReferencedContainer = "container:MetalSamples.xcodeproj">
+            BuildableName = "HSMR"
+            BlueprintName = "HSMR"
+            ReferencedContainer = "container:HSMR.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

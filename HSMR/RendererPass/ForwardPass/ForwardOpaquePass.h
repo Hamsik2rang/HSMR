@@ -7,13 +7,13 @@
 #ifndef __BASIC_CLEAR_PASS_H__
 #define __BASIC_CLEAR_PASS_H__
 
-#include "RendererPass.h"
+#include "ForwardPass.h"
 
-class HSBasicClearPass : public HSRendererPass
+class HSForwardOpaquePass : public HSForwardPass
 {
 public:
-    HSBasicClearPass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
-    ~HSBasicClearPass() override;
+    HSForwardOpaquePass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
+    ~HSForwardOpaquePass() override;
     
     void Initialize() override;
     
