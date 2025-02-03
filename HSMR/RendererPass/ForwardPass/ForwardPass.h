@@ -7,13 +7,16 @@
 #ifndef __HS_FORWARD_PASS_H__
 #define __HS_FORWARD_PASS_H__
 
+#include "Precompile.h"
 #include "RendererPass.h"
 
-class HSForwardPass : public HSRendererPass
+HS_NS_BEGIN
+
+class ForwardPass : public RendererPass
 {
 public:
-    HSForwardPass(const char* name, HSRenderer* renderer, uint32 renderingOrder)
-    : HSRendererPass(name, renderer, renderingOrder)
+    ForwardPass(const char* name, Renderer* renderer, uint32 renderingOrder)
+    : RendererPass(name, renderer, renderingOrder)
     {}
     
 private:
@@ -21,5 +24,6 @@ private:
     
 };
 
+HS_NS_END
 
 #endif

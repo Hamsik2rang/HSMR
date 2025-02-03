@@ -7,9 +7,12 @@
 #ifndef __HS_DEBUG_PASS_H__
 #define __HS_DEBUG_PASS_H__
 
+#include "Precompile.h"
 #include "RendererPass.h"
 
-class HSDebugPass : public HSRendererPass
+HS_NS_BEGIN
+
+class DebugPass : public RendererPass
 {
 public:
     void Initialize() override;
@@ -28,6 +31,6 @@ private:
     
 };
 
-
+HS_NS_END
 
 #endif

@@ -7,13 +7,16 @@
 #ifndef __BASIC_CLEAR_PASS_H__
 #define __BASIC_CLEAR_PASS_H__
 
+#include "Precompile.h"
 #include "ForwardPass.h"
 
-class HSForwardOpaquePass : public HSForwardPass
+HS_NS_BEGIN
+
+class ForwardOpaquePass : public ForwardPass
 {
 public:
-    HSForwardOpaquePass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
-    ~HSForwardOpaquePass() override;
+    ForwardOpaquePass(const char* name, Renderer* renderer, uint32_t renderingOrder);
+    ~ForwardOpaquePass() override;
     
     void Initialize() override;
     
@@ -29,12 +32,11 @@ public:
     
     
 private:
+    
+    id<MTLTexture> _currentRenderTarget;
+
 };
 
-
-
-
-
-
+HS_NS_END
 
 #endif

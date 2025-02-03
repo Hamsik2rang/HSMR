@@ -7,8 +7,11 @@
 #ifndef __HS_SCENE_H__
 #define __HS_SCENE_H__
 
+#include "Precompile.h"
 
-class HSScene
+HS_NS_BEGIN
+
+class Scene
 {
 public:
     
@@ -19,7 +22,7 @@ private:
 };
 
 
-
+HS_NS_END
 
 
 #endif

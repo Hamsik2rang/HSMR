@@ -10,9 +10,14 @@
 
 #import <Metal/Metal.h>
 
-HSRendererPass::HSRendererPass(const char* name, HSRenderer* renderer, uint32_t renderingOrder)
+HS_NS_BEGIN
+
+RendererPass::RendererPass(const char* name, Renderer* renderer, uint32_t renderingOrder)
     : name(name)
     , _renderer(renderer)
     , renderingOrder(renderingOrder)
 {
 }
+
+
+HS_NS_END

@@ -7,32 +7,36 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include "Precompile.h"
+
 #include <vector>
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
 #include <SDL3/SDL.h>
 
-class HSScene;
-class HSRendererPass;
+HS_NS_BEGIN
+
+class Scene;
+class RendererPass;
 
 extern std::string hs_get_resource_path(const char* filePath);
 
-class HSRenderer
+class Renderer
 {
 public:
-    HSRenderer(SDL_Window* window);
-    ~HSRenderer();
+    Renderer(SDL_Window* window);
+    ~Renderer();
 
     bool Init();
 
     void NextFrame();
 
-    void Render(HSScene* scene);
+    void Render(Scene* scene);
 
     void Present();
 
-    void AddPass(HSRendererPass* pass)
+    void AddPass(RendererPass* pass)
     {
         _rendererPasses.push_back(pass);
         _isPassListSorted = false;
@@ -60,7 +64,7 @@ private:
     id<CAMetalDrawable> _currentDrawable;
     MTLRenderPassDescriptor* _renderPassDescriptor;
 
-    std::vector<HSRendererPass*> _rendererPasses;
+    std::vector<RendererPass*> _rendererPasses;
     uint32_t _submitIndex = 0;
     SDL_Window* _window;
     void* _view;
@@ -68,5 +72,7 @@ private:
     bool _isInitialized = false;
     bool _isPassListSorted = true;
 };
+
+HS_NS_END
 
 #endif

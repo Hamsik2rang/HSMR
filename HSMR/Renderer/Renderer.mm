@@ -16,10 +16,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
+HS_NS_BEGIN
 
 ImFont* g_guiFont = nullptr;
 
-HSRenderer::HSRenderer(SDL_Window* window)
+Renderer::Renderer(SDL_Window* window)
     : _window(window)
 {
     _view = SDL_Metal_CreateView(window);
@@ -30,12 +31,12 @@ HSRenderer::HSRenderer(SDL_Window* window)
     _layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
 }
 
-HSRenderer::~HSRenderer()
+Renderer::~Renderer()
 {
     Shutdown();
 }
 
-bool HSRenderer::Init()
+bool Renderer::Init()
 {
 
     ImGui_ImplSDL3_InitForMetal(_window);
@@ -54,7 +55,7 @@ bool HSRenderer::Init()
     return _isInitialized;
 }
 
-void HSRenderer::NextFrame()
+void Renderer::NextFrame()
 {
     _submitIndex = (_submitIndex + 1) % MAX_SUBMIT_INDEX;
 
@@ -65,7 +66,7 @@ void HSRenderer::NextFrame()
     _currentDrawable = [_layer nextDrawable];
 }
 
-void HSRenderer::Render(HSScene* scene)
+void Renderer::Render(Scene* scene)
 {
     _commandBuffer = [_commandQueue commandBuffer];
 
@@ -129,14 +130,14 @@ void HSRenderer::Render(HSScene* scene)
     [_renderEncoder endEncoding];
 }
 
-void HSRenderer::Present()
+void Renderer::Present()
 {
     [_commandBuffer presentDrawable:_currentDrawable];
 
     [_commandBuffer commit];
 }
 
-void HSRenderer::Shutdown()
+void Renderer::Shutdown()
 {
     // Cleanup
     ImGui_ImplMetal_Shutdown();
@@ -153,12 +154,12 @@ void HSRenderer::Shutdown()
     _isInitialized = false;
 }
 
-void HSRenderer::SetFont(void* font)
+void Renderer::SetFont(void* font)
 {
     g_guiFont = static_cast<ImFont*>(font);
 }
 
-void HSRenderer::renderDockingPanel()
+void Renderer::renderDockingPanel()
 {
     // READ THIS !!!
     // TL;DR; this demo is more complicated than what most users you would normally use.
@@ -263,3 +264,5 @@ void HSRenderer::renderDockingPanel()
 
     ImGui::End();
 }
+
+HS_NS_END
