@@ -19,7 +19,7 @@ HSBasicClearPass::~HSBasicClearPass()
 {
 }
 
-void HSBasicClearPass::OnInit()
+void HSBasicClearPass::Initialize()
 {
 }
 
@@ -40,13 +40,5 @@ void HSBasicClearPass::Execute(id<MTLRenderCommandEncoder> renderEncoder)
 
 void HSBasicClearPass::OnAfterRendering()
 {
-}
-
-void HSBasicClearPass::OnGUI()
-{
-    ImGui::Begin("BasicClearPass");
     
-    ImGui::Text("It is Basic Clear Pass");
-    
-    ImGui::End();
 }

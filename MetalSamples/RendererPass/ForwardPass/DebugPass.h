@@ -1,18 +1,20 @@
 //
-//  ForwardTrianglePass.h
+//  DebugPass.h
 //  MetalSamples
 //
-//  Created by Yongsik Im on 1/30/25.
+//  Created by Yongsik Im on 2/2/25.
 //
-#ifndef __FORWARD_TRIANGLE_PASS_H__
-#define __FORWARD_TRIANGLE_PASS_H__
+#ifndef __HS_DEBUG_PASS_H__
+#define __HS_DEBUG_PASS_H__
 
 #include "RendererPass.h"
 
-class HSForwardTrianglePass : public HSRendererPass
+class HSDebugPass : public HSRendererPass
 {
 public:
-    void OnInit() override;
+    void Initialize() override;
+    
+    void Finalize() override;
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
@@ -22,11 +24,10 @@ public:
     
     void OnAfterRendering() override;
     
-    void OnGUI() override;
-    
 private:
     
 };
+
 
 
 #endif

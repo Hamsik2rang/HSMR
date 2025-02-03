@@ -13,8 +13,8 @@
 #import <QuartzCore/QuartzCore.h>
 #include <SDL3/SDL.h>
 
+class HSScene;
 class HSRendererPass;
-
 
 extern std::string hs_get_resource_path(const char* filePath);
 
@@ -28,32 +28,34 @@ public:
 
     void NextFrame();
 
-    void Render();
-    
-    void RenderGUI();
+    void Render(HSScene* scene);
 
     void Present();
 
+    void AddPass(HSRendererPass* pass)
+    {
+        _rendererPasses.push_back(pass);
+        _isPassListSorted = false;
+    }
+
+    void* GetView() { return _view; }
+    
     id<MTLDevice> GetDevice() { return _device; }
-
-    void AddPass(HSRendererPass* pass) { _rendererPasses.push_back(pass); }
-
-    void* GetView() {return _view;}
     
     void Shutdown();
-    
+
     void SetFont(void* font);
 
     static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
 
 private:
     void renderDockingPanel();
-    
+
     id<MTLDevice> _device;
     id<MTLCommandQueue> _commandQueue;
     id<MTLCommandBuffer> _commandBuffer;
     id<MTLRenderCommandEncoder> _renderEncoder;
-    
+
     id<MTLTexture> _renderTarget[MAX_SUBMIT_INDEX];
     id<CAMetalDrawable> _currentDrawable;
     MTLRenderPassDescriptor* _renderPassDescriptor;
@@ -64,6 +66,7 @@ private:
     void* _view;
     CAMetalLayer* _layer;
     bool _isInitialized = false;
+    bool _isPassListSorted = true;
 };
 
 #endif

@@ -15,7 +15,9 @@ public:
     HSBasicClearPass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
     ~HSBasicClearPass() override;
     
-    void OnInit() override;
+    void Initialize() override;
+    
+    void Finalize() override;
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
@@ -25,7 +27,6 @@ public:
     
     void OnAfterRendering() override;
     
-    void OnGUI() override;
     
 private:
 };

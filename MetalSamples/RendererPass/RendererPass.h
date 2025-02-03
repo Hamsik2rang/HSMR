@@ -22,7 +22,9 @@ public:
     HSRendererPass(const char* name, HSRenderer* renderer, uint32_t renderingOrder);
     virtual ~HSRendererPass() = default;
 
-    virtual void OnInit() = 0;
+    virtual void Initialize() = 0;
+    
+    virtual void Finalize() = 0;
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
@@ -32,8 +34,6 @@ public:
 
     virtual void OnAfterRendering() = 0;
     
-    virtual void OnGUI() = 0;
-
     virtual void Clear() {}
 
     bool IsExecutable() { return _isExecutable; }
