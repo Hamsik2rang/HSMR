@@ -6,22 +6,24 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(ENGINE_NAME "HSMR")
 
-project(${ENGINE_NAME})
+project(${ENGINE_NAME} VERSION 0.1.0)
 
 set(HS_ROOT_DIR ${HSMR_SOURCE_DIR})
 message(STATUS "HS_ROOT_DIR: ${HS_ROOT_DIR}")
 
-set(HS_BIN_DIR ${HSML_BINARY_DIR})
-message(STATUS "HS_BIN_DIR ${HS_BIN_DIR}")
+set(HS_BIN_DIR ${HSMR_BINARY_DIR})
+message(STATUS "HS_BIN_DIR: ${HS_BIN_DIR}")
+
+set(HS_PROJECT_BINARY_DIR ${PROJECT_BINARY_DIR})
 
 set(HS_SRC_DIR ${HS_ROOT_DIR}/Source)
-message(STATUS "HS_SRC_DIR ${HS_SRC_DIR}")
+message(STATUS "HS_SRC_DIR: ${HS_SRC_DIR}")
 
 set(HS_RES_DIR ${HS_ROOT_DIR}/Resource)
-message(STATUS "HS_RES_DIR ${HS_RES_DIR}")
+message(STATUS "HS_RES_DIR: ${HS_RES_DIR}")
 
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
-message(STATUS "HS_DEPS_DIR ${HS_DEPS_DIR}")
+message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
 if(NOT APPLE)
     message(FATAL_ERROR "Currently, HSMR is only support MacOS.")
@@ -33,8 +35,6 @@ else()
     set(HS_ARCH "x86_64")
 endif()
 
-set(CMAKE_OSX_ARCHITECTURES $(HS_ARCH))
-
 if(CMAKE_GENERATOR STREQUAL "Xcode")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
 else()
@@ -44,11 +44,11 @@ endif()
 
 message(STATUS "Processor Architecture is ${HS_ARCH}")
 
-set(HS_DEPS_STATIC_DIR ${HS_DEPS_DIR}/lib)
-set(HS_DEPS_SHARED_DIR ${HS_DEPS_DIR}/dll)
+set(HS_DEPS_LIB_DIR ${HS_DEPS_DIR}/lib)
+set(HS_DEPS_DLL_DIR ${HS_DEPS_DIR}/dll)
 set(HS_DEPS_INCLUDE_DIR ${HS_DEPS_DIR}/include)
 
-set(SDL3 ${HS_DEPS_SHARED_DIR}/libSDL3.dylib)
+set(SDL3 ${HS_DEPS_DLL_DIR}/libSDL3.dylib)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof -Winline-new-delete -fno-rtti")
