@@ -9,8 +9,12 @@ add_executable(${TARGET_NAME}
 )
 
 list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
-set_target_properties(${TARGET_NAME} PROPERTIES XCODE_ATTRIBUTE_INSTALL_PATH "/Client")
-set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_SCHEME_ARGUMENTS "")
+
+set_target_properties(${TARGET_NAME} PROPERTIES
+    XCODE_ATTRIBUTE_INSTALL_PATH "/Client"
+    OUTPUT_NAME "HSMR"
+    RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
+)
 
 target_link_libraries(${TARGET_NAME}
     PUBLIC
@@ -29,5 +33,5 @@ set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
 set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE Metal)
 
 # set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_GENERATE_DEBUGGING_SYMBOLS ON)
-install(DIRECTORY ${TL_DEPS_DLL_DIR}/ DESTINATION "${INSTALL_FOLDER}")
-install(DIRECTORY ${TL_RES_DIR}/ DESTINATION "${INSTALL_FOLDER}")
+install(DIRECTORY ${HS_DEPS_DLL_DIR}/ DESTINATION "${INSTALL_FOLDER}")
+install(DIRECTORY ${HS_RES_DIR}/ DESTINATION "${INSTALL_FOLDER}/Resource")
