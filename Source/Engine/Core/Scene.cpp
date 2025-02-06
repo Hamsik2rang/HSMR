@@ -1,6 +1,6 @@
 //
 //  Scene.cpp
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 2/2/25.
 //

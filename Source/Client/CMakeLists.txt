@@ -19,6 +19,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 target_link_libraries(${TARGET_NAME}
     PUBLIC
     Engine
+    Editor
 )
 
 target_compile_definitions(${TARGET_NAME} PUBLIC
@@ -27,6 +28,7 @@ target_compile_definitions(${TARGET_NAME} PUBLIC
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CLIENT
+    HS_EDITOR_API_IMPORT
 )
 
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)

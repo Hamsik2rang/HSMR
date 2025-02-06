@@ -18,16 +18,42 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 
-#ifndef HS_BREAK
-    #define HS_BREAK __builtin_trap
+#ifndef HS_DEBUG_BREAK
+#define HS_DEBUG_BREAK __builtin_trap
 #endif
 
+#if defined(HS_EDITOR_API_EXPORT)
+
+#define HS_EDITOR_API __attribute__((__visibility__("default"))
+
+#elif defined(HS_EDITOR_API_IMPORT)
+
+#define HS_EDITOR_API
+
+#else
+
+#define HS_EDITOR_API
+#endif
 
 #ifndef HS_NS_BEGIN
-#define HS_NS_BEGIN namespace HS {
+#define HS_NS_BEGIN \
+    namespace HS    \
+    {
 #endif
 #ifndef HS_NS_END
 #define HS_NS_END }
+#endif
+#ifndef HS_NS_EDITOR_BEGIN
+#define HS_NS_EDITOR_BEGIN \
+    namespace HS           \
+    {                      \
+    namespace Editor                 \
+    {
+#endif
+#ifndef HS_NS_EDITOR_END
+#define HS_NS_EDITOR_END \
+    }                    \
+    }
 #endif
 
 #endif

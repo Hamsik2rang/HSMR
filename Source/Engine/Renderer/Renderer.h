@@ -1,6 +1,6 @@
 //
 //  Renderer.h
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
@@ -49,9 +49,9 @@ public:
     void Shutdown();
 
     void SetFont(void* font);
-
+    
     static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
-
+    
 private:
     void renderDockingPanel();
 

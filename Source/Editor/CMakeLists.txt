@@ -1,0 +1,77 @@
+set(TARGET_NAME Editor)
+
+set(TOTAL_FILES)
+
+set(CORE_HEADERS
+    Core/EditorContext.h
+)
+
+source_group("Core\\Public" FILES ${CORE_HEADERS})
+
+list(APPEND TOTAL_FILES ${CORE_HEADERS})
+
+set(CORE_SOURCES
+    Core/EditorContext.cpp
+)
+
+source_group("Core\\Private" FILES ${CORE_SOURCES})
+
+list(APPEND TOTAL_FILES ${CORE_SOURCES})
+
+set(GUI_HEADERS
+    GUI/GUIContext.h
+    GUI/GUIRenderer.h
+)
+
+source_group("GUI\\Public" FILES ${GUI_HEADERS})
+
+list(APPEND TOTAL_FILES ${GUI_HEADERS})
+
+set(GUI_SOURCES
+    GUI/GUIContext.cpp
+    GUI/GUIRenderer.cpp
+)
+
+list(APPEND TOTAL_FILES ${GUI_SOURCES})
+
+source_group("GUI\\Private" FILES ${GUI_SOURCES})
+
+set(PANEL_HEADERS
+    Panel/BasePanel.h
+)
+
+source_group("Panel\\Public" FILES ${PANEL_HEADERS})
+
+list(APPEND TOTAL_FILES ${PANEL_HEADERS})
+
+set(PANEL_SOURCES
+    Panel/BasePanel.cpp
+)
+
+source_group("Panel\\Private" FILES ${PANEL_SOURCES})
+
+list(APPEND TOTAL_FILES ${PANEL_SOURCES})
+
+add_library(${TARGET_NAME}
+    SHARED
+    ${TOTAL_FILES}
+)
+
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+    Engine
+)
+
+set_target_properties(${TARGET_PATH} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
+)
+
+target_compile_definitions(${TARGET_NAME} PRIVATE
+    $<$<CONFIG:Debug>:_DEBUG>
+    $<$<CONFIG:MinSizeRel>:_RELEASE>
+    $<$<CONFIG:Release>:_RELEASE>
+    $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
+    HS_EDITOR
+    HS_EDITOR_API_EXPORT
+)
