@@ -1,11 +1,11 @@
-#ifndef __RENDERER_PASS_H__
-#define __RENDERER_PASS_H__
 //
 //  RendererPass.h
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 1/30/25.
 //
+#ifndef __RENDERER_PASS_H__
+#define __RENDERER_PASS_H__
 
 #include "Precompile.h"
 

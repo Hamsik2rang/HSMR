@@ -3,6 +3,9 @@ set(TARGET_NAME Engine)
 set(CORE_HEADERS
     Core/Application.h
     Core/Scene.h
+    Core/Log.h
+    Core/EngineContext.h
+    Core/FileSystem.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
@@ -10,12 +13,16 @@ source_group("Core\\Public" FILES ${CORE_HEADERS})
 set(CORE_SOURCES
     Core/Application.mm
     Core/Scene.cpp
+    Core/Log.cpp
+    Core/EngineContext.cpp
+    Core/FileSystem.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})
 
 set(RENDERER_HEADERS
     Renderer/Renderer.h
+    Renderer/RHIDefinition.h
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
@@ -28,12 +35,18 @@ source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
 
 set(OBJECT_HEADERS
     Object/Object.h
+    Object/Material.h
+    Object/Mesh.h
+    Object/Image.h
 )
 
 source_group("Object\\Public" FILES ${OBJECT_HEADERS})
 
 set(OBJECT_SOURCES
     Object/Object.cpp
+    Object/Material.cpp
+    Object/Mesh.cpp
+    Object/Image.cpp
 )
 
 source_group("Object\\Private" FILES ${OBJECT_SOURCES})

@@ -1,6 +1,6 @@
 //
 //  RendererPass.m
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 1/30/25.
 //

@@ -63,7 +63,9 @@ include_directories(SYSTEM ${HS_DEPS_INCLUDE_DIR})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(HS_ENGINE_DIR "Source/Engine")
+set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 
 add_subdirectory(${HS_ENGINE_DIR})
+add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})

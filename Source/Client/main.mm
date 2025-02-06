@@ -1,12 +1,13 @@
 //
-//  main.m
-//  MetalSamples
+//  main.mm
+//  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/RendererPass/ForwardPass/ForwardOpaquePass.h"
+
+#include "Editor/GUI/GUIContext.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
@@ -27,6 +28,8 @@ int main(int, char**)
 {
     extern int errno;
     errno = 0;
+    
+    HS::Editor::GUIContext* t = new HS::Editor::GUIContext();
     
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

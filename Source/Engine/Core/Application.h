@@ -1,6 +1,6 @@
 //
 //  Application.h
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 2/2/25.
 //
@@ -9,6 +9,7 @@
 
 #include "Precompile.h"
 
+#include "Engine/Core/EngineContext.h"
 #include "Engine/ThirdParty/ImGui/imgui.h"
 #include "SDL3/SDL.h"
 
@@ -21,7 +22,10 @@ class Scene;
 class Application
 {
 public:
-    void Init();
+    Application() {}
+    virtual ~Application();
+    
+    void Init(EngineContext* engineContext);
     void Run();
     void Shutdown();
     
@@ -32,6 +36,8 @@ private:
     
     Renderer* _renderer;
     Scene* _scene;
+    
+    bool _isInitialized = false;
 };
 
 HS_NS_END

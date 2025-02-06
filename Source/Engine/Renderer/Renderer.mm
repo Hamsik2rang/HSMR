@@ -1,6 +1,6 @@
 //
 //  Renderer.mm
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
@@ -38,6 +38,9 @@ Renderer::~Renderer()
 
 bool Renderer::Init()
 {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    
 
     ImGui_ImplSDL3_InitForMetal(_window);
     ImGui_ImplMetal_Init(_device);
