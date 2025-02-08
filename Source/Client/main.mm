@@ -15,21 +15,11 @@
 
 #include <sys/stat.h>
 #include <stdio.h>
-#include <errno.h>
 #include <string>
-
-std::string hs_get_resource_path(const char* filePath)
-{
-    static std::string resPath = "./Resource/";
-    return resPath + filePath;
-}
 
 int main(int, char**)
 {
-    extern int errno;
-    errno = 0;
     
-    HS::Editor::GUIContext* t = new HS::Editor::GUIContext();
     
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -40,6 +30,7 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows -> Metal+SDL3에서 지원 안함
+
 
     io.IniFilename = hs_get_resource_path("imgui.ini").c_str();
     chmod(io.IniFilename, S_IRWXU);
@@ -98,13 +89,11 @@ int main(int, char**)
         printf("Error creating window: %s\n", SDL_GetError());
         return -2;
     }
-    
-    auto path = SDL_GetBasePath();
 
     HS::Renderer* g_renderer = new HS::Renderer(window);
     g_renderer->Init();
     g_renderer->AddPass(new HS::ForwardOpaquePass("ForwardOpaque", g_renderer, 0));
-    g_renderer->SetFont(font);
+    
 
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);

@@ -1,14 +1,19 @@
 set(TARGET_NAME Engine)
 
+set(TOTAL_FILES)
+
 set(CORE_HEADERS
     Core/Application.h
     Core/Scene.h
     Core/Log.h
     Core/EngineContext.h
     Core/FileSystem.h
+    Core/Window.h
+    Core/Event.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
     Core/Application.mm
@@ -16,9 +21,12 @@ set(CORE_SOURCES
     Core/Log.cpp
     Core/EngineContext.cpp
     Core/FileSystem.cpp
+    Core/Window.cpp
+    Core/Event.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(RENDERER_HEADERS
     Renderer/Renderer.h
@@ -26,13 +34,14 @@ set(RENDERER_HEADERS
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
+list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
     Renderer/Renderer.mm
 )
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
-
+list(APPEND TOTAL_FILES ${RENDERER_SOURCES})
 set(OBJECT_HEADERS
     Object/Object.h
     Object/Material.h
@@ -41,7 +50,7 @@ set(OBJECT_HEADERS
 )
 
 source_group("Object\\Public" FILES ${OBJECT_HEADERS})
-
+list(APPEND TOTAL_FILES ${OBJECT_HEADERS})
 set(OBJECT_SOURCES
     Object/Object.cpp
     Object/Material.cpp
@@ -50,41 +59,50 @@ set(OBJECT_SOURCES
 )
 
 source_group("Object\\Private" FILES ${OBJECT_SOURCES})
+list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 
+set(UTILITY_HEADERS
+    Utility/ResourceManager.h
+)
+
+source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
+list(APPEND TOTAL_FILES ${UTILITY_HEADERS})
+set(UTILITY_SOURCES
+    Utility/ResourceManager.cpp
+)
+
+source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
+list(APPEND TOTAL_FILES ${UTILITY_SOURCES})
 set(RENDERER_PASS_HEADERS
     RendererPass/RendererPass.h
     RendererPass/DebugPass.h
 )
 
 source_group("RendererPass\\Public" FILES ${RENDERER_PASS_HEADERS})
-
+list(APPEND TOTAL_FILES ${RENDERER_PASS_HEADERS})
 set(RENDERER_PASS_SOURCES
     RendererPass/RendererPass.mm
     RendererPass/DebugPass.mm
 )
 
 source_group("RendererPass\\Private" FILES ${RENDERER_PASS_SOURCES})
-
+list(APPEND TOTAL_FILES ${RENDERER_PASS_SOURCES})
 set(FORWARD_PASS_HEADERS
     RendererPass/ForwardPass/ForwardPass.h
     RendererPass/ForwardPass/ForwardOpaquePass.h
 )
 
 source_group("RendererPass\\ForwardPass\\Public" FILES ${FORWARD_PASS_HEADERS})
-
+list(APPEND TOTAL_FILES ${FORWARD_PASS_HEADERS})
 set(FORWARD_PASS_SOURCES
     RendererPass/ForwardPass/ForwardPass.mm
     RendererPass/ForwardPass/ForwardOpaquePass.mm
 )
 
 source_group("RendererPass\\ForwardPass\\Private" FILES ${FORWARD_PASS_SOURCES})
-
+list(APPEND TOTAL_FILES ${FORWARD_PASS_SOURCES})
 list(APPEND RENDERER_PASS_HEADERS
     ${FORWARD_PASS_HEADERS}
-)
-
-list(APPEND RENDERER_PASS_SOURCES
-    ${FORWARD_PASS_SOURCES}
 )
 
 set(THIRDPARTY_IMGUI
@@ -121,17 +139,10 @@ list(APPEND THIRDPARTY_IMGUI
 set(THIRDPARTY
     ${THIRDPARTY_IMGUI}
 )
+list(APPEND TOTAL_FILES ${THIRDPARTY})
 
 add_library(${TARGET_NAME} STATIC
-    ${CORE_HEADERS}
-    ${CORE_SOURCES}
-    ${OBJECT_HEADERS}
-    ${OBJECT_SOURCES}
-    ${RENDERER_HEADERS}
-    ${RENDERER_SOURCES}
-    ${RENDERER_PASS_HEADERS}
-    ${RENDERER_PASS_SOURCES}
-    ${THIRDPARTY}
+    ${TOTAL_FILES}
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC ThirdParty)

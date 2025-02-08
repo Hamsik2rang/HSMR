@@ -69,3 +69,9 @@ set(HS_CLIENT_DIR "Source/Client")
 add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
+
+add_custom_target(
+    Rebuild CMake
+    COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}
+    COMMENT "Rebuilding CMake..."
+)

@@ -1,10 +1,3 @@
-//
-//  Log.cpp
-//  Engine
-//
-//  Created by Yongsik Im on 2/6/25.
-//
-
 #include "Engine/Core/Log.h"
 
 HS_NS_BEGIN

@@ -23,37 +23,46 @@ typedef uint64_t uint64;
 #endif
 
 #if defined(HS_EDITOR_API_EXPORT)
-
-#define HS_EDITOR_API __attribute__((__visibility__("default"))
-
+#define HS_EDITOR_API __attribute__((__visibility__("default")))
 #elif defined(HS_EDITOR_API_IMPORT)
-
 #define HS_EDITOR_API
-
 #else
-
 #define HS_EDITOR_API
 #endif
 
-#ifndef HS_NS_BEGIN
+#define HS_DIR_SEPERATOR '/'
+
+#define HS_CHAR_INIT_LENGTH 512
+#define HS_CHAR_INIT_SHORT_LENGTH 256
+#define HS_CHAR_INIT_LONG_LENGTH 1024
+
+#define HS_BIT(x) ((uint64)1 << (x))
+
+#define HS_INT8_MAX     (0x0f)
+#define HS_UINT8_MAX    (0xff)
+#define HS_INT16_MAX    (0x0fff)
+#define HS_UINT16_MAX   (0xffff)
+#define HS_INT32_MAX    (0x0fffffff)
+#define HS_UINT32_MAX   (0xffffffff)
+#define HS_INT64_MAX    (0x0fffffffffffffff)
+#define HS_UINT64_MAX   (0xffffffffffffffff)
+
+#define HS_FORCEINLINE __attribute__((always_inline))
+
 #define HS_NS_BEGIN \
     namespace HS    \
     {
-#endif
-#ifndef HS_NS_END
+
 #define HS_NS_END }
-#endif
-#ifndef HS_NS_EDITOR_BEGIN
+
 #define HS_NS_EDITOR_BEGIN \
     namespace HS           \
     {                      \
-    namespace Editor                 \
+    namespace Editor       \
     {
-#endif
-#ifndef HS_NS_EDITOR_END
+
 #define HS_NS_EDITOR_END \
     }                    \
     }
-#endif
 
 #endif

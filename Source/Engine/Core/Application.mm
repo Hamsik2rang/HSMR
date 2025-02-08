@@ -1,9 +1,3 @@
-//
-//  Application.mm
-//  HSMR
-//
-//  Created by Yongsik Im on 2/2/25.
-//
 #include "Application.h"
 
 #include "Engine/Core/Log.h"

@@ -17,7 +17,7 @@ HS_NS_BEGIN
 
 class Renderer;
 class Scene;
-
+class Window;
 
 class Application
 {
@@ -25,17 +25,18 @@ public:
     Application() {}
     virtual ~Application();
     
-    void Init(EngineContext* engineContext);
-    void Run();
-    void Shutdown();
+    virtual void Init(EngineContext* engineContext);
+    virtual void Run();
+    virtual void Shutdown();
     
-private:
+protected:
     void update(float dt);
     void render();
     void renderGUI();
     
     Renderer* _renderer;
     Scene* _scene;
+    Window* _window;
     
     bool _isInitialized = false;
 };
