@@ -63,7 +63,7 @@ void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarg
 {
     _commandBuffer = [METAL_COMMAND_QUEUE(_commandQueue) commandBuffer];
 
-    _renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 1.0f, 0.2f, 1.0f);
+    _renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
     _renderPassDescriptor.colorAttachments[0].texture     = _currentDrawable.texture;
     _renderPassDescriptor.colorAttachments[0].loadAction  = MTLLoadActionClear;
     _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -73,7 +73,7 @@ void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarg
     ImGui_ImplMetal_NewFrame(_renderPassDescriptor);
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-
+    
     // ... GUI
     ImGui::ShowDemoWindow();
 

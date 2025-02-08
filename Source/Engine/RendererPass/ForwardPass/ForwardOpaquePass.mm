@@ -32,12 +32,12 @@ void ForwardOpaquePass::OnBeforeRendering(uint32_t submitIndex)
     _submitIndex = submitIndex;
 }
 
-void ForwardOpaquePass::Configure(id<MTLTexture> renderTarget)
+void ForwardOpaquePass::Configure(RenderTexture* renderTarget)
 {
     _currentRenderTarget = renderTarget;
 }
 
-void ForwardOpaquePass::Execute(id<MTLRenderCommandEncoder> renderEncoder)
+void ForwardOpaquePass::Execute(RenderCommandEncoder* renderEncoder)
 {
 }
 
