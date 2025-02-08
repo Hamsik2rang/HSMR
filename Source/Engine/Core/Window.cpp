@@ -17,6 +17,11 @@ Window::Window(const char* name, uint32 width, uint32 height, uint64 flags)
     , _renderer(nullptr)
 {}
 
+Window::~Window()
+{
+    
+}
+
 uint32 Window::Initialize()
 {
     SDL_Window* window = SDL_CreateWindow(_name, _width, _height, _flags);
