@@ -6,6 +6,8 @@
 //
 #include "DebugPass.h"
 
+#import <Metal/Metal.h>
+
 HS_NS_BEGIN
 
 void DebugPass::Initialize() {
@@ -22,11 +24,11 @@ void DebugPass::OnBeforeRendering(uint32_t submitIndex) {
 }
 
 
-void DebugPass::Configure(id<MTLTexture> renderTarget) {
+void DebugPass::Configure(RenderTexture* renderTarget) {
     return;
 }
 
-void DebugPass::Execute(id<MTLRenderCommandEncoder> renderEncoder) {
+void DebugPass::Execute(RenderCommandEncoder* renderEncoder) {
     return;
 }
 

@@ -42,7 +42,9 @@ bool hs_file_is_eof(FileHandle fileHandle)
 std::string hs_file_get_directory(const std::string& absolutePath)
 {
     size_t delimIndex = absolutePath.find_last_of("/");
-    return absolutePath.substr(0, delimIndex);
+    std::string absoluteDirectory =  absolutePath.substr(0, delimIndex+1);
+    
+    return absoluteDirectory;
 }
 
 std::string hs_file_get_extension(const std::string& fileName)
@@ -54,7 +56,9 @@ std::string hs_file_get_extension(const std::string& fileName)
 }
 std::string hs_file_get_resource_path(const std::string& relativePath)
 {
-    std::string absolutePath = hs_engine_get_context()->executableDirectory + std::string("/Resource/") + relativePath;
+    std::string absolutePath = std::string(hs_engine_get_context()->resourceDirectory) + relativePath;
+    
+    return absolutePath;
 }
 
 bool hs_file_is_absolute_path(const std::string& path)

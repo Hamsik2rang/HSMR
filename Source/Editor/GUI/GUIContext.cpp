@@ -10,27 +10,37 @@
 
 #include "Engine/Renderer/Renderer.h"
 
+#include <string>
+
 HS_NS_EDITOR_BEGIN
 
-GUIContext* s_guiContext;
+GUIContext* s_guiContext = nullptr;
+
+GUIContext::GUIContext()
+    : layoutFileName(std::string("imgui.ini"))
+    , _font{nullptr}
+    , _context(nullptr)
+{}
 
 GUIContext::~GUIContext()
 {
-     Finalize();
+    Finalize();
 }
-
 void GUIContext::Initialize()
 {
     IMGUI_CHECKVERSION();
     _context = ImGui::CreateContext();
+
     ImGuiIO& io = ImGui::GetIO();
+    
+    layoutFileName = "imgui.ini";
 
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows -> Metal+SDL3에서 지원 안함
-
-    io.IniFilename = hs_file_get_resource_path(iniFileName).c_str();
+    HS_LOG(debug, "%s", layoutFileName.c_str());
+    io.IniFilename = hs_file_get_resource_path(layoutFileName).c_str();
     chmod(io.IniFilename, S_IRWXU);
 
     // Setup style
@@ -41,9 +51,13 @@ void GUIContext::Initialize()
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-        style.WindowRounding = 0.0f;
+        style.WindowRounding              = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
+}
+void GUIContext::NextFrame()
+{
+    ImGui::NewFrame();
 }
 
 void GUIContext::Finalize()
@@ -59,15 +73,11 @@ void GUIContext::SetFont(std::string& fontPath, float fontSize)
 {
     ImGui::PopFont();
     ImGuiIO& io = ImGui::GetIO();
-    _font = io.Fonts->AddFontFromFileTTF(hs_file_get_resource_path(fontPath).c_str(), 18.0f);
+    _font       = io.Fonts->AddFontFromFileTTF(hs_file_get_resource_path(fontPath).c_str(), 18.0f);
 
     io.Fonts->Build();
 
     ImGui::PushFont(_font);
-}
-
-GUIContext* hs_editor_get_gui_context()
-{
 }
 
 HS_NS_EDITOR_END

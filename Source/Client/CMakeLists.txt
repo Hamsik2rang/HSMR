@@ -1,5 +1,7 @@
 set(TARGET_NAME Client)
 
+set(EXECUTABLE_NAME "HSMR")
+
 set(COMMON_SOURCES
     main.mm
 )
@@ -12,7 +14,7 @@ list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework Co
 
 set_target_properties(${TARGET_NAME} PROPERTIES
     XCODE_ATTRIBUTE_INSTALL_PATH "/Client"
-    OUTPUT_NAME "HSMR"
+    OUTPUT_NAME ${EXECUTABLE_NAME}
     RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
 )
 
@@ -29,6 +31,7 @@ target_compile_definitions(${TARGET_NAME} PUBLIC
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CLIENT
     HS_EDITOR_API_IMPORT
+    HS_EXECUTABLE_NAME=${EXECUTABLE_NAME}
 )
 
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)

@@ -11,11 +11,8 @@
 
 #include <typeinfo>
 
-#import <Metal/Metal.h>
-#import <simd/simd.h>
-
 #include "Engine/ThirdParty/ImGui/imgui.h"
-
+#include "Engine/Renderer/RenderDefinition.h"
 HS_NS_BEGIN
 
 class Renderer;
@@ -32,9 +29,9 @@ public:
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
-    virtual void Configure(id<MTLTexture> renderTarget) = 0;
+    virtual void Configure(RenderTexture* renderTarget) = 0;
 
-    virtual void Execute(id<MTLRenderCommandEncoder> renderEncoder) = 0;
+    virtual void Execute(RenderCommandEncoder* renderEncoder) = 0;
 
     virtual void OnAfterRendering() = 0;
     

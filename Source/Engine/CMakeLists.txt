@@ -30,7 +30,7 @@ list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(RENDERER_HEADERS
     Renderer/Renderer.h
-    Renderer/RHIDefinition.h
+    Renderer/RenderDefinition.h
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
@@ -38,6 +38,7 @@ list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
     Renderer/Renderer.mm
+    Renderer/RenderDefinition.mm
 )
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
@@ -63,12 +64,16 @@ list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 
 set(UTILITY_HEADERS
     Utility/ResourceManager.h
+    Utility/Timer.h
+    Utility/Geometry.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
 list(APPEND TOTAL_FILES ${UTILITY_HEADERS})
 set(UTILITY_SOURCES
     Utility/ResourceManager.cpp
+    Utility/Timer.h
+    Utility/Geometry.h
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
