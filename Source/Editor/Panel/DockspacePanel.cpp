@@ -21,7 +21,7 @@ void DockspacePanel::Cleanup()
 void DockspacePanel::Draw()
 {
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
-    ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoBackground;
+    ImGuiDockNodeFlags dockspaceFlags = 0;/*= ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoBackground*/
     
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
