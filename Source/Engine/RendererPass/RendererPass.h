@@ -13,19 +13,40 @@
 
 #include "Engine/ThirdParty/ImGui/imgui.h"
 #include "Engine/Renderer/RenderDefinition.h"
+
 HS_NS_BEGIN
 
+#define RHI_RESOURCE_BEGIN struct RendererPass::RHIResource {
+#define RHI_RESOURCE_END };
+
+
 class Renderer;
+class CommandBuffer;
+class RenderCommandEncoder;
+
+enum class ERenderingOrder
+{
+    INVALID = 0,
+    
+    
+    OPAQUE = 500,
+    SKYBOX = 600,
+    TRANSPARENT = 800,
+    
+    //...
+};
+
+constexpr bool operator<(ERenderingOrder lhs, ERenderingOrder rhs)
+{
+    return static_cast<uint16>(lhs) < static_cast<uint16>(rhs);
+}
 
 class RendererPass
 {
 public:
-    RendererPass(const char* name, Renderer* renderer, uint32 renderingOrder);
-    virtual ~RendererPass() = default;
-
-    virtual void Initialize() = 0;
+    RendererPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
     
-    virtual void Finalize() = 0;
+    virtual ~RendererPass() = default;
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
@@ -42,8 +63,14 @@ public:
     const char* name;
 
     uint32_t renderingOrder;
+    
+    static RendererPass* Create(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
 
 protected:
+    struct RHIResource;
+    RHIResource* _res;
+    
+    
     Renderer* _renderer;
     bool _isExecutable = true;
     size_t _submitIndex;

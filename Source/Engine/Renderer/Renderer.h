@@ -21,8 +21,11 @@ HS_NS_BEGIN
 class EngineContext;
 class RendererPass;
 class Scene;
+class Swapchain;
 
 struct NativeWindowHandle;
+
+extern const uint8 MAX_SUBMIT_INDEX;
 
 class Renderer
 {
@@ -32,11 +35,11 @@ public:
 
     virtual bool Initialize(const NativeWindowHandle* nativeHandle);
 
-    virtual void NextFrame();
+    virtual void NextFrame(Swapchain* swapchain);
 
     virtual void Render(const RenderParameter& param, RenderTexture* renderTarget);
 
-    virtual void Present();
+    virtual void Present(Swapchain* swapchain);
 
     void AddPass(RendererPass* pass)
     {

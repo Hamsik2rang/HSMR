@@ -51,20 +51,73 @@ struct RenderParameter
     // Render()호출에 던질 것들 전부 넣기
 };
 
-struct Texture
+struct TextureInfo
 {
-    EPixelFormat  format      = EPixelFormat::R8G8B8A8_UNORM;
-    ETextureType  type        = ETextureType::TEX_2D;
-    ETextureUsage usage       = ETextureUsage::UNKNOWN;
-    uint32        width       = 0;
-    uint32        height      = 0;
-    uint32        depth       = 1;
-    uint32        mipLevel    = 1;
-    uint32        arrayLength = 1;
+    EPixelFormat  format = EPixelFormat::R8G8B8A8_UNORM;
+    ETextureType  type   = ETextureType::TEX_2D;
+    ETextureUsage usage  = ETextureUsage::UNKNOWN;
+    struct
+    {
+        uint32 width  = 0;
+        uint32 height = 0;
+        uint32 depth  = 1;
+    } extent;
 
-    bool  isSwapchianTexture = false;
-    void* handle             = nullptr;
+    uint32 mipLevel    = 1;
+    uint32 arrayLength = 1;
+    size_t byteSize    = 0;
+
+    bool isCompressed         = false;
+    bool isSwapchianTexture   = false;
+    bool isDepthStencilBuffer = false;
+    bool useGenerateMipmap    = false;
 };
+
+enum class EFilterMode
+{
+    NEAREST,
+    LINEAR
+};
+
+enum class EAddressMode
+{
+    REPEAT          = 0,
+    MIRRORED_REPEAT = 1,
+    CLAMP_TO_EDGE   = 2,
+};
+
+struct SamplerInfo
+{
+    ETextureType type;
+    EFilterMode  minFilter;
+    EFilterMode  magFilter;
+    EFilterMode  mipFilter;
+    EAddressMode addressU;
+    EAddressMode addressV;
+    EAddressMode addressW;
+
+    uint16 mipLevels = 1;
+
+    bool isPixelCoordinate = false;
+};
+
+enum class EBufferUsage
+{
+    UNIFORM = 0x00000010,
+    INDEX   = 0x00000040,
+    VERTEX  = 0x00000080,
+    TEXEL   = 0x00000004,
+};
+
+enum class EBufferMemoryOption
+{
+    NOTHING,
+    MAPPED,
+    STATIC,
+    DYNAMIC
+};
+
+class Texture;
 
 struct RenderTexture
 {
@@ -75,10 +128,64 @@ struct RenderTexture
     Texture*              depthStencilBuffer;
 };
 
-struct RenderCommandEncoder
+struct SwapchainInfo
 {
-    
-    
+    EPixelFormat colorFormat;
+    EPixelFormat depthStencilFormat;
+    bool         useDepth;
+    bool         useStencil;
+    bool         useMSAA;
+
+    void* surface; // layer
+};
+
+enum class EStoreAction
+{
+    DONT_CARE,
+    STORE,
+};
+
+enum class ELoadAction
+{
+    DONT_CARE,
+    LOAD,
+    CLEAR,
+};
+
+struct Attachment
+{
+    EPixelFormat format;
+    ELoadAction  loadAction;
+    EStoreAction storeAction;
+    bool         isDepthStencil = false;
+};
+
+struct RenderPassInfo
+{
+    std::vector<Attachment> colorAttachments;
+    Attachment              depthStencilAttachment;
+    size_t                  colorAttachmentCount;
+
+    bool useDepthStencilAttachment = false;
+    bool isSwapchainRenderPass     = false;
+};
+
+class RenderPass;
+
+struct FramebufferInfo
+{
+    RenderPass*           renderPass;
+    std::vector<Texture*> colorBuffers;
+    Texture*              depthStencilBuffer;
+
+    uint32 width                  = 1;
+    uint32 height                 = 1;
+    bool   isSwapchainFramebuffer = false;
+};
+
+struct PipelineInfo
+{
+    //...
 };
 
 HS_NS_END

@@ -8,8 +8,5 @@
 
 HS_NS_BEGIN
 
-#define HTEXTURE(x) ((__bridge id<MTLTexture>)(x))
-#define HBUFFER(x) ((__bridge id<MTLBufer>)(x))
-
 
 HS_NS_END

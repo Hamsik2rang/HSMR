@@ -44,10 +44,8 @@ uint32 Window::Initialize()
 
     onInitialize();
     
-    
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
-    
 }
 
 void Window::NextFrame()

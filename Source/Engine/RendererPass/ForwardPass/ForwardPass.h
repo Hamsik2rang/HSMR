@@ -15,11 +15,10 @@ HS_NS_BEGIN
 class ForwardPass : public RendererPass
 {
 public:
-    ForwardPass(const char* name, Renderer* renderer, uint32 renderingOrder)
-    : RendererPass(name, renderer, renderingOrder)
-    {}
+    ForwardPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    ~ForwardPass() override {}
     
-private:
+protected:
     
     
 };

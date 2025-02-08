@@ -17,9 +17,8 @@ HS_NS_BEGIN
 class DebugPass : public RendererPass
 {
 public:
-    void Initialize() override;
-    
-    void Finalize() override;
+    DebugPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    ~DebugPass() = default;
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
@@ -30,6 +29,7 @@ public:
     void OnAfterRendering() override;
     
 private:
+
     
 };
 

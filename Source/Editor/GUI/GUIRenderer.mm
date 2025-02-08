@@ -47,7 +47,7 @@ bool GUIRenderer::Initialize(const NativeWindowHandle* nativeHandle)
     _renderPassDescriptor = [MTLRenderPassDescriptor new];
 }
 
-void GUIRenderer::NextFrame()
+void GUIRenderer::NextFrame(Swapchain* swapchain)
 {
     _submitIndex = (_submitIndex + 1) % MAX_SUBMIT_INDEX;
 
@@ -57,10 +57,7 @@ void GUIRenderer::NextFrame()
     SDL_GetWindowSizeInPixels(window, &width, &height);
     METAL_LAYER(_layer).drawableSize = CGSizeMake(width, height);
     _currentDrawable                 = [METAL_LAYER(_layer) nextDrawable];
-}
-
-void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
-{
+    
     _commandBuffer = [METAL_COMMAND_QUEUE(_commandQueue) commandBuffer];
 
     _renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
@@ -73,9 +70,12 @@ void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarg
     ImGui_ImplMetal_NewFrame(_renderPassDescriptor);
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-    
+}
+
+void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
+{
     // ... GUI
-    ImGui::ShowDemoWindow();
+//    ImGui::ShowDemoWindow();
 
     //    Renderer::renderDockingPanel();
 
@@ -93,7 +93,7 @@ void GUIRenderer::Render(const RenderParameter& param, RenderTexture* renderTarg
     [_renderEncoder endEncoding];
 }
 
-void GUIRenderer::Present()
+void GUIRenderer::Present(Swapchain* swapchain)
 {
     [_commandBuffer presentDrawable:_currentDrawable];
 

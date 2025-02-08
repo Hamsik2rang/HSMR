@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Engine/Core/EngineContext.h"
+#include "Engine/Renderer/RenderDefinition.h"
 
 #include <list>
 
@@ -19,6 +20,7 @@ HS_NS_BEGIN
 
 class Renderer;
 class Scene;
+class Swapchain;
 
 struct NativeWindowHandle
 {
@@ -65,10 +67,10 @@ public:
     Window(const char* name, uint32 width, uint32 height, uint64 flags);
     virtual ~Window();
 
-    void NextFrame();
-    void Update();
-    void Render();
-    void Present();
+    virtual void NextFrame();
+    virtual void Update();
+    virtual void Render();
+    virtual void Present();
 
     uint32 Initialize();
     void   Shutdown();
@@ -81,6 +83,7 @@ public:
     HS_FORCEINLINE bool                      PeekEvent(uint64 eventType, uint32 windowID);
     HS_FORCEINLINE bool                      IsOpened() { return !_shouldClose; }
     HS_FORCEINLINE void                      Close() { _shouldClose = true; }
+    HS_FORCEINLINE Swapchain*                GetSwapchain() { return _swapchain; }
 
 protected:
     virtual void dispatchEvent(uint64 eventType);
@@ -99,6 +102,8 @@ protected:
 
     Renderer* _renderer = nullptr;
     Scene*    _scene    = nullptr;
+
+    Swapchain* _swapchain = nullptr;
 
     const char* _name;
     uint32      _width;

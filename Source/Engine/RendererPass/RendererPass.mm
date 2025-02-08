@@ -13,12 +13,12 @@
 
 HS_NS_BEGIN
 
-RendererPass::RendererPass(const char* name, Renderer* renderer, uint32_t renderingOrder)
-    : name(name)
-    , _renderer(renderer)
-    , renderingOrder(renderingOrder)
-{
-}
+RHI_RESOURCE_BEGIN
+    id<MTLDevice> device;
+    id<MTLCommandQueue> cmdQueue;
+RHI_RESOURCE_END
+
+
 
 
 HS_NS_END

@@ -31,6 +31,11 @@ list(APPEND TOTAL_FILES ${CORE_SOURCES})
 set(RENDERER_HEADERS
     Renderer/Renderer.h
     Renderer/RenderDefinition.h
+    Renderer/Swapchain.h
+    Renderer/RenderPass.h
+    Renderer/Framebuffer.h
+    Renderer/Pipeline.h
+    Renderer/CommandHandle.h
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
@@ -39,6 +44,11 @@ list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 set(RENDERER_SOURCES
     Renderer/Renderer.mm
     Renderer/RenderDefinition.mm
+    Renderer/Swapchain.mm
+    Renderer/CommandHandle.mm
+    Renderer/RenderPass.mm
+    Renderer/Framebuffer.mm
+    Renderer/Pipeline.mm
 )
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
@@ -66,14 +76,16 @@ set(UTILITY_HEADERS
     Utility/ResourceManager.h
     Utility/Timer.h
     Utility/Geometry.h
+    Utility/Color.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
 list(APPEND TOTAL_FILES ${UTILITY_HEADERS})
 set(UTILITY_SOURCES
     Utility/ResourceManager.cpp
-    Utility/Timer.h
-    Utility/Geometry.h
+    Utility/Timer.cpp
+    Utility/Geometry.cpp
+    Utility/Color.cpp
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
