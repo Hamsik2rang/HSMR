@@ -4,8 +4,11 @@
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-
 #include "Engine/Renderer/Renderer.h"
+
+#include "Engine/Core/Log.h"
+#include "Engine/Core/Window.h"
+#include "Engine/Core/EngineContext.h"
 #include "Engine/RendererPass/RendererPass.h"
 #include "Engine/Core/Scene.h"
 
@@ -13,22 +16,29 @@
 #include "ImGui/backends/imgui_impl_sdl3.h"
 #include "ImGui/backends/imgui_impl_metal.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#import <Metal/Metal.h>
+#import <QuartzCore/QuartzCore.h>
 
 HS_NS_BEGIN
-
-ImFont* g_guiFont = nullptr;
-
-Renderer::Renderer(SDL_Window* window)
-    : _window(window)
+namespace
 {
-    _view = SDL_Metal_CreateView(window);
-    _layer = (__bridge CAMetalLayer*)SDL_Metal_GetLayer(_view);
-    _device = MTLCreateSystemDefaultDevice();
+id<MTLDevice>       s_device;
+id<MTLCommandQueue> s_commandQueue;
+CAMetalLayer*       s_layer;
 
-    _layer.device = _device;
-    _layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+// TODO: 테스트용 임시
+//    id<MTLDevice> _device;
+//    id<MTLCommandQueue> _commandQueue;
+id<MTLCommandBuffer>        _commandBuffer;
+id<MTLRenderCommandEncoder> _renderEncoder;
+
+id<MTLTexture>           _renderTarget[Renderer::MAX_SUBMIT_INDEX];
+id<CAMetalDrawable>      _currentDrawable;
+MTLRenderPassDescriptor* _renderPassDescriptor;
+} // namespace
+
+Renderer::Renderer()
+{
 }
 
 Renderer::~Renderer()
@@ -36,26 +46,38 @@ Renderer::~Renderer()
     Shutdown();
 }
 
-bool Renderer::Init()
+bool Renderer::Init(const NativeWindowHandle* nativeHandle)
 {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    
+    SDL_Window* window = static_cast<SDL_Window*>(nativeHandle->window);
 
-    ImGui_ImplSDL3_InitForMetal(_window);
-    ImGui_ImplMetal_Init(_device);
+    _view    = SDL_Metal_CreateView(window);
+    _layer   = SDL_Metal_GetLayer(_view);
+    s_layer  = (__bridge CAMetalLayer*)_layer;
+    s_device = MTLCreateSystemDefaultDevice();
 
-    _commandQueue = [_layer.device newCommandQueue];
-    if (_commandQueue == nil)
+    s_layer.device      = s_device;
+    s_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+
+    ImGui_ImplSDL3_InitForMetal(window);
+    ImGui_ImplMetal_Init(s_device);
+
+    s_commandQueue = [s_layer.device newCommandQueue];
+    if (s_commandQueue == nil)
     {
         return false;
     }
 
-    _renderPassDescriptor = [MTLRenderPassDescriptor new];
+    //    _renderPassDescriptor = [MTLRenderPassDescriptor new];
 
     _isInitialized = true;
 
     return _isInitialized;
+}
+
+bool Renderer::InitGUIBackend(SDL_Window* window)
+{
+    ImGui_ImplSDL3_InitForMetal(window);
+    ImGui_ImplMetal_Init(s_device);
 }
 
 void Renderer::NextFrame()
@@ -65,19 +87,19 @@ void Renderer::NextFrame()
     int width, height;
 
     SDL_GetWindowSizeInPixels(_window, &width, &height);
-    _layer.drawableSize = CGSizeMake(width, height);
-    _currentDrawable = [_layer nextDrawable];
+    s_layer.drawableSize = CGSizeMake(width, height);
+    _currentDrawable     = [s_layer nextDrawable];
 }
 
 void Renderer::Render(Scene* scene)
 {
-    _commandBuffer = [_commandQueue commandBuffer];
+    _commandBuffer = [s_commandQueue commandBuffer];
 
-    _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.5f, 0.5f, 0.5f, 1.0f);
-    _renderPassDescriptor.colorAttachments[0].texture = _currentDrawable.texture;
-    _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    _renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.5f, 0.5f, 0.5f, 1.0f);
+    _renderPassDescriptor.colorAttachments[0].texture     = _currentDrawable.texture;
+    _renderPassDescriptor.colorAttachments[0].loadAction  = MTLLoadActionClear;
     _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    _renderEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
+    _renderEncoder                                        = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
 
     [_renderEncoder pushDebugGroup:@"Scene Rendering"];
 
@@ -102,22 +124,20 @@ void Renderer::Render(Scene* scene)
     }
 
     [_renderEncoder popDebugGroup];
-    
+
     // GUI
     [_renderEncoder pushDebugGroup:@"GUI Rendering"];
 
     ImGui_ImplMetal_NewFrame(_renderPassDescriptor);
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-    
-    ImGui::PushFont(g_guiFont);
-    
+
     renderDockingPanel();
     // ... GUI
     ImGui::ShowDemoWindow();
 
     ImGui::PopFont();
-    
+
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), _commandBuffer, _renderEncoder);
 
@@ -128,7 +148,7 @@ void Renderer::Render(Scene* scene)
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
     }
-    
+
     [_renderEncoder popDebugGroup];
     [_renderEncoder endEncoding];
 }
@@ -142,13 +162,8 @@ void Renderer::Present()
 
 void Renderer::Shutdown()
 {
-    // Cleanup
-    ImGui_ImplMetal_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-
-    SDL_Metal_DestroyView(_view);
-    SDL_DestroyWindow(_window);
+    //    SDL_Metal_DestroyView(_view);
+    //    SDL_DestroyWindow(_window);
 
     for (auto* pass : _rendererPasses)
     {
@@ -157,9 +172,10 @@ void Renderer::Shutdown()
     _isInitialized = false;
 }
 
-void Renderer::SetFont(void* font)
+void Renderer::ShutdownGUIBackend()
 {
-    g_guiFont = static_cast<ImFont*>(font);
+    ImGui_ImplMetal_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
 }
 
 void Renderer::renderDockingPanel()
@@ -179,8 +195,8 @@ void Renderer::renderDockingPanel()
     // - (4) we have a local menu bar in the host window (vs. you could use BeginMainMenuBar() + DockSpaceOverViewport()
     //      in your code, but we don't here because we allow the window to be floating)
 
-    static bool opt_fullscreen = true;
-    static bool opt_padding = false;
+    static bool               opt_fullscreen  = true;
+    static bool               opt_padding     = false;
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
@@ -236,31 +252,31 @@ void Renderer::renderDockingPanel()
         {
             // Disabling fullscreen would allow the window to be moved to the front of other windows,
             // which we can't undo at the moment without finer window depth/z control.
-//            ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-//            ImGui::MenuItem("Padding", NULL, &opt_padding);
+            //            ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+            //            ImGui::MenuItem("Padding", NULL, &opt_padding);
             ImGui::Separator();
 
             if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
-            if (ImGui::MenuItem("Flag: NoDockingSplit",         "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0))             { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
-            if (ImGui::MenuItem("Flag: NoUndocking",            "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0))                { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
-            if (ImGui::MenuItem("Flag: NoResize",               "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                   { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
-            if (ImGui::MenuItem("Flag: AutoHideTabBar",         "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))             { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
-            if (ImGui::MenuItem("Flag: PassthruCentralNode",    "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
+            if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
+            if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
+            if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
+            if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
+            if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
             ImGui::Separator();
 
             if (ImGui::MenuItem("Close", NULL, false))
                 open = false;
             ImGui::EndMenu();
         }
-//        HelpMarker(
-//            "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n"
-//            "- Drag from window title bar or their tab to dock/undock." "\n"
-//            "- Drag from window menu button (upper-left button) to undock an entire node (all windows)." "\n"
-//            "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift == false, default)" "\n"
-//            "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift == true)" "\n"
-//            "This demo app has nothing to do with enabling docking!" "\n\n"
-//            "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window." "\n\n"
-//            "Read comments in ShowExampleAppDockSpace() for more details.");
+        //        HelpMarker(
+        //            "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n"
+        //            "- Drag from window title bar or their tab to dock/undock." "\n"
+        //            "- Drag from window menu button (upper-left button) to undock an entire node (all windows)." "\n"
+        //            "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift == false, default)" "\n"
+        //            "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift == true)" "\n"
+        //            "This demo app has nothing to do with enabling docking!" "\n\n"
+        //            "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window." "\n\n"
+        //            "Read comments in ShowExampleAppDockSpace() for more details.");
 
         ImGui::EndMenuBar();
     }

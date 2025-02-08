@@ -1,9 +1,3 @@
-//
-//  Scene.cpp
-//  HSMR
-//
-//  Created by Yongsik Im on 2/2/25.
-//
 #include "Scene.h"
 
 

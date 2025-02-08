@@ -16,6 +16,8 @@ HS_NS_EDITOR_BEGIN
 class GUIRenderer : public Renderer
 {
 public:
+    GUIRenderer();
+    ~GUIRenderer();
     
     
 };

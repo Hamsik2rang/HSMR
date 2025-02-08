@@ -6,8 +6,6 @@
 //
 #include "Engine/Object/Image.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
 
 HS_NS_BEGIN
 

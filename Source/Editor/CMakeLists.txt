@@ -3,7 +3,8 @@ set(TARGET_NAME Editor)
 set(TOTAL_FILES)
 
 set(CORE_HEADERS
-    Core/EditorContext.h
+    Core/EditorApplication.h
+    Core/EditorWindow.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
@@ -11,7 +12,8 @@ source_group("Core\\Public" FILES ${CORE_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
-    Core/EditorContext.cpp
+    Core/EditorApplication.cpp
+    Core/EditorWindow.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})
@@ -29,7 +31,7 @@ list(APPEND TOTAL_FILES ${GUI_HEADERS})
 
 set(GUI_SOURCES
     GUI/GUIContext.cpp
-    GUI/GUIRenderer.cpp
+    GUI/GUIRenderer.mm
 )
 
 list(APPEND TOTAL_FILES ${GUI_SOURCES})

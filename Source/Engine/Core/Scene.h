@@ -9,15 +9,18 @@
 
 #include "Precompile.h"
 
+#include <vector>
+
 HS_NS_BEGIN
 
 class Scene
 {
 public:
     
+    void Update();
     
 private:
-    
+    std::vector<Scene*> _next;
     
 };
 
