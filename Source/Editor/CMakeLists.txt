@@ -39,7 +39,10 @@ list(APPEND TOTAL_FILES ${GUI_SOURCES})
 source_group("GUI\\Private" FILES ${GUI_SOURCES})
 
 set(PANEL_HEADERS
-    Panel/BasePanel.h
+    Panel/Panel.h
+    Panel/DockspacePanel.h
+    Panel/ScenePanel.h
+    Panel/InspectorPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -47,7 +50,10 @@ source_group("Panel\\Public" FILES ${PANEL_HEADERS})
 list(APPEND TOTAL_FILES ${PANEL_HEADERS})
 
 set(PANEL_SOURCES
-    Panel/BasePanel.cpp
+    Panel/Panel.cpp
+    Panel/DockspacePanel.cpp
+    Panel/ScenePanel.cpp
+    Panel/InspectorPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

@@ -10,17 +10,19 @@
 #include "Precompile.h"
 #include "ForwardPass.h"
 
+#include "Engine/REnderer/ResourceHandle.h"
+
 HS_NS_BEGIN
+
+class RenderPass;
+class Framebuffer;
+class Pipeline;
 
 class ForwardOpaquePass : public ForwardPass
 {
 public:
-    ForwardOpaquePass(const char* name, Renderer* renderer, uint32_t renderingOrder);
+    ForwardOpaquePass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
     ~ForwardOpaquePass() override;
-    
-    void Initialize() override;
-    
-    void Finalize() override;
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
@@ -30,10 +32,11 @@ public:
     
     void OnAfterRendering() override;
     
-    
 private:
+   
+    void createResourceHandles();
     
-    RenderTexture* _currentRenderTarget;
+    RenderTexture* _currentRenderTexture;
 
 };
 

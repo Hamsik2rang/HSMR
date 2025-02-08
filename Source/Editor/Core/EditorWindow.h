@@ -14,6 +14,8 @@
 
 HS_NS_EDITOR_BEGIN
 
+class Panel;
+
 class GUIRenderer;
 
 
@@ -23,6 +25,8 @@ public:
     EditorWindow(const char* name, uint32 width, uint32 height, uint64 flags);
     ~EditorWindow() override;
     
+    void Render() override;
+    
 private:
     bool onInitialize() override;
     void onNextFrame() override;
@@ -30,6 +34,11 @@ private:
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
+    void onRenderGUI();
+    
+    
+    GUIRenderer* _guiRenderer;
+    Panel* _basePanel;
 };
 
 

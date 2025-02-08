@@ -24,7 +24,7 @@ GUIContext::GUIContext()
 
 GUIContext::~GUIContext()
 {
-    Finalize();
+    
 }
 void GUIContext::Initialize()
 {

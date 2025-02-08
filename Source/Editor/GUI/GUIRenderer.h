@@ -24,11 +24,10 @@ public:
     ~GUIRenderer();
     
     bool Initialize(const NativeWindowHandle* nativeHandle) override;
-    void NextFrame() override;
+    void NextFrame(Swapchain* swapchain) override;
     void Render(const RenderParameter& params, RenderTexture* renderTarget) override;
-    void Present() override;
+    void Present(Swapchain* swapchain) override;
     void Shutdown() override;
-    
     
 };
 
