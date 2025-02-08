@@ -14,13 +14,22 @@
 
 HS_NS_EDITOR_BEGIN
 
+class GUIContext;
+
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
+    EditorApplication(const std::string& appName);
+    ~EditorApplication() override;
     
+    bool Initialize(EngineContext* engineContext) override;
+    void Run() override;
+    void Finalize() override;
     
 private:
+    GUIContext* _guiContext;
     
+    float _deltaTime = 0.0f;
 };
 
 HS_NS_EDITOR_END

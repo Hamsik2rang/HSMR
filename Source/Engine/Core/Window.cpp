@@ -12,14 +12,16 @@ Window::Window(const char* name, uint32 width, uint32 height, uint64 flags)
     , _height(height)
     , _flags(flags)
     , _resizable(false)
+    , _isClosed(false)
     , _shouldClose(false)
     , _useHDR(false)
     , _renderer(nullptr)
+    , _scene(nullptr)
 {}
 
 Window::~Window()
 {
-    
+    Shutdown();
 }
 
 uint32 Window::Initialize()
@@ -28,7 +30,7 @@ uint32 Window::Initialize()
     if (nullptr == window)
     {
         HS_LOG(error, "Window Initialize Failed");
-        return HS_INVALID_WINDOW_ID;
+        return HS_WINDOW_INVALID_ID;
     }
 
     _resizable = (_flags & SDL_WINDOW_RESIZABLE);
@@ -39,6 +41,13 @@ uint32 Window::Initialize()
     _nativeHandle.window = static_cast<void*>(window);
     _nativeHandle.view   = static_cast<void*>(view);
     _nativeHandle.layer  = SDL_Metal_GetLayer(view);
+
+    onInitialize();
+    
+    
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_ShowWindow(window);
+    
 }
 
 void Window::NextFrame()
@@ -85,16 +94,8 @@ void Window::Present()
     }
 }
 
-// Shutdown은 Postorder로 진행
 void Window::Shutdown()
 {
-    for (auto* child : _childs)
-    {
-        child->Shutdown();
-    }
-
-    _childs.clear();
-
     onShutdown();
 
     if (nullptr != _nativeHandle.view)
@@ -107,6 +108,8 @@ void Window::Shutdown()
         SDL_DestroyWindow(static_cast<SDL_Window*>(_nativeHandle.window));
         _nativeHandle.window = nullptr;
     }
+
+    _isClosed = true;
 }
 
 bool Window::PeekEvent(uint64 eventType, uint32 windowID)
@@ -155,9 +158,32 @@ void Window::Flush()
         Shutdown();
     }
 
+    // 트리 순회하면서 자식들 중에 close된 애들 해제 후 리스트에서 삭제
+    std::list<Window*> deletedChilds(_childs.size());
     for (auto* child : _childs)
     {
         child->Flush();
+        if (child->_isClosed)
+        {
+            deletedChilds.push_back(child);
+        }
+    }
+
+    for (auto* child : deletedChilds)
+    {
+        for (auto* grandChild : child->_childs)
+        {
+            if(!grandChild->_isClosed)
+            {
+                _childs.push_back(grandChild);
+            }
+        }
+        _childs.remove(child);
+    }
+
+    for (auto* delChild : deletedChilds)
+    {
+        delete delChild;
     }
 }
 

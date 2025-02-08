@@ -22,23 +22,21 @@ class Window;
 class Application
 {
 public:
-    Application() {}
-    virtual ~Application();
-    
-    virtual void Init(EngineContext* engineContext);
-    virtual void Run();
-    virtual void Shutdown();
-    
+    Application(const std::string& appName)
+        : _name(appName)
+    {}
+    virtual ~Application() {}
+
+    virtual bool Initialize(EngineContext* engineContext) = 0;
+    virtual void Run()                                    = 0;
+    virtual void Finalize()                               = 0;
+
 protected:
-    void update(float dt);
-    void render();
-    void renderGUI();
-    
-    Renderer* _renderer;
-    Scene* _scene;
-    Window* _window;
-    
-    bool _isInitialized = false;
+    std::string _name;
+
+    EngineContext* _engineContext;
+    Window*        _window;
+    bool           _isInitialized = false;
 };
 
 HS_NS_END

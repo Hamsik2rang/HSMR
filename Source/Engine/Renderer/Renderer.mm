@@ -46,26 +46,27 @@ Renderer::~Renderer()
     Shutdown();
 }
 
-bool Renderer::Init(const NativeWindowHandle* nativeHandle)
+bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
 {
-    SDL_Window* window = static_cast<SDL_Window*>(nativeHandle->window);
+    _window = nativeHandle->window;
+    _view    = nativeHandle->view;
+    _layer   = nativeHandle->layer;
+    
+    SDL_Window* window = static_cast<SDL_Window*>(_window);
 
-    _view    = SDL_Metal_CreateView(window);
-    _layer   = SDL_Metal_GetLayer(_view);
     s_layer  = (__bridge CAMetalLayer*)_layer;
     s_device = MTLCreateSystemDefaultDevice();
+    _rhiDevice = (__bridge void*)s_device;
 
     s_layer.device      = s_device;
     s_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-
-    ImGui_ImplSDL3_InitForMetal(window);
-    ImGui_ImplMetal_Init(s_device);
 
     s_commandQueue = [s_layer.device newCommandQueue];
     if (s_commandQueue == nil)
     {
         return false;
     }
+    _commandQueue = (__bridge void*)s_commandQueue;
 
     //    _renderPassDescriptor = [MTLRenderPassDescriptor new];
 
@@ -74,83 +75,14 @@ bool Renderer::Init(const NativeWindowHandle* nativeHandle)
     return _isInitialized;
 }
 
-bool Renderer::InitGUIBackend(SDL_Window* window)
-{
-    ImGui_ImplSDL3_InitForMetal(window);
-    ImGui_ImplMetal_Init(s_device);
-}
-
 void Renderer::NextFrame()
 {
-    _submitIndex = (_submitIndex + 1) % MAX_SUBMIT_INDEX;
-
-    int width, height;
-
-    SDL_GetWindowSizeInPixels(_window, &width, &height);
-    s_layer.drawableSize = CGSizeMake(width, height);
-    _currentDrawable     = [s_layer nextDrawable];
+   
 }
 
-void Renderer::Render(Scene* scene)
+void Renderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
 {
-    _commandBuffer = [s_commandQueue commandBuffer];
-
-    _renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.5f, 0.5f, 0.5f, 1.0f);
-    _renderPassDescriptor.colorAttachments[0].texture     = _currentDrawable.texture;
-    _renderPassDescriptor.colorAttachments[0].loadAction  = MTLLoadActionClear;
-    _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    _renderEncoder                                        = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
-
-    [_renderEncoder pushDebugGroup:@"Scene Rendering"];
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnBeforeRendering(_submitIndex);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->Configure(_renderTarget[_submitIndex]);
-
-        if (pass->IsExecutable())
-        {
-            pass->Execute(_renderEncoder);
-        }
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnAfterRendering();
-    }
-
-    [_renderEncoder popDebugGroup];
-
-    // GUI
-    [_renderEncoder pushDebugGroup:@"GUI Rendering"];
-
-    ImGui_ImplMetal_NewFrame(_renderPassDescriptor);
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-
-    renderDockingPanel();
-    // ... GUI
-    ImGui::ShowDemoWindow();
-
-    ImGui::PopFont();
-
-    ImGui::Render();
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), _commandBuffer, _renderEncoder);
-
-    ImGuiIO& io = ImGui::GetIO();
-    // Update and Render additional Platform Windows
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-    }
-
-    [_renderEncoder popDebugGroup];
-    [_renderEncoder endEncoding];
+   
 }
 
 void Renderer::Present()
@@ -165,17 +97,11 @@ void Renderer::Shutdown()
     //    SDL_Metal_DestroyView(_view);
     //    SDL_DestroyWindow(_window);
 
-    for (auto* pass : _rendererPasses)
-    {
-        delete pass;
-    }
+//    for (auto* pass : _rendererPasses)
+//    {
+//        delete pass;
+//    }
     _isInitialized = false;
-}
-
-void Renderer::ShutdownGUIBackend()
-{
-    ImGui_ImplMetal_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
 }
 
 void Renderer::renderDockingPanel()

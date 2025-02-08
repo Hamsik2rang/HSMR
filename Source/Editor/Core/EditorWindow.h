@@ -14,18 +14,14 @@
 
 HS_NS_EDITOR_BEGIN
 
-class GUIContext;
+class GUIRenderer;
+
 
 class HS_EDITOR_API EditorWindow : public Window
 {
 public:
     EditorWindow(const char* name, uint32 width, uint32 height, uint64 flags);
     ~EditorWindow() override;
-    
-    void NextFrame() override;
-    void Update() override;
-    void Render() override;
-    void Present() override;
     
 private:
     bool onInitialize() override;
@@ -34,8 +30,6 @@ private:
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
-    
-    GUIContext* _guiContext;
 };
 
 

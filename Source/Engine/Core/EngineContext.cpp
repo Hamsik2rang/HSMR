@@ -4,15 +4,13 @@
 #include "Engine/Core/FileSystem.h"
 
 #include <SDL3/SDL.h>
+#include <string>
 
 HS_NS_BEGIN
 
-namespace
-{
-EngineContext* s_engineContext;
-};
+static EngineContext* s_engineContext;
 
-EngineContext* hs_engine_initialize_context()
+EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rhiPlatform)
 {
     if (nullptr != s_engineContext)
     {
@@ -34,15 +32,13 @@ EngineContext* hs_engine_initialize_context()
     // Enable native IME.
     SDL_SetHint(SDL_HINT_IME_IMPLEMENTED_UI, "1");
 
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL+Metal example", 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
-    if (window == nullptr)
-    {
-        printf("Error creating window: %s\n", SDL_GetError());
-        return nullptr;
-    }
+    s_engineContext                      = new EngineContext();
+    s_engineContext->name                = name;
+    s_engineContext->rhiPlatform         = rhiPlatform;
+    s_engineContext->executableDirectory = SDL_GetBasePath();
+    s_engineContext->executablePath      = s_engineContext->name + s_engineContext->executableDirectory;
+    s_engineContext->resourceDirectory   = s_engineContext->executableDirectory + std::string("/Resource/");
 
-    s_engineContext = new EngineContext();
-    
     return s_engineContext;
 }
 
@@ -53,12 +49,17 @@ EngineContext* hs_engine_get_context()
         return s_engineContext;
     }
 
-    HS_LOG(error, "Engine Context isn't initialized.");
+    HS_LOG(crash, "Engine Context isn't initialized.");
 
     return nullptr;
 }
 
-EngineContext* hs_engine_finalize_context()
+void hs_engine_set_context(EngineContext* context)
+{
+    s_engineContext = context;
+}
+
+EngineContext* hs_engine_destroy_context()
 {
     SDL_Quit();
 

@@ -8,11 +8,11 @@
 #define __HS_GUI_CONTEXT_H__
 
 #include "Precompile.h"
-#include "ImGui/imgui.h"
 
 #include <string>
 
 class ImGuiContext;
+class ImFont;
 
 namespace HS
 {
@@ -24,11 +24,13 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API GUIContext
 {
 public:
-    GUIContext() = default;
+    GUIContext();
     ~GUIContext();
 
     void Initialize();
     void Finalize();
+    
+    void NextFrame();
 
     void SetColorTheme(bool useWhite);
     void SetFont(std::string& fontPath, float fontSize = 18.0f);
@@ -36,10 +38,8 @@ public:
 private:
     ImGuiContext* _context;
     ImFont* _font;
-    std::string iniFileName = "imgui.ini";
+    std::string layoutFileName;
 };
-
-GUIContext* hs_editor_get_gui_context();
 
 HS_NS_EDITOR_END
 

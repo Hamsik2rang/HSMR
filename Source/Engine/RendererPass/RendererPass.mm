@@ -10,6 +10,7 @@
 
 #import <Metal/Metal.h>
 
+
 HS_NS_BEGIN
 
 RendererPass::RendererPass(const char* name, Renderer* renderer, uint32_t renderingOrder)

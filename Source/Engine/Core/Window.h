@@ -15,9 +15,10 @@
 
 HS_NS_BEGIN
 
-#define HS_INVALID_WINDOW_ID HS_UINT32_MAX
+#define HS_WINDOW_INVALID_ID HS_UINT32_MAX
 
 class Renderer;
+class Scene;
 
 struct NativeWindowHandle
 {
@@ -32,6 +33,8 @@ public:
     // Same with SDL_WindowFlags.
     enum class EFlags : uint64
     {
+        NONE = 0,
+
         WINDOW_FULLSCREEN          = HS_BIT(0), /**< window is in fullscreen mode */
         WINDOW_OPENGL              = HS_BIT(1), /**< window usable with OpenGL context */
         WINDOW_OCCLUDED            = HS_BIT(2),
@@ -62,10 +65,10 @@ public:
     Window(const char* name, uint32 width, uint32 height, uint64 flags);
     virtual ~Window();
 
-    virtual void NextFrame();
-    virtual void Update();
-    virtual void Render();
-    virtual void Present();
+    void NextFrame();
+    void Update();
+    void Render();
+    void Present();
 
     uint32 Initialize();
     void   Shutdown();
@@ -76,11 +79,13 @@ public:
     HS_FORCEINLINE uint32                    GetWindowID() { return _id; }
     HS_FORCEINLINE uint64                    GetFlags() { return _flags; }
     HS_FORCEINLINE bool                      PeekEvent(uint64 eventType, uint32 windowID);
+    HS_FORCEINLINE bool                      IsOpened() { return !_shouldClose; }
+    HS_FORCEINLINE void                      Close() { _shouldClose = true; }
 
 protected:
     virtual void dispatchEvent(uint64 eventType);
 
-    virtual bool onInitialize() {};
+    virtual bool onInitialize(){};
     virtual void onNextFrame() {}
     virtual void onUpdate() {}
     virtual void onRender() {}
@@ -93,6 +98,7 @@ protected:
     NativeWindowHandle _nativeHandle;
 
     Renderer* _renderer = nullptr;
+    Scene*    _scene    = nullptr;
 
     const char* _name;
     uint32      _width;
@@ -101,14 +107,36 @@ protected:
     uint32      _id;
 
     bool _shouldClose;
+    bool _isClosed;
     bool _resizable;
     bool _useHDR;
-    
 };
 
 constexpr Window::EFlags operator&(Window::EFlags lhs, Window::EFlags rhs)
 {
     return static_cast<Window::EFlags>(static_cast<uint64>(lhs) & static_cast<uint64>(rhs));
+}
+
+constexpr Window::EFlags& operator&=(Window::EFlags& lhs, Window::EFlags rhs)
+{
+    lhs = lhs & rhs;
+    return lhs;
+}
+
+constexpr Window::EFlags operator|(Window::EFlags lhs, Window::EFlags rhs)
+{
+    return static_cast<Window::EFlags>(static_cast<uint64>(lhs) | static_cast<uint64>(rhs));
+}
+
+constexpr Window::EFlags operator|(Window::EFlags lhs, uint64 rhs)
+{
+    return lhs | static_cast<Window::EFlags>(rhs);
+}
+
+constexpr Window::EFlags& operator|=(Window::EFlags& lhs, Window::EFlags rhs)
+{
+    lhs = lhs | rhs;
+    return lhs;
 }
 
 HS_NS_END

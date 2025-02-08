@@ -24,16 +24,16 @@ public:
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
-    void Configure(id<MTLTexture> renderTarget) override;
+    void Configure(RenderTexture* renderTarget) override;
     
-    void Execute(id<MTLRenderCommandEncoder> renderEncoder) override;
+    void Execute(RenderCommandEncoder* renderEncoder) override;
     
     void OnAfterRendering() override;
     
     
 private:
     
-    id<MTLTexture> _currentRenderTarget;
+    RenderTexture* _currentRenderTarget;
 
 };
 
