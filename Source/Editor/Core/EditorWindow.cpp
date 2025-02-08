@@ -77,7 +77,7 @@ void EditorWindow::onRenderGUI()
 {
     _basePanel->Draw(); // Draw panel tree.
     
-//    _guiRenderer->Render({}, _swapchain->);
+    _guiRenderer->Render({}, nullptr);
 }
 
 HS_NS_EDITOR_END
