@@ -39,7 +39,7 @@ void GUIContext::Initialize()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows -> Metal+SDL3에서 지원 안함
-    HS_LOG(debug, "%s", layoutFileName.c_str());
+
     io.IniFilename = hs_file_get_resource_path(layoutFileName).c_str();
     chmod(io.IniFilename, S_IRWXU);
 
@@ -54,6 +54,9 @@ void GUIContext::Initialize()
         style.WindowRounding              = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
+    
+    std::string fontName ="OpenSans-Regular.ttf";
+    SetFont(fontName, 18.0f);
 }
 void GUIContext::NextFrame()
 {
@@ -69,15 +72,13 @@ void GUIContext::SetColorTheme(bool useWhite)
 {
 }
 
-void GUIContext::SetFont(std::string& fontPath, float fontSize)
+// Font Push/Pop 어떻게?
+void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
-    ImGui::PopFont();
     ImGuiIO& io = ImGui::GetIO();
     _font       = io.Fonts->AddFontFromFileTTF(hs_file_get_resource_path(fontPath).c_str(), 18.0f);
 
     io.Fonts->Build();
-
-    ImGui::PushFont(_font);
 }
 
 HS_NS_EDITOR_END

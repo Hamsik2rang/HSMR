@@ -33,7 +33,7 @@ public:
     void NextFrame();
 
     void SetColorTheme(bool useWhite);
-    void SetFont(std::string& fontPath, float fontSize = 18.0f);
+    void SetFont(const std::string& fontPath, float fontSize = 18.0f);
 
 private:
     ImGuiContext* _context;
