@@ -1,8 +1,1 @@
-//
-//  InspectorPanel.cpp
-//  Editor
-//
-//  Created by Yongsik Im on 2/8/25.
-//
-
-#include <stdio.h>
+#include "Editor/Panel/InspectorPanel.h"

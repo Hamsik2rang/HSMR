@@ -31,9 +31,10 @@ public:
     
     void SetShader(Shader* shader);
     void SetShaderParameter(const char* name);
+    
 private:
     Shader* _shader;
-    
+
 };
 
 

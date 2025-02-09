@@ -15,11 +15,19 @@ HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API InspectorPanel : public Panel
 {
-    
-    
-    
-};
+public:
+    InspectorPanel(Window* window)
+        : Panel(window)
+    {}
+    ~InspectorPanel() override;
 
+    bool Setup() override;
+    void Cleanup() override;
+
+    void Draw() override;
+
+private:
+};
 
 HS_NS_EDITOR_END
 

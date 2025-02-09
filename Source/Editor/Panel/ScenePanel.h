@@ -8,7 +8,6 @@
 #ifndef __HS_SCENE_PANEL_H__
 #define __HS_SCENE_PANEL_H__
 
-
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
@@ -18,18 +17,18 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API ScenePanel : public Panel
 {
 public:
-    ScenePanel();
+    ScenePanel(Window* window)
+        : Panel(window)
+    {}
     ~ScenePanel() override;
-    
+
     bool Setup() override;
     void Cleanup() override;
-    
-    void Draw() override;
-    
-private:
-    
-};
 
+    void Draw() override;
+
+private:
+};
 
 HS_NS_EDITOR_END
 

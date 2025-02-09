@@ -13,7 +13,7 @@
 
 HS_NS_BEGIN
 
-class Pipeline : public RenderHandle
+class Pipeline : public RHIHandle
 {
 public:
     Pipeline();

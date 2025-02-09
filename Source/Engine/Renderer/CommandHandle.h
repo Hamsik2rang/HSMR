@@ -13,7 +13,7 @@
 
 HS_NS_BEGIN
 
-class CommandBuffer : public RenderHandle
+class CommandBuffer : public RHIHandle
 {
 public:
     

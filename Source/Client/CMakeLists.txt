@@ -3,8 +3,10 @@ set(TARGET_NAME Client)
 set(EXECUTABLE_NAME "HSMR")
 
 set(COMMON_SOURCES
-    main.mm
+    main.cpp
 )
+
+source_group("Entry" FILES ${COMMON_SOURCES})
 
 add_executable(${TARGET_NAME}
     ${COMMON_SOURCES}

@@ -28,26 +28,24 @@ public:
         COMPUTE
     };
 
-    Shader(EStage stage)
-        : Object(Object::EType::SHADER)
-        , _byteCode(nullptr)
-        , _byteSize(0)
-        , _stage(stage)
-    {}
-    
-    Shader(EStage stage, const char* path);
-    Shader(EStage stage, const char* byteCocde, size_t byteSize);
-    
+    Shader(EStage stage, const char* path, const char* entryName, bool isBuiltIn = true);
+    Shader(EStage stage, const char* byteCocde, size_t byteSize, const char* entryName, bool isBuitIn = true);
+
     ~Shader() override;
 
     const char* GetByteCode() { return _byteCode; }
-    size_t GetByteSize() { return _byteSize; }
-    EStage GetStage() { return _stage; }
+    const char* GetEntryName() { return _entryName; }
+    size_t      GetByteSize() { return _byteSize; }
+    EStage      GetStage() { return _stage; }
 
 private:
+    void loadShader();
+    
+    bool        _isBuiltIn;
     const char* _byteCode;
-    size_t _byteSize;
-    EStage _stage;
+    const char* _entryName;
+    size_t      _byteSize;
+    EStage      _stage;
 };
 
 HS_NS_END

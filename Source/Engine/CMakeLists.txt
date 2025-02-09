@@ -36,6 +36,7 @@ set(RENDERER_HEADERS
     Renderer/Framebuffer.h
     Renderer/Pipeline.h
     Renderer/CommandHandle.h
+    Renderer/ResourceHandle.h
     Renderer/RHIUtility.h
 )
 
@@ -46,10 +47,11 @@ set(RENDERER_SOURCES
     Renderer/Renderer.mm
     Renderer/RenderDefinition.mm
     Renderer/Swapchain.mm
-    Renderer/CommandHandle.mm
     Renderer/RenderPass.mm
     Renderer/Framebuffer.mm
     Renderer/Pipeline.mm
+    Renderer/CommandHandle.mm
+    Renderer/ResourceHandle.h
     Renderer/RHIUtility.mm
 )
 

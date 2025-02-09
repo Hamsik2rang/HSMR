@@ -11,8 +11,6 @@
 #include <simd/simd.h>
 
 #if defined(HS_SHADER_FILE)
-    #include <metal_stdlib>
-
     #define ATTR_NUM(x) [[attribute(x)]]
     #define ATTR_KEY(x) [[x]]
 
@@ -29,13 +27,13 @@ using float4 = vector_float4;
     #define VSINPUT_BASIC VSInput_Basic
     #define FSINPUT_BASIC FSInput_Basic
 
-struct VSInput_Basic
+struct VSINPUT_BASIC
 {
     float4 pos   ATTR_NUM(0);
     float4 color ATTR_NUM(1);
 };
 
-struct FSInput_Basic
+struct FSINPUT_BASIC
 {
     float4 pos ATTR_KEY(position);
     float4     color;

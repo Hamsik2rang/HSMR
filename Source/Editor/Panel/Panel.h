@@ -18,7 +18,7 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API Panel
 {
 public:
-    Panel() = default;
+    Panel(Window* window) : _window(window) {}
     virtual ~Panel() {}
 
     virtual bool Setup() = 0;
