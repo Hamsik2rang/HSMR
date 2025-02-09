@@ -36,6 +36,7 @@ set(RENDERER_HEADERS
     Renderer/Framebuffer.h
     Renderer/Pipeline.h
     Renderer/CommandHandle.h
+    Renderer/RHIUtility.h
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
@@ -49,6 +50,7 @@ set(RENDERER_SOURCES
     Renderer/RenderPass.mm
     Renderer/Framebuffer.mm
     Renderer/Pipeline.mm
+    Renderer/RHIUtility.mm
 )
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
@@ -58,6 +60,7 @@ set(OBJECT_HEADERS
     Object/Material.h
     Object/Mesh.h
     Object/Image.h
+    Object/Shader.h
 )
 
 source_group("Object\\Public" FILES ${OBJECT_HEADERS})
@@ -67,6 +70,7 @@ set(OBJECT_SOURCES
     Object/Material.cpp
     Object/Mesh.cpp
     Object/Image.cpp
+    Object/Shader.cpp
 )
 
 source_group("Object\\Private" FILES ${OBJECT_SOURCES})
@@ -158,11 +162,21 @@ set(THIRDPARTY
 )
 list(APPEND TOTAL_FILES ${THIRDPARTY})
 
+set(SHADER_LAYOUT ${HS_RES_SHADER_DIR}/MSL/BuiltInMaterialLayout.h)
+
+source_group("Renderer\\Reference" FILES ${SHADER_LAYOUT})
+list(APPEND TOTAL_FILES ${SHADER_LAYOUT})
+
 add_library(${TARGET_NAME} STATIC
     ${TOTAL_FILES}
 )
 
-target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PUBLIC ThirdParty)
+target_include_directories(${TARGET_NAME}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC ThirdParty ${HS_RES_SHADER_DIR}
+)
+
+add_dependencies(${TARGET_NAME} Shader)
 
 target_link_libraries(${TARGET_NAME}
     PUBLIC

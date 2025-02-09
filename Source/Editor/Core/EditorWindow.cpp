@@ -22,19 +22,15 @@ EditorWindow::~EditorWindow()
 
 void EditorWindow::Render()
 {
-//    onRender();
-    //    _renderer->Render(...);
-
-    onRenderGUI();
+    onRender();
 }
 
 bool EditorWindow::onInitialize()
 {
-//    _renderer = new Renderer();
-//    _renderer->Initialize(&_nativeHandle);
-
     _guiRenderer = new GUIRenderer();
     _guiRenderer->Initialize(&_nativeHandle);
+    
+    _guiRenderer->AddPass(new ForwardOpaquePass("Opaque Pass", _guiRenderer, ERenderingOrder::OPAQUE));
 
     _basePanel = new DockspacePanel();
     _basePanel->Setup();
@@ -44,7 +40,6 @@ bool EditorWindow::onInitialize()
 
 void EditorWindow::onNextFrame()
 {
-//    _renderer->NextFrame();
     _guiRenderer->NextFrame(_swapchain);
 }
 
@@ -55,8 +50,14 @@ void EditorWindow::onUpdate()
 
 void EditorWindow::onRender()
 {
+    
+    RenderTexture rt;
+    rt.width = _swapchain->GetWidth();
+    rt.height = _swapchain->GetHeight();
     // 1. Render Scene
-    //_renderer->Render({}, nullptr);
+    _guiRenderer->Render({}, &rt);
+    
+    onRenderGUI();
 }
 
 void EditorWindow::onPresent()
@@ -75,9 +76,11 @@ void EditorWindow::onShutdown()
 
 void EditorWindow::onRenderGUI()
 {
+//    _guiRenderer->Render({}, nullptr);
+    
     _basePanel->Draw(); // Draw panel tree.
     
-    _guiRenderer->Render({}, nullptr);
+    _guiRenderer->RenderGUI();
 }
 
 HS_NS_EDITOR_END

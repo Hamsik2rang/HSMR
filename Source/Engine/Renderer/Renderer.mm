@@ -9,8 +9,15 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Core/Window.h"
 #include "Engine/Core/EngineContext.h"
-#include "Engine/RendererPass/RendererPass.h"
 #include "Engine/Core/Scene.h"
+
+#include "Engine/Renderer/Swapchain.h"
+#include "Engine/Renderer/RenderPass.h"
+#include "Engine/Renderer/CommandHandle.h"
+#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/Renderer/RHIUtility.h"
+
+#include "Engine/RendererPass/RendererPass.h"
 
 #include "SDL3/SDL.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
@@ -34,8 +41,12 @@ id<MTLRenderCommandEncoder> _renderEncoder;
 
 id<MTLTexture>           _renderTarget[Renderer::MAX_SUBMIT_INDEX];
 id<CAMetalDrawable>      _currentDrawable;
-MTLRenderPassDescriptor* _renderPassDescriptor;
+MTLRenderPassDescriptor* _currentRpDesc;
+RenderPass* _currentRp;
+
 } // namespace
+
+const size_t Renderer::MAX_FRAME_COUNT = 3;
 
 Renderer::Renderer()
 {
@@ -49,14 +60,14 @@ Renderer::~Renderer()
 bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
 {
     _window = nativeHandle->window;
-    _view    = nativeHandle->view;
-    _layer   = nativeHandle->layer;
-    
+    _view   = nativeHandle->view;
+    _layer  = nativeHandle->layer;
+
     SDL_Window* window = static_cast<SDL_Window*>(_window);
 
-    s_layer  = (__bridge CAMetalLayer*)_layer;
-    s_device = MTLCreateSystemDefaultDevice();
-    _rhiDevice = (__bridge void*)s_device;
+    s_layer    = hs_rhi_to_layer(_layer);
+    s_device   = MTLCreateSystemDefaultDevice();
+    _rhiDevice = hs_rhi_from_device(s_device);
 
     s_layer.device      = s_device;
     s_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
@@ -68,7 +79,7 @@ bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
     }
     _commandQueue = (__bridge void*)s_commandQueue;
 
-    //    _renderPassDescriptor = [MTLRenderPassDescriptor new];
+    _currentRpDesc = nil;
 
     _isInitialized = true;
 
@@ -77,12 +88,62 @@ bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
 
 void Renderer::NextFrame(Swapchain* swapchain)
 {
-   
+    swapchain->_frameCount = (swapchain->_frameCount + 1) % MAX_FRAME_COUNT;
+
+    int width, height;
+
+    SDL_Window* window = static_cast<SDL_Window*>(_window);
+    SDL_GetWindowSizeInPixels(window, &width, &height);
+    hs_rhi_to_layer(_layer).drawableSize = CGSizeMake(width, height);
+    _currentDrawable                     = [hs_rhi_to_layer(_layer) nextDrawable];
+    swapchain->SetDrawable((__bridge void*)_currentDrawable);
+    swapchain->SetSize(width, height);
+    
+    
+    _commandBuffer = [hs_rhi_to_command_queue(_commandQueue) commandBuffer];
+
+    RenderPass* rp = swapchain->GetRenderPass();
+
+    MTLRenderPassDescriptor* rpDesc = (__bridge MTLRenderPassDescriptor*)rp->handle;
+
+    rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
+    rpDesc.colorAttachments[0].texture     = _currentDrawable.texture;
+    rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
+    rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+    rp->info.colorAttachments[0].loadAction  = hs_rhi_from_load_action(rpDesc.colorAttachments[0].loadAction);
+    rp->info.colorAttachments[0].storeAction = hs_rhi_from_store_action(rpDesc.colorAttachments[0].storeAction);
+
+    _currentRp = rp;
+    _currentRpDesc = rpDesc;
 }
 
 void Renderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
 {
-   
+    _commandBuffer    = [s_commandQueue commandBuffer];
+    _curCommandBuffer = (__bridge void*)_commandBuffer;
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->OnBeforeRendering(_frameCount);
+    }
+
+    id<MTLRenderCommandEncoder> encoder = [_commandBuffer renderCommandEncoderWithDescriptor:_currentRpDesc];
+    _curCommandEncoder                  = (__bridge_retained void*)encoder;
+    
+    
+//
+//    for (auto* pass : _rendererPasses)
+//    {
+//        pass->Configure(renderTarget);
+//
+//        pass->Execute(_curCommandEncoder, _currentRp);
+//    }
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->OnAfterRendering();
+    }
 }
 
 void Renderer::Present(Swapchain* swapchain)
@@ -97,7 +158,7 @@ void Renderer::Shutdown()
     _isInitialized = false;
 }
 //
-//void Renderer::renderDockingPanel()
+// void Renderer::renderDockingPanel()
 //{
 //    // READ THIS !!!
 //    // TL;DR; this demo is more complicated than what most users you would normally use.

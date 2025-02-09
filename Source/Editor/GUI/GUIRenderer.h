@@ -25,8 +25,9 @@ public:
     
     bool Initialize(const NativeWindowHandle* nativeHandle) override;
     void NextFrame(Swapchain* swapchain) override;
-    void Render(const RenderParameter& params, RenderTexture* renderTarget) override;
-    void Present(Swapchain* swapchain) override;
+    //void Render(const RenderParameter& params, RenderTexture* renderTarget) override;
+    void RenderGUI();
+//    void Present(Swapchain* swapchain) override;
     void Shutdown() override;
     
 };

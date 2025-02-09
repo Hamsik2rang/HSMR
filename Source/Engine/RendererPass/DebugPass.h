@@ -1,38 +1,38 @@
+////
+////  DebugPass.h
+////  HSMR
+////
+////  Created by Yongsik Im on 2/2/25.
+////
+//#ifndef __HS_DEBUG_PASS_H__
+//#define __HS_DEBUG_PASS_H__
 //
-//  DebugPass.h
-//  HSMR
+//#include "Precompile.h"
 //
-//  Created by Yongsik Im on 2/2/25.
+//#include "Engine/RendererPass/RendererPass.h"
+//#include "Engine/Renderer/RenderDefinition.h"
 //
-#ifndef __HS_DEBUG_PASS_H__
-#define __HS_DEBUG_PASS_H__
-
-#include "Precompile.h"
-
-#include "Engine/RendererPass/RendererPass.h"
-#include "Engine/Renderer/RenderDefinition.h"
-
-HS_NS_BEGIN
-
-class DebugPass : public RendererPass
-{
-public:
-    DebugPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
-    ~DebugPass() = default;
-    
-    void OnBeforeRendering(uint32_t submitIndex) override;
-    
-    void Configure(RenderTexture* renderTarget) override;
-    
-    void Execute(RenderCommandEncoder* renderEncoder) override;
-    
-    void OnAfterRendering() override;
-    
-private:
-
-    
-};
-
-HS_NS_END
-
-#endif
+//HS_NS_BEGIN
+//
+//class DebugPass : public RendererPass
+//{
+//public:
+//    DebugPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+//    ~DebugPass() = default;
+//    
+//    void OnBeforeRendering(uint32_t submitIndex) override;
+//    
+//    void Configure(RenderTexture* renderTarget) override;
+//    
+//    void Execute(CommandBuffer* cmdBuffer, RenderPass* renderPass) override;
+//    
+//    void OnAfterRendering() override;
+//    
+//private:
+//
+//    
+//};
+//
+//HS_NS_END
+//
+//#endif

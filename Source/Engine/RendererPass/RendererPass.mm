@@ -10,15 +10,12 @@
 
 #import <Metal/Metal.h>
 
-
 HS_NS_BEGIN
-
-RHI_RESOURCE_BEGIN
-    id<MTLDevice> device;
-    id<MTLCommandQueue> cmdQueue;
-RHI_RESOURCE_END
-
-
-
+RendererPass::RendererPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder)
+    : name(name)
+    , _renderer(renderer)
+    , renderingOrder(renderingOrder)
+{
+}
 
 HS_NS_END

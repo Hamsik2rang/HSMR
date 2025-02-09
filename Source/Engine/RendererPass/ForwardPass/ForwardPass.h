@@ -17,10 +17,9 @@ class ForwardPass : public RendererPass
 public:
     ForwardPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
     ~ForwardPass() override {}
-    
+
 protected:
-    
-    
+    RHI_RESOURCE_DEFINE(ForwardPass)
 };
 
 HS_NS_END

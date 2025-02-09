@@ -1,6 +1,8 @@
 #include "Engine/Core/Window.h"
 
 #include "Engine/Core/Log.h"
+#include "Engine/Renderer/Swapchain.h"
+#include "Engine/Renderer/RenderPass.h"
 
 #include <SDL3/SDL.h>
 
@@ -41,7 +43,17 @@ uint32 Window::Initialize()
     _nativeHandle.window = static_cast<void*>(window);
     _nativeHandle.view   = static_cast<void*>(view);
     _nativeHandle.layer  = SDL_Metal_GetLayer(view);
+    
+    SwapchainInfo swInfo{};
+    swInfo.colorFormat = EPixelFormat::B8G8A8R8_UNORM;
+    swInfo.depthStencilFormat = EPixelFormat::DEPTH24_STENCIL8;
+    swInfo.nativeWindowHandle = static_cast<void*>(&_nativeHandle);
+    swInfo.useDepth = false;
+    swInfo.useMSAA = false;
+    swInfo.useStencil = false;
 
+    _swapchain = new Swapchain(swInfo);
+    
     onInitialize();
     
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);

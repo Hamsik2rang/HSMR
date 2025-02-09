@@ -7,7 +7,19 @@
 #ifndef __HS_COMMAND_HANDLE_H__
 #define __HS_COMMAND_HANDLE_H__
 
+#include "Precompile.h"
 
+#include "Engine/Renderer/RenderDefinition.h"
 
+HS_NS_BEGIN
 
-#endif /* RenderHandle_h */
+class CommandBuffer : public RenderHandle
+{
+public:
+    
+    
+};
+
+HS_NS_END
+
+#endif /* __HS_COMMAND_HANDLE_H__ */
