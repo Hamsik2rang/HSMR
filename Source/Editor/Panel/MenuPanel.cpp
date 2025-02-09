@@ -10,7 +10,6 @@ HS_NS_EDITOR_BEGIN
 
 MenuPanel::~MenuPanel()
 {
-    
 }
 
 bool MenuPanel::Setup()
@@ -24,7 +23,7 @@ void MenuPanel::Cleanup()
 void MenuPanel::Draw()
 {
     static bool useWhite = true;
-    
+    static bool showDemo = true;
     if (ImGui::BeginMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -35,13 +34,14 @@ void MenuPanel::Draw()
             //             ImGui::MenuItem("Padding", NULL, &opt_padding);
             ImGui::Separator();
 
-            if(ImGui::MenuItem("Show Demo", nullptr, false))
+            if (ImGui::MenuItem("Show Demo", nullptr, false))
             {
-                ImGui::ShowDemoWindow();
+                showDemo = !showDemo;
             }
-            if(ImGui::MenuItem("Change Theme", nullptr, false))
+            if (ImGui::MenuItem("Change Theme", nullptr, false))
             {
                 hs_editor_get_gui_context()->SetColorTheme(useWhite);
+                useWhite = !useWhite;
             }
             ImGui::Separator();
 
@@ -65,6 +65,10 @@ void MenuPanel::Draw()
         {
         }
         ImGui::EndMenuBar();
+    }
+    if (showDemo)
+    {
+        ImGui::ShowDemoWindow(&showDemo);
     }
 }
 
