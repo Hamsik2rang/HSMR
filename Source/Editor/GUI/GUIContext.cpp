@@ -24,7 +24,6 @@ GUIContext::GUIContext()
 
 GUIContext::~GUIContext()
 {
-    
 }
 void GUIContext::Initialize()
 {
@@ -32,7 +31,7 @@ void GUIContext::Initialize()
     _context = ImGui::CreateContext();
 
     ImGuiIO& io = ImGui::GetIO();
-    
+
     layoutFileName = "imgui.ini";
 
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
@@ -54,8 +53,8 @@ void GUIContext::Initialize()
         style.WindowRounding              = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-    
-    std::string fontName ="OpenSans-Regular.ttf";
+
+    std::string fontName = "Font/OpenSans-Regular.ttf";
     SetFont(fontName, 18.0f);
 }
 void GUIContext::NextFrame()
