@@ -5,24 +5,21 @@ HS_NS_EDITOR_BEGIN
 
 DockspacePanel::~DockspacePanel()
 {
-    
 }
 
 bool DockspacePanel::Setup()
 {
-    
 }
 
 void DockspacePanel::Cleanup()
 {
-    
 }
 
 void DockspacePanel::Draw()
 {
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
-    ImGuiDockNodeFlags dockspaceFlags = 0;/*= ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoBackground*/
-    
+    ImGuiWindowFlags   windowFlags    = ImGuiWindowFlags_NoDocking;
+    ImGuiDockNodeFlags dockspaceFlags = 0; /*= ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoBackground*/
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -30,28 +27,30 @@ void DockspacePanel::Draw()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    
-    windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+
+    windowFlags |= ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-    
+
     static bool open = true;
 
     ImGui::Begin("Dockspace Panel", &open, windowFlags);
-    
+
     ImGui::PopStyleVar();
     ImGui::PopStyleVar(2);
-    
+
     ImGuiIO& io = ImGui::GetIO();
-    if(io.ConfigFlags  & ImGuiConfigFlags_DockingEnable)
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
         ImGuiID dockspaceID = ImGui::GetID("Dockspace Panel");
         ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
     }
-    
-    ImGui::End();
-    
-    ImGui::ShowDemoWindow();
-}
 
+    for (auto* child : _childs)
+    {
+        child->Draw();
+    }
+
+    ImGui::End();
+}
 
 HS_NS_EDITOR_END

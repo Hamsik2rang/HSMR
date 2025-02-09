@@ -69,7 +69,7 @@ Swapchain::~Swapchain()
 {
     if (nullptr != _framebuffers)
     {
-        for (size_t i = 0; i < _maxFrameCount; i++)
+        for (size_t i = 0; i < 3; i++)
         {
             if (nullptr != _framebuffers[i])
             {
@@ -77,9 +77,6 @@ Swapchain::~Swapchain()
                 _framebuffers[i] = nullptr;
             }
         }
-
-        delete[] _framebuffers;
-        _framebuffers = nullptr;
     }
 
     if (nullptr != _renderPass)

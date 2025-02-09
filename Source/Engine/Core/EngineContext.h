@@ -44,8 +44,7 @@ void hs_engine_set_context(EngineContext* context);
 EngineContext* hs_engine_destroy_context();
 void hs_engine_set_position(uint32 x, uint32 y);
 void hs_engine_get_position(uint32& outX, uint32& outY);
-void hs_engine_set_size(uint32 width, uint32 height);
-void hs_engine_get_size(uint32& outWidth, uint32& outHeight);
+
 HS_NS_END
 
 #endif /* EngineContext_hpp */

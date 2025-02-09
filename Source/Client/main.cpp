@@ -17,20 +17,10 @@
 #include <stdio.h>
 #include <string>
 
-//void initialize_imgui_context()
-//{
-//    IMGUI_CHECKVERSION();
-//    ImGuiContext* context = ImGui::CreateContext();
-//    
-//    HS::Editor::hs_editor_set_main_gui_context(context);
-//}
 
 int main(int, char**)
 {
     // TODO: Parse command arguments
-
-//    initialize_imgui_context();
-    
     
     HS::EngineContext* engineContext = HS::hs_engine_create_context(std::string("HSMR"), HS::ERHIPlatform::METAL);
 

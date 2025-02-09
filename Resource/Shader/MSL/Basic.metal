@@ -1,29 +1,24 @@
+#define HS_SHADER_FILE
+#define HS_BASIC_SHADER
+#include "BuiltInMaterialLayout.h"
+
 #include <metal_stdlib>
 
 using namespace metal;
 
-struct VSInput_Basic {
-    float4 pos [[attribute(0)]];
-    float4 color [[attribute(1)]];
-};
 
-struct FSInput_Basic {
-    float4 pos [[position]];
-    float4 color;
-};
-
-vertex FSInput_Basic VertexShader_Basic(uint vertexID [[vertex_id]],
-                                      const device VSInput_Basic* input [[buffer(0)]])
+vertex FSINPUT_BASIC VertexShader_Basic(
+                                        VSINPUT_BASIC input ATTR_KEY(stage_in))
 {
     FSInput_Basic output;
     
-    output.pos = input[vertexID].pos;
-    output.color = input[vertexID].color;
+    output.pos = input.pos;
+    output.color = input.color;
     
     return output;
 }
 
-fragment float4 FragmentShader_Basic(FSInput_Basic input [[stage_in]])
+fragment float4 FragmentShader_Basic(FSINPUT_BASIC input ATTR_KEY(stage_in))
 {
     return input.color;
 }

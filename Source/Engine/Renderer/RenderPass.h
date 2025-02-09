@@ -15,7 +15,7 @@
 
 HS_NS_BEGIN
 
-class RenderPass : public RenderHandle
+class RenderPass : public RHIHandle
 {
 public:
     RenderPass(RenderPassInfo info);

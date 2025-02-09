@@ -11,6 +11,7 @@
 #include "Precompile.h"
 
 #include "Engine/Core/Window.h"
+#include "Engine/Renderer/RenderDefinition.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -18,16 +19,17 @@ class Panel;
 
 class GUIRenderer;
 
-
 class HS_EDITOR_API EditorWindow : public Window
 {
 public:
     EditorWindow(const char* name, uint32 width, uint32 height, uint64 flags);
     ~EditorWindow() override;
-    
+
     void Render() override;
-    
+
 private:
+    void setupPanels();
+    
     bool onInitialize() override;
     void onNextFrame() override;
     void onUpdate() override;
@@ -35,13 +37,12 @@ private:
     void onPresent() override;
     void onShutdown() override;
     void onRenderGUI();
-    
-    
+
+    RenderTexture _renderTextures[3]; // TODO: 매직 넘버 제거
+
     GUIRenderer* _guiRenderer;
-    Panel* _basePanel;
+    Panel*       _basePanel;
 };
-
-
 
 HS_NS_EDITOR_END
 

@@ -9,15 +9,12 @@
 #include "Engine/Renderer/RHIUtility.h"
 #include "Engine/Renderer/CommandHandle.h"
 
+#include "MSL/BuiltInMaterialLayout.h"
+
 #import <Metal/Metal.h>
 
 HS_NS_BEGIN
 
-struct VSINPUT_basic
-{
-    vector_float4 position;
-    vector_float4 color;
-};
 
 RHI_RESOURCE_BEGIN(ForwardOpaquePass)
 id<MTLDevice>               device;
@@ -92,7 +89,7 @@ void ForwardOpaquePass::createResourceHandles()
 {
     @autoreleasepool
     {
-        VSINPUT_basic vertices[]{
+        VSINPUT_BASIC vertices[]{
             {
                 {0.5f, -0.5f, 0.0f, 1.0f},
                 {1.0f, 0.0f, 0.0f, 1.0f},
@@ -136,6 +133,19 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 
 //      rp = hs_rhi_to_render_pass(renderPass);
 
+    MTLVertexDescriptor* vertexDesc = [[MTLVertexDescriptor alloc] init];
+    vertexDesc.attributes[0].offset = 0;
+    vertexDesc.attributes[0].format = MTLVertexFormatFloat4;
+    vertexDesc.attributes[0].bufferIndex = 0;
+    
+    vertexDesc.attributes[1].format = MTLVertexFormatFloat4;
+    vertexDesc.attributes[1].offset = sizeof(vector_float4);
+    vertexDesc.attributes[1].bufferIndex = 0;
+    
+    vertexDesc.layouts[0].stride = sizeof(vector_float4) * 2;
+    vertexDesc.layouts[0].stepRate = 1;
+    vertexDesc.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+    
     MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
     pipelineDesc.label                        = @"ForwardOpaquePass Pipeline";
     pipelineDesc.vertexFunction               = _rhiRes->vertexFunction;
@@ -143,6 +153,7 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
     pipelineDesc.rasterizationEnabled = true;
     pipelineDesc.rasterSampleCount = 1;
     pipelineDesc.colorAttachments[0].pixelFormat = hs_rhi_to_pixel_format(renderPass->info.colorAttachments[0].format);
+    pipelineDesc.vertexDescriptor = vertexDesc;
     
     _rhiRes->pipelineState = [_rhiRes->device newRenderPipelineStateWithDescriptor:pipelineDesc
                                                                              error:&error];

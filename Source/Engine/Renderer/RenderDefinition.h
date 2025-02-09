@@ -13,9 +13,11 @@
 
 HS_NS_BEGIN
 
-class RenderHandle
+class RHIHandle
 {
 public:
+    virtual ~RHIHandle() {}
+
     void* handle;
 };
 
@@ -137,8 +139,9 @@ class Texture;
 
 struct RenderTexture
 {
-    uint32 width;
-    uint32 height;
+    EPixelFormat format;
+    uint32       width;
+    uint32       height;
 
     std::vector<Texture*> colorBuffers;
     Texture*              depthStencilBuffer;
@@ -177,8 +180,8 @@ struct Attachment
     EPixelFormat format;
     ELoadAction  loadAction;
     EStoreAction storeAction;
-    float clearColor[4];
-    bool isDepthStencil = false;
+    float        clearColor[4];
+    bool         isDepthStencil = false;
 };
 
 struct RenderPassInfo

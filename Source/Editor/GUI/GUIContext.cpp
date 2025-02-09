@@ -16,6 +16,8 @@ HS_NS_EDITOR_BEGIN
 
 GUIContext* s_guiContext = nullptr;
 
+GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
+
 GUIContext::GUIContext()
     : layoutFileName(std::string("imgui.ini"))
     , _font{nullptr}
@@ -69,6 +71,14 @@ void GUIContext::Finalize()
 
 void GUIContext::SetColorTheme(bool useWhite)
 {
+    if (useWhite)
+    {
+        ImGui::StyleColorsLight();
+    }
+    else
+    {
+        ImGui::StyleColorsDark();
+    }
 }
 
 // Font Push/Pop 어떻게?

@@ -8,6 +8,7 @@
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
+#include "Editor/Panel/MenuPanel.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -29,11 +30,18 @@ bool EditorWindow::onInitialize()
 {
     _guiRenderer = new GUIRenderer();
     _guiRenderer->Initialize(&_nativeHandle);
-    
+
     _guiRenderer->AddPass(new ForwardOpaquePass("Opaque Pass", _guiRenderer, ERenderingOrder::OPAQUE));
 
-    _basePanel = new DockspacePanel();
-    _basePanel->Setup();
+    for (int i = 0; i < sizeof(_renderTextures) / sizeof(RenderTexture); i++)
+    {
+        _renderTextures[i].width = _width;
+        _renderTextures[i].height = _height;
+        _renderTextures[i].colorBuffers.resize(1);
+        
+    }
+
+    setupPanels();
 
     //    _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, 0));
 }
@@ -50,13 +58,13 @@ void EditorWindow::onUpdate()
 
 void EditorWindow::onRender()
 {
-    
+
     RenderTexture rt;
-    rt.width = _swapchain->GetWidth();
+    rt.width  = _swapchain->GetWidth();
     rt.height = _swapchain->GetHeight();
     // 1. Render Scene
     _guiRenderer->Render({}, &rt);
-    
+
     onRenderGUI();
 }
 
@@ -76,11 +84,23 @@ void EditorWindow::onShutdown()
 
 void EditorWindow::onRenderGUI()
 {
-//    _guiRenderer->Render({}, nullptr);
-    
+    //    _guiRenderer->Render({}, nullptr);
+
     _basePanel->Draw(); // Draw panel tree.
-    
+
     _guiRenderer->RenderGUI();
+}
+
+void EditorWindow::setupPanels()
+{
+    _basePanel = new DockspacePanel(this);
+    _basePanel->Setup();
+    
+    Panel* menuPanel = new MenuPanel(this);
+    menuPanel->Setup();
+    
+    _basePanel->InsertPanel(menuPanel);
+
 }
 
 HS_NS_EDITOR_END

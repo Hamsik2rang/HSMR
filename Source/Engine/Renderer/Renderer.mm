@@ -36,7 +36,7 @@ CAMetalLayer*       s_layer;
 // TODO: 테스트용 임시
 //    id<MTLDevice> _device;
 //    id<MTLCommandQueue> _commandQueue;
-id<MTLCommandBuffer>        _commandBuffer;
+
 id<MTLRenderCommandEncoder> _renderEncoder;
 
 id<MTLTexture>           _renderTarget[Renderer::MAX_SUBMIT_INDEX];
@@ -99,9 +99,6 @@ void Renderer::NextFrame(Swapchain* swapchain)
     swapchain->SetDrawable((__bridge void*)_currentDrawable);
     swapchain->SetSize(width, height);
     
-    
-    _commandBuffer = [hs_rhi_to_command_queue(_commandQueue) commandBuffer];
-
     RenderPass* rp = swapchain->GetRenderPass();
 
     MTLRenderPassDescriptor* rpDesc = (__bridge MTLRenderPassDescriptor*)rp->handle;
@@ -120,25 +117,24 @@ void Renderer::NextFrame(Swapchain* swapchain)
 
 void Renderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
 {
-    _commandBuffer    = [s_commandQueue commandBuffer];
-    _curCommandBuffer = (__bridge void*)_commandBuffer;
+    id<MTLCommandBuffer> commandBuffer    = [s_commandQueue commandBuffer];
+    _curCommandBuffer = (__bridge_retained void*)commandBuffer;
 
     for (auto* pass : _rendererPasses)
     {
         pass->OnBeforeRendering(_frameCount);
     }
 
-    id<MTLRenderCommandEncoder> encoder = [_commandBuffer renderCommandEncoderWithDescriptor:_currentRpDesc];
+    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:_currentRpDesc];
     _curCommandEncoder                  = (__bridge_retained void*)encoder;
     
-    
-//
-//    for (auto* pass : _rendererPasses)
-//    {
-//        pass->Configure(renderTarget);
-//
-//        pass->Execute(_curCommandEncoder, _currentRp);
-//    }
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->Configure(renderTarget);
+
+        pass->Execute(_curCommandEncoder, _currentRp);
+    }
 
     for (auto* pass : _rendererPasses)
     {
@@ -148,9 +144,14 @@ void Renderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
 
 void Renderer::Present(Swapchain* swapchain)
 {
-    [_commandBuffer presentDrawable:_currentDrawable];
+    id<MTLCommandBuffer> commandBuffer = (__bridge_transfer id<MTLCommandBuffer>)_curCommandBuffer;
+    
+    [commandBuffer presentDrawable:_currentDrawable];
 
-    [_commandBuffer commit];
+    [commandBuffer commit];
+    
+    _curCommandBuffer = nullptr;
+    _curCommandEncoder = nullptr;
 }
 
 void Renderer::Shutdown()

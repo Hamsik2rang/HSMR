@@ -41,6 +41,8 @@ private:
     std::string layoutFileName;
 };
 
+GUIContext* hs_editor_get_gui_context();
+
 HS_NS_EDITOR_END
 
 #endif

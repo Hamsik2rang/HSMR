@@ -8,6 +8,7 @@
 
 HS_NS_BEGIN
 
+
 Window::Window(const char* name, uint32 width, uint32 height, uint64 flags)
     : _name(name)
     , _width(width)
@@ -57,6 +58,7 @@ uint32 Window::Initialize()
     onInitialize();
     
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_SetWindowSize(window, _width, _height);
     SDL_ShowWindow(window);
 }
 
