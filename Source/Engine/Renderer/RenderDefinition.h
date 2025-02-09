@@ -13,6 +13,12 @@
 
 HS_NS_BEGIN
 
+class RenderHandle
+{
+public:
+    void* handle;
+};
+
 enum class EPixelFormat
 {
     INVALID = 0,
@@ -30,11 +36,13 @@ enum class EPixelFormat
 
 enum class ETextureType
 {
-    TEX_1D       = 0,
-    TEX_1D_ARRAY = 1,
-    TEX_2D       = 2,
-    TEX_2D_ARRAY = 3,
-    TEX_CUBE     = 5,
+    INVALID = 0,
+
+    TEX_1D,
+    TEX_1D_ARRAY,
+    TEX_2D,
+    TEX_2D_ARRAY,
+    TEX_CUBE,
 };
 
 enum class ETextureUsage
@@ -75,15 +83,19 @@ struct TextureInfo
 
 enum class EFilterMode
 {
+    INVALID = 0,
+
     NEAREST,
     LINEAR
 };
 
 enum class EAddressMode
 {
-    REPEAT          = 0,
-    MIRRORED_REPEAT = 1,
-    CLAMP_TO_EDGE   = 2,
+    INVALID = 0,
+
+    REPEAT,
+    MIRRORED_REPEAT,
+    CLAMP_TO_EDGE,
 };
 
 struct SamplerInfo
@@ -103,6 +115,8 @@ struct SamplerInfo
 
 enum class EBufferUsage
 {
+    INVALID = 0,
+
     UNIFORM = 0x00000010,
     INDEX   = 0x00000040,
     VERTEX  = 0x00000080,
@@ -111,6 +125,8 @@ enum class EBufferUsage
 
 enum class EBufferMemoryOption
 {
+    INVALID = 0,
+
     NOTHING,
     MAPPED,
     STATIC,
@@ -136,17 +152,21 @@ struct SwapchainInfo
     bool         useStencil;
     bool         useMSAA;
 
-    void* surface; // layer
+    void* nativeWindowHandle;
 };
 
 enum class EStoreAction
 {
+    INVALID = 0,
+
     DONT_CARE,
     STORE,
 };
 
 enum class ELoadAction
 {
+    INVALID = 0,
+
     DONT_CARE,
     LOAD,
     CLEAR,
@@ -157,7 +177,8 @@ struct Attachment
     EPixelFormat format;
     ELoadAction  loadAction;
     EStoreAction storeAction;
-    bool         isDepthStencil = false;
+    float clearColor[4];
+    bool isDepthStencil = false;
 };
 
 struct RenderPassInfo
@@ -186,6 +207,54 @@ struct FramebufferInfo
 struct PipelineInfo
 {
     //...
+};
+
+enum class EShaderParameterType
+{
+    T_BOOL = 0,
+    T_CHAR,
+    T_INT8,
+    T_UINT8,
+    T_INT16,
+    T_UINT16,
+    T_INT32,
+    T_UINT32,
+    T_INT64,
+    T_UINT64,
+
+    T_HALF,
+    T_FLOAT,
+    T_DOUBLE,
+
+    T_VEC2,
+    T_VEC3,
+    T_VEC4,
+
+    T_MAT22,
+    T_MAT33,
+    T_MAT44,
+
+    T_STRUCT // Constant Buffer
+    //,..
+};
+
+struct ShaderParameterValue
+{
+    EShaderParameterType type;
+
+    void* data = nullptr;
+    uint8 offset;
+    uint8 align;
+};
+
+struct Viewport
+{
+    float x      = 0;
+    float y      = 0;
+    float width  = 0;
+    float height = 0;
+    float zMear  = 0.0f;
+    float zFar   = 1.0f;
 };
 
 HS_NS_END

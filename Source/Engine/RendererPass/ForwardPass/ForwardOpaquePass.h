@@ -10,7 +10,7 @@
 #include "Precompile.h"
 #include "ForwardPass.h"
 
-#include "Engine/REnderer/ResourceHandle.h"
+#include "Engine/Renderer/ResourceHandle.h"
 
 HS_NS_BEGIN
 
@@ -28,13 +28,15 @@ public:
     
     void Configure(RenderTexture* renderTarget) override;
     
-    void Execute(RenderCommandEncoder* renderEncoder) override;
+    void Execute(void* cmdEncoder, RenderPass* renderPass) override;
     
     void OnAfterRendering() override;
     
 private:
-   
+    RHI_RESOURCE_DEFINE(ForwardOpaquePass)
+    
     void createResourceHandles();
+    void createPipelineHandles(RenderPass* renderPass);
     
     RenderTexture* _currentRenderTexture;
 

@@ -24,14 +24,14 @@ target_link_libraries(${TARGET_NAME}
     Editor
 )
 
-target_compile_definitions(${TARGET_NAME} PUBLIC
+target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CLIENT
     HS_EDITOR_API_IMPORT
-    HS_EXECUTABLE_NAME=${EXECUTABLE_NAME}
+    HS_EXECUTABLE_NAME="${EXECUTABLE_NAME}"
 )
 
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)

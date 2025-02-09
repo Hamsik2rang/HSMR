@@ -15,14 +15,13 @@
 
 HS_NS_BEGIN
 
-class RenderPass
+class RenderPass : public RenderHandle
 {
 public:
-    RenderPass(const RenderPassInfo& info);
+    RenderPass(RenderPassInfo info);
     ~RenderPass();
     
-private:
-    RenderPassInfo _info;
+    RenderPassInfo info;
 };
 
 HS_NS_END

@@ -16,9 +16,16 @@
 
 HS_NS_BEGIN
 
-#define RHI_RESOURCE_BEGIN struct RendererPass::RHIResource {
-#define RHI_RESOURCE_END };
+#define RHI_RESOURCE_BEGIN(passName) \
+    struct passName::RHIResource    \
+    {
 
+#define RHI_RESOURCE_END(passName) };
+
+#define RHI_RESOURCE_DEFINE(passName) \
+private:                              \
+struct RHIResource;                 \
+RHIResource* _rhiRes;
 
 class Renderer;
 class CommandBuffer;
@@ -27,12 +34,11 @@ class RenderCommandEncoder;
 enum class ERenderingOrder
 {
     INVALID = 0,
-    
-    
-    OPAQUE = 500,
-    SKYBOX = 600,
+
+    OPAQUE      = 500,
+    SKYBOX      = 600,
     TRANSPARENT = 800,
-    
+
     //...
 };
 
@@ -45,35 +51,31 @@ class RendererPass
 {
 public:
     RendererPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
-    
+
     virtual ~RendererPass() = default;
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
     virtual void Configure(RenderTexture* renderTarget) = 0;
 
-    virtual void Execute(RenderCommandEncoder* renderEncoder) = 0;
+    virtual void Execute(void* cmdEncoder, RenderPass* renderPass) = 0;
 
     virtual void OnAfterRendering() = 0;
-    
+
     virtual void Clear() {}
 
     bool IsExecutable() { return _isExecutable; }
+    
+    Renderer* GetRenderer() { return _renderer;}
 
     const char* name;
 
-    uint32_t renderingOrder;
-    
-    static RendererPass* Create(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    ERenderingOrder renderingOrder;
 
 protected:
-    struct RHIResource;
-    RHIResource* _res;
-    
-    
     Renderer* _renderer;
-    bool _isExecutable = true;
-    size_t _submitIndex;
+    bool      _isExecutable = true;
+    size_t    _submitIndex;
 };
 
 HS_NS_END

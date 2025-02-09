@@ -76,4 +76,10 @@ std::string hs_file_get_absolute_path(const std::string& relativePath)
 {
 }
 
+std::string hs_file_get_default_shader_library()
+{
+    static const char* defaultShaderLib = "default.metallib";
+    return hs_engine_get_context()->executableDirectory + defaultShaderLib;
+}
+
 HS_NS_END

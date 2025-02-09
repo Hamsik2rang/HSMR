@@ -22,6 +22,9 @@ message(STATUS "HS_SRC_DIR: ${HS_SRC_DIR}")
 set(HS_RES_DIR ${HS_ROOT_DIR}/Resource)
 message(STATUS "HS_RES_DIR: ${HS_RES_DIR}")
 
+set(HS_RES_SHADER_DIR ${HS_RES_DIR}/Shader)
+message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
+
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
 message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
@@ -66,6 +69,7 @@ set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 
+add_subdirectory(${HS_RES_SHADER_DIR})
 add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})

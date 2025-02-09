@@ -9,10 +9,15 @@
 
 #include "Precompile.h"
 
-class Pipeline
+#include "Engine/Renderer/RenderDefinition.h"
+
+HS_NS_BEGIN
+
+class Pipeline : public RenderHandle
 {
 public:
-    
+    Pipeline();
+    ~Pipeline();
     
     
 private:
@@ -20,6 +25,8 @@ private:
     
     
 };
+
+HS_NS_END
 
 
 #endif /* Pipeline_h */

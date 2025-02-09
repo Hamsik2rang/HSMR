@@ -25,7 +25,7 @@ class Swapchain;
 
 struct NativeWindowHandle;
 
-extern const uint8 MAX_SUBMIT_INDEX;
+
 
 class Renderer
 {
@@ -47,6 +47,8 @@ public:
         _isPassListSorted = false;
     }
     
+    virtual void* GetDevice() { return _rhiDevice; }
+    
     virtual void Shutdown();
     
     static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
@@ -67,11 +69,16 @@ protected:
     
     void* _rhiDevice;
     void* _commandQueue;
+    void* _curCommandBuffer;
+    void* _curCommandEncoder;
     
     std::vector<RendererPass*> _rendererPasses;
     uint32_t _submitIndex = 0;
     bool _isInitialized = false;
     bool _isPassListSorted = true;
+    
+    static const size_t MAX_FRAME_COUNT;
+    uint32 _frameCount;
 };
 
 HS_NS_END
