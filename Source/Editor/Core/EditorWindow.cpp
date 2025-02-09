@@ -38,7 +38,6 @@ bool EditorWindow::onInitialize()
         _renderTextures[i].width = _width;
         _renderTextures[i].height = _height;
         _renderTextures[i].colorBuffers.resize(1);
-        
     }
 
     setupPanels();

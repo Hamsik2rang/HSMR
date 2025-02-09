@@ -32,7 +32,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     _guiContext->Initialize();
 
     Window::EFlags windowFlags = Window::EFlags::NONE;
-//    windowFlags |= Window::EFlags::WINDOW_RESIZABLE;
+    windowFlags |= Window::EFlags::WINDOW_RESIZABLE;
     windowFlags |= Window::EFlags::WINDOW_HIGH_PIXEL_DENSITY;
 
     _window = new EditorWindow("EditorApp BaseWindow", 1600, 1050, static_cast<uint64>(windowFlags));
