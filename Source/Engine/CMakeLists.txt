@@ -28,6 +28,20 @@ set(CORE_SOURCES
 source_group("Core\\Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
+set(RHI_HEADERS
+    RHI/RHIContext.h
+)
+
+source_group("RHI\\Public" FILES ${RHI_HEADERS})
+list(APPEND TOTAL_FILES ${RHI_HEADERS})
+
+set(RHI_SOURCES
+    RHI/RHIContext.cpp
+)
+
+source_group("RHI\\Private" FILES ${RHI_SOURCES})
+list(APPEND TOTAL_FILES ${RHI_SOURCES})
+
 set(RENDERER_HEADERS
     Renderer/Renderer.h
     Renderer/RenderDefinition.h
@@ -257,7 +271,7 @@ endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    PUBLIC ThirdParty ${HS_RES_SHADER_DIR}
+    PUBLIC ThirdParty METAL_CPP_INCLUDE_DIRS ${HS_RES_SHADER_DIR}
 )
 
 add_dependencies(${TARGET_NAME} Shader)
