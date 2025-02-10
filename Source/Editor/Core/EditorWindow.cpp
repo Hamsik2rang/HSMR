@@ -57,13 +57,15 @@ void EditorWindow::onUpdate()
 
 void EditorWindow::onRender()
 {
-
     RenderTexture rt;
     rt.width  = _swapchain->GetWidth();
     rt.height = _swapchain->GetHeight();
-    // 1. Render Scene
+    // 1. Render Scene to Scene Panel
     _guiRenderer->Render({}, &rt);
 
+    // ScenePanel->SetRenderResult(...);
+    
+    // 2. Render GUI
     onRenderGUI();
 }
 
