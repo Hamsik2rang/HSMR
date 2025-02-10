@@ -11,6 +11,7 @@
 #include "Precompile.h"
 
 #include "Engine/Core/Log.h"
+#include "Engine/RHI/RHIContext.h"
 
 #include <SDL3/SDL.h>
 
@@ -32,7 +33,7 @@ struct EngineContext
     std::string name = "";
     //...
     ERHIPlatform rhiPlatform;
-    void* rhiContext;
+    RHIContext* rhiContext;
 
     std::string executablePath;
     std::string executableDirectory;

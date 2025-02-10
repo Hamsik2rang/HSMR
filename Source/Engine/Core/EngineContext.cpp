@@ -59,12 +59,12 @@ void hs_engine_set_context(EngineContext* context)
     s_engineContext = context;
 }
 
-void* hs_engine_get_rhi_context()
+RHIContext* hs_engine_get_rhi_context()
 {
     return hs_engine_get_context()->rhiContext;
 }
 
-void hs_engine_set_rhi_context(void* rhiContext)
+void hs_engine_set_rhi_context(RHIContext* rhiContext)
 {
     hs_engine_get_context()->rhiContext = rhiContext;
 }
