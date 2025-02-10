@@ -8,6 +8,7 @@
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/RHIUtility.h"
 #include "Engine/Renderer/CommandHandle.h"
+#include "Engine/Renderer/Framebuffer.h"
 
 #include "MSL/BuiltInMaterialLayout.h"
 
@@ -47,9 +48,9 @@ void ForwardOpaquePass::OnBeforeRendering(uint32_t submitIndex)
     _submitIndex = submitIndex;
 }
 
-void ForwardOpaquePass::Configure(RenderTexture* renderTarget)
+void ForwardOpaquePass::Configure(Framebuffer* renderTarget)
 {
-    _currentRenderTexture = renderTarget;
+    _currentFramebuffer = renderTarget;
 }
 
 void ForwardOpaquePass::Execute(void* cmdEncoder, RenderPass* renderPass)
@@ -66,7 +67,7 @@ void ForwardOpaquePass::Execute(void* cmdEncoder, RenderPass* renderPass)
 
     [encoder pushDebugGroup:@"Forward - Opaque"];
 
-    MTLViewport vp = {0.0, 0.0, static_cast<double>(_currentRenderTexture->width), static_cast<double>(_currentRenderTexture->height), 0.0, 1.0};
+    MTLViewport vp = {0.0, 0.0, static_cast<double>(_currentFramebuffer->info.width), static_cast<double>(_currentFramebuffer->info.height), 0.0, 1.0};
 
     [encoder setViewport:vp];
 

@@ -22,6 +22,7 @@ class EngineContext;
 class RendererPass;
 class Scene;
 class Swapchain;
+class Framebuffer;
 
 struct NativeWindowHandle;
 
@@ -37,7 +38,7 @@ public:
 
     virtual void NextFrame(Swapchain* swapchain);
 
-    virtual void Render(const RenderParameter& param, RenderTexture* renderTarget);
+    virtual void Render(const RenderParameter& param, Framebuffer* renderTarget);
 
     virtual void Present(Swapchain* swapchain);
 

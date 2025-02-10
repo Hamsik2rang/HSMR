@@ -51,7 +51,7 @@ set(RENDERER_SOURCES
     Renderer/Framebuffer.mm
     Renderer/Pipeline.mm
     Renderer/CommandHandle.mm
-    Renderer/ResourceHandle.h
+    Renderer/ResourceHandle.mm
     Renderer/RHIUtility.mm
 )
 

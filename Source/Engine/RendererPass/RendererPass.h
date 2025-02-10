@@ -30,6 +30,7 @@ RHIResource* _rhiRes;
 class Renderer;
 class CommandBuffer;
 class RenderCommandEncoder;
+class Framebuffer;
 
 enum class ERenderingOrder
 {
@@ -56,7 +57,7 @@ public:
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
-    virtual void Configure(RenderTexture* renderTarget) = 0;
+    virtual void Configure(Framebuffer* renderTarget) = 0;
 
     virtual void Execute(void* cmdEncoder, RenderPass* renderPass) = 0;
 

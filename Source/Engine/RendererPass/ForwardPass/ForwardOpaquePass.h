@@ -26,7 +26,7 @@ public:
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
-    void Configure(RenderTexture* renderTarget) override;
+    void Configure(Framebuffer* renderTarget) override;
     
     void Execute(void* cmdEncoder, RenderPass* renderPass) override;
     
@@ -38,7 +38,7 @@ private:
     void createResourceHandles();
     void createPipelineHandles(RenderPass* renderPass);
     
-    RenderTexture* _currentRenderTexture;
+    Framebuffer* _currentFramebuffer;
 
 };
 

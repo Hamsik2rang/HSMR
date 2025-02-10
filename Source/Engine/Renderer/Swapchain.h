@@ -35,22 +35,20 @@ public:
     HS_FORCEINLINE void*         GetDrawable() { return _drawable; }
     HS_FORCEINLINE void          SetDrawable(void* drawable) { return _drawable; }
 
-    void* GetNativeWindowHandle() { return _nativeHandle; }
-    void  SetSize(uint32 width, uint32 height)
-    {
-        _width  = width;
-        _height = height;
-    }
-    uint32 GetWidth() { return _width; }
-    uint32 GetHeight() { return _height; }
-
+    void Update(uint32 width, uint32 height);
+   
+    HS_FORCEINLINE void* GetNativeWindowHandle() { return _nativeHandle; }
+    HS_FORCEINLINE uint32 GetWidth() const { return _width; }
+    HS_FORCEINLINE uint32 GetHeight() const { return _height; }
+    HS_FORCEINLINE uint32 GetCurrentFrameCount() const { return _frameCount;}
+    
 private:
     SwapchainInfo _info;
 
-    RenderPass*   _renderPass;
-    Framebuffer* _framebuffers[3];
-    uint32        _frameCount;
-    uint32        _maxFrameCount;
+    RenderPass*  _renderPass;
+    Framebuffer* _framebuffers[3]; //TODO: 매직 넘버 제거하기.
+    uint32       _frameCount;
+    uint32       _maxFrameCount;
 
     uint32 _width;
     uint32 _height;

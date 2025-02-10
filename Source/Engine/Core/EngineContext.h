@@ -32,6 +32,7 @@ struct EngineContext
     std::string name = "";
     //...
     ERHIPlatform rhiPlatform;
+    void* rhiContext;
 
     std::string executablePath;
     std::string executableDirectory;
@@ -42,6 +43,9 @@ EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rh
 EngineContext* hs_engine_get_context();
 void hs_engine_set_context(EngineContext* context);
 EngineContext* hs_engine_destroy_context();
+void* hs_engine_get_rhi_context();
+void hs_engine_set_rhi_context(void* rhiContext);
+
 void hs_engine_set_position(uint32 x, uint32 y);
 void hs_engine_get_position(uint32& outX, uint32& outY);
 

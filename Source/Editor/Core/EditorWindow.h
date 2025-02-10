@@ -13,10 +13,14 @@
 #include "Engine/Core/Window.h"
 #include "Engine/Renderer/RenderDefinition.h"
 
+namespace HS
+{
+class Framebuffer;
+} // namespace HS
+
 HS_NS_EDITOR_BEGIN
 
 class Panel;
-
 class GUIRenderer;
 
 class HS_EDITOR_API EditorWindow : public Window
@@ -29,7 +33,7 @@ public:
 
 private:
     void setupPanels();
-    
+
     bool onInitialize() override;
     void onNextFrame() override;
     void onUpdate() override;
@@ -38,10 +42,12 @@ private:
     void onShutdown() override;
     void onRenderGUI();
 
-    RenderTexture _renderTextures[3]; // TODO: 매직 넘버 제거
+    Framebuffer* _renderTextures[3]; // TODO: 매직 넘버 제거
 
     GUIRenderer* _guiRenderer;
     Panel*       _basePanel;
+    Panel*       _menuPanel;
+    Panel*       _scenePanel;
 };
 
 HS_NS_EDITOR_END
