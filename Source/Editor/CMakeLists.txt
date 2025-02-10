@@ -43,6 +43,7 @@ set(PANEL_HEADERS
     Panel/DockspacePanel.h
     Panel/ScenePanel.h
     Panel/InspectorPanel.h
+    Panel/MenuPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -54,6 +55,7 @@ set(PANEL_SOURCES
     Panel/DockspacePanel.cpp
     Panel/ScenePanel.cpp
     Panel/InspectorPanel.cpp
+    Panel/MenuPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

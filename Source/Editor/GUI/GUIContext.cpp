@@ -46,15 +46,13 @@ void GUIContext::Initialize()
 
     // Setup style
     SetColorTheme(true);
-    // ImGui::StyleColorsLight();
 
-    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        style.WindowRounding              = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    }
+//    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+//    {
+//        style.WindowRounding              = 0.0f;
+//        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+//    }
 
     std::string fontName = "Font/OpenSans-Regular.ttf";
     SetFont(fontName, 18.0f);

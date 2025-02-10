@@ -17,10 +17,17 @@
 #include <stdio.h>
 #include <string>
 
+#include <unistd.h>
+
 
 int main(int, char**)
 {
+    // https://developer.apple.com/forums/thread/765445
+    // to Prevent macOS bug. => apple is xxx.
+    usleep(777777);
+    
     // TODO: Parse command arguments
+    
     
     HS::EngineContext* engineContext = HS::hs_engine_create_context(std::string("HSMR"), HS::ERHIPlatform::METAL);
 
