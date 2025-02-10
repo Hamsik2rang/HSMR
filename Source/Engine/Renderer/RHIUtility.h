@@ -27,6 +27,12 @@ EStoreAction hs_rhi_from_store_action(MTLStoreAction action);
 MTLViewport hs_rhi_to_viewport(Viewport vp);
 Viewport hs_rhi_from_viewport(MTLViewport vp);
 
+MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage);
+ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage);
+
+MTLTextureType hs_rhi_to_texture_type(ETextureType type);
+ETextureType hs_rhi_from_texture_type(MTLTextureType type);
+
 CAMetalLayer* hs_rhi_to_layer(void* layer);
 void* hs_rhi_from_layer(CAMetalLayer* layer);
 
@@ -42,7 +48,8 @@ void hs_rhi_from_clear_color(MTLClearColor color, float* outColor);
 MTLRenderPassDescriptor* hs_rhi_to_render_pass_desc(void* desc);
 void* hs_rhi_from_render_pass_desc(MTLRenderPassDescriptor* desc);
 
-
+id<MTLTexture> hs_rhi_to_texture(void* texture);
+void* hs_rhi_from_texture(id<MTLTexture> texture);
 
 HS_NS_END
 

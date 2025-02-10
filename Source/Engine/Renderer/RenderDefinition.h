@@ -109,9 +109,7 @@ struct SamplerInfo
     EAddressMode addressU;
     EAddressMode addressV;
     EAddressMode addressW;
-
-    uint16 mipLevels = 1;
-
+    
     bool isPixelCoordinate = false;
 };
 
@@ -136,6 +134,7 @@ enum class EBufferMemoryOption
 };
 
 class Texture;
+class RenderPass;
 
 struct RenderTexture
 {
@@ -149,8 +148,6 @@ struct RenderTexture
 
 struct SwapchainInfo
 {
-    EPixelFormat colorFormat;
-    EPixelFormat depthStencilFormat;
     bool         useDepth;
     bool         useStencil;
     bool         useMSAA;
@@ -175,12 +172,25 @@ enum class ELoadAction
     CLEAR,
 };
 
+struct ClearValue
+{
+    union
+    {
+        float color[4];
+        struct
+        {
+            float depth   = 1.0f;
+            float stencil = 0.0f;
+        };
+    };
+};
+
 struct Attachment
 {
     EPixelFormat format;
     ELoadAction  loadAction;
     EStoreAction storeAction;
-    float        clearColor[4];
+    ClearValue   clearValue;
     bool         isDepthStencil = false;
 };
 
@@ -201,6 +211,7 @@ struct FramebufferInfo
     RenderPass*           renderPass;
     std::vector<Texture*> colorBuffers;
     Texture*              depthStencilBuffer;
+    Texture*              resolveBuffer;
 
     uint32 width                  = 1;
     uint32 height                 = 1;

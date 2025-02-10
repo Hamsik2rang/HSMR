@@ -12,6 +12,10 @@
 
 #include "Editor/Panel/Panel.h"
 
+namespace HS
+{
+class Framebuffer;
+}
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API ScenePanel : public Panel
@@ -27,7 +31,10 @@ public:
 
     void Draw() override;
 
+    void SetSceneRenderFramebuffer(Framebuffer* framebuffer) { _currentFramebuffer = framebuffer; }
+
 private:
+    Framebuffer* _currentFramebuffer;
 };
 
 HS_NS_EDITOR_END

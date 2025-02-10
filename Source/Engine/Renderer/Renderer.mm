@@ -68,6 +68,8 @@ bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
     s_layer    = hs_rhi_to_layer(_layer);
     s_device   = MTLCreateSystemDefaultDevice();
     _rhiDevice = hs_rhi_from_device(s_device);
+    
+    hs_engine_set_rhi_context(hs_rhi_from_device(s_device));
 
     s_layer.device      = s_device;
     s_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
@@ -97,7 +99,7 @@ void Renderer::NextFrame(Swapchain* swapchain)
     hs_rhi_to_layer(_layer).drawableSize = CGSizeMake(width, height);
     _currentDrawable                     = [hs_rhi_to_layer(_layer) nextDrawable];
     swapchain->SetDrawable((__bridge void*)_currentDrawable);
-    swapchain->SetSize(width, height);
+    swapchain->Update(width, height);
     
     RenderPass* rp = swapchain->GetRenderPass();
 
@@ -115,7 +117,7 @@ void Renderer::NextFrame(Swapchain* swapchain)
     _currentRpDesc = rpDesc;
 }
 
-void Renderer::Render(const RenderParameter& param, RenderTexture* renderTarget)
+void Renderer::Render(const RenderParameter& param, Framebuffer* renderTarget)
 {
     id<MTLCommandBuffer> commandBuffer    = [s_commandQueue commandBuffer];
     _curCommandBuffer = (__bridge_retained void*)commandBuffer;

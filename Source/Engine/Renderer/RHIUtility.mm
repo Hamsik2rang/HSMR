@@ -133,10 +133,95 @@ Viewport hs_rhi_from_viewport(MTLViewport vp)
     };
 }
 
+MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
+{
+    switch(usage)
+    {
+        case ETextureUsage::SHADER_READ:
+            return MTLTextureUsageShaderRead;
+        case ETextureUsage::SHADER_WRITE:
+            return MTLTextureUsageShaderWrite;
+        case ETextureUsage::PIXELFORMAT_VIEW:
+            return MTLTextureUsagePixelFormatView;
+        case ETextureUsage::RENDER_TARGET:
+            return MTLTextureUsageRenderTarget;
+            
+        default:
+            break;
+    }
+    HS_LOG(crash, "Unsupported MTLTextureUsage");
+    return MTLTextureUsageUnknown;
+}
+
+ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage)
+{
+    switch(usage)
+    {
+        case MTLTextureUsageShaderRead:
+            return ETextureUsage::SHADER_READ;
+        case MTLTextureUsageShaderWrite:
+            return ETextureUsage::SHADER_WRITE;
+        case MTLTextureUsagePixelFormatView:
+            return ETextureUsage::PIXELFORMAT_VIEW;
+        case MTLTextureUsageRenderTarget:
+            return ETextureUsage::RENDER_TARGET;
+            
+        default:
+            break;
+    }
+    HS_LOG(crash, "Unsupported ETextureUsage");
+    return ETextureUsage::UNKNOWN;
+}
+
+MTLTextureType hs_rhi_to_texture_type(ETextureType type)
+{
+    switch(type)
+    {
+        case ETextureType::TEX_1D:
+            return MTLTextureType1D;
+        case ETextureType::TEX_1D_ARRAY:
+            return MTLTextureType1DArray;
+        case ETextureType::TEX_2D:
+            return MTLTextureType2D;
+        case ETextureType::TEX_2D_ARRAY:
+            return MTLTextureType2DArray;
+        case ETextureType::TEX_CUBE:
+            return MTLTextureTypeCube;
+            
+        default:
+            break;
+    }
+    HS_LOG(crash, "Unsupported MTLTextureType");
+    return MTLTextureType2D;
+}
+
+ETextureType hs_rhi_from_texture_type(MTLTextureType type)
+{
+    switch(type)
+    {
+        case MTLTextureType1D:
+            return ETextureType::TEX_1D;
+        case MTLTextureType1DArray:
+            return ETextureType::TEX_1D_ARRAY;
+        case MTLTextureType2D:
+            return ETextureType::TEX_2D;
+        case MTLTextureType2DArray:
+            return ETextureType::TEX_2D_ARRAY;
+        case MTLTextureTypeCube:
+            return ETextureType::TEX_CUBE;
+            
+        default:
+            break;
+    }
+    HS_LOG(crash, "Unsupported ETextureType");
+    return ETextureType::INVALID;
+}
+
 CAMetalLayer* hs_rhi_to_layer(void* layer)
 {
     return (__bridge CAMetalLayer*)layer;
 }
+
 void* hs_rhi_from_layer(CAMetalLayer* layer)
 {
     return (__bridge void*)layer;
@@ -146,11 +231,11 @@ id<MTLDevice> hs_rhi_to_device(void* device)
 {
     return (__bridge_transfer id<MTLDevice>) device;
 }
+
 void* hs_rhi_from_device(id<MTLDevice> device)
 {
     return (__bridge_retained void*)device;
 }
-
 
 id<MTLCommandQueue> hs_rhi_to_command_queue(void* q)
 {
@@ -179,16 +264,25 @@ void hs_rhi_from_clear_color(MTLClearColor color, float* outColor)
     outColor[3] = static_cast<float>(color.alpha);
 }
 
-
 MTLRenderPassDescriptor* hs_rhi_to_render_pass_desc(void* desc)
 {
     return (__bridge_transfer MTLRenderPassDescriptor*)desc;
 }
+
 void* hs_rhi_from_render_pass_desc(MTLRenderPassDescriptor* desc)
 {
     return (__bridge_retained void*)desc;
 }
 
+id<MTLTexture> hs_rhi_to_texture(void* texture)
+{
+    return (__bridge_transfer id<MTLTexture>)texture;
+}
+
+void* hs_rhi_from_texture(id<MTLTexture> texture)
+{
+    return (__bridge_retained void*)texture;
+}
 
 
 HS_NS_END

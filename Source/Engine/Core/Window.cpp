@@ -8,7 +8,6 @@
 
 HS_NS_BEGIN
 
-
 Window::Window(const char* name, uint32 width, uint32 height, uint64 flags)
     : _name(name)
     , _width(width)
@@ -44,21 +43,20 @@ uint32 Window::Initialize()
     _nativeHandle.window = static_cast<void*>(window);
     _nativeHandle.view   = static_cast<void*>(view);
     _nativeHandle.layer  = SDL_Metal_GetLayer(view);
-    
+
+    SDL_SetWindowSize(window, _width, _height);
+
     SwapchainInfo swInfo{};
-    swInfo.colorFormat = EPixelFormat::B8G8A8R8_UNORM;
-    swInfo.depthStencilFormat = EPixelFormat::DEPTH24_STENCIL8;
     swInfo.nativeWindowHandle = static_cast<void*>(&_nativeHandle);
-    swInfo.useDepth = false;
-    swInfo.useMSAA = false;
-    swInfo.useStencil = false;
+    swInfo.useDepth           = false;
+    swInfo.useMSAA            = false;
+    swInfo.useStencil         = false;
 
     _swapchain = new Swapchain(swInfo);
-    
+
     onInitialize();
-    
+
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    SDL_SetWindowSize(window, _width, _height);
     SDL_ShowWindow(window);
 }
 
@@ -185,7 +183,7 @@ void Window::Flush()
     {
         for (auto* grandChild : child->_childs)
         {
-            if(!grandChild->_isClosed)
+            if (!grandChild->_isClosed)
             {
                 _childs.push_back(grandChild);
             }

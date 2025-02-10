@@ -22,12 +22,14 @@ public:
     Framebuffer(FramebufferInfo info);
     ~Framebuffer() override;
     
+    void Resize(uint32 width, uint32 height);
+    
     FramebufferInfo info;
 
+    RenderPass* GetRenderPass() { return _renderPass;}
 private:
-    std::vector<Texture*> _colorBuffer;
-    Texture* _depthStencilBuffer;
-    Texture* _resolveBuffer;
+    //...
+    RenderPass* _renderPass;
 };
 
 HS_NS_END
