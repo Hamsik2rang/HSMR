@@ -11,11 +11,11 @@
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/Scene.h"
 
-#include "Engine/Renderer/Swapchain.h"
-#include "Engine/Renderer/RenderPass.h"
-#include "Engine/Renderer/CommandHandle.h"
-#include "Engine/Renderer/RenderDefinition.h"
-#include "Engine/Renderer/RHIUtility.h"
+#include "Engine/RHI/Swapchain.h"
+#include "Engine/RHI/RenderPass.h"
+#include "Engine/RHI/CommandHandle.h"
+#include "Engine/RHI/RenderDefinition.h"
+#include "Engine/RHI/RHIUtility.h"
 
 #include "Engine/RendererPass/RendererPass.h"
 

@@ -32,9 +32,5 @@ Shader::Shader(Shader::EStage stage, const char* byteCode, size_t byteSize, cons
     loadShader();
 }
 
-void Shader::loadShader()
-{
-    
-}
 
 HS_NS_END

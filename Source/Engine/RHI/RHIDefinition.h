@@ -16,9 +16,36 @@ HS_NS_BEGIN
 class RHIHandle
 {
 public:
+    enum class Type
+    {
+        BUFFER,
+        TEXTURE,
+        SAMPER,
+        SHADER,
+        RESOURCE_LAYOUY,
+        DESCRIPTOR_SET,
+        DESCRIPTOR_POOL,
+        RENDER_PASS,
+        FRAMEBUFFER,
+        PIPELINE,
+        COMMAND_QUEUE,
+        COMMAND_POOL,
+        COMMAND_BUFFER,
+        FENCE,
+        SEMAPHORE,
+        BARRIER
+    };
+    
+    RHIHandle() = delete;
+    RHIHandle(RHIHandle::Type type) : type(type) {}
     virtual ~RHIHandle() {}
 
-    void* handle;
+    void GetHash() { return _hash; }
+    
+    const Type type;
+protected:
+    //...
+    
 };
 
 enum class EPixelFormat
@@ -109,7 +136,7 @@ struct SamplerInfo
     EAddressMode addressU;
     EAddressMode addressV;
     EAddressMode addressW;
-    
+
     bool isPixelCoordinate = false;
 };
 
@@ -148,9 +175,9 @@ struct RenderTexture
 
 struct SwapchainInfo
 {
-    bool         useDepth;
-    bool         useStencil;
-    bool         useMSAA;
+    bool useDepth;
+    bool useStencil;
+    bool useMSAA;
 
     void* nativeWindowHandle;
 };
@@ -269,6 +296,51 @@ struct Viewport
     float height = 0;
     float zMear  = 0.0f;
     float zFar   = 1.0f;
+};
+
+#Ifdef DOMAIN
+#pragma push_macro("DOMAIN")
+#undef DOMAIN
+#endif
+enum class EShaderStage
+{
+    VERTEX,
+    GEOMETRY,
+    DOMAIN,
+    HULL,
+    FRAGMENT,
+
+    COMPUTE
+}
+
+#ifdef DOMAIN
+#pragma pop_macro("DOMAIN")
+#endif
+
+enum class EResourceType : uint8
+{
+    SAMPLER,
+    COMBINED_IMAGE_SAMPLER,
+    SAMPLED_IMAGE,
+    STORAGE_IMAGE,
+    UNIFORM_TEXEL_BUFFER,
+    STORAGET_TEXEL_BUFFER,
+    UNIFORM_BUFFER,
+    STORAGE_BUFFER,
+    UNIFORM_BUFFER_DYNAMIC,
+    STORAGE_BUFFER_DYNAMIC,
+    INPUT_ATTACHMENT,
+};
+
+struct ResourceBinding
+{
+    EResourceType type;
+    EShaderStage stage;
+    uint8 biding;
+    uint8 arrayCount;
+    
+    std::string name;
+    uint32 nameHash;
 };
 
 HS_NS_END

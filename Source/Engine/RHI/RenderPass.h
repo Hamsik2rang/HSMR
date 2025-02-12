@@ -11,7 +11,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/RHI/RenderDefinition.h"
 
 HS_NS_BEGIN
 
