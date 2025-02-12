@@ -9,14 +9,12 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/RHI/RenderDefinition.h"
 
 HS_NS_BEGIN
 
-class Renderer;
-class RenderPass;
-class Framebuffer;
 class CommandBuffer;
+class RenderTarget;
 class NativeWindowHandle;
 
 class Swapchain
@@ -29,14 +27,11 @@ public:
 
     void Submit(CommandBuffer** cmdBuffers, size_t bufferCount);
 
-    HS_FORCEINLINE RenderPass*   GetRenderPass() { return _renderPass; }
-    HS_FORCEINLINE void          SetRenderPass(RenderPass* renderPass) { _renderPass = renderPass; }
-    HS_FORCEINLINE SwapchainInfo GetInfo() { return _info; }
-    HS_FORCEINLINE void*         GetDrawable() { return _drawable; }
-    HS_FORCEINLINE void          SetDrawable(void* drawable) { return _drawable; }
-
     void Update(uint32 width, uint32 height);
-   
+    
+    HS_FORCEINLINE SwapchainInfo GetInfo() { return _info; }
+    
+    HS_FORCEINLINE RenderTarget* GetRenderTarget() { return _renderTarget; }
     HS_FORCEINLINE void* GetNativeWindowHandle() { return _nativeHandle; }
     HS_FORCEINLINE uint32 GetWidth() const { return _width; }
     HS_FORCEINLINE uint32 GetHeight() const { return _height; }
@@ -44,18 +39,9 @@ public:
     
 private:
     SwapchainInfo _info;
-
-    RenderPass*  _renderPass;
-    Framebuffer* _framebuffers[3]; //TODO: 매직 넘버 제거하기.
-    uint32       _frameCount;
-    uint32       _maxFrameCount;
-
-    uint32 _width;
-    uint32 _height;
-
+    
+    RenderTarget* _renderTarget;
     NativeWindowHandle* _nativeHandle;
-
-    void* _drawable;
 };
 
 HS_NS_END

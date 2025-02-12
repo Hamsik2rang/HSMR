@@ -9,9 +9,30 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/RHI/RenderDefinition.h"
 
 HS_NS_BEGIN
+
+class Semaphore : public RHIHandle
+{
+    
+};
+
+class Fence : public RHIHandle
+{
+    
+};
+
+class CommandQueue : public RHIHandle
+{
+    
+    
+};
+
+class CommandPool : public RHIHandle
+{
+    
+};
 
 class CommandBuffer : public RHIHandle
 {

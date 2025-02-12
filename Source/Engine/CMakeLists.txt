@@ -16,7 +16,7 @@ source_group("Core\\Public" FILES ${CORE_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
-    Core/Application.mm
+    Core/Application.cpp
     Core/Scene.cpp
     Core/Log.cpp
     Core/EngineContext.cpp
@@ -30,43 +30,75 @@ list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(RHI_HEADERS
     RHI/RHIContext.h
+    RHI/RHIDefinition.h
+    RHI/RHIUtility.h
+    RHI/Swapchain.h
+    RHI/RenderPass.h
+    RHI/Framebuffer.h
+    RHI/Pipeline.h
+    RHI/Shader.h
+    RHI/CommandHandle.h
+    RHI/ResourceHandle.h
 )
 
-source_group("RHI\\Public" FILES ${RHI_HEADERS})
+source_group("RHI\\Common\\Public" FILES ${RHI_HEADERS})
 list(APPEND TOTAL_FILES ${RHI_HEADERS})
 
 set(RHI_SOURCES
-    RHI/RHIContext.cpp
+    RHI/RHIDefinition.cpp
+    RHI/Shader.cpp
 )
 
-source_group("RHI\\Private" FILES ${RHI_SOURCES})
+source_group("RHI\\Common\\Private" FILES ${RHI_SOURCES})
 list(APPEND TOTAL_FILES ${RHI_SOURCES})
+
+if(APPLE)
+    set(RHI_METAL_HEADERS
+        RHI/Metal/RHIContextMetal.h
+        RHI/Metal/RHIDefinitionMetal.h
+        RHI/Metal/RHIUtilityMetal.h
+        RHI/Metal/SwapchainMetal.h
+        RHI/Metal/RenderPassMetal.h
+        RHI/Metal/FramebufferMetal.h
+        RHI/Metal/PipelineMetal.h
+        RHI/Metal/ShaderMetal.h
+        RHI/Metal/CommandHandleMetal.h
+        RHI/Metal/ResourceHandleMetal.h
+    )
+
+    source_group("RHI\\Metal\\Public" FILES ${RHI_METAL_HEADERS})
+    list(APPEND TOTAL_FILES ${RHI_METAL_HEADERS})
+
+    set(RHI_METAL_SOURCES
+        RHI/Metal/RHIContextMetal.cpp
+        RHI/Metal/RHIDefinitionMetal.cpp
+        RHI/Metal/RHIUtilityMetal.cpp
+        RHI/Metal/SwapchainMetal.cpp
+        RHI/Metal/RenderPassMetal.cpp
+        RHI/Metal/FramebufferMetal.cpp
+        RHI/Metal/PipelineMetal.cpp
+        RHI/Metal/ShaderMetal.cpp
+        RHI/Metal/CommandHandleMetal.cpp
+        RHI/Metal/ResourceHandleMetal.cpp
+    )
+
+    source_group("RHI\\Metal\\Private" FILES ${RHI_METAL_SOURCES})
+    list(APPEND TOTAL_FILES ${RHI_METAL_SOURCES})
+
+else()
+endif()
 
 set(RENDERER_HEADERS
     Renderer/Renderer.h
-    Renderer/RenderDefinition.h
-    Renderer/Swapchain.h
-    Renderer/RenderPass.h
-    Renderer/Framebuffer.h
-    Renderer/Pipeline.h
-    Renderer/CommandHandle.h
-    Renderer/ResourceHandle.h
-    Renderer/RHIUtility.h
+    Renderer/RenderTarget.h
 )
 
 source_group("Renderer\\Public" FILES ${RENDERER_HEADERS})
 list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
-    Renderer/Renderer.mm
-    Renderer/RenderDefinition.mm
-    Renderer/Swapchain.mm
-    Renderer/RenderPass.mm
-    Renderer/Framebuffer.mm
-    Renderer/Pipeline.mm
-    Renderer/CommandHandle.mm
-    Renderer/ResourceHandle.mm
-    Renderer/RHIUtility.mm
+    Renderer/Renderer.cpp
+    Renderer/RenderTarget.cpp
 )
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
@@ -76,7 +108,6 @@ set(OBJECT_HEADERS
     Object/Material.h
     Object/Mesh.h
     Object/Image.h
-    Object/Shader.h
 )
 
 source_group("Object\\Public" FILES ${OBJECT_HEADERS})
@@ -86,7 +117,6 @@ set(OBJECT_SOURCES
     Object/Material.cpp
     Object/Mesh.cpp
     Object/Image.cpp
-    Object/Shader.cpp
 )
 
 source_group("Object\\Private" FILES ${OBJECT_SOURCES})
@@ -118,8 +148,8 @@ set(RENDERER_PASS_HEADERS
 source_group("RendererPass\\Public" FILES ${RENDERER_PASS_HEADERS})
 list(APPEND TOTAL_FILES ${RENDERER_PASS_HEADERS})
 set(RENDERER_PASS_SOURCES
-    RendererPass/RendererPass.mm
-    RendererPass/DebugPass.mm
+    RendererPass/RendererPass.cpp
+    RendererPass/DebugPass.cpp
 )
 
 source_group("RendererPass\\Private" FILES ${RENDERER_PASS_SOURCES})
@@ -132,8 +162,8 @@ set(FORWARD_PASS_HEADERS
 source_group("RendererPass\\ForwardPass\\Public" FILES ${FORWARD_PASS_HEADERS})
 list(APPEND TOTAL_FILES ${FORWARD_PASS_HEADERS})
 set(FORWARD_PASS_SOURCES
-    RendererPass/ForwardPass/ForwardPass.mm
-    RendererPass/ForwardPass/ForwardOpaquePass.mm
+    RendererPass/ForwardPass/ForwardPass.cpp
+    RendererPass/ForwardPass/ForwardOpaquePass.cpp
 )
 
 source_group("RendererPass\\ForwardPass\\Private" FILES ${FORWARD_PASS_SOURCES})
@@ -185,8 +215,6 @@ if(APPLE)
         "${METAL_CPP_DIR}/QuartzCore/QuartzCore.hpp"
         "${METAL_CPP_DIR}/Metal/Metal.hpp"
     )
-
-    message(STATUS "METAL_CPP_DIR: ${METAL_CPP_DIR}")
 
     option(MAKE_METAL_SINGLE_HEADER "use metal-cpp as a single header" OFF)
 
@@ -267,12 +295,12 @@ add_library(${TARGET_NAME} STATIC
 set(INCLUDE_DIRECTORIES)
 
 if(APPLE)
+    target_include_directories(${TARGET_NAME}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        PUBLIC ThirdParty ThirdParty/metal-cpp ${HS_RES_SHADER_DIR}
+    )
+else()
 endif()
-
-target_include_directories(${TARGET_NAME}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-    PUBLIC ThirdParty METAL_CPP_INCLUDE_DIRS ${HS_RES_SHADER_DIR}
-)
 
 add_dependencies(${TARGET_NAME} Shader)
 

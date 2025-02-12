@@ -8,7 +8,7 @@
 #define __RENDERER_H__
 
 #include "Precompile.h"
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/RHI/RenderDefinition.h"
 
 #include <vector>
 
@@ -25,8 +25,6 @@ class Swapchain;
 class Framebuffer;
 
 struct NativeWindowHandle;
-
-
 
 class Renderer
 {
@@ -55,15 +53,6 @@ public:
     static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
     
 protected:
-    void renderDockingPanel();
-//    id<MTLDevice> _device;
-//    id<MTLCommandQueue> _commandQueue;
-//    id<MTLCommandBuffer> _commandBuffer;
-//    id<MTLRenderCommandEncoder> _renderEncoder;
-//
-//    id<MTLTexture> _renderTarget[MAX_SUBMIT_INDEX];
-//    id<CAMetalDrawable> _currentDrawable;
-//    MTLRenderPassDescriptor* _renderPassDescriptor;
     void* _window;
     void* _view;
     void* _layer;

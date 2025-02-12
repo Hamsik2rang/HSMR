@@ -8,10 +8,7 @@
 #ifndef __HS_RHI_UTILITY_H__
 #define __HS_RHI_UTILITY_H__
 
-#include "RenderDefinition.h"
-
-#import <Metal/Metal.h>
-#import <QuartzCore/QuartzCore.h>
+#include "Engine/RHI/RenderDefinition.h"
 
 HS_NS_BEGIN
 
