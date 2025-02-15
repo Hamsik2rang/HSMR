@@ -31,7 +31,7 @@ list(APPEND TOTAL_FILES ${GUI_HEADERS})
 
 set(GUI_SOURCES
     GUI/GUIContext.cpp
-    GUI/GUIRenderer.mm
+    GUI/GUIRenderer.cpp
 )
 
 list(APPEND TOTAL_FILES ${GUI_SOURCES})

@@ -4,8 +4,8 @@
 //
 //  Created by Yongsik Im on 11/2/25.
 //
-#ifnderf __RENDER_TARGET_H__
-#define __RENDER_TARGET_H__
+#ifnderf __HS_RENDER_TARGET_H__
+#define __HS_RENDER_TARGET_H__
 
 #include "Precompile.h"
 
@@ -17,6 +17,6 @@ class RenderTarget
 };
 
 
-HS_NS_ENd
+HS_NS_END
 
-#endif
+#endif /* __HS_RENDER_TARGET_H__ */

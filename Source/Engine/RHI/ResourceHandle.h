@@ -34,8 +34,33 @@ public:
     SamplerInfo GetInfo() { return _info; }
 private:
     SamplerInfo _info;
-ß
+
 };
+
+
+class Shader
+{
+public:
+    Shader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true);
+    Shader(EShaderStage stage, const char* byteCocde, size_t byteSize, const char* entryName, bool isBuitIn = true);
+
+    virtual ~Shader();
+
+    const char*  GetByteCode() { return _byteCode; }
+    const char*  GetEntryName() { return _entryName; }
+    size_t       GetByteSize() { return _byteSize; }
+    EShaderStage GetStage() { return _stage; }
+
+private:
+    void loadShader();
+
+    bool         _isBuiltIn;
+    const char*  _byteCode;
+    const char*  _entryName;
+    size_t       _byteSize;
+    EShaderStage _stage;
+};
+
 
 class Buffer : public RHIHandle
 {

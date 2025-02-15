@@ -23,6 +23,11 @@ class Fence : public RHIHandle
     
 };
 
+class ResourceBarrier : public RHIHandle
+{
+    
+};
+
 class CommandQueue : public RHIHandle
 {
     

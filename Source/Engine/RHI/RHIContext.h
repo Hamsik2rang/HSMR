@@ -12,7 +12,7 @@
 #include "Engine/RHI/RHIDefinition.h"
 #include "Engine/RHI/RenderPass.h"
 #include "Engine/RHI/Framebuffer.h"
-#include "Engine/RHI/Pipeline.h.h"
+#include "Engine/RHI/Pipeline.h"
 #include "Engine/RHI/CommandHandle.h"
 #include "Engine/RHI/ResourceHandle.h"
 
@@ -38,15 +38,41 @@ public:
     virtual Pipeline* CreatePipeline() =0;
     virtual void DestroyPipeline() =0;
     
-    
+    virtual Shader* CreateShader() = 0;
+    virtual void DestroyShader(Shader* shader);
     
     virtual Buffer* CreateBuffer()                = 0;
     virtual void    DestroyBuffer(Buffer* buffer) = 0;
 
     virtual Texture* CreateTextrue()                  = 0;
     virtual void     DestroyTexture(Texture* texture) = 0;
+    
+    virtual ResourceLayout CreateResourceLayout() =0;
+    virtual void DestroyResourceLayout(ResourceLayout* resourceLayout) = 0;
+    
+    virtual DescriptorSet* CreateDescriptorSet() =0;
+    virtual void DestroyDescriptorSet(DescriptorSet* dSet);
+    
+    virtual DescriptorPool* CreateDescriptorPool() =0;
+    virtual void DestroyDescriptorPool(DescriptorPool* dPool) = 0;
+//    
+//    virtual CommandQueue* CreateCommandQueue() =0;
+//    virtual void DestroyCommandQueue(CommandQueue* cmdQueue) = 0;
+    
+    virtual CommandPool* CreateCommandPool() =0;
+    virtual void DestroyCommandPool(CommandPool* cmdPool) = 0;
+    
+    virtual CommandBuffer* CreateCommandBuffer() =0;
+    virtual void DestroyCommandBuffer(CommandBuffer* cmdBuffer) = 0;
+    
+    virtual Fence* CreateFence() = 0;
+    virtual void DestroyFence(Fence* fence) = 0;
+    
+    virtual Semaphore CreateSemaphore() = 0;
+    virtual void DestroySemaphore(Semaphore* semaphore)  = 0;
 
-    virtual void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount);
+
+    virtual void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) = 0;
 
     virtual void Present(Swapchain* swapchain) = 0;
 
