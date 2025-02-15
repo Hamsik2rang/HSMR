@@ -8,7 +8,10 @@
 #define __RENDERER_H__
 
 #include "Precompile.h"
-#include "Engine/RHI/RenderDefinition.h"
+
+#include "Engine/Renderer/RenderTarget.h"
+#include "Engine/RHI/RHIDefinition.h"
+#include "Engine/RHI/RHIContext.h"
 
 #include <vector>
 
@@ -29,14 +32,14 @@ struct NativeWindowHandle;
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(RHIContext* rhiContext);
     ~Renderer();
 
-    virtual bool Initialize(const NativeWindowHandle* nativeHandle);
+    virtual bool Initialize();
 
     virtual void NextFrame(Swapchain* swapchain);
 
-    virtual void Render(const RenderParameter& param, Framebuffer* renderTarget);
+    virtual void Render(const RenderParameter& param, RenderTarget* renderTexture);
 
     virtual void Present(Swapchain* swapchain);
 
@@ -46,29 +49,25 @@ public:
         _isPassListSorted = false;
     }
     
-    virtual void* GetDevice() { return _rhiDevice; }
-    
     virtual void Shutdown();
     
-    static constexpr uint32_t MAX_SUBMIT_INDEX = 3;
+    HS_FORCEINLINE RHIContext* GetRHIContext() { return _rhiContext; }
+    
+    HS_FORCEINLINE uint32 GetCurrentFrameIndex() { return _frameIndex; }
     
 protected:
-    void* _window;
-    void* _view;
-    void* _layer;
+    RHIContext* _rhiContext;
     
-    void* _rhiDevice;
-    void* _commandQueue;
-    void* _curCommandBuffer;
-    void* _curCommandEncoder;
+    CommandBuffer* _commandBuffer[3]; // TODO: Multi-CommandBuffer 구현 필요
     
     std::vector<RendererPass*> _rendererPasses;
-    uint32_t _submitIndex = 0;
+    uint32 _frameIndex = 0;
     bool _isInitialized = false;
     bool _isPassListSorted = true;
     
-    static const size_t MAX_FRAME_COUNT;
-    uint32 _frameCount;
+    Swapchain* _swapchain = nullptr;
+    
+    RenderTarget* _currentRenderTarget;
 };
 
 HS_NS_END

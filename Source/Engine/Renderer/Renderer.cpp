@@ -1,54 +1,52 @@
+////
+////  Renderer.mm
+////  HSMR
+////
+////  Created by Yongsik Im on 1/29/25.
+////
+// #include "Engine/Renderer/Renderer.h"
 //
-//  Renderer.mm
-//  HSMR
+// #include "Engine/Core/Log.h"
+// #include "Engine/Core/Window.h"
+// #include "Engine/Core/EngineContext.h"
 //
-//  Created by Yongsik Im on 1/29/25.
+// #include "Engine/Core/Swapchain.h"
+// #include "Engine/RHI/RHIRenderPass.h"
+// #include "Engine/RHI/RHICommandHandle.h"
+// #include "Engine/RHI/RHIDefinition.h"
 //
-#include "Engine/Renderer/Renderer.h"
+// #include "Engine/RendererPass/RendererPass.h"
+//
+// #include "SDL3/SDL.h"
+// #include "ImGui/backends/imgui_impl_sdl3.h"
+// #include "ImGui/backends/imgui_impl_metal.h"
+//
+// HS_NS_BEGIN
+//
+// namespace
+//{
+// id<MTLDevice>       s_device;
+// id<MTLCommandQueue> s_commandQueue;
+// CAMetalLayer*       s_layer;
+//
+//// TODO: 테스트용 임시
+////    id<MTLDevice> _device;
+////    id<MTLCommandQueue> _commandQueue;
+//
+// id<MTLRenderCommandEncoder> _renderEncoder;
+//
+// id<MTLTexture>           _renderTarget[Renderer::MAX_SUBMIT_INDEX];
+// id<CAMetalDrawable>      _currentDrawable;
+// MTLRenderPassDescriptor* _currentRpDesc;
+// RenderPass* _currentRp;
+//
+//} // namespace
 
-#include "Engine/Core/Log.h"
-#include "Engine/Core/Window.h"
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Scene.h"
-
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RHI/RenderPass.h"
-#include "Engine/RHI/CommandHandle.h"
-#include "Engine/RHI/RenderDefinition.h"
-#include "Engine/RHI/RHIUtility.h"
-
-#include "Engine/RendererPass/RendererPass.h"
-
-#include "SDL3/SDL.h"
-#include "ImGui/backends/imgui_impl_sdl3.h"
-#include "ImGui/backends/imgui_impl_metal.h"
-
-#import <Metal/Metal.h>
-#import <QuartzCore/QuartzCore.h>
-
-HS_NS_BEGIN
-namespace
-{
-id<MTLDevice>       s_device;
-id<MTLCommandQueue> s_commandQueue;
-CAMetalLayer*       s_layer;
-
-// TODO: 테스트용 임시
-//    id<MTLDevice> _device;
-//    id<MTLCommandQueue> _commandQueue;
-
-id<MTLRenderCommandEncoder> _renderEncoder;
-
-id<MTLTexture>           _renderTarget[Renderer::MAX_SUBMIT_INDEX];
-id<CAMetalDrawable>      _currentDrawable;
-MTLRenderPassDescriptor* _currentRpDesc;
-RenderPass* _currentRp;
-
-} // namespace
-
-const size_t Renderer::MAX_FRAME_COUNT = 3;
-
-Renderer::Renderer()
+Renderer::Renderer(RHIContxt* context)
+    : _rhiContext(context)
+    , _swapchain(nullptr)
+    , _currentRenderTarget(nullptr)
+    , _frameIndex(0)
 {
 }
 
@@ -57,214 +55,91 @@ Renderer::~Renderer()
     Shutdown();
 }
 
-bool Renderer::Initialize(const NativeWindowHandle* nativeHandle)
+bool Renderer::Initialize()
 {
-    _window = nativeHandle->window;
-    _view   = nativeHandle->view;
-    _layer  = nativeHandle->layer;
-
-    SDL_Window* window = static_cast<SDL_Window*>(_window);
-
-    s_layer    = hs_rhi_to_layer(_layer);
-    s_device   = MTLCreateSystemDefaultDevice();
-    _rhiDevice = hs_rhi_from_device(s_device);
-    
-    hs_engine_set_rhi_context(hs_rhi_from_device(s_device));
-
-    s_layer.device      = s_device;
-    s_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-
-    s_commandQueue = [s_layer.device newCommandQueue];
-    if (s_commandQueue == nil)
+    for (int i = 0; i < 3; i++)
     {
-        return false;
+        _commandBuffer[i] = _rhiContext->CreateCommandBuffer();
     }
-    _commandQueue = (__bridge void*)s_commandQueue;
-
-    _currentRpDesc = nil;
-
     _isInitialized = true;
 
     return _isInitialized;
 }
 
-void Renderer::NextFrame(Swapchain* swapchain)
-{
-    swapchain->_frameCount = (swapchain->_frameCount + 1) % MAX_FRAME_COUNT;
-
-    int width, height;
-
-    SDL_Window* window = static_cast<SDL_Window*>(_window);
-    SDL_GetWindowSizeInPixels(window, &width, &height);
-    hs_rhi_to_layer(_layer).drawableSize = CGSizeMake(width, height);
-    _currentDrawable                     = [hs_rhi_to_layer(_layer) nextDrawable];
-    swapchain->SetDrawable((__bridge void*)_currentDrawable);
-    swapchain->Update(width, height);
-    
-    RenderPass* rp = swapchain->GetRenderPass();
-
-    MTLRenderPassDescriptor* rpDesc = (__bridge MTLRenderPassDescriptor*)rp->handle;
-
-    rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
-    rpDesc.colorAttachments[0].texture     = _currentDrawable.texture;
-    rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
-    rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
-
-    rp->info.colorAttachments[0].loadAction  = hs_rhi_from_load_action(rpDesc.colorAttachments[0].loadAction);
-    rp->info.colorAttachments[0].storeAction = hs_rhi_from_store_action(rpDesc.colorAttachments[0].storeAction);
-
-    _currentRp = rp;
-    _currentRpDesc = rpDesc;
-}
-
-void Renderer::Render(const RenderParameter& param, Framebuffer* renderTarget)
-{
-    id<MTLCommandBuffer> commandBuffer    = [s_commandQueue commandBuffer];
-    _curCommandBuffer = (__bridge_retained void*)commandBuffer;
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnBeforeRendering(_frameCount);
-    }
-
-    id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:_currentRpDesc];
-    _curCommandEncoder                  = (__bridge_retained void*)encoder;
-    
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->Configure(renderTarget);
-
-        pass->Execute(_curCommandEncoder, _currentRp);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnAfterRendering();
-    }
-}
-
-void Renderer::Present(Swapchain* swapchain)
-{
-    id<MTLCommandBuffer> commandBuffer = (__bridge_transfer id<MTLCommandBuffer>)_curCommandBuffer;
-    
-    [commandBuffer presentDrawable:_currentDrawable];
-
-    [commandBuffer commit];
-    
-    _curCommandBuffer = nullptr;
-    _curCommandEncoder = nullptr;
-}
+// void Renderer::NextFrame(Swapchain* swapchain)
+//{
+//     swapchain->_frameCount = (swapchain->_frameCount + 1) % MAX_FRAME_COUNT;
+//
+//     int width, height;
+//
+//     SDL_Window* window = static_cast<SDL_Window*>(_window);
+//     SDL_GetWindowSizeInPixels(window, &width, &height);
+//     hs_rhi_to_layer(_layer).drawableSize = CGSizeMake(width, height);
+//     _currentDrawable                     = [hs_rhi_to_layer(_layer) nextDrawable];
+//     swapchain->SetDrawable((__bridge void*)_currentDrawable);
+//     swapchain->Update(width, height);
+//
+//     RenderPass* rp = swapchain->GetRenderPass();
+//
+//     MTLRenderPassDescriptor* rpDesc = (__bridge MTLRenderPassDescriptor*)rp->handle;
+//
+//     rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
+//     rpDesc.colorAttachments[0].texture     = _currentDrawable.texture;
+//     rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
+//     rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+//
+//     rp->info.colorAttachments[0].loadAction  = hs_rhi_from_load_action(rpDesc.colorAttachments[0].loadAction);
+//     rp->info.colorAttachments[0].storeAction = hs_rhi_from_store_action(rpDesc.colorAttachments[0].storeAction);
+//
+//     _currentRp = rp;
+//     _currentRpDesc = rpDesc;
+// }
+//
+// void Renderer::Render(const RenderParameter& param, Framebuffer* renderTarget)
+//{
+//     id<MTLCommandBuffer> commandBuffer    = [s_commandQueue commandBuffer];
+//     _curCommandBuffer = (__bridge_retained void*)commandBuffer;
+//
+//     for (auto* pass : _rendererPasses)
+//     {
+//         pass->OnBeforeRendering(_frameCount);
+//     }
+//
+//     id<MTLRenderCommandEncoder> encoder = [commandBuffer renderCommandEncoderWithDescriptor:_currentRpDesc];
+//     _curCommandEncoder                  = (__bridge_retained void*)encoder;
+//
+//
+//     for (auto* pass : _rendererPasses)
+//     {
+//         pass->Configure(renderTarget);
+//
+//         pass->Execute(_curCommandEncoder, _currentRp);
+//     }
+//
+//     for (auto* pass : _rendererPasses)
+//     {
+//         pass->OnAfterRendering();
+//     }
+// }
 
 void Renderer::Shutdown()
 {
+    for (int i = 0; i < 3; i++)
+    {
+        if (nullptr != _commandBuffer[i])
+        {
+            delete _commandBuffer[i];
+            _commandBuffer[i] = nullptr;
+        }
+    }
+
+    for (size_t i = 0; i < _rendererPasses.count(); i++)
+    {
+        delete _rendererPasses[i];
+        _rendererPasses[i] = nullptr;
+    }
+    _rendererPasses[i].clear();
+
     _isInitialized = false;
 }
-//
-// void Renderer::renderDockingPanel()
-//{
-//    // READ THIS !!!
-//    // TL;DR; this demo is more complicated than what most users you would normally use.
-//    // If we remove all options we are showcasing, this demo would become:
-//    //     void ShowExampleAppDockSpace()
-//    //     {
-//    //         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-//    //     }
-//    // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
-//    // In this specific demo, we are not using DockSpaceOverViewport() because:
-//    // - (1) we allow the host window to be floating/moveable instead of filling the viewport (when opt_fullscreen == false)
-//    // - (2) we allow the host window to have padding (when opt_padding == true)
-//    // - (3) we expose many flags and need a way to have them visible.
-//    // - (4) we have a local menu bar in the host window (vs. you could use BeginMainMenuBar() + DockSpaceOverViewport()
-//    //      in your code, but we don't here because we allow the window to be floating)
-//
-//    static bool               opt_fullscreen  = true;
-//    static bool               opt_padding     = false;
-//    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-//
-//    // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-//    // because it would be confusing to have two docking targets within each others.
-//    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-//    if (opt_fullscreen)
-//    {
-//        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-//        ImGui::SetNextWindowPos(viewport->WorkPos);
-//        ImGui::SetNextWindowSize(viewport->WorkSize);
-//        ImGui::SetNextWindowViewport(viewport->ID);
-//        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-//        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-//        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-//        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-//    }
-//    else
-//    {
-//        dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-//    }
-//
-//    // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
-//    // and handle the pass-thru hole, so we ask Begin() to not render a background.
-//    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-//        window_flags |= ImGuiWindowFlags_NoBackground;
-//
-//    // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-//    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-//    // all active windows docked into it will lose their parent and become undocked.
-//    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-//    // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
-//    if (!opt_padding)
-//        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-//    static bool open = true;
-//    ImGui::Begin("DockSpace Demo", &open, window_flags);
-//    if (!opt_padding)
-//        ImGui::PopStyleVar();
-//
-//    if (opt_fullscreen)
-//        ImGui::PopStyleVar(2);
-//
-//    // Submit the DockSpace
-//    ImGuiIO& io = ImGui::GetIO();
-//    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-//    {
-//        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-//        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-//    }
-//
-//    if (ImGui::BeginMenuBar())
-//    {
-//        if (ImGui::BeginMenu("Options"))
-//        {
-//            // Disabling fullscreen would allow the window to be moved to the front of other windows,
-//            // which we can't undo at the moment without finer window depth/z control.
-//            //            ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-//            //            ImGui::MenuItem("Padding", NULL, &opt_padding);
-//            ImGui::Separator();
-//
-//            if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
-//            if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
-//            if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
-//            if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
-//            if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
-//            if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
-//            ImGui::Separator();
-//
-//            if (ImGui::MenuItem("Close", NULL, false))
-//                open = false;
-//            ImGui::EndMenu();
-//        }
-//        //        HelpMarker(
-//        //            "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n"
-//        //            "- Drag from window title bar or their tab to dock/undock." "\n"
-//        //            "- Drag from window menu button (upper-left button) to undock an entire node (all windows)." "\n"
-//        //            "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift == false, default)" "\n"
-//        //            "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift == true)" "\n"
-//        //            "This demo app has nothing to do with enabling docking!" "\n\n"
-//        //            "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window." "\n\n"
-//        //            "Read comments in ShowExampleAppDockSpace() for more details.");
-//
-//        ImGui::EndMenuBar();
-//    }
-//
-//    ImGui::End();
-//}
-
-HS_NS_END
+// HS_NS_END
