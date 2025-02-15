@@ -29,7 +29,7 @@ public:
 
     void Initialize();
     void Finalize();
-    
+
     void NextFrame();
 
     void SetColorTheme(bool useWhite);
@@ -37,8 +37,8 @@ public:
 
 private:
     ImGuiContext* _context;
-    ImFont* _font;
-    std::string layoutFileName;
+    ImFont*       _font;
+    std::string   layoutFileName;
 };
 
 GUIContext* hs_editor_get_gui_context();

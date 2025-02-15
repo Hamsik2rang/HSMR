@@ -20,25 +20,15 @@ class NativeWindowHandle;
 class Swapchain
 {
 public:
-    Swapchain(SwapchainInfo desc);
-    ~Swapchain();
-
-    void Submit(CommandBuffer** cmdBuffers, size_t bufferCount);
+    Swapchain(const SwapchainInfo& desc);
+    virtual ~Swapchain();
 
     void Update(uint32 width, uint32 height);
     
     HS_FORCEINLINE SwapchainInfo GetInfo() { return _info; }
     
-    HS_FORCEINLINE RenderTarget* GetRenderTarget() { return _renderTarget; }
-    HS_FORCEINLINE void* GetNativeWindowHandle() { return _nativeHandle; }
-  
-    HS_FORCEINLINE uint32 GetCurrentFrameIndex() const { return _frameIndex; }
-    
-private:
-    uint32 _frameIndex;
+protected:
     SwapchainInfo _info;
-    
-    NativeWindowHandle* _nativeHandle;
 };
 
 HS_NS_END

@@ -23,19 +23,17 @@ enum class EFileAccess
     READ_WRITE
 };
 
-struct FileHandle
-{
-    void* ioStream;
-};
+typedef void* FileHandle;
 
 bool hs_file_copy(const std::string& src, const std::string& dst);
-FileHandle hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
+bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
 bool hs_file_close(FileHandle fileHandle);
-int64 hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize);
-int64 hs_file_wrtie(FileHandle fileHandle, void* buffer, size_t byteSize);
+size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize);
+size_t hs_file_wrtie(FileHandle fileHandle, void* buffer, size_t byteSize);
 bool hs_file_set_pos(FileHandle fileHandle, const int64 pos);
 bool hs_file_flush(FileHandle fileHandle);
 bool hs_file_is_eof(FileHandle fileHandle);
+size_t hs_file_get_size(FileHandle fileHandle);
 
 std::string hs_file_get_directory(const std::string& absolutePath);
 std::string hs_file_get_extension(const std::string& fileNmae);

@@ -5,8 +5,11 @@
 //  Created by Yongsik Im on 2/14/25.
 //
 
-#ifndef RenderDefinition_h
-#define RenderDefinition_h
+#ifndef __HS_RENDER_DEFINITION_H__
+#define __HS_RENDER_DEFINITION_H__
 
+struct RenderParameter
+{
+};
 
-#endif /* RenderDefinition_h */
+#endif /* __HS_RENDER_DEFINITION_H__ */

@@ -9,41 +9,44 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RenderDefinition.h"
+#include "Engine/RHI/RHIDefinition.h"
 
 HS_NS_BEGIN
 
-class Semaphore : public RHIHandle
+struct Semaphore : public RHIHandle
 {
-    
+    Semaphore();
+    ~Semaphore() override;
 };
 
-class Fence : public RHIHandle
+struct Fence : public RHIHandle
 {
-    
+    Fence();
+    ~Fence() override;
 };
 
-class ResourceBarrier : public RHIHandle
+struct ResourceBarrier : public RHIHandle
 {
-    
+    ResourceBarrier();
+    ~ResourceBarrier() override;
 };
 
-class CommandQueue : public RHIHandle
+struct CommandQueue : public RHIHandle
 {
-    
-    
+    CommandQueue();
+    ~CommandQueue() override;
 };
 
-class CommandPool : public RHIHandle
+struct CommandPool : public RHIHandle
 {
-    
+    CommandPool();
+    ~CommandPool() override;
 };
 
-class CommandBuffer : public RHIHandle
+struct CommandBuffer : public RHIHandle
 {
-public:
-    
-    
+    CommandBuffer();
+    ~CommandBuffer() override;
 };
 
 HS_NS_END

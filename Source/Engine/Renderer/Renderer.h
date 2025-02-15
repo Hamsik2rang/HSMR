@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Engine/Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderDefinition.h"
 #include "Engine/RHI/RHIDefinition.h"
 #include "Engine/RHI/RHIContext.h"
 
@@ -18,8 +19,6 @@
 #include <SDL3/SDL.h>
 
 HS_NS_BEGIN
-
-//TODO: RHIContext 분리 필요
 
 class EngineContext;
 class RendererPass;

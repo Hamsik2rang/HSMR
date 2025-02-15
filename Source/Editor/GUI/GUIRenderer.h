@@ -20,10 +20,10 @@ HS_NS_EDITOR_BEGIN
 class GUIRenderer : public Renderer
 {
 public:
-    GUIRenderer();
+    GUIRenderer(RHIContext* rhIContext);
     ~GUIRenderer();
     
-    bool Initialize(const NativeWindowHandle* nativeHandle) override;
+    bool Initialize() override;
     void NextFrame(Swapchain* swapchain) override;
     //void Render(const RenderParameter& params, RenderTexture* renderTarget) override;
     void RenderGUI();

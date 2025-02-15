@@ -33,9 +33,7 @@ list(APPEND TOTAL_FILES ${CORE_SOURCES})
 set(RHI_HEADERS
     RHI/RHIContext.h
     RHI/RHIDefinition.h
-    RHI/RenderPass.h
-    RHI/Framebuffer.h
-    RHI/Pipeline.h
+    RHI/RenderHandle.h
     RHI/CommandHandle.h
     RHI/ResourceHandle.h
 )
@@ -45,6 +43,9 @@ list(APPEND TOTAL_FILES ${RHI_HEADERS})
 
 set(RHI_SOURCES
     RHI/RHIDefinition.cpp
+    RHI/RenderHandle.cpp
+    RHI/ResourceHandle.cpp
+    RHI/CommandHandle.cpp
 )
 
 source_group("RHI\\Common\\Private" FILES ${RHI_SOURCES})
@@ -56,9 +57,7 @@ if(APPLE)
         RHI/Metal/RHIDefinitionMetal.h
         RHI/Metal/RHIUtilityMetal.h
         RHI/Metal/SwapchainMetal.h
-        RHI/Metal/RenderPassMetal.h
-        RHI/Metal/FramebufferMetal.h
-        RHI/Metal/PipelineMetal.h
+        RHI/Metal/RenderHandleMetal.h
         RHI/Metal/CommandHandleMetal.h
         RHI/Metal/ResourceHandleMetal.h
     )
@@ -71,9 +70,7 @@ if(APPLE)
         RHI/Metal/RHIDefinitionMetal.mm
         RHI/Metal/RHIUtilityMetal.mm
         RHI/Metal/SwapchainMetal.mm
-        RHI/Metal/RenderPassMetal.mm
-        RHI/Metal/FramebufferMetal.mm
-        RHI/Metal/PipelineMetal.mm
+        RHI/Metal/RenderHandleMetal.mm
         RHI/Metal/CommandHandleMetal.mm
         RHI/Metal/ResourceHandleMetal.mm
     )

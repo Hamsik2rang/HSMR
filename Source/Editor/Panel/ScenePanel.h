@@ -11,6 +11,7 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 namespace HS
 {
@@ -31,10 +32,10 @@ public:
 
     void Draw() override;
 
-    void SetSceneRenderFramebuffer(Framebuffer* framebuffer) { _currentFramebuffer = framebuffer; }
+    void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
 
 private:
-    Framebuffer* _currentFramebuffer;
+    RenderTarget* _currentRenderTarget;
 };
 
 HS_NS_EDITOR_END
