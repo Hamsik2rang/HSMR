@@ -4,10 +4,12 @@
 //
 //  Created by Yongsik Im on 2/6/25.
 //
-#ifndef __HS_RENDER_DEFINITION_H__
-#define __HS_RENDER_DEFINITION_H__
+#ifndef __HS_RHI_DEFINITION_H__
+#define __HS_RHI_DEFINITION_H__
 
 #include "Precompile.h"
+
+#include "Engine/Core/Log.h"
 
 #include <vector>
 
@@ -16,34 +18,58 @@ HS_NS_BEGIN
 class RHIHandle
 {
 public:
-    enum class Type
+    enum class EType
     {
         BUFFER,
         TEXTURE,
-        SAMPER,
+        SAMPLER,
         SHADER,
-        RESOURCE_LAYOUY,
+        RESOURCE_LAYOUT,
         DESCRIPTOR_SET,
         DESCRIPTOR_POOL,
         RENDER_PASS,
         FRAMEBUFFER,
-        PIPELINE,
+        GRAPHICS_PIPELINE,
+        COMPUTE_PIPELINE,
         COMMAND_QUEUE,
         COMMAND_POOL,
         COMMAND_BUFFER,
         FENCE,
         SEMAPHORE,
-        BARRIER
+        RESOURCE_BARRIER
     };
     
     RHIHandle() = delete;
-    RHIHandle(RHIHandle::Type type) : type(type) {}
+    RHIHandle(RHIHandle::EType type) : _type(type) {}
     virtual ~RHIHandle() {}
 
-    void GetHash() { return _hash; }
+    RHIHandle::EType GetType() const { return _type;}
+    void GetHash() const { return _hash; }
+    int Retain()
+    {
+        return ++_refs;
+    }
     
-    const Type type;
+    int Release()
+    {
+        if(_refs <=0)
+        {
+            HS_LOG(crash, "Over Released");
+        }
+        
+        if(--_refs == 0)
+        {
+            // add pending delete list
+        }
+        
+        return _refs;
+    }
+    
 protected:
+    const EType _type;
+    
+    int _refs;
+    uint32 _hash;
     //...
     
 };
@@ -81,11 +107,6 @@ enum class ETextureUsage
     SHADER_WRITE     = 0x0002,
     RENDER_TARGET    = 0x0004,
     PIXELFORMAT_VIEW = 0x0010,
-};
-
-struct RenderParameter
-{
-    // Render()호출에 던질 것들 전부 넣기
 };
 
 struct TextureInfo
@@ -158,6 +179,12 @@ enum class EBufferMemoryOption
     MAPPED,
     STATIC,
     DYNAMIC
+};
+
+struct BufferInfo
+{
+    EBufferUsage usage;
+    EBufferMemoryOption memoryOption;
 };
 
 class Texture;
@@ -245,9 +272,15 @@ struct FramebufferInfo
     bool   isSwapchainFramebuffer = false;
 };
 
-struct PipelineInfo
+struct GraphicsPipelineInfo
 {
     //...
+};
+
+struct ComputePipelineInfo
+{
+    //...
+    
 };
 
 enum class EShaderParameterType
@@ -298,7 +331,7 @@ struct Viewport
     float zFar   = 1.0f;
 };
 
-#Ifdef DOMAIN
+#ifdef DOMAIN
 #pragma push_macro("DOMAIN")
 #undef DOMAIN
 #endif
@@ -311,11 +344,21 @@ enum class EShaderStage
     FRAGMENT,
 
     COMPUTE
-}
+};
 
 #ifdef DOMAIN
 #pragma pop_macro("DOMAIN")
 #endif
+
+
+struct ShaderInfo
+{
+    EShaderStage stage;
+    const char* entryName;
+    
+    bool isBuiltIn = true;
+};
+
 
 enum class EResourceType : uint8
 {

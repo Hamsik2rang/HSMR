@@ -1,4 +1,4 @@
-#include "Engine/Renderer/RHIUtility.h"
+#include "Engine/RHI/Metal/RHIUtilityMetal.h"
 
 #include "Engine/Core/Log.h"
 
@@ -217,35 +217,6 @@ ETextureType hs_rhi_from_texture_type(MTLTextureType type)
     return ETextureType::INVALID;
 }
 
-CAMetalLayer* hs_rhi_to_layer(void* layer)
-{
-    return (__bridge CAMetalLayer*)layer;
-}
-
-void* hs_rhi_from_layer(CAMetalLayer* layer)
-{
-    return (__bridge void*)layer;
-}
-
-id<MTLDevice> hs_rhi_to_device(void* device)
-{
-    return (__bridge_transfer id<MTLDevice>) device;
-}
-
-void* hs_rhi_from_device(id<MTLDevice> device)
-{
-    return (__bridge_retained void*)device;
-}
-
-id<MTLCommandQueue> hs_rhi_to_command_queue(void* q)
-{
-    return (__bridge id<MTLCommandQueue>)q;
-}
-void* hs_rhi_from_command_queue(id<MTLCommandQueue> q)
-{
-    return (__bridge void*)q;
-}
-
 MTLClearColor hs_rhi_to_clear_color(const float* color)
 {
     double r = static_cast<double>(color[0]);
@@ -263,26 +234,5 @@ void hs_rhi_from_clear_color(MTLClearColor color, float* outColor)
     outColor[2] = static_cast<float>(color.blue);
     outColor[3] = static_cast<float>(color.alpha);
 }
-
-MTLRenderPassDescriptor* hs_rhi_to_render_pass_desc(void* desc)
-{
-    return (__bridge_transfer MTLRenderPassDescriptor*)desc;
-}
-
-void* hs_rhi_from_render_pass_desc(MTLRenderPassDescriptor* desc)
-{
-    return (__bridge_retained void*)desc;
-}
-
-id<MTLTexture> hs_rhi_to_texture(void* texture)
-{
-    return (__bridge_transfer id<MTLTexture>)texture;
-}
-
-void* hs_rhi_from_texture(id<MTLTexture> texture)
-{
-    return (__bridge_retained void*)texture;
-}
-
 
 HS_NS_END

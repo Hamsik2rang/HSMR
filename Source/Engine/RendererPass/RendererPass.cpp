@@ -8,8 +8,6 @@
 #include "Engine/RendererPass/RendererPass.h"
 #include "Engine/Renderer/Renderer.h"
 
-#import <Metal/Metal.h>
-
 HS_NS_BEGIN
 RendererPass::RendererPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder)
     : name(name)

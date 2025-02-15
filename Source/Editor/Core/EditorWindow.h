@@ -15,7 +15,7 @@
 
 namespace HS
 {
-class Framebuffer;
+class RenderTarget;
 } // namespace HS
 
 HS_NS_EDITOR_BEGIN
@@ -42,7 +42,7 @@ private:
     void onShutdown() override;
     void onRenderGUI();
 
-    Framebuffer* _renderTextures[3]; // TODO: 매직 넘버 제거
+    RenderTarget* _renderTextures[3]; // TODO: 매직 넘버 제거
 
     GUIRenderer* _guiRenderer;
     Panel*       _basePanel;

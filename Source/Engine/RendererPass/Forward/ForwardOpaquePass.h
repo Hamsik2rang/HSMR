@@ -10,7 +10,7 @@
 #include "Precompile.h"
 #include "ForwardPass.h"
 
-#include "Engine/Renderer/ResourceHandle.h"
+#include "Engine/RHI/ResourceHandle.h"
 
 HS_NS_BEGIN
 

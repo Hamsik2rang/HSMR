@@ -1,27 +1,19 @@
-////
-////  Renderer.mm
-////  HSMR
-////
-////  Created by Yongsik Im on 1/29/25.
-////
-// #include "Engine/Renderer/Renderer.h"
 //
-// #include "Engine/Core/Log.h"
-// #include "Engine/Core/Window.h"
-// #include "Engine/Core/EngineContext.h"
+//  Renderer.mm
+//  HSMR
 //
-// #include "Engine/Core/Swapchain.h"
-// #include "Engine/RHI/RHIRenderPass.h"
-// #include "Engine/RHI/RHICommandHandle.h"
-// #include "Engine/RHI/RHIDefinition.h"
+//  Created by Yongsik Im on 1/29/25.
 //
-// #include "Engine/RendererPass/RendererPass.h"
-//
-// #include "SDL3/SDL.h"
-// #include "ImGui/backends/imgui_impl_sdl3.h"
-// #include "ImGui/backends/imgui_impl_metal.h"
-//
-// HS_NS_BEGIN
+#include "Engine/Renderer/Renderer.h"
+
+#include "Engine/Core/Log.h"
+#include "Engine/Core/Window.h"
+#include "Engine/Core/EngineContext.h"
+
+#include "Engine/Core/Swapchain.h"
+#include "Engine/RendererPass/RendererPass.h"
+
+ HS_NS_BEGIN
 //
 // namespace
 //{
@@ -42,7 +34,7 @@
 //
 //} // namespace
 
-Renderer::Renderer(RHIContxt* context)
+Renderer::Renderer(RHIContext* context)
     : _rhiContext(context)
     , _swapchain(nullptr)
     , _currentRenderTarget(nullptr)
@@ -133,13 +125,14 @@ void Renderer::Shutdown()
         }
     }
 
-    for (size_t i = 0; i < _rendererPasses.count(); i++)
+    for (size_t i = 0; i < _rendererPasses.size(); i++)
     {
         delete _rendererPasses[i];
         _rendererPasses[i] = nullptr;
     }
-    _rendererPasses[i].clear();
+    _rendererPasses.clear();
 
     _isInitialized = false;
 }
-// HS_NS_END
+
+ HS_NS_END

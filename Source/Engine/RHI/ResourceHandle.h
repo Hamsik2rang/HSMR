@@ -9,63 +9,35 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RenderDefinition.h"
+#include "Engine/RHI/RHIDefinition.h"
 #include <simd/simd.h>
 
 HS_NS_BEGIN
 
-class Texture : public RHIHandle
+struct Texture : public RHIHandle
 {
-public:
-    Texture(void* image, const TextureInfo& info);
-    Texture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage);
+    Texture();
     ~Texture() override;
 
-    TextureInfo GetInfo() { return _info;}
-private:
+    TextureInfo GetInfo() { return _info; }
+
     TextureInfo _info;
 };
 
-class Sampler : public RHIHandle
+struct Sampler : public RHIHandle
 {
-public:
-    
+    Sampler();
+    ~Sampler() override;
 
     SamplerInfo GetInfo() { return _info; }
-private:
+
     SamplerInfo _info;
-
 };
 
-
-class Shader
+struct Buffer : public RHIHandle
 {
-public:
-    Shader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true);
-    Shader(EShaderStage stage, const char* byteCocde, size_t byteSize, const char* entryName, bool isBuitIn = true);
-
-    virtual ~Shader();
-
-    const char*  GetByteCode() { return _byteCode; }
-    const char*  GetEntryName() { return _entryName; }
-    size_t       GetByteSize() { return _byteSize; }
-    EShaderStage GetStage() { return _stage; }
-
-private:
-    void loadShader();
-
-    bool         _isBuiltIn;
-    const char*  _byteCode;
-    const char*  _entryName;
-    size_t       _byteSize;
-    EShaderStage _stage;
-};
-
-
-class Buffer : public RHIHandle
-{
-public:
-    Buffer(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
+    Buffer();
+    //    Buffer(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
     ~Buffer() override;
 
     EBufferUsage        _usage;
@@ -74,26 +46,37 @@ public:
     size_t              byteSize;
 };
 
-class ResourceLayout : public RHIHandle
+struct Shader : public RHIHandle
 {
-public:
-    
-    
-    std::vector<ResourceBinding> GetBinding();
-private:
+    Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info);
+    ~Shader() override;
+
+    const ShaderInfo info;
+    const char*      byteCode;
+    const size_t     byteCodeSize;
+};
+
+struct ResourceLayout : public RHIHandle
+{
+    ResourceLayout();
+    ~ResourceLayout() override;
+
     std::vector<ResourceBinding> _bindings;
-    uint32 hash;
+    uint32                       hash;
 };
 
-class DescriptorSet : public RHIHandle
+struct DescriptorSet : public RHIHandle
 {
+    DescriptorSet();
+    ~DescriptorSet() override;
+
     std::vector<ResourceLayout> _layouts;
-    
 };
 
-class DescriptorPool : public RHIHandle
+struct DescriptorPool : public RHIHandle
 {
-    
+    DescriptorPool();
+    ~DescriptorPool() override;
 };
 
 HS_NS_END

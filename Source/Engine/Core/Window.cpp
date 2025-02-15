@@ -1,8 +1,8 @@
 #include "Engine/Core/Window.h"
 
 #include "Engine/Core/Log.h"
-#include "Engine/Renderer/Swapchain.h"
-#include "Engine/Renderer/RenderPass.h"
+#include "Engine/Core/Swapchain.h"
+#include "Engine/RHI/RenderHandle.h"
 
 #include <SDL3/SDL.h>
 

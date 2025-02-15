@@ -12,9 +12,7 @@
 
 #include "Engine/RHI/RHIContext.h"
 
-#include <Metal/Metal.hpp>
-#include <Foundation/Foundation.hpp>
-#include <QUartzCore/QuartzCore.hpp>
+HS_NS_BEGIN
 
 class RHIContextMetal : public RHIContext
 {
@@ -26,29 +24,31 @@ class RHIContextMetal : public RHIContext
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
     void       DestroySwapchain(Swapchain* swapchain) override;
 
-    RenderPass* CreateRenderPass() override;
+    RenderPass* CreateRenderPass(const RenderPassInfo& info) override;
     void        DestroyRenderPass(RenderPass* renderPass) override;
 
-    Framebuffer* CreateFramebuffer() override;
+    Framebuffer* CreateFramebuffer(const FramebufferInfo& info) override;
     void         DestroyFramebuffer(Framebuffer* framebuffer) override;
 
-    Pipeline* CreatePipeline() override;
-    void      DestroyPipeline() override;
+    GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) override;
+    void              DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
 
-    Shader* CreateShader() override;
-    void    DestroyShader(Shader* shader);
+    Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true) override;
+    Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
+    void    DestroyShader(Shader* shader) override;
 
     Buffer* CreateBuffer() override;
     void    DestroyBuffer(Buffer* buffer) override;
 
-    Texture* CreateTextrue() override;
+    Texture* CreateTextrue(void* image, const TextureInfo& info) override;
+    Texture* CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
     void     DestroyTexture(Texture* texture) override;
 
     ResourceLayout CreateResourceLayout() override;
     void           DestroyResourceLayout(ResourceLayout* resourceLayout) override;
 
     DescriptorSet* CreateDescriptorSet() override;
-    void           DestroyDescriptorSet(DescriptorSet* dSet);
+    void           DestroyDescriptorSet(DescriptorSet* dSet) override;
 
     DescriptorPool* CreateDescriptorPool() override;
     void            DestroyDescriptorPool(DescriptorPool* dPool) override;
@@ -71,6 +71,8 @@ class RHIContextMetal : public RHIContext
     void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
 
     void Present(Swapchain* swapchain) override;
-}
+};
+
+HS_NS_END
 
 #endif /* __RHI_CONTEXT_METAL_H__ */
