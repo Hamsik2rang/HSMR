@@ -23,12 +23,13 @@ public:
     GUIRenderer(RHIContext* rhIContext);
     ~GUIRenderer();
     
-    bool Initialize() override;
-    void NextFrame(Swapchain* swapchain) override;
+//    void NextFrame(Swapchain* swapchain) override;
     //void Render(const RenderParameter& params, RenderTexture* renderTarget) override;
-    void RenderGUI();
+    
 //    void Present(Swapchain* swapchain) override;
     void Shutdown() override;
+private:
+    
     
 };
 

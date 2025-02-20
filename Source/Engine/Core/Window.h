@@ -21,6 +21,7 @@ HS_NS_BEGIN
 class Renderer;
 class Scene;
 class Swapchain;
+class RHIContext;
 
 struct NativeWindowHandle
 {
@@ -100,9 +101,10 @@ protected:
 
     NativeWindowHandle _nativeHandle;
 
+    RHIContext* _rhiContext = nullptr;
     Renderer* _renderer = nullptr;
     Scene*    _scene    = nullptr;
-
+    
     Swapchain* _swapchain = nullptr;
 
     const char* _name;

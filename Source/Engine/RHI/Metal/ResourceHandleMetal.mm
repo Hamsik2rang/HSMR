@@ -11,7 +11,7 @@ HS_NS_BEGIN
 //{
 //
 //
-//     MTLTextureDescriptor* texDesc     = [[MTLTextureDescriptor alloc] init];
+//     MTLTextureResource* texDesc     = [[MTLTextureResource alloc] init];
 //     texDesc.width                     = texInfo.extent.width;
 //     texDesc.height                    = texInfo.extent.height;
 //     texDesc.depth                     = texInfo.extent.depth;
@@ -22,7 +22,7 @@ HS_NS_BEGIN
 //     texDesc.pixelFormat               = hs_rhi_to_pixel_format(texInfo.format);
 //     texDesc.textureType               = hs_rhi_to_texture_type(texInfo.type);
 //
-//     id<MTLTexture> texture = [device newTextureWithDescriptor:texDesc];
+//     id<MTLTexture> texture = [device newTextureWithResource:texDesc];
 //
 //     handle = hs_rhi_from_texture(texture);
 // }
@@ -31,7 +31,7 @@ HS_NS_BEGIN
 //{
 //     id<MTLDevice> device = hs_rhi_to_device(hs_engine_get_rhi_context());
 //
-//     MTLTextureDescriptor* texDesc     = [[MTLTextureDescriptor alloc] init];
+//     MTLTextureResource* texDesc     = [[MTLTextureResource alloc] init];
 //     texDesc.width                     = width;
 //     texDesc.height                    = height;
 //     texDesc.depth                     = 1;
@@ -42,10 +42,11 @@ HS_NS_BEGIN
 //     texDesc.pixelFormat               = hs_rhi_to_pixel_format(format);
 //     texDesc.textureType               = hs_rhi_to_texture_type(type);
 //
-//     id<MTLTexture> texture = [device newTextureWithDescriptor:texDesc];
+//     id<MTLTexture> texture = [device newTextureWithResource:texDesc];
 // }
 
-TextureMetal::TextureMetal()
+TextureMetal::TextureMetal(const TextureInfo& info)
+    : Texture(info)
 {
 }
 
@@ -53,7 +54,8 @@ TextureMetal::~TextureMetal()
 {
 }
 
-SamplerMetal::SamplerMetal()
+SamplerMetal::SamplerMetal(const SamplerInfo& info)
+    : Sampler(info)
 {}
 
 SamplerMetal::~SamplerMetal()
@@ -66,7 +68,8 @@ SamplerMetal::~SamplerMetal()
 //
 // }
 
-BufferMetal::BufferMetal()
+BufferMetal::BufferMetal(const BufferInfo& info)
+    : Buffer(info)
 {
 }
 
@@ -113,19 +116,19 @@ ResourceLayoutMetal::~ResourceLayoutMetal()
 {
 }
 
-DescriptorSetMetal::DescriptorSetMetal()
+ResourceSetMetal::ResourceSetMetal()
 {
 }
 
-DescriptorSetMetal::~DescriptorSetMetal()
+ResourceSetMetal::~ResourceSetMetal()
 {
 }
 
-DescriptorPoolMetal::DescriptorPoolMetal()
+ResourceSetPoolMetal::ResourceSetPoolMetal()
 {
 }
 
-DescriptorPoolMetal::~DescriptorPoolMetal()
+ResourceSetPoolMetal::~ResourceSetPoolMetal()
 {
 }
 

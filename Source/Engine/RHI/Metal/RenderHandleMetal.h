@@ -34,11 +34,9 @@ struct GraphicsPipelineMetal : public GraphicsPipeline
     GraphicsPipelineMetal(const GraphicsPipelineInfo& info);
     ~GraphicsPipelineMetal() override;
     
-    
+    id<MTLRenderPipelineState> pipelineState;
+    id<MTLDepthStencilState> depthStencilState;
 };
-
-
-
 
 
 

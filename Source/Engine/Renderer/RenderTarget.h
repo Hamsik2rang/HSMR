@@ -21,17 +21,18 @@ public:
 
     uint32 GetWidth() const { return _width; }
     uint32 GetHeight() const { return _height; }
+
+    Texture* GetColorTexture(uint32 index) { return _colorTextures[index]; }
+    Texture* GetDepthStencilTexture() const { return _depthStencilTexture; }
     
-    Texture* GetColorTexture(uint32 index);
-    const std::vector<Texture*>& GetColorTextures();
-    Texture* GetDepthStencilTexture() const {return _depthStencilTexture;}
+    const std::vector<Texture*>& GetColorTextures() { return _colorTextures; }
 
 private:
     uint32 _width;
     uint32 _height;
-    
+
     std::vector<Texture*> _colorTextures;
-    Texture* _depthStencilTexture;
+    Texture*              _depthStencilTexture;
 };
 
 HS_NS_END

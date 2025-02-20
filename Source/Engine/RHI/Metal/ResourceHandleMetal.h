@@ -17,28 +17,37 @@ HS_NS_BEGIN
 struct TextureMetal : public Texture
 {
 //    TextureMetal(void* image, const TextureInfo& texInfo);
-    TextureMetal();
+    TextureMetal(const TextureInfo& info);
     ~TextureMetal() override;
+    
+    id<MTLTexture> handle;
 };
 
 struct SamplerMetal : public Sampler
 {
 //    SamplerMetal(const SamplerInfo& info);
-    SamplerMetal();
+    SamplerMetal(const SamplerInfo& info);
     ~SamplerMetal() override;
+    
+    id<MTLSamplerState> handle;
 };
 
 struct BufferMetal : public Buffer
 {
 //    BufferMetal(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
-    BufferMetal();
+    BufferMetal(const BufferInfo& info);
     ~BufferMetal() override;
+    
+    id<MTLBuffer> handle;
 };
 
 struct ShaderMetal : public Shader
 {
     ShaderMetal(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info);
     ~ShaderMetal() override;
+    
+    id<MTLLibrary> library;
+    id<MTLFunction> handle;
 };
 
 struct ResourceLayoutMetal : public ResourceLayout
@@ -47,16 +56,16 @@ struct ResourceLayoutMetal : public ResourceLayout
     ~ResourceLayoutMetal() override;
 };
 
-struct DescriptorSetMetal : public DescriptorSet
+struct ResourceSetMetal : public ResourceSet
 {
-    DescriptorSetMetal();
-    ~DescriptorSetMetal() override;
+    ResourceSetMetal();
+    ~ResourceSetMetal() override;
 };
 
-struct DescriptorPoolMetal : public DescriptorPool
+struct ResourceSetPoolMetal : public ResourceSetPool
 {
-    DescriptorPoolMetal();
-    ~DescriptorPoolMetal() override;
+    ResourceSetPoolMetal();
+    ~ResourceSetPoolMetal() override;
 };
 
 HS_NS_END

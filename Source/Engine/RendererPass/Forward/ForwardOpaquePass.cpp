@@ -25,17 +25,17 @@ ForwardOpaquePass::~ForwardOpaquePass()
     
 }
 
-void ForwardOpaquePass::OnBeforeRendering(uint32_t submitIndex)
+void ForwardOpaquePass::OnBeforeRendering(uint32_t frameIndex)
 {
-    _submitIndex = submitIndex;
+    _frameIndex = frameIndex;
 }
 
-void ForwardOpaquePass::Configure(Framebuffer* renderTarget)
+void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
 {
     _currentFramebuffer = renderTarget;
 }
 
-void ForwardOpaquePass::Execute(void* cmdEncoder, RenderPass* renderPass)
+void ForwardOpaquePass::Execute(CommandBuffer* commandBuffer, RenderPass* renderPass)
 {
 //    id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)cmdEncoder;
 //

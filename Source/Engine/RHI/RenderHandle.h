@@ -14,28 +14,36 @@
 
 HS_NS_BEGIN
 
-struct RenderPass : public RHIHandle
+class RenderPass : public RHIHandle
 {
-    RenderPass(const RenderPassInfo& info);
+public:
     ~RenderPass() override;
 
     const RenderPassInfo info;
+
+protected:
+    RenderPass(const RenderPassInfo& info);
 };
 
-struct Framebuffer : public RHIHandle
+class Framebuffer : public RHIHandle
 {
-    Framebuffer(const FramebufferInfo& info);
+public:
     ~Framebuffer() override;
-    
+
     const FramebufferInfo info;
+    
+protected:
+    Framebuffer(const FramebufferInfo& info);
 };
 
 struct GraphicsPipeline : public RHIHandle
 {
-    GraphicsPipeline(const GraphicsPipelineInfo& info);
+public:
     ~GraphicsPipeline() override;
-    
+
     const GraphicsPipelineInfo info;
+protected:
+    GraphicsPipeline(const GraphicsPipelineInfo& info);
 };
 
 HS_NS_END

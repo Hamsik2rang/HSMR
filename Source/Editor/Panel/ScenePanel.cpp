@@ -3,7 +3,7 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
-#include "Engine/RHI/Framebuffer.h"
+#include "Engine/RHI/RenderHandle.h"
 #include "Engine/RHI/ResourceHandle.h"
 
 
@@ -35,7 +35,7 @@ void ScenePanel::Draw()
     ImVec2 viewportSize = ImVec2(static_cast<float>(width), static_cast<float>(height));
     Texture* texture = _currentRenderTarget->GetColorTexture(0);
     
-    ImGui::ImageOffscreen(texture, viewportSize);
+    ImGuiExt::ImageOffscreen(texture, viewportSize);
 
     
     

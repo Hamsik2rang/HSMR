@@ -19,7 +19,7 @@ public:
     ~ForwardPass() override {}
 
 protected:
-    RHI_RESOURCE_DEFINE(ForwardPass)
+    
 };
 
 HS_NS_END

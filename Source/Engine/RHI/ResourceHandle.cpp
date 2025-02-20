@@ -2,26 +2,39 @@
 
 HS_NS_BEGIN
 
-Texture::Texture()
+Texture::Texture(const TextureInfo& info)
     : RHIHandle(EType::TEXTURE)
-{}
+    , info(info)
+{
+    size_t size = info.extent.width * info.extent.height * info.extent.depth;
+}
 
 Texture::~Texture()
-{}
+{
+    if (nullptr != data)
+    {
+        delete data;
+        data = nullptr;
+    }
+}
 
-Sampler::Sampler()
+Sampler::Sampler(const SamplerInfo& info)
     : RHIHandle(EType::SAMPLER)
-{}
+    , info(info)
+{
+}
 
 Sampler::~Sampler()
-{}
+{
+}
 
 Shader::Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info)
     : RHIHandle(EType::SHADER)
     , byteCode(byteCode)
     , byteCodeSize(byteCodeSize)
     , info(info)
-{}
+{
+}
 
 Shader::~Shader()
 {
@@ -32,8 +45,9 @@ Shader::~Shader()
     }
 }
 
-Buffer::Buffer()
+Buffer::Buffer(const BufferInfo& info)
     : RHIHandle(EType::BUFFER)
+    , info(info)
 {}
 
 Buffer::~Buffer()
@@ -46,18 +60,18 @@ ResourceLayout::ResourceLayout()
 ResourceLayout::~ResourceLayout()
 {}
 
-DescriptorSet::DescriptorSet()
-    : RHIHandle(EType::DESCRIPTOR_SET)
+ResourceSet::ResourceSet()
+    : RHIHandle(EType::RESOURCE_SET)
 {}
 
-DescriptorSet::~DescriptorSet()
+ResourceSet::~ResourceSet()
 {}
 
-DescriptorPool::DescriptorPool()
-    : RHIHandle(EType::DESCRIPTOR_POOL)
+ResourceSetPool::ResourceSetPool()
+    : RHIHandle(EType::RESOURCE_SET_POOL)
 {}
 
-DescriptorPool::~DescriptorPool()
+ResourceSetPool::~ResourceSetPool()
 {}
 
 HS_NS_END

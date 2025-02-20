@@ -3,6 +3,8 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Core/FileSystem.h"
 
+#include "Engine/RHI/Metal/RHIContextMetal.h"
+
 #include <SDL3/SDL.h>
 #include <string>
 
@@ -38,6 +40,17 @@ EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rh
     s_engineContext->executableDirectory = SDL_GetBasePath();
     s_engineContext->executablePath      = s_engineContext->executableDirectory + s_engineContext->name;
     s_engineContext->resourceDirectory   = s_engineContext->executableDirectory + std::string("Resource/");
+
+    switch (rhiPlatform)
+    {
+        case ERHIPlatform::METAL:
+        {
+            s_engineContext->rhiContext = new RHIContextMetal();
+        }
+        break;
+        default:
+            break;
+    }
 
     return s_engineContext;
 }

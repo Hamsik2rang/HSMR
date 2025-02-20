@@ -45,6 +45,8 @@ uint32 Window::Initialize()
     _nativeHandle.layer  = SDL_Metal_GetLayer(view);
 
     SDL_SetWindowSize(window, _width, _height);
+    
+    _rhiContext = hs_engine_get_rhi_context();
 
     SwapchainInfo swInfo{};
     swInfo.nativeWindowHandle = static_cast<void*>(&_nativeHandle);
@@ -52,7 +54,7 @@ uint32 Window::Initialize()
     swInfo.useMSAA            = false;
     swInfo.useStencil         = false;
 
-    _swapchain = new Swapchain(swInfo);
+    _swapchain = _rhiContext->CreateSwapchain(swInfo);
 
     onInitialize();
 
