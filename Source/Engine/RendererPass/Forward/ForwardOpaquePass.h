@@ -26,19 +26,17 @@ public:
     
     void OnBeforeRendering(uint32_t submitIndex) override;
     
-    void Configure(Framebuffer* renderTarget) override;
+    void Configure(RenderTarget* renderTarget) override;
     
-    void Execute(void* cmdEncoder, RenderPass* renderPass) override;
+    void Execute(CommandBuffer* commandBuffer, RenderPass* renderPass) override;
     
     void OnAfterRendering() override;
     
-private:
-    RHI_RESOURCE_DEFINE(ForwardOpaquePass)
-    
+private:    
     void createResourceHandles();
     void createPipelineHandles(RenderPass* renderPass);
     
-    Framebuffer* _currentFramebuffer;
+    RenderTarget* _currentFramebuffer;
 
 };
 

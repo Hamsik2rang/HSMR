@@ -130,4 +130,9 @@ size_t hs_file_get_size(FileHandle fileHandle)
     return SDL_GetIOSize(reinterpret_cast<SDL_IOStream*>(fileHandle));
 }
 
+std::string hs_file_get_resource_path(const std::string& relativePath)
+{
+    return std::string("Resource/") + relativePath;
+}
+
 HS_NS_END

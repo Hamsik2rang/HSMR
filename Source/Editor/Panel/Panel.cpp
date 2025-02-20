@@ -17,7 +17,7 @@ void Panel::RemovePanel(Panel* panel)
     {
         if (_childs[i] == panel)
         {
-            index = i;
+            index = static_cast<size_t>(i);
             break;
         }
     }

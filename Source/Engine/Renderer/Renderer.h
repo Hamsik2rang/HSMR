@@ -40,8 +40,6 @@ public:
 
     virtual void Render(const RenderParameter& param, RenderTarget* renderTexture);
 
-    virtual void Present(Swapchain* swapchain);
-
     void AddPass(RendererPass* pass)
     {
         _rendererPasses.push_back(pass);
@@ -56,8 +54,9 @@ public:
     
 protected:
     RHIContext* _rhiContext;
+    CommandBuffer* _curCommandBuffer;
     
-    CommandBuffer* _commandBuffer[3]; // TODO: Multi-CommandBuffer 구현 필요
+//    CommandBuffer* _commandBuffer[3];  //TODO: Multi-CommandBuffer 구현 필요
     
     std::vector<RendererPass*> _rendererPasses;
     uint32 _frameIndex = 0;

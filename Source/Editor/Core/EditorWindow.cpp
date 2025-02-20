@@ -2,11 +2,11 @@
 
 #include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
 #include "Engine/Core/Swapchain.h"
-#include "Engine/RHI/Framebuffer.h"
-#include "Engine/RHI/RenderPass.h"
+#include "Engine/RHI/RenderHandle.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/GUIRenderer.h"
+#include "Editor/GUI/ImGuiExtension.h"
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
@@ -32,8 +32,10 @@ void EditorWindow::Render()
 
 bool EditorWindow::onInitialize()
 {
-    _guiRenderer = new GUIRenderer(hs_engine_get_rhi_context());
+    _guiRenderer = new GUIRenderer(_rhiContext);
     _guiRenderer->Initialize();
+    
+    ImGuiExt::InitializeBackend(_swapchain);
 
     _guiRenderer->AddPass(new ForwardOpaquePass("Opaque Pass", _guiRenderer, ERenderingOrder::OPAQUE));
     
@@ -88,7 +90,7 @@ void EditorWindow::onRender()
 
 void EditorWindow::onPresent()
 {
-    _guiRenderer->Present(_swapchain);
+    hs_engine_get_rhi_context()->Present(_swapchain);
 }
 void EditorWindow::onShutdown()
 {
@@ -102,11 +104,13 @@ void EditorWindow::onShutdown()
 
 void EditorWindow::onRenderGUI()
 {
+    // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
+    ImGuiExt::BeginRender(_swapchain);
     //    _guiRenderer->Render({}, nullptr);
 
     _basePanel->Draw(); // Draw panel tree.
 
-    _guiRenderer->RenderGUI();
+    ImGuiExt::EndRender(_swapchain->GetCommandBufferForCurrentFrame());
 }
 
 void EditorWindow::setupPanels()

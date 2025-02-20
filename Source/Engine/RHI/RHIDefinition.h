@@ -25,8 +25,8 @@ public:
         SAMPLER,
         SHADER,
         RESOURCE_LAYOUT,
-        DESCRIPTOR_SET,
-        DESCRIPTOR_POOL,
+        RESOURCE_SET,
+        RESOURCE_SET_POOL,
         RENDER_PASS,
         FRAMEBUFFER,
         GRAPHICS_PIPELINE,
@@ -38,40 +38,43 @@ public:
         SEMAPHORE,
         RESOURCE_BARRIER
     };
-    
+
     RHIHandle() = delete;
-    RHIHandle(RHIHandle::EType type) : _type(type) {}
+    RHIHandle(RHIHandle::EType type)
+        : _type(type)
+    {}
     virtual ~RHIHandle() {}
 
-    RHIHandle::EType GetType() const { return _type;}
-    void GetHash() const { return _hash; }
-    int Retain()
+    RHIHandle::EType GetType() const { return _type; }
+    void             GetHash() const { return _hash; }
+    int              Retain()
     {
         return ++_refs;
     }
-    
+
     int Release()
     {
-        if(_refs <=0)
+        if (_refs <= 0)
         {
             HS_LOG(crash, "Over Released");
         }
-        
-        if(--_refs == 0)
+
+        if (--_refs == 0)
         {
             // add pending delete list
         }
-        
+
         return _refs;
     }
-    
+
+    std::string name;
+
 protected:
     const EType _type;
-    
-    int _refs;
+
+    int    _refs;
     uint32 _hash;
     //...
-    
 };
 
 enum class EPixelFormat
@@ -161,6 +164,8 @@ struct SamplerInfo
     bool isPixelCoordinate = false;
 };
 
+struct Buffer;
+
 enum class EBufferUsage
 {
     INVALID = 0,
@@ -183,12 +188,12 @@ enum class EBufferMemoryOption
 
 struct BufferInfo
 {
-    EBufferUsage usage;
+    EBufferUsage        usage;
     EBufferMemoryOption memoryOption;
 };
 
-class Texture;
-class RenderPass;
+struct Texture;
+struct RenderPass;
 
 struct RenderTexture
 {
@@ -272,17 +277,6 @@ struct FramebufferInfo
     bool   isSwapchainFramebuffer = false;
 };
 
-struct GraphicsPipelineInfo
-{
-    //...
-};
-
-struct ComputePipelineInfo
-{
-    //...
-    
-};
-
 enum class EShaderParameterType
 {
     T_BOOL = 0,
@@ -332,8 +326,8 @@ struct Viewport
 };
 
 #ifdef DOMAIN
-#pragma push_macro("DOMAIN")
-#undef DOMAIN
+    #pragma push_macro("DOMAIN")
+    #undef DOMAIN
 #endif
 enum class EShaderStage
 {
@@ -347,18 +341,16 @@ enum class EShaderStage
 };
 
 #ifdef DOMAIN
-#pragma pop_macro("DOMAIN")
+    #pragma pop_macro("DOMAIN")
 #endif
-
 
 struct ShaderInfo
 {
     EShaderStage stage;
-    const char* entryName;
-    
+    const char*  entryName;
+
     bool isBuiltIn = true;
 };
-
 
 enum class EResourceType : uint8
 {
@@ -375,15 +367,274 @@ enum class EResourceType : uint8
     INPUT_ATTACHMENT,
 };
 
+struct Sampler;
+
 struct ResourceBinding
 {
+    struct Resource
+    {
+        std::vector<Buffer*>  buffers;
+        std::vector<Texture*> textures;
+        std::vector<Sampler*> samplers;
+
+        std::vector<uint32> offsets;
+    };
+
     EResourceType type;
-    EShaderStage stage;
-    uint8 biding;
-    uint8 arrayCount;
-    
+    EShaderStage  stage;
+    uint8         binding;
+    uint8         arrayCount;
+    Resource      resource;
+
     std::string name;
-    uint32 nameHash;
+    uint32      nameHash;
+};
+
+class Shader;
+
+struct ShaderProgramDescriptor
+{
+    Shader* vertexShader   = nullptr;
+    Shader* geometryShader = nullptr;
+    Shader* domainShader   = nullptr;
+    Shader* hullShader     = nullptr;
+    Shader* fragmentShader = nullptr;
+
+    Shader* computeShader = nullptr;
+};
+
+struct VertexInputLayoutDescriptor
+{
+    uint32 binding;
+    uint32 stride;
+    uint32 stepRate;
+    bool   useInstancing;
+};
+
+struct VertexInputAttributeDescriptor
+{
+    uint32 location;
+    uint32 binding;
+    uint32 formatSize;
+    uint32 offset;
+};
+
+struct VertexInputStateDescriptor
+{
+    std::vector<VertexInputLayoutDescriptor>    layouts;
+    std::vector<VertexInputAttributeDescriptor> attributes;
+};
+
+enum class EPrimitiveTopology
+{
+    POINT_LIST,
+    LINE_LIST,
+    LINE_STRIP,
+    TRIANGLE_LIST,
+    TRIANGLE_STRIP,
+    TRIANGLE_FAN,
+    LINE_LIST_WITH_ADJACENCY,
+    LINE_STRIP_WITH_ADJACENCY,
+    TRIANGLE_LIST_WITH_ADJACENCY,
+    TRIANGLE_STRIP_WITH_ADJACENCY,
+    PATCH_LIST
+};
+
+struct InputAssemblyStateDescriptor
+{
+    EPrimitiveTopology primitiveTopology;
+    // bool isRestartEnable = false;
+};
+
+enum class ELogicOp
+{
+    CLEAR         = 0,
+    AND           = 1,
+    AND_REVERSE   = 2,
+    COPY          = 3,
+    AND_INVERTED  = 4,
+    NO_OP         = 5,
+    XOR           = 6,
+    OR            = 7,
+    NOR           = 8,
+    EQUIVALENT    = 9,
+    INVERT        = 10,
+    OR_REVERSE    = 11,
+    COPY_INVERTED = 12,
+    OR_INVERTED   = 13,
+    NAND          = 14,
+    SET           = 15,
+};
+
+enum class EBlendFactor
+{
+    ZERO                = 0,
+    ONE                 = 1,
+    SRC_COLOR           = 2,
+    ONE_MINUS_SRC_COLOR = 3,
+    DST_COLOR           = 4,
+    ONE_MINUS_DST_COLOR = 5,
+    SRC_ALPHA           = 6,
+    ONE_MINUS_SRC_ALPHA = 7,
+    DST_ALPHA           = 8,
+    ONE_MINUS_DST_ALPHA = 9,
+
+    SRC_ALPHA_SATURATE   = 14,
+    SRC1_COLOR           = 15,
+    ONE_MINUS_SRC1_COLOR = 16,
+    SRC1_ALPHA           = 17,
+    ONE_MINUS_SRC1_ALPHA = 18,
+
+    INVALID = 0xFF
+};
+
+enum class EBlendOp
+{
+    ADD              = 0,
+    SUBTRACT         = 1,
+    REVERSE_SUBTRACT = 2,
+    MIN              = 3,
+    MAX              = 4,
+
+    INVALID = 0xFF
+};
+
+struct ColorBlendAttachmentDescriptor
+{
+    bool blendEnable;
+
+    EBlendFactor srcColorFactor;
+    EBlendFactor dstColorFactor;
+    EBlendOp     colorBlendOp;
+
+    EBlendFactor srcAlphaFactor;
+    EBlendFactor dstAlphaFactor;
+    EBlendOp     alphaBlendOp;
+
+    uint32 writeMask; // 0x FF(R) FF(G) FF(B) FF(A)
+};
+
+struct ColorBlendStateDescriptor
+{
+    bool                                        logicOpEnable;
+    ELogicOp                                    blendLogic;
+    uint32                                      attachmentCount;
+    std::vector<ColorBlendAttachmentDescriptor> attachments;
+    float                                       blendConestant[4];
+};
+
+enum class EPolygonMode
+{
+    FILL,
+    LINE,
+    POINT,
+};
+
+enum class ECullMode
+{
+    NONE  = 0x0,
+    FRONT = 0x1,
+    BACK  = 0x2,
+    ALL   = 0x3
+};
+
+enum class EFrontFace
+{
+    COUNTER_CLOCKWISE = 0,
+    CLOCKWISE         = 1
+};
+
+struct RasterizerStateDescriptor
+{
+    bool         depthClampEnable;
+    bool         rasterizerDiscardEnable;
+    EPolygonMode polygonMode;
+    ECullMode    cullMode;
+    EFrontFace   frontFace;
+    bool         depthBiasEnable;
+    float        depthBias;
+    float        depthBiasClamp;
+    float        depthBiasSlope;
+    float        lineWidth;
+};
+
+struct MultiSampleStateDescriptor
+{
+    // TODO: 멀티샘플링 지원 추가
+    //...
+};
+
+enum class ECompareOp
+{
+    NEVER,
+    LESS,
+    EQUAL,
+    LESS_OR_EQUAL,
+    GREATER,
+    NOT_EQUAL,
+    GREATER_OR_EQUAL,
+    ALWAYS,
+};
+
+enum class EStencilOp
+{
+    KEEP,
+    ZERO,
+    REPLACE,
+    INCREMENT_AND_CLAMP,
+    DECREMENT_AND_CLAMP,
+    INVERT,
+    INCREMENT_AND_WARP,
+    DECREMENT_AND_WRAP
+};
+
+struct StencilTestDescriptor
+{
+    EStencilOp failOp;
+    EStencilOp passOp;
+    EStencilOp depthFailOp;
+    ECompareOp compareOp;
+    uint32     compareMask;
+    uint32     writeMask;
+    uint32     reference;
+};
+
+struct DepthStencilStateDescriptor
+{
+    bool                  depthTestEnable;
+    bool                  depthWriteEnable;
+    ECompareOp            depthCompareOp;
+    bool                  depthBoundTestEnable;
+    bool                  stencilTestEnable;
+    StencilTestDescriptor stencilFront;
+    StencilTestDescriptor stencilBack;
+    float                 minDepthBound;
+    float                 maxDepthBound;
+};
+
+struct TesellationStateDescriptor
+{
+    uint32 patchControlPoints = 0;
+};
+
+struct GraphicsPipelineInfo
+{
+    //...
+    ShaderProgramDescriptor      shaderDesc;
+    InputAssemblyStateDescriptor inputAssemblyDesc;
+    TesellationStateDescriptor   tesellationDesc;
+    VertexInputStateDescriptor   vertexInputDesc;
+    RasterizerStateDescriptor    rasterizerDesc;
+    MultiSampleStateDescriptor   multisampleDesc;
+    DepthStencilStateDescriptor  depthStencilDesc;
+    ColorBlendStateDescriptor    colorBlendDesc;
+
+    RenderPass* renderPass;
+};
+
+struct ComputePipelineInfo
+{
+    //...
 };
 
 HS_NS_END

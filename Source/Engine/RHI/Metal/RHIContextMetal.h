@@ -5,8 +5,8 @@
 //  Created by Yongsik Im on 2/11/25.
 //
 
-#ifndef __RHI_CONTEXT_METAL_H__
-#define __RHI_CONTEXT_METAL_H__
+#ifndef __HS_RHI_CONTEXT_METAL_H__
+#define __HS_RHI_CONTEXT_METAL_H__
 
 #include "Precompile.h"
 
@@ -16,10 +16,14 @@ HS_NS_BEGIN
 
 class RHIContextMetal : public RHIContext
 {
+public:
+    RHIContextMetal() {}
+    ~RHIContextMetal() override {}
+
     bool Initialize() override;
     void Finalize() override;
 
-    uint32 NextFrame(Swapchain* swapchain) override;
+    uint32 AcquireNextImage(Swapchain* swapchain) override;
 
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
     void       DestroySwapchain(Swapchain* swapchain) override;
@@ -37,21 +41,25 @@ class RHIContextMetal : public RHIContext
     Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
     void    DestroyShader(Shader* shader) override;
 
-    Buffer* CreateBuffer() override;
+    Buffer* CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
+    Buffer* CreateBuffer(void* data, size_t dataSize, const BufferInfo& info) override;
     void    DestroyBuffer(Buffer* buffer) override;
 
-    Texture* CreateTextrue(void* image, const TextureInfo& info) override;
+    Texture* CreateTexture(void* image, const TextureInfo& info) override;
     Texture* CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
     void     DestroyTexture(Texture* texture) override;
 
-    ResourceLayout CreateResourceLayout() override;
-    void           DestroyResourceLayout(ResourceLayout* resourceLayout) override;
+    Sampler* CreateSampler(const SamplerInfo& info) override;
+    void     DestroySampler(Sampler* sampler) override;
 
-    DescriptorSet* CreateDescriptorSet() override;
-    void           DestroyDescriptorSet(DescriptorSet* dSet) override;
+    ResourceLayout* CreateResourceLayout() override;
+    void            DestroyResourceLayout(ResourceLayout* rLayout) override;
 
-    DescriptorPool* CreateDescriptorPool() override;
-    void            DestroyDescriptorPool(DescriptorPool* dPool) override;
+    ResourceSet* CreateResourceSet() override;
+    void         DestroyResourceSet(ResourceSet* resSet) override;
+
+    ResourceSetPool* CreateResourceSetPool() override;
+    void             DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
     //
     //     CommandQueue* CreateCommandQueue() override;
     //     void DestroyCommandQueue(CommandQueue* cmdQueue) override;
@@ -65,14 +73,19 @@ class RHIContextMetal : public RHIContext
     Fence* CreateFence() override;
     void   DestroyFence(Fence* fence) override;
 
-    Semaphore CreateSemaphore() override;
-    void      DestroySemaphore(Semaphore* semaphore) override;
+    Semaphore* CreateSemaphore() override;
+    void       DestroySemaphore(Semaphore* semaphore) override;
 
     void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
 
     void Present(Swapchain* swapchain) override;
+
+    HS_FORCEINLINE void* GetDevice() const { return _device; }
+
+private:
+    void* _device = nullptr;
 };
 
 HS_NS_END
 
-#endif /* __RHI_CONTEXT_METAL_H__ */
+#endif /* __HS_RHI_CONTEXT_METAL_H__ */

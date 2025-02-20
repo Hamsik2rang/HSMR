@@ -14,19 +14,9 @@
 #include "Engine/ThirdParty/ImGui/imgui.h"
 #include "Engine/Renderer//RenderDefinition.h"
 #include "Engine/RHI/RenderHandle.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 HS_NS_BEGIN
-
-#define RHI_RESOURCE_BEGIN(passName) \
-    struct passName::RHIResource    \
-    {
-
-#define RHI_RESOURCE_END(passName) };
-
-#define RHI_RESOURCE_DEFINE(passName) \
-private:                              \
-struct RHIResource;                 \
-RHIResource* _rhiRes;
 
 class Renderer;
 class CommandBuffer;
@@ -58,9 +48,9 @@ public:
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
-    virtual void Configure(Framebuffer* renderTarget) = 0;
+    virtual void Configure(RenderTarget* renderTarget) = 0;
 
-    virtual void Execute(void* cmdEncoder, RenderPass* renderPass) = 0;
+    virtual void Execute(CommandBuffer* commandBuffer, RenderPass* renderPass) = 0;
 
     virtual void OnAfterRendering() = 0;
 
@@ -77,7 +67,7 @@ public:
 protected:
     Renderer* _renderer;
     bool      _isExecutable = true;
-    size_t    _submitIndex;
+    size_t    _frameIndex;
 };
 
 HS_NS_END

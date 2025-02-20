@@ -16,34 +16,32 @@ HS_NS_BEGIN
 
 struct Texture : public RHIHandle
 {
-    Texture();
+    Texture(const TextureInfo& info);
     ~Texture() override;
-
-    TextureInfo GetInfo() { return _info; }
-
-    TextureInfo _info;
+   
+    void* data;
+    uint32 dataSize;
+    
+    const TextureInfo info;
 };
 
 struct Sampler : public RHIHandle
 {
-    Sampler();
+    Sampler(const SamplerInfo& info);
     ~Sampler() override;
 
-    SamplerInfo GetInfo() { return _info; }
-
-    SamplerInfo _info;
+    const SamplerInfo info;
 };
 
 struct Buffer : public RHIHandle
 {
-    Buffer();
-    //    Buffer(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
+    Buffer(const BufferInfo& info);
     ~Buffer() override;
 
-    EBufferUsage        _usage;
-    EBufferMemoryOption _memoryOption;
-    void*               byte;
-    size_t              byteSize;
+    void*            byte;
+    size_t           byteSize;
+    
+    const BufferInfo info;
 };
 
 struct Shader : public RHIHandle
@@ -61,22 +59,21 @@ struct ResourceLayout : public RHIHandle
     ResourceLayout();
     ~ResourceLayout() override;
 
-    std::vector<ResourceBinding> _bindings;
-    uint32                       hash;
+    std::vector<ResourceBinding> bindings;
 };
 
-struct DescriptorSet : public RHIHandle
+struct ResourceSet : public RHIHandle
 {
-    DescriptorSet();
-    ~DescriptorSet() override;
+    ResourceSet();
+    ~ResourceSet() override;
 
-    std::vector<ResourceLayout> _layouts;
+    std::vector<ResourceLayout*> layouts;
 };
 
-struct DescriptorPool : public RHIHandle
+struct ResourceSetPool : public RHIHandle
 {
-    DescriptorPool();
-    ~DescriptorPool() override;
+    ResourceSetPool();
+    ~ResourceSetPool() override;
 };
 
 HS_NS_END
