@@ -206,13 +206,31 @@ set(THIRDPARTY
     ${THIRDPARTY_IMGUI}
 )
 
+list(APPEND TOTAL_FILES ${THIRDPARTY})
+
+set(SHADER_LAYOUT ${HS_RES_SHADER_DIR}/MSL/BuiltInMaterialLayout.h)
+
+source_group("Renderer\\Reference" FILES ${SHADER_LAYOUT})
+list(APPEND TOTAL_FILES ${SHADER_LAYOUT})
+
+add_library(${TARGET_NAME} STATIC
+    ${TOTAL_FILES}
+)
+
+set(INCLUDE_DIRECTORIES)
+
+target_include_directories(${TARGET_NAME}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC ThirdParty ${HS_RES_SHADER_DIR}
+)
+
 add_dependencies(${TARGET_NAME} Shader)
 
 target_link_libraries(${TARGET_NAME}
     PUBLIC
     ${SDL3}
     PRIVATE
-    "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController"
+    "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
 )
 
 # set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_GENERATE_DEBUGGING_SYMBOLS ON)
