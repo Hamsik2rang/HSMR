@@ -36,10 +36,23 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
 
     const uint32 maxFrameIndex = swMetal->GetMaxFrameIndex();
     swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameIndex;
-
-    swMetal->drawable = [swMetal->layer nextDrawable];
     
-    //MTLRenderPassDescriptor* rpDesc = ...
+    swMetal->layer.drawableSize = CGSizeMake(swapchain->GetWidth(), swapchain->GetHeight());
+    
+    id<CAMetalDrawable> drawable = [swMetal->layer nextDrawable];
+    swMetal->drawable = drawable;
+    if(drawable == nil)
+    {
+        HS_CHECK(drawable, "drawable is nil");
+    }
+    MTLRenderPassDescriptor* rpDesc = [MTLRenderPassDescriptor renderPassDescriptor];
+    rpDesc.colorAttachments[0].clearColor = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
+    rpDesc.colorAttachments[0].texture = drawable.texture;
+    rpDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
+    rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    
+    RenderPassMetal* swRenderPassMetal = static_cast<RenderPassMetal*>(swMetal->GetRenderPass());
+    swRenderPassMetal->handle = rpDesc;
 }
 
 Swapchain* RHIContextMetal::CreateSwapchain(SwapchainInfo info)
