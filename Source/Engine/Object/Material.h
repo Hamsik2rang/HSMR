@@ -18,12 +18,6 @@ HS_NS_BEGIN
 
 class Shader;
 
-struct BuiltInMaterialLayout
-{
-
-    
-};
-
 class Material : public Object
 {
 public:
