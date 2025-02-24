@@ -22,7 +22,6 @@ list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(GUI_HEADERS
     GUI/GUIContext.h
-    GUI/GUIRenderer.h
     GUI/ImGuiExtension.h
 )
 
@@ -32,7 +31,6 @@ list(APPEND TOTAL_FILES ${GUI_HEADERS})
 
 set(GUI_SOURCES
     GUI/GUIContext.cpp
-    GUI/GUIRenderer.cpp
 )
 
 list(APPEND TOTAL_FILES ${GUI_SOURCES})

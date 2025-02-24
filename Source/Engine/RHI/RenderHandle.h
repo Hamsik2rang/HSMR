@@ -46,6 +46,17 @@ protected:
     GraphicsPipeline(const GraphicsPipelineInfo& info);
 };
 
+template<>
+struct Hasher<RenderPass>
+{
+    static uint32 Get(const RenderPass& key)
+    {
+        
+    }
+};
+
+
+
 HS_NS_END
 
 #endif /* __HS_RENDER_PASS_H__ */

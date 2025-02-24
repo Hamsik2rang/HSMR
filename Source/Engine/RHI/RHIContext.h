@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Swapchain.h"
+#include "Engine/RHI/Swapchain.h"
 
 #include "Engine/RHI/RHIDefinition.h"
 #include "Engine/RHI/RenderHandle.h"
@@ -83,6 +83,8 @@ public:
     virtual void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) = 0;
 
     virtual void Present(Swapchain* swapchain) = 0;
+
+    virtual void WaitForIdle() const = 0;
 };
 
 HS_NS_END

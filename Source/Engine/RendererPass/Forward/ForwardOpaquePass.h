@@ -23,21 +23,26 @@ class ForwardOpaquePass : public ForwardPass
 public:
     ForwardOpaquePass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
     ~ForwardOpaquePass() override;
-    
+
     void OnBeforeRendering(uint32_t submitIndex) override;
-    
+
     void Configure(RenderTarget* renderTarget) override;
-    
+
     void Execute(CommandBuffer* commandBuffer, RenderPass* renderPass) override;
-    
+
     void OnAfterRendering() override;
-    
-private:    
+
+private:
     void createResourceHandles();
     void createPipelineHandles(RenderPass* renderPass);
-    
-    RenderTarget* _currentFramebuffer;
 
+    RenderTarget*     _currentRenderTarget = nullptr;
+    Buffer*           _vertexBuffer       = nullptr;
+    Shader*           _vertexShader       = nullptr;
+    Shader*           _fragmentShader     = nullptr;
+    GraphicsPipeline* _gPipeline          = nullptr;
+
+    GraphicsPipeline* pipeline = nullptr;
 };
 
 HS_NS_END

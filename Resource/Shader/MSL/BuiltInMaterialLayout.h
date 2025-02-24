@@ -4,7 +4,6 @@
 //
 //  Created by Yongsik Im on 2/9/25.
 //
-
 #ifndef __HS_BUILTIN_MATERIAL_LAYOUT_H__
 #define __HS_BUILTIN_MATERIAL_LAYOUT_H__
 
@@ -24,8 +23,10 @@ using float4 = vector_float4;
 
 #if defined(HS_BASIC_SHADER) || !defined(HS_SHADER_FILE)
 
-    #define VSINPUT_BASIC VSInput_Basic
-    #define FSINPUT_BASIC FSInput_Basic
+    #define VSINPUT_BASIC     VSInput_Basic
+    #define FSINPUT_BASIC     FSInput_Basic
+    #define VSENTRY_BASIC     VertexShader_Basic
+    #define FSENTRY_BASIC     FragmentShader_Basic
 
 struct VSINPUT_BASIC
 {

@@ -14,11 +14,11 @@ RenderPassMetal::~RenderPassMetal()
 FramebufferMetal::FramebufferMetal(const FramebufferInfo& info)
     : Framebuffer(info)
 {
+    
 }
 
 FramebufferMetal::~FramebufferMetal()
 {
-    
     
 }
 

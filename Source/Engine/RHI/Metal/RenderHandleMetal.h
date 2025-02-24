@@ -21,6 +21,8 @@ struct RenderPassMetal : public RenderPass
 {
     RenderPassMetal(const RenderPassInfo& info);
     ~RenderPassMetal() override;
+    
+    MTLRenderPassDescriptor* handle;
 };
 
 struct FramebufferMetal : public Framebuffer

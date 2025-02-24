@@ -34,6 +34,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     Window::EFlags windowFlags = Window::EFlags::NONE;
     windowFlags |= Window::EFlags::WINDOW_RESIZABLE;
     windowFlags |= Window::EFlags::WINDOW_HIGH_PIXEL_DENSITY;
+    windowFlags |= Window::EFlags::WINDOW_METAL;
 
     _window = new EditorWindow("EditorApp BaseWindow", 1600, 1050, static_cast<uint64>(windowFlags));
     if (HS_WINDOW_INVALID_ID == _window->Initialize())
@@ -81,14 +82,7 @@ void EditorApplication::Run()
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT ||
-                (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == _window->GetWindowID()))
-                _window->Close();
-        }
-        if (_window->GetFlags() & SDL_WINDOW_MINIMIZED)
-        {
-            SDL_Delay(10);
-            continue;
+            _window->PeekEvent(event.type, event.window.windowID);
         }
 
         _window->NextFrame();

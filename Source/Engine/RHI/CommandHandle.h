@@ -59,7 +59,7 @@ struct CommandBuffer : public RHIHandle
     
     virtual void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer) = 0;
     virtual void BindPipeline(GraphicsPipeline* pipeline) = 0;
-    virtual void BindDescriptorSet(ResourceSet* rSet) = 0;
+    virtual void BindResourceSet(ResourceSet* rSet) = 0;
     virtual void SetViewport(const Viewport& viewport) = 0;
     virtual void SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height) = 0;
     virtual void BindIndexBuffer(Buffer* indexBuffer) = 0;

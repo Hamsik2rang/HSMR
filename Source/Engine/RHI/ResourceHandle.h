@@ -18,10 +18,10 @@ struct Texture : public RHIHandle
 {
     Texture(const TextureInfo& info);
     ~Texture() override;
-   
-    void* data;
+
+    void*  data;
     uint32 dataSize;
-    
+
     const TextureInfo info;
 };
 
@@ -38,9 +38,9 @@ struct Buffer : public RHIHandle
     Buffer(const BufferInfo& info);
     ~Buffer() override;
 
-    void*            byte;
-    size_t           byteSize;
-    
+    void*  byte;
+    size_t byteSize;
+
     const BufferInfo info;
 };
 
@@ -74,6 +74,24 @@ struct ResourceSetPool : public RHIHandle
 {
     ResourceSetPool();
     ~ResourceSetPool() override;
+};
+
+template <>
+struct Hasher<Texture>
+{
+    static uint32 Get(const Texture& key)
+    {
+        return Hasher<TextureInfo>::Get(key.info);
+    }
+};
+
+template <>
+struct Hasher<Texture*>
+{
+    static uint32 Get(const Texture*& key)
+    {
+        return Hasher<TextureInfo>::Get(key->info);
+    }
 };
 
 HS_NS_END

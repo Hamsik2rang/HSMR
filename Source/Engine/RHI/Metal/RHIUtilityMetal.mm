@@ -450,6 +450,7 @@ MTLVertexFormat hs_rhi_get_vertex_format_from_size(size_t size)
         case 8:  return MTLVertexFormatFloat2;
         case 12: return MTLVertexFormatFloat3;
         case 16: return MTLVertexFormatFloat4;
+            
 
         default: break;
     }
@@ -477,23 +478,23 @@ MTLResourceOptions hs_rhi_to_buffer_option(EBufferMemoryOption option)
 {
     switch (option)
     {
-        case EBufferMemoryOption::STATIC:  return MTLResourceStorageModePrivate;
-        case EBufferMemoryOption::DYNAMIC: return MTLResourceStorageModeShared;
-        case EBufferMemoryOption::MAPPED:  return MTLResourceStorageModeManaged;
+        case EBufferMemoryOption::STATIC:  return MTLStorageModePrivate;
+        case EBufferMemoryOption::DYNAMIC: return MTLStorageModeShared;
+        case EBufferMemoryOption::MAPPED:  return MTLStorageModeManaged;
 
         default:                           break;
     }
 
     HS_LOG(crash, "Unsupported MTLResourceOption");
-    return MTLResourceStorageModeManaged;
+    return MTLStorageModeManaged;
 }
 EBufferMemoryOption hs_rhi_from_buffer_option(MTLResourceOptions option)
 {
     switch (option)
     {
-        case MTLResourceStorageModePrivate: return EBufferMemoryOption::STATIC;
-        case MTLResourceStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
-        case MTLResourceStorageModeManaged: return EBufferMemoryOption::MAPPED;
+        case MTLStorageModePrivate: return EBufferMemoryOption::STATIC;
+        case MTLStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
+        case MTLStorageModeManaged: return EBufferMemoryOption::MAPPED;
 
         default:                            break;
     }

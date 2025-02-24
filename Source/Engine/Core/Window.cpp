@@ -1,7 +1,7 @@
 #include "Engine/Core/Window.h"
 
 #include "Engine/Core/Log.h"
-#include "Engine/Core/Swapchain.h"
+#include "Engine/RHI/Swapchain.h"
 #include "Engine/RHI/RenderHandle.h"
 
 #include <SDL3/SDL.h>
@@ -35,7 +35,7 @@ uint32 Window::Initialize()
         return HS_WINDOW_INVALID_ID;
     }
 
-    _resizable = (_flags & SDL_WINDOW_RESIZABLE);
+    _resizable = (_flags & SDL_WINDOW_RESIZABLE);    
     _useHDR    = (_flags & SDL_WINDOW_HIGH_PIXEL_DENSITY);
 
     SDL_MetalView view = SDL_Metal_CreateView(window);
@@ -43,12 +43,12 @@ uint32 Window::Initialize()
     _nativeHandle.window = static_cast<void*>(window);
     _nativeHandle.view   = static_cast<void*>(view);
     _nativeHandle.layer  = SDL_Metal_GetLayer(view);
-
-    SDL_SetWindowSize(window, _width, _height);
     
     _rhiContext = hs_engine_get_rhi_context();
 
     SwapchainInfo swInfo{};
+    swInfo.width              = _width;
+    swInfo.height             = _height;
     swInfo.nativeWindowHandle = static_cast<void*>(&_nativeHandle);
     swInfo.useDepth           = false;
     swInfo.useMSAA            = false;
@@ -124,8 +124,13 @@ void Window::Shutdown()
     _isClosed = true;
 }
 
-bool Window::PeekEvent(uint64 eventType, uint32 windowID)
+bool Window::PeekEvent(uint32 eventType, uint32 windowID)
 {
+    if (dispatchEvent(eventType, windowID))
+    {
+        return true;
+    }
+
     if (_id != windowID)
     {
         for (auto* child : _childs)
@@ -136,31 +141,48 @@ bool Window::PeekEvent(uint64 eventType, uint32 windowID)
                 return true;
             }
         }
-
-        return false;
     }
 
-    PeekEvent(eventType, windowID);
-
-    return true;
+    return false;
 }
 
-void Window::dispatchEvent(uint64 eventType)
+bool Window::dispatchEvent(uint64 eventType, uint32 windowId)
 {
     SDL_EventType event = static_cast<SDL_EventType>(eventType);
 
+    if (event == SDL_EVENT_QUIT)
+    {
+        _shouldClose = true;
+        return false;
+    }
+
     switch (event)
     {
-        case SDL_EVENT_QUIT:
         case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
         {
             _shouldClose = true;
+        }
+        break;
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        {
+            _isMinimized = true;
+        }
+        break;
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        {
+        }
+        break;
+        case SDL_EVENT_WINDOW_RESTORED:
+        {
+            _isMinimized = false;
         }
         break;
         //...
         default:
             break;
     }
+
+    return true;
 }
 
 void Window::Flush()
