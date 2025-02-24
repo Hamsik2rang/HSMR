@@ -24,9 +24,10 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     nativeHandle       = nh;
     view               = nh->view;
     layer              = (__bridge CAMetalLayer*)SDL_Metal_GetLayer(view);
+    layer.device       = MTLCreateSystemDefaultDevice();
     layer.drawableSize = CGSizeMake(info.width, info.height);
-    
-    drawable           = [layer nextDrawable];
+
+    drawable = [layer nextDrawable];
 
     _maxFrameIndex = layer.maximumDrawableCount;
 
@@ -65,8 +66,8 @@ void SwapchainMetal::setRenderTargets()
     info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
     TextureInfo colorTextureInfo{};
-    colorTextureInfo.extent.width         = _width;
-    colorTextureInfo.extent.height        = _height;
+    colorTextureInfo.extent.width         = _info.width;
+    colorTextureInfo.extent.height        = _info.height;
     colorTextureInfo.extent.depth         = 1;
     colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
     colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;

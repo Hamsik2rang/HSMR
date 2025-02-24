@@ -26,7 +26,8 @@ void InitializeBackend(Swapchain* swapchain)
 {
     SwapchainMetal*     swMetal      = static_cast<SwapchainMetal*>(swapchain);
     NativeWindowHandle* nativeHandle = reinterpret_cast<NativeWindowHandle*>(swMetal->nativeHandle);
-
+//    SDL_Window* window = static_cast<SDL_Window*>(nativeHandle->window);
+    
     id<MTLDevice> device = ((__bridge_transfer CAMetalLayer*)nativeHandle->layer).device;
     ImGui_ImplMetal_Init(device);
     ImGui_ImplSDL3_InitForMetal(static_cast<SDL_Window*>(nativeHandle->window));

@@ -36,7 +36,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     windowFlags |= Window::EFlags::WINDOW_HIGH_PIXEL_DENSITY;
     windowFlags |= Window::EFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 1600, 1050, static_cast<uint64>(windowFlags));
+    _window = new EditorWindow("EditorApp BaseWindow", 3200, 2100, static_cast<uint64>(windowFlags));
     if (HS_WINDOW_INVALID_ID == _window->Initialize())
     {
         HS_LOG(error, "Fail to initialize base window");

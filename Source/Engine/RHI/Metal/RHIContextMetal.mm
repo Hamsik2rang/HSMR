@@ -502,6 +502,7 @@ void RHIContextMetal::Present(Swapchain* swapchain)
 
     CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
     [cmdBufferMetal->handle presentDrawable:swMetal->drawable];
+    [cmdBufferMetal->handle commit];
     [cmdBufferMetal->handle waitUntilCompleted];
 }
 
