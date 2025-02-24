@@ -68,6 +68,7 @@ public:
     Window(const char* name, uint32 width, uint32 height, uint64 flags);
     virtual ~Window();
 
+    bool         PeekEvent(uint32 eventType, uint32 windowID);
     virtual void NextFrame();
     virtual void Update();
     virtual void Render();
@@ -81,13 +82,13 @@ public:
     HS_FORCEINLINE const char*               GetName() { return _name; }
     HS_FORCEINLINE uint32                    GetWindowID() { return _id; }
     HS_FORCEINLINE uint64                    GetFlags() { return _flags; }
-    HS_FORCEINLINE bool                      PeekEvent(uint64 eventType, uint32 windowID);
     HS_FORCEINLINE bool                      IsOpened() { return !_shouldClose; }
     HS_FORCEINLINE void                      Close() { _shouldClose = true; }
+    HS_FORCEINLINE void                      SetMinimize(bool value) { _isMinimized = value; }
     HS_FORCEINLINE Swapchain*                GetSwapchain() { return _swapchain; }
 
 protected:
-    virtual void dispatchEvent(uint64 eventType);
+    virtual bool dispatchEvent(uint64 eventType, uint32 windowID);
 
     virtual bool onInitialize(){};
     virtual void onNextFrame() {}
@@ -102,9 +103,9 @@ protected:
     NativeWindowHandle _nativeHandle;
 
     RHIContext* _rhiContext = nullptr;
-    Renderer* _renderer = nullptr;
-    Scene*    _scene    = nullptr;
-    
+    Renderer*   _renderer   = nullptr;
+    Scene*      _scene      = nullptr;
+
     Swapchain* _swapchain = nullptr;
 
     const char* _name;
@@ -116,6 +117,7 @@ protected:
     bool _shouldClose;
     bool _isClosed;
     bool _resizable;
+    bool _isMinimized;
     bool _useHDR;
 };
 

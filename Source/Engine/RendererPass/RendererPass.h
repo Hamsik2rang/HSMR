@@ -56,9 +56,11 @@ public:
 
     virtual void Clear() {}
 
-    bool IsExecutable() { return _isExecutable; }
-    
-    Renderer* GetRenderer() { return _renderer;}
+    HS_FORCEINLINE bool IsExecutable() const { return _isExecutable; }
+
+    HS_FORCEINLINE Renderer* GetRenderer() const { return _renderer; }
+
+    HS_FORCEINLINE const RenderPassInfo& GetFixedSettingForCurrentPass() const { return _renderPassInfo; }
 
     const char* name;
 
@@ -68,6 +70,8 @@ protected:
     Renderer* _renderer;
     bool      _isExecutable = true;
     size_t    _frameIndex;
+
+    RenderPassInfo _renderPassInfo;
 };
 
 HS_NS_END

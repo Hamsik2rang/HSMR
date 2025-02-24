@@ -1,18 +1,17 @@
 #include "Editor/Core/EditorWindow.h"
 
 #include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
-#include "Engine/Core/Swapchain.h"
+#include "Engine/RHI/Swapchain.h"
 #include "Engine/RHI/RenderHandle.h"
+#include "Engine/Renderer/ForwardRenderer.h"
 
 #include "Editor/GUI/GUIContext.h"
-#include "Editor/GUI/GUIRenderer.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
-
 
 HS_NS_EDITOR_BEGIN
 
@@ -32,73 +31,113 @@ void EditorWindow::Render()
 
 bool EditorWindow::onInitialize()
 {
-    _guiRenderer = new GUIRenderer(_rhiContext);
-    _guiRenderer->Initialize();
-    
+    _renderer = new ForwardRenderer(_rhiContext);
+    _renderer->Initialize();
+
     ImGuiExt::InitializeBackend(_swapchain);
 
-    _guiRenderer->AddPass(new ForwardOpaquePass("Opaque Pass", _guiRenderer, ERenderingOrder::OPAQUE));
-    
-    for (int i = 0; i < (sizeof(_renderTextures) / sizeof(Framebuffer*)); i++)
+    _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
+
+    _renderTargets.resize(_swapchain->GetMaxFrameIndex());
+
+    uint32 width  = _swapchain->GetWidth();
+    uint32 height = _swapchain->GetHeight();
+    for (size_t i = 0; i < _renderTargets.size(); i++)
     {
-//        RenderPassInfo rpInfo{};
-//        rpInfo.colorAttachments.resize(1);
-//        rpInfo.colorAttachmentCount = 1;
-//        rpInfo.useDepthStencilAttachment = false;
-//        
-//        RenderPass* renderPass = new RenderPass(rpInfo);
-////        
-//        FramebufferInfo fbInfo;
-//        fbInfo.width = _width;
-//        fbInfo.height = _height;
-//        fbInfo.renderPass = renderPass;
-//        fbInfo.resolveBuffer = nullptr;
-//        fbInfo.depthStencilBuffer = nullptr;
-//        fbInfo.colorBuffers.emplace_back(new Texture(nullptr, _width, _height, EPixelFormat::R8G8B8A8_UNORM, ETextureType::TEX_2D, ETextureUsage::SHADER_WRITE));
-//        fbInfo.isSwapchainFramebuffer = false;
-       
-        _renderTextures[i] = new RenderTarget();
+        RenderTargetInfo info = _renderer->GetBareboneRenderTargetInfo();
+        for (size_t j = 0; j < info.colorTextureCount; j++)
+        {
+            info.colorTextureInfos[j].extent.width  = width;
+            info.colorTextureInfos[j].extent.height = height;
+            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
+            info.colorTextureInfos[j].usage         = ETextureUsage::RENDER_TARGET;
+            info.colorTextureInfos[j].isCompressed  = false;
+            info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
+        }
+
+        info.useDepthStencilTexture                = true;
+        info.depthStencilInfo.extent.width         = width;
+        info.depthStencilInfo.extent.height        = height;
+        info.depthStencilInfo.extent.depth         = 1;
+        info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
+        info.depthStencilInfo.usage                = ETextureUsage::RENDER_TARGET;
+        info.depthStencilInfo.isDepthStencilBuffer = true;
+        info.depthStencilInfo.isCompressed         = false;
+
+        _renderTargets[i].Create(info);
     }
 
     setupPanels();
-
-    //    _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, 0));
 }
 
 void EditorWindow::onNextFrame()
 {
-    _guiRenderer->NextFrame(_swapchain);
-    
+    if (_isMinimized)
+    {
+        return;
+    }
+
+    _renderer->NextFrame(_swapchain);
+    uint32 width  = _swapchain->GetWidth();
+    uint32 height = _swapchain->GetHeight();
+
+    for (auto& renderTarget : _renderTargets)
+    {
+        renderTarget.Update(width, height);
+    }
 }
 
 void EditorWindow::onUpdate()
 {
+//    if (_isMinimized)
+//    {
+//        return;
+//    }
     //....
+
+    // 렌더타겟 크기 업데이트는 여기서 합니다(onNextFrame 이후 ~ onRender 이전)
 }
 
 void EditorWindow::onRender()
 {
-    RenderTarget* rt = _renderTextures[_swapchain->GetCurrentFrameIndex()];
-    // 1. Render Scene to Scene Panel
-//    _guiRenderer->Render({}, currentFramebuffer);
+    if (_isMinimized)
+    {
+        return;
+    }
+    CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
+    cmdBuffer->Begin();
 
-    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(rt);
-    
+    RenderTarget* curRT = &_renderTargets[_swapchain->GetCurrentFrameIndex()];
+
+    // 1. Render Scene to Scene Panel
+    _renderer->Render({}, curRT);
+
+    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(curRT);
+
     // 2. Render GUI
     onRenderGUI();
+
+    cmdBuffer->End();
 }
 
 void EditorWindow::onPresent()
 {
+    if (_isMinimized)
+    {
+        return;
+    }
     hs_engine_get_rhi_context()->Present(_swapchain);
 }
+
 void EditorWindow::onShutdown()
 {
-    if (nullptr != _guiRenderer)
+    ImGuiExt::FinalizeBackend();
+
+    if (nullptr != _renderer)
     {
-        _guiRenderer->Shutdown();
-        delete _guiRenderer;
-        _guiRenderer = nullptr;
+        _renderer->Shutdown();
+        delete _renderer;
+        _renderer = nullptr;
     }
 }
 
@@ -106,27 +145,25 @@ void EditorWindow::onRenderGUI()
 {
     // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
     ImGuiExt::BeginRender(_swapchain);
-    //    _guiRenderer->Render({}, nullptr);
+    //    _renderer->Render({}, nullptr);
 
     _basePanel->Draw(); // Draw panel tree.
 
-    ImGuiExt::EndRender(_swapchain->GetCommandBufferForCurrentFrame());
+    ImGuiExt::EndRender(_swapchain);
 }
 
 void EditorWindow::setupPanels()
 {
     _basePanel = new DockspacePanel(this);
     _basePanel->Setup();
-    
+
     _menuPanel = new MenuPanel(this);
     _menuPanel->Setup();
     _basePanel->InsertPanel(_menuPanel);
-    
+
     _scenePanel = new ScenePanel(this);
     _scenePanel->Setup();
     _basePanel->InsertPanel(_scenePanel);
-    
-
 }
 
 HS_NS_EDITOR_END

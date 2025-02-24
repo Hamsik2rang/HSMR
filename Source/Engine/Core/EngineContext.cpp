@@ -51,6 +51,8 @@ EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rh
         default:
             break;
     }
+    
+    s_engineContext->rhiContext->Initialize();
 
     return s_engineContext;
 }
@@ -84,6 +86,8 @@ void hs_engine_set_rhi_context(RHIContext* rhiContext)
 
 EngineContext* hs_engine_destroy_context()
 {
+    s_engineContext->rhiContext->Finalize();
+    
     SDL_Quit();
 
     delete s_engineContext;

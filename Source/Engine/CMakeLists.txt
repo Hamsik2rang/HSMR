@@ -9,7 +9,6 @@ set(CORE_HEADERS
     Core/EngineContext.h
     Core/FileSystem.h
     Core/Window.h
-    Core/Swapchain.h
     Core/Event.h
 )
 
@@ -21,7 +20,6 @@ set(CORE_SOURCES
     Core/Scene.cpp
     Core/Log.cpp
     Core/EngineContext.cpp
-    Core/Swapchain.cpp
     Core/FileSystem.cpp
     Core/Window.cpp
     Core/Event.cpp
@@ -36,6 +34,7 @@ set(RHI_HEADERS
     RHI/RenderHandle.h
     RHI/CommandHandle.h
     RHI/ResourceHandle.h
+    RHI/Swapchain.h
 )
 
 source_group("RHI\\Common\\Public" FILES ${RHI_HEADERS})
@@ -46,6 +45,7 @@ set(RHI_SOURCES
     RHI/RenderHandle.cpp
     RHI/ResourceHandle.cpp
     RHI/CommandHandle.cpp
+    RHI/Swapchain.cpp
 )
 
 source_group("RHI\\Common\\Private" FILES ${RHI_SOURCES})
@@ -83,6 +83,8 @@ endif()
 
 set(RENDERER_HEADERS
     Renderer/Renderer.h
+    Renderer/ForwardRenderer.h
+    Renderer/DeferredRenderer.h
     Renderer/RenderTarget.h
     Renderer/RenderDefinition.h
 )
@@ -92,6 +94,8 @@ list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
     Renderer/Renderer.cpp
+    Renderer/ForwardRenderer.cpp
+    Renderer/DeferredRenderer.cpp
     Renderer/RenderTarget.cpp
 )
 
@@ -121,6 +125,7 @@ set(UTILITY_HEADERS
     Utility/Timer.h
     Utility/Geometry.h
     Utility/Color.h
+    Utility/Hash.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
@@ -130,6 +135,7 @@ set(UTILITY_SOURCES
     Utility/Timer.cpp
     Utility/Geometry.cpp
     Utility/Color.cpp
+    Utility/Hash.cpp
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
@@ -200,107 +206,13 @@ set(THIRDPARTY
     ${THIRDPARTY_IMGUI}
 )
 
-# if(APPLE)
-# set(METAL_CPP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Thirdparty/metal-cpp)
-
-# set(METAL_CPP_HEADERS
-# "${METAL_CPP_DIR}/Foundation/Foundation.hpp"
-# "${METAL_CPP_DIR}/QuartzCore/QuartzCore.hpp"
-# "${METAL_CPP_DIR}/Metal/Metal.hpp"
-# )
-
-# option(MAKE_METAL_SINGLE_HEADER "use metal-cpp as a single header" OFF)
-
-# if(MAKE_METAL_SINGLE_HEADER)
-# add_compile_definitions(SINGLE_METAL_HEADER)
-
-# # Python required to run the metal-cpp/SingleHeader/MakeSingleHeader.py
-# find_package(Python3 REQUIRED COMPONENTS Interpreter)
-
-# set(MAKE_SINGLE_HEADER_SCRIPT_PY "${METAL_CPP_DIR}/SingleHeader/MakeSingleHeader.py")
-
-# if(EXISTS ${MAKE_SINGLE_HEADER_SCRIPT_PY})
-# # if(INCLUDE_APPKIT_EXTENSION)
-# # file(COPY "${METAL_CPP_EXTENSIONS_DIR}/AppKit"
-# # DESTINATION "${METAL_CPP_DIR}/")
-# # list(APPEND METAL_CPP_HEADERS "${METAL_CPP_DIR}/AppKit/AppKit.hpp")
-# # endif()
-
-# # if(INCLUDE_METALKIT_EXTENSION)
-# # file(COPY "${METAL_CPP_EXTENSIONS_DIR}/MetalKit"
-# # DESTINATION "${METAL_CPP_DIR}/")
-# # list(APPEND METAL_CPP_HEADERS "${METAL_CPP_DIR}/MetalKit/MetalKit.hpp")
-# # endif()
-# message(STATUS "run metal-cpp single header script...")
-
-# # Run the python script.
-# execute_process(
-# COMMAND python3 ${MAKE_SINGLE_HEADER_SCRIPT_PY} ${HEADERS}
-# WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-# RESULT_VARIABLE EXIT_CODE
-# OUTPUT_QUIET
-# )
-# endif()
-# endif()
-
-# if(${MAKE_METAL_SINGLE_HEADER} AND EXISTS "${METAL_CPP_DIR}/SingleHeader/Metal.hpp")
-# set(METAL_CPP_INCLUDE_DIRS "${METAL_CPP_DIR}/SingleHeader")
-# set(METAL_CPP_HEADERS ${METAL_CPP_DIR}/SingleHeader/Metal.hpp)
-
-# # Remove unnecessary  headers.
-# execute_process(
-# COMMAND python3 "${CMAKE_CURRENT_LIST_DIR}/scripts/RemoveUselessImports.py"
-# "${METAL_CPP_DIR}/SingleHeader/Metal.hpp"
-# WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-# RESULT_VARIABLE EXIT_CODE2
-# OUTPUT_QUIET)
-
-# if(NOT ${EXIT_CODE1} EQUAL 0 OR NOT ${EXIT_CODE2} EQUAL 0)
-# message(
-# FATAL_ERROR "An error has ocurred: the script did not successfully complete.")
-# else()
-# message(STATUS "Single header created: ${METAL_CPP_DIR}/SingleHeader/Metal.hpp")
-# endif()
-
-# else(NOT ${MAKE_METAL_SINGLE_HEADER})
-# list(APPEND METAL_CPP_INCLUDE_DIRS ${METAL_CPP_DIR})
-
-# # if(INCLUDE_APPKIT_EXTENSION OR INCLUDE_METALKIT_EXTENSION)
-# # list(APPEND METAL_CPP_INCLUDE_DIRS ${METAL_CPP_EXTENSIONS_DIR})
-# # endif()
-# endif()
-
-# source_group("ThirdParty\\metal-cpp" FILES ${METAL_CPP_HEADERS})
-# list(APPEND THIRDPARTY ${METAL_CPP_HEADERS})
-# endif()
-list(APPEND TOTAL_FILES ${THIRDPARTY})
-
-set(SHADER_LAYOUT ${HS_RES_SHADER_DIR}/MSL/BuiltInMaterialLayout.h)
-
-source_group("Renderer\\Reference" FILES ${SHADER_LAYOUT})
-list(APPEND TOTAL_FILES ${SHADER_LAYOUT})
-
-add_library(${TARGET_NAME} STATIC
-    ${TOTAL_FILES}
-)
-
-set(INCLUDE_DIRECTORIES)
-
-if(APPLE)
-    target_include_directories(${TARGET_NAME}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-        PUBLIC ThirdParty ThirdParty/metal-cpp ${HS_RES_SHADER_DIR}
-    )
-else()
-endif()
-
 add_dependencies(${TARGET_NAME} Shader)
 
 target_link_libraries(${TARGET_NAME}
     PUBLIC
     ${SDL3}
     PRIVATE
-    "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
+    "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController"
 )
 
 # set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_GENERATE_DEBUGGING_SYMBOLS ON)

@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Engine/Core/Log.h"
+#include "Engine/Utility/Hash.h"
 
 #include <vector>
 
@@ -72,9 +73,34 @@ public:
 protected:
     const EType _type;
 
-    int    _refs;
+    int    _refs = 1; // Create한 순간 자동으로 Ratain하는 것으로 판단.
     uint32 _hash;
     //...
+};
+
+enum class EVertexFormat
+{
+    FLOAT,
+    FLOAT2,
+    FLOAT3,
+    FLOAT4,
+
+    HALF,
+    HALF2,
+    HALF3,
+    HALF4,
+
+    MAT2x2,
+    MAT2x3,
+    MAT2x4,
+
+    MAT3x2,
+    MAT3x3,
+    MAT3x4,
+
+    MAT4x2,
+    MAT4x3,
+    MAT4x4
 };
 
 enum class EPixelFormat
@@ -112,6 +138,16 @@ enum class ETextureUsage
     PIXELFORMAT_VIEW = 0x0010,
 };
 
+HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
+{
+    return static_cast<ETextureUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE ETextureUsage operator&(ETextureUsage lhs, ETextureUsage rhs)
+{
+    return static_cast<ETextureUsage>(static_cast<uint32>(lhs) & static_cast<uint32>(rhs));
+}
+
 struct TextureInfo
 {
     EPixelFormat  format = EPixelFormat::R8G8B8A8_UNORM;
@@ -129,7 +165,7 @@ struct TextureInfo
     size_t byteSize    = 0;
 
     bool isCompressed         = false;
-    bool isSwapchianTexture   = false;
+    bool isSwapchainTexture   = false;
     bool isDepthStencilBuffer = false;
     bool useGenerateMipmap    = false;
 };
@@ -207,6 +243,9 @@ struct RenderTexture
 
 struct SwapchainInfo
 {
+    uint32 width;
+    uint32 height;
+    
     bool useDepth;
     bool useStencil;
     bool useMSAA;
@@ -233,6 +272,15 @@ enum class ELoadAction
 
 struct ClearValue
 {
+    ClearValue() = default;
+    ClearValue(float r, float g, float b, float a)
+        : color{r, g, b, a}
+    {}
+    ClearValue(float depth, float stencil)
+        : depth(depth)
+        , stencil(stencil)
+    {}
+
     union
     {
         float color[4];
@@ -267,14 +315,15 @@ class RenderPass;
 
 struct FramebufferInfo
 {
-    RenderPass*           renderPass;
-    std::vector<Texture*> colorBuffers;
-    Texture*              depthStencilBuffer;
-    Texture*              resolveBuffer;
+    RenderPass*     renderPass;
+    Texture* const* colorBuffers;
+    Texture*        depthStencilBuffer;
+    Texture*        resolveBuffer;
 
-    uint32 width                  = 1;
-    uint32 height                 = 1;
-    bool   isSwapchainFramebuffer = false;
+    uint32 width  = 1;
+    uint32 height = 1;
+
+    bool isSwapchainFramebuffer = false;
 };
 
 enum class EShaderParameterType
@@ -405,16 +454,16 @@ struct ShaderProgramDescriptor
 
 struct VertexInputLayoutDescriptor
 {
-    uint32 binding;
+    uint32 binding; // Metal에서는 무시됩니다.
     uint32 stride;
-    uint32 stepRate;
-    bool   useInstancing;
+    uint8  stepRate : 7;
+    bool   useInstancing : 1;
 };
 
 struct VertexInputAttributeDescriptor
 {
     uint32 location;
-    uint32 binding;
+    uint32 binding; // Metal에서는 무시됩니다.
     uint32 formatSize;
     uint32 offset;
 };
@@ -541,7 +590,9 @@ enum class ECullMode
 enum class EFrontFace
 {
     COUNTER_CLOCKWISE = 0,
-    CLOCKWISE         = 1
+    CCW               = COUNTER_CLOCKWISE,
+    CLOCKWISE         = 1,
+    CW                = CLOCKWISE,
 };
 
 struct RasterizerStateDescriptor
@@ -635,6 +686,55 @@ struct GraphicsPipelineInfo
 struct ComputePipelineInfo
 {
     //...
+};
+
+template <>
+struct Hasher<Attachment>
+{
+    static uint32 Get(const Attachment& key)
+    {
+        uint32 hash = HashCombine(Hasher<EPixelFormat>::Get(key.format), Hasher<ELoadAction>::Get(key.loadAction), Hasher<EStoreAction>::Get(key.storeAction));
+        hash        = HashCombine(hash, key.isDepthStencil);
+
+        return hash;
+    }
+};
+
+template <>
+struct Hasher<RenderPassInfo>
+{
+    static uint32 Get(const RenderPassInfo& key)
+    {
+        uint32 hash = HashCombine(Hasher<uint64>::Get(key.colorAttachmentCount), key.useDepthStencilAttachment, key.isSwapchainRenderPass);
+        for (size_t i = 0; i < key.colorAttachmentCount / 2; i += 2)
+        {
+            hash = HashCombine(hash, Hasher<Attachment>::Get(key.colorAttachments[i]), Hasher<Attachment>::Get(key.colorAttachments[i + 1]));
+        }
+
+        uint32 b = (key.colorAttachmentCount % 2 != 0) ? Hasher<Attachment>::Get(key.colorAttachments.back()) : 0;
+        uint32 c = (key.useDepthStencilAttachment) ? Hasher<Attachment>::Get(key.depthStencilAttachment) : 0;
+        hash     = HashCombine(hash, b, c);
+
+        return hash;
+    }
+};
+
+template <>
+struct Hasher<TextureInfo>
+{
+    static uint32 Get(const TextureInfo& key)
+    {
+        uint32 hash = 0;
+        hash        = HashCombine(key.extent.width, key.extent.height, key.extent.depth);
+        hash        = HashCombine(hash, Hasher<EPixelFormat>::Get(key.format), Hasher<ETextureType>::Get(key.type));
+        hash        = HashCombine(hash, Hasher<ETextureUsage>::Get(key.usage), key.mipLevel);
+        hash        = HashCombine(hash, key.arrayLength, Hasher<size_t>::Get(key.byteSize));
+
+        hash = HashCombine(hash, key.isCompressed, key.isSwapchainTexture);
+        hash = HashCombine(hash, key.isDepthStencilBuffer, key.useGenerateMipmap);
+
+        return hash;
+    }
 };
 
 HS_NS_END

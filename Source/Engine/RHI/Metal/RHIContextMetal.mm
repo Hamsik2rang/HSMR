@@ -7,6 +7,7 @@
 #include "Engine/RHI/Metal/ResourceHandleMetal.h"
 
 #include "Engine/Core/FileSystem.h"
+#include "Engine/Core/EngineContext.h"
 
 HS_NS_BEGIN
 
@@ -15,6 +16,9 @@ id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
 bool RHIContextMetal::Initialize()
 {
+    NSLog(@"System: %@", [NSProcessInfo processInfo]);
+    NSLog(@"Available MTL devices: %@", MTLCopyAllDevices());
+    
     s_device   = MTLCreateSystemDefaultDevice();
     s_cmdQueue = [s_device newCommandQueue];
 
@@ -34,6 +38,8 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
     swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameIndex;
 
     swMetal->drawable = [swMetal->layer nextDrawable];
+    
+    //MTLRenderPassDescriptor* rpDesc = ...
 }
 
 Swapchain* RHIContextMetal::CreateSwapchain(SwapchainInfo info)
@@ -69,6 +75,11 @@ Framebuffer* RHIContextMetal::CreateFramebuffer(const FramebufferInfo& info)
 {
     FramebufferMetal* fbMetal = new FramebufferMetal(info);
 
+    if (info.isSwapchainFramebuffer)
+    {
+        //...
+    }
+
     return static_cast<Framebuffer*>(fbMetal);
 }
 
@@ -82,89 +93,90 @@ void RHIContextMetal::DestroyFramebuffer(Framebuffer* framebuffer)
 GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
     GraphicsPipelineMetal* pipelineMetal = new GraphicsPipelineMetal(info);
-
-    MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
-    pipelineDesc.label                        = @"Graphics Pipeline";
-    pipelineDesc.vertexFunction               = static_cast<ShaderMetal*>(info.shaderDesc.vertexShader)->handle;
-    pipelineDesc.fragmentFunction             = static_cast<ShaderMetal*>(info.shaderDesc.fragmentShader)->handle;
-    pipelineDesc.rasterizationEnabled         = true;
-
-    MTLVertexDescriptor* vertexDesc = [[MTLVertexDescriptor alloc] init];
-
-    for (size_t i = 0; i < info.vertexInputDesc.attributes.size(); i++)
+    @autoreleasepool
     {
-        const auto& curAttribute = info.vertexInputDesc.attributes[i];
+        MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
+        pipelineDesc.label                        = @"Graphics Pipeline";
+        pipelineDesc.vertexFunction               = static_cast<ShaderMetal*>(info.shaderDesc.vertexShader)->handle;
+        pipelineDesc.fragmentFunction             = static_cast<ShaderMetal*>(info.shaderDesc.fragmentShader)->handle;
+        pipelineDesc.rasterizationEnabled         = true;
 
-        vertexDesc.attributes[i].offset      = curAttribute.offset;
-        vertexDesc.attributes[i].bufferIndex = curAttribute.location;
-        vertexDesc.attributes[i].format      = hs_rhi_get_vertex_format_from_size(curAttribute.formatSize);
-    }
+        MTLVertexDescriptor* vertexDesc = [[MTLVertexDescriptor alloc] init];
 
-    for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
-    {
-        const auto& curLayout = info.vertexInputDesc.layouts[i];
-
-        vertexDesc.layouts[i].stride       = curLayout.stride;
-        vertexDesc.layouts[i].stepRate     = curLayout.stepRate;
-        vertexDesc.layouts[i].stepFunction = curLayout.useInstancing ? MTLVertexStepFunctionPerInstance : MTLVertexStepFunctionPerVertex;
-    }
-
-    pipelineDesc.vertexDescriptor = vertexDesc;
-
-    for (size_t i = 0; i < info.renderPass->info.colorAttachmentCount; i++)
-    {
-        const Attachment& attachment = info.renderPass->info.colorAttachments[i];
-
-        MTLRenderPipelineColorAttachmentDescriptor* colorDesc = pipelineDesc.colorAttachments[i];
-
-        colorDesc.pixelFormat                 = hs_rhi_to_pixel_format(attachment.format);
-        colorDesc.blendingEnabled             = info.colorBlendDesc.attachments[i].blendEnable;
-        colorDesc.sourceRGBBlendFactor        = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcColorFactor);
-        colorDesc.destinationRGBBlendFactor   = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstColorFactor);
-        colorDesc.rgbBlendOperation           = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].colorBlendOp);
-        colorDesc.sourceAlphaBlendFactor      = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcAlphaFactor);
-        colorDesc.destinationAlphaBlendFactor = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstAlphaFactor);
-        colorDesc.alphaBlendOperation         = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].alphaBlendOp);
-    }
-
-    if (info.depthStencilDesc.depthTestEnable)
-    {
-        const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
-        MTLPixelFormat    depthStencilFormat     = hs_rhi_to_pixel_format(depthStencilAttachment.format);
-        // TODO: 스텐실 처리 추가
-    }
-
-    NSError* error               = nil;
-    pipelineMetal->pipelineState = [s_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
-
-    if (error)
-    {
-        HS_LOG(crash, "Failed to create Graphics Pipeline");
-    }
-
-    if (info.renderPass->info.useDepthStencilAttachment)
-    {
-        MTLDepthStencilDescriptor* depthStencilDesc = [MTLDepthStencilDescriptor new];
-        bool                       stencilTest      = info.depthStencilDesc.stencilTestEnable;
-
-        if (!info.depthStencilDesc.depthTestEnable)
+        for (size_t i = 0; i < info.vertexInputDesc.attributes.size(); i++)
         {
-            depthStencilDesc.depthCompareFunction = MTLCompareFunctionAlways;
-        }
-        else
-        {
-            depthStencilDesc.depthCompareFunction = hs_rhi_to_compare_function(info.depthStencilDesc.depthCompareOp);
-            depthStencilDesc.depthWriteEnabled    = info.depthStencilDesc.depthWriteEnable;
+            const auto& curAttribute = info.vertexInputDesc.attributes[i];
+
+            vertexDesc.attributes[i].offset      = curAttribute.offset;
+            vertexDesc.attributes[i].bufferIndex = curAttribute.location;
+            vertexDesc.attributes[i].format      = hs_rhi_get_vertex_format_from_size(curAttribute.formatSize);
         }
 
-        if (stencilTest)
+        for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
         {
-            // TODO: 스텐실 처리
+            const auto& curLayout = info.vertexInputDesc.layouts[i];
+
+            vertexDesc.layouts[i].stride       = curLayout.stride;
+            vertexDesc.layouts[i].stepRate     = static_cast<uint8>(curLayout.stepRate);
+            vertexDesc.layouts[i].stepFunction = curLayout.useInstancing ? MTLVertexStepFunctionPerInstance : MTLVertexStepFunctionPerVertex;
         }
 
-        pipelineMetal->depthStencilState = [s_device newDepthStencilStateWithDescriptor:depthStencilDesc];
-    }
+        pipelineDesc.vertexDescriptor = vertexDesc;
 
+        for (size_t i = 0; i < info.renderPass->info.colorAttachmentCount; i++)
+        {
+            const Attachment& attachment = info.renderPass->info.colorAttachments[i];
+
+            MTLRenderPipelineColorAttachmentDescriptor* colorDesc = pipelineDesc.colorAttachments[i];
+
+            colorDesc.pixelFormat                 = hs_rhi_to_pixel_format(attachment.format);
+            colorDesc.blendingEnabled             = info.colorBlendDesc.attachments[i].blendEnable;
+            colorDesc.sourceRGBBlendFactor        = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcColorFactor);
+            colorDesc.destinationRGBBlendFactor   = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstColorFactor);
+            colorDesc.rgbBlendOperation           = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].colorBlendOp);
+            colorDesc.sourceAlphaBlendFactor      = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcAlphaFactor);
+            colorDesc.destinationAlphaBlendFactor = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstAlphaFactor);
+            colorDesc.alphaBlendOperation         = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].alphaBlendOp);
+        }
+
+        if (info.depthStencilDesc.depthTestEnable)
+        {
+            const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
+            MTLPixelFormat    depthStencilFormat     = hs_rhi_to_pixel_format(depthStencilAttachment.format);
+            // TODO: 스텐실 처리 추가
+        }
+
+        NSError* error               = nil;
+        pipelineMetal->pipelineState = [s_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
+
+        if (error)
+        {
+            HS_LOG(crash, "Failed to create Graphics Pipeline");
+        }
+
+        if (info.renderPass->info.useDepthStencilAttachment)
+        {
+            MTLDepthStencilDescriptor* depthStencilDesc = [MTLDepthStencilDescriptor new];
+            bool                       stencilTest      = info.depthStencilDesc.stencilTestEnable;
+
+            if (!info.depthStencilDesc.depthTestEnable)
+            {
+                depthStencilDesc.depthCompareFunction = MTLCompareFunctionAlways;
+            }
+            else
+            {
+                depthStencilDesc.depthCompareFunction = hs_rhi_to_compare_function(info.depthStencilDesc.depthCompareOp);
+                depthStencilDesc.depthWriteEnabled    = info.depthStencilDesc.depthWriteEnable;
+            }
+
+            if (stencilTest)
+            {
+                // TODO: 스텐실 처리
+            }
+
+            pipelineMetal->depthStencilState = [s_device newDepthStencilStateWithDescriptor:depthStencilDesc];
+        }
+    }
     return static_cast<GraphicsPipeline*>(pipelineMetal);
 }
 
@@ -206,12 +218,68 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, cons
 
 Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn)
 {
+    const static std::string metalLibPath = std::string(hs_engine_get_context()->executableDirectory) + std::string("default.metallib");
+
     ShaderInfo info{};
     info.stage     = stage;
     info.entryName = entryName;
     info.isBuiltIn = isBuitIn;
 
     ShaderMetal* shaderMetal = new ShaderMetal(byteCode, byteCodeSize, info);
+
+    @autoreleasepool
+    {
+        NSError* error = nil;
+        NSURL*   url   = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
+
+        //        NSString*          source = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
+        //        MTLCompileOptions* option = [MTLCompileOptions new];
+
+        //        id<MTLLibrary> library = [s_device newLibraryWithSource:source options:option error:&error];
+        id<MTLLibrary> library = [s_device newLibraryWithURL:url error:&error];
+        if (nil == library)
+        {
+            HS_LOG(crash, "Fail to cretae MTLLibrary");
+            return nullptr;
+        }
+
+        NSString* entry = [NSString stringWithCString:entryName encoding:NSUTF8StringEncoding];
+
+        id<MTLFunction> func = nil;
+        switch (stage)
+        {
+            case EShaderStage::VERTEX:
+            {
+                func = [library newFunctionWithName:entry];
+            }
+            break;
+            case EShaderStage::FRAGMENT:
+            {
+                func = [library newFunctionWithName:entry];
+            }
+            break;
+            case EShaderStage::COMPUTE:
+            {
+                //...
+            }
+                //            break;
+            default:
+            {
+                HS_LOG(crash, "This stage is Not supported yet");
+            }
+            break;
+        }
+
+        if (nil == func)
+        {
+            HS_LOG(crash, "Fail to create MTLFunction");
+            return nullptr;
+        }
+
+        shaderMetal->handle = func;
+    }
+
+    return shaderMetal;
 }
 
 void RHIContextMetal::DestroyShader(Shader* shader)
@@ -300,7 +368,7 @@ void RHIContextMetal::DestroyTexture(Texture* texture)
 Sampler* RHIContextMetal::CreateSampler(const SamplerInfo& info)
 {
     SamplerMetal* samplerMetal = new SamplerMetal(info);
-    
+
     return static_cast<Sampler*>(samplerMetal);
 }
 
@@ -422,6 +490,11 @@ void RHIContextMetal::Present(Swapchain* swapchain)
     CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
     [cmdBufferMetal->handle presentDrawable:swMetal->drawable];
     [cmdBufferMetal->handle waitUntilCompleted];
+}
+
+void RHIContextMetal::WaitForIdle() const
+{
+    //...
 }
 
 HS_NS_END

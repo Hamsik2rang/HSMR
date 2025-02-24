@@ -1,8 +1,1 @@
-//
-//  Color.cpp
-//  Engine
-//
-//  Created by Yongsik Im on 2/8/25.
-//
-
-#include <stdio.h>
+#include "Engine/Utility/Color.h"

@@ -4,9 +4,8 @@
 //
 //  Created by Yongsik Im on 2/8/25.
 //
+#ifndef __HS_GEOMETRY_H__
+#define __HS_GEOMETRY_H__
 
-#ifndef Geometry_h
-#define Geometry_h
 
-
-#endif /* Geometry_h */
+#endif /* __HS_GEOMETRY_H__ */

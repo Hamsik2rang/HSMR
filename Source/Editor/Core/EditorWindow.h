@@ -16,12 +16,12 @@
 namespace HS
 {
 class RenderTarget;
+class Renderer;
 } // namespace HS
 
 HS_NS_EDITOR_BEGIN
 
 class Panel;
-class GUIRenderer;
 
 class HS_EDITOR_API EditorWindow : public Window
 {
@@ -42,12 +42,11 @@ private:
     void onShutdown() override;
     void onRenderGUI();
 
-    RenderTarget* _renderTextures[3]; // TODO: 매직 넘버 제거
+    std::vector<RenderTarget> _renderTargets;
 
-    GUIRenderer* _guiRenderer;
-    Panel*       _basePanel;
-    Panel*       _menuPanel;
-    Panel*       _scenePanel;
+    Panel*    _basePanel;
+    Panel*    _menuPanel;
+    Panel*    _scenePanel;
 };
 
 HS_NS_EDITOR_END

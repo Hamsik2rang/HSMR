@@ -36,6 +36,10 @@ typedef uint64_t uint64;
 #define HS_CHAR_INIT_SHORT_LENGTH 256
 #define HS_CHAR_INIT_LONG_LENGTH 1024
 
+#define HS_STRINGIFY(x) #x
+#define HS_TO_STRING(x) HS_STRINGIFY(x)
+
+
 #define HS_BIT(x) ((uint64)1 << (x))
 
 #define HS_INT8_MAX     (0x0f)
@@ -47,7 +51,13 @@ typedef uint64_t uint64;
 #define HS_INT64_MAX    (0x0fffffffffffffff)
 #define HS_UINT64_MAX   (0xffffffffffffffff)
 
-#define HS_FORCEINLINE __attribute__((always_inline))
+#if defined(__GNUC__) || defined(__clang__)
+    #define HS_FORCEINLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+    #define HS_FORCEINLINE __forceinline
+#else
+    #define HS_FORCEINLINE inline
+#endif
 
 #define HS_NS_BEGIN \
     namespace HS    \
@@ -64,5 +74,24 @@ typedef uint64_t uint64;
 #define HS_NS_EDITOR_END \
     }                    \
     }
+
+#ifdef __cplusplus
+
+#include <memory>
+
+namespace HS
+{
+    template<typename Tp>
+    using Scope = std::unique_ptr<Tp>;
+
+    template <typename Tp, typename ...Args>
+    constexpr Scope<Tp> CreateScope(Args&& ... args)
+    {
+        return std::make_unique<Tp>(std::forward<Args>(args)...);
+    }
+
+}
+
+#endif
 
 #endif

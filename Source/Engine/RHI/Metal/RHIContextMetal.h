@@ -80,6 +80,8 @@ public:
 
     void Present(Swapchain* swapchain) override;
 
+    void WaitForIdle() const override;
+
     HS_FORCEINLINE void* GetDevice() const { return _device; }
 
 private:

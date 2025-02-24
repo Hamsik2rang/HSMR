@@ -63,7 +63,7 @@ public:
 
     void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer) override;
     void BindPipeline(GraphicsPipeline* pipeline) override;
-    void BindDescriptorSet(ResourceSet* rSet) override;
+    void BindResourceSet(ResourceSet* rSet) override;
     void SetViewport(const Viewport& viewport) override;
     void SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height) override;
     void BindIndexBuffer(Buffer* indexBuffer) override;
@@ -80,6 +80,7 @@ public:
 
     id<MTLCommandBuffer>        handle;
     id<MTLRenderCommandEncoder> curRenderEncoder;
+    MTLRenderPassDescriptor*    curRenderPassDesc;
     RenderPassMetal*            curBindRenderPass;
     FramebufferMetal*           curBindFramebuffer;
     GraphicsPipelineMetal*      curBindPipeline;
@@ -93,9 +94,8 @@ private:
     void bindTextures(EShaderStage stage, uint8 binding, Texture* const* textures, uint8 arrayCount);
     void bindSamplers(EShaderStage stage, uint8 binding, Sampler* const* samplers, uint8 arrayCount);
 
-    bool                     _isBegan;
-    bool                     _isRenderPassBegan;
-    MTLRenderPassDescriptor* _curRenderPassDesc;
+    bool _isBegan;
+    bool _isRenderPassBegan;
 };
 
 HS_NS_END

@@ -7,7 +7,7 @@
 using namespace metal;
 
 
-vertex FSINPUT_BASIC VertexShader_Basic(
+vertex FSINPUT_BASIC VSENTRY_BASIC(
                                         VSINPUT_BASIC input ATTR_KEY(stage_in))
 {
     FSInput_Basic output;
@@ -18,7 +18,7 @@ vertex FSINPUT_BASIC VertexShader_Basic(
     return output;
 }
 
-fragment float4 FragmentShader_Basic(FSINPUT_BASIC input ATTR_KEY(stage_in))
+fragment float4 FSENTRY_BASIC(FSINPUT_BASIC input ATTR_KEY(stage_in))
 {
     return input.color;
 }

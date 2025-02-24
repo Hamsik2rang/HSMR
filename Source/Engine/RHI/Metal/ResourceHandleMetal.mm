@@ -102,6 +102,7 @@ BufferMetal::~BufferMetal()
 ShaderMetal::ShaderMetal(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info)
     : Shader(byteCode, byteCodeSize, info)
 {
+    
 }
 
 ShaderMetal::~ShaderMetal()
