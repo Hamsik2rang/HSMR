@@ -39,7 +39,7 @@ bool EditorWindow::onInitialize()
     _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
 
     _renderTargets.resize(_swapchain->GetMaxFrameIndex());
-
+    
     uint32 width  = _swapchain->GetWidth();
     uint32 height = _swapchain->GetHeight();
     for (size_t i = 0; i < _renderTargets.size(); i++)

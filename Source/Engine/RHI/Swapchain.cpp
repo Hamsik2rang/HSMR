@@ -9,8 +9,6 @@ HS_NS_BEGIN
 
 Swapchain::Swapchain(const SwapchainInfo& info)
     : _info(info)
-    , _width(1)
-    , _height(1)
 {
 }
 

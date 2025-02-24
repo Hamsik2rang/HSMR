@@ -34,11 +34,11 @@ public:
     virtual CommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
     virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
 
-    HS_FORCEINLINE uint32 GetWidth() { return _width; }
-    HS_FORCEINLINE uint32 GetHeight() { return _height; }
+    HS_FORCEINLINE uint32 GetWidth() { return _info.width; }
+    HS_FORCEINLINE uint32 GetHeight() { return _info.height; }
 
-    HS_FORCEINLINE void SetWidth(uint32 width) { _width = width; }
-    HS_FORCEINLINE void SetHeight(uint32 height) { _height = height; }
+    HS_FORCEINLINE void SetWidth(uint32 width) { _info.width = width; }
+    HS_FORCEINLINE void SetHeight(uint32 height) { _info.height = height; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
     HS_FORCEINLINE RenderPass*   GetRenderPass() const { return _renderPass; }
@@ -51,9 +51,6 @@ protected:
 
     RenderPass*               _renderPass;
     std::vector<RenderTarget> _renderTargets;
-
-    uint32 _width;
-    uint32 _height;
 
     // RHIContext로만 생성할 수 있도록
     Swapchain(const SwapchainInfo& desc);

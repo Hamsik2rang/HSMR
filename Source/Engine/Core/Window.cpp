@@ -34,6 +34,8 @@ uint32 Window::Initialize()
         HS_LOG(error, "Window Initialize Failed");
         return HS_WINDOW_INVALID_ID;
     }
+    float scale = SDL_GetWindowDisplayScale(window);
+    SDL_SetWindowSize(window, _width / scale, _height / scale);
 
     _resizable = (_flags & SDL_WINDOW_RESIZABLE);    
     _useHDR    = (_flags & SDL_WINDOW_HIGH_PIXEL_DENSITY);
