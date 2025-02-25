@@ -39,12 +39,14 @@ void CommandBufferMetal::End()
 
 void CommandBufferMetal::Reset()
 {
-    if (nil != curRenderEncoder)
+    @autoreleasepool
     {
-        [curRenderEncoder endEncoding];
-        curRenderEncoder = nil;
+        if (nil != curRenderEncoder)
+        {
+            [curRenderEncoder endEncoding];
+            curRenderEncoder = nil;
+        }
     }
-
     _isBegan = false;
 }
 
@@ -52,51 +54,54 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
     HS_CHECK(renderPass, "RenderPass is null");
-
-    if (renderPass->info.isSwapchainRenderPass)
+    @autoreleasepool
     {
-//        HS_ASSERT(framebuffer->info.isSwapchainFramebuffer, "Swapchain RenderPass, but Framebuffer isn't");
-        curRenderPassDesc = static_cast<RenderPassMetal*>(renderPass)->handle;
-    }
-    else
-    {
-        HS_CHECK(framebuffer, "Framebuffer is null");
-        HS_CHECK(renderPass == framebuffer->info.renderPass, "RenderPass is not same with Framebuffer's RenderPass");
-        curRenderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
 
-        bool useDepthStencil = renderPass->info.useDepthStencilAttachment;
-
-        size_t i = 0;
-        for (; i < renderPass->info.colorAttachmentCount; i++)
+        if (renderPass->info.isSwapchainRenderPass)
         {
-            const Attachment& curAttachment = renderPass->info.colorAttachments[i];
+            //        HS_ASSERT(framebuffer->info.isSwapchainFramebuffer, "Swapchain RenderPass, but Framebuffer isn't");
+            curRenderPassDesc = static_cast<RenderPassMetal*>(renderPass)->handle;
+        }
+        else
+        {
+            HS_CHECK(framebuffer, "Framebuffer is null");
+            HS_CHECK(renderPass == framebuffer->info.renderPass, "RenderPass is not same with Framebuffer's RenderPass");
+            curRenderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
 
-            curRenderPassDesc.colorAttachments[i].texture     = static_cast<TextureMetal*>(framebuffer->info.colorBuffers[i])->handle;
-            curRenderPassDesc.colorAttachments[i].loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
-            curRenderPassDesc.colorAttachments[i].storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
-            curRenderPassDesc.colorAttachments[i].clearColor  = hs_rhi_to_clear_color(curAttachment.clearValue.color);
+            bool useDepthStencil = renderPass->info.useDepthStencilAttachment;
+
+            size_t i = 0;
+            for (; i < renderPass->info.colorAttachmentCount; i++)
+            {
+                const Attachment& curAttachment = renderPass->info.colorAttachments[i];
+
+                curRenderPassDesc.colorAttachments[i].texture     = static_cast<TextureMetal*>(framebuffer->info.colorBuffers[i])->handle;
+                curRenderPassDesc.colorAttachments[i].loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
+                curRenderPassDesc.colorAttachments[i].storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
+                curRenderPassDesc.colorAttachments[i].clearColor  = hs_rhi_to_clear_color(curAttachment.clearValue.color);
+            }
+
+            if (useDepthStencil)
+            {
+                const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
+                curRenderPassDesc.depthAttachment.texture     = static_cast<TextureMetal*>(framebuffer->info.depthStencilBuffer)->handle;
+                curRenderPassDesc.depthAttachment.loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
+                curRenderPassDesc.depthAttachment.storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
+                curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depth);
+            }
         }
 
-        if (useDepthStencil)
+        if (nil != curRenderEncoder)
         {
-            const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
-            curRenderPassDesc.depthAttachment.texture     = static_cast<TextureMetal*>(framebuffer->info.depthStencilBuffer)->handle;
-            curRenderPassDesc.depthAttachment.loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
-            curRenderPassDesc.depthAttachment.storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
-            curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depth);
+            [curRenderEncoder endEncoding];
         }
-    }
 
-    if (nil != curRenderEncoder)
-    {
-        [curRenderEncoder endEncoding];
+        curRenderEncoder          = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
+        curBindRenderPass         = static_cast<RenderPassMetal*>(renderPass);
+        curBindRenderPass->handle = curRenderPassDesc;
+        curBindFramebuffer        = static_cast<FramebufferMetal*>(framebuffer);
+        _isRenderPassBegan        = true;
     }
-
-    curRenderEncoder          = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
-    curBindRenderPass         = static_cast<RenderPassMetal*>(renderPass);
-    curBindRenderPass->handle = curRenderPassDesc;
-    curBindFramebuffer        = static_cast<FramebufferMetal*>(framebuffer);
-    _isRenderPassBegan        = true;
 }
 
 void CommandBufferMetal::BindPipeline(GraphicsPipeline* pipeline)
@@ -104,52 +109,56 @@ void CommandBufferMetal::BindPipeline(GraphicsPipeline* pipeline)
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
     HS_CHECK(_isRenderPassBegan, "RenderPass isn't began yet");
     HS_CHECK(pipeline, "Pipeline is null");
-
     curBindPipeline = static_cast<GraphicsPipelineMetal*>(pipeline);
 
-    [curRenderEncoder setRenderPipelineState:curBindPipeline->pipelineState];
-    if (curBindRenderPass->info.useDepthStencilAttachment)
+    @autoreleasepool
     {
-        [curRenderEncoder setDepthStencilState:curBindPipeline->depthStencilState];
+        [curRenderEncoder setRenderPipelineState:curBindPipeline->pipelineState];
+        if (curBindRenderPass->info.useDepthStencilAttachment)
+        {
+            [curRenderEncoder setDepthStencilState:curBindPipeline->depthStencilState];
+        }
+        [curRenderEncoder setFrontFacingWinding:hs_rhi_to_front_face(pipeline->info.rasterizerDesc.frontFace)];
+        [curRenderEncoder setCullMode:hs_rhi_to_cull_mode(pipeline->info.rasterizerDesc.cullMode)];
+        [curRenderEncoder setTriangleFillMode:hs_rhi_to_polygon_mode(pipeline->info.rasterizerDesc.polygonMode)];
     }
-    [curRenderEncoder setFrontFacingWinding:hs_rhi_to_front_face(pipeline->info.rasterizerDesc.frontFace)];
-    [curRenderEncoder setCullMode:hs_rhi_to_cull_mode(pipeline->info.rasterizerDesc.cullMode)];
-    [curRenderEncoder setTriangleFillMode:hs_rhi_to_polygon_mode(pipeline->info.rasterizerDesc.polygonMode)];
-
     curBindPipeline = static_cast<GraphicsPipelineMetal*>(pipeline);
 }
 
 void CommandBufferMetal::BindResourceSet(ResourceSet* rSet)
 {
-    for (size_t i = 0; i < rSet->layouts.size(); i++)
+    @autoreleasepool
     {
-        const auto& bindings = rSet->layouts[i]->bindings;
-        for (size_t j = 0; j < bindings.size(); j++)
+        for (size_t i = 0; i < rSet->layouts.size(); i++)
         {
-            const ResourceBinding& rb = bindings[j];
-
-            switch (rb.type)
+            const auto& bindings = rSet->layouts[i]->bindings;
+            for (size_t j = 0; j < bindings.size(); j++)
             {
-                case EResourceType::UNIFORM_BUFFER:
+                const ResourceBinding& rb = bindings[j];
+
+                switch (rb.type)
                 {
-                    bindBuffers(rb.stage, rb.binding, rb.resource.buffers.data(), rb.resource.offsets.data(), rb.arrayCount);
-                }
-                break;
-                case EResourceType::COMBINED_IMAGE_SAMPLER:
-                case EResourceType::SAMPLED_IMAGE:
-                {
-                    bindTextures(rb.stage, rb.binding, rb.resource.textures.data(), rb.arrayCount);
-                }
-                break;
-                case EResourceType::SAMPLER:
-                {
-                    bindSamplers(rb.stage, rb.binding, rb.resource.samplers.data(), rb.arrayCount);
-                }
-                break;
-                default:
-                {
-                    HS_LOG(crash, "Not Implemented ResourceType");
+                    case EResourceType::UNIFORM_BUFFER:
+                    {
+                        bindBuffers(rb.stage, rb.binding, rb.resource.buffers.data(), rb.resource.offsets.data(), rb.arrayCount);
+                    }
                     break;
+                    case EResourceType::COMBINED_IMAGE_SAMPLER:
+                    case EResourceType::SAMPLED_IMAGE:
+                    {
+                        bindTextures(rb.stage, rb.binding, rb.resource.textures.data(), rb.arrayCount);
+                    }
+                    break;
+                    case EResourceType::SAMPLER:
+                    {
+                        bindSamplers(rb.stage, rb.binding, rb.resource.samplers.data(), rb.arrayCount);
+                    }
+                    break;
+                    default:
+                    {
+                        HS_LOG(crash, "Not Implemented ResourceType");
+                        break;
+                    }
                 }
             }
         }
@@ -158,52 +167,70 @@ void CommandBufferMetal::BindResourceSet(ResourceSet* rSet)
 
 void CommandBufferMetal::SetViewport(const Viewport& viewport)
 {
-    [curRenderEncoder setViewport:hs_rhi_to_viewport(viewport)];
+    @autoreleasepool
+    {
+        [curRenderEncoder setViewport:hs_rhi_to_viewport(viewport)];
+    }
 }
 
 void CommandBufferMetal::SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height)
 {
-    MTLScissorRect rect = {x, y, width, height};
-    [curRenderEncoder setScissorRect:rect];
+    @autoreleasepool
+    {
+        MTLScissorRect rect = {x, y, width, height};
+        [curRenderEncoder setScissorRect:rect];
+    }
 }
 
 void CommandBufferMetal::BindIndexBuffer(Buffer* indexBuffer)
 {
-    curBindIndexBuffer = static_cast<BufferMetal*>(indexBuffer);
+    @autoreleasepool
+    {
+        curBindIndexBuffer = static_cast<BufferMetal*>(indexBuffer);
+    }
 }
 
 void CommandBufferMetal::BindVertexBuffers(const Buffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
 {
-    for (uint8 i = 0; i < bufferCount; i++)
+    @autoreleasepool
     {
-        auto vertexBuffer = static_cast<const BufferMetal*>(vertexBuffers[i]);
+        for (uint8 i = 0; i < bufferCount; i++)
+        {
+            auto vertexBuffer = static_cast<const BufferMetal*>(vertexBuffers[i]);
 
-        [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:i];
+            [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:i];
+        }
     }
 }
 
 void CommandBufferMetal::DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount)
 {
-    MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
+    @autoreleasepool
+    {
+        MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
-    [curRenderEncoder drawPrimitives:primType
-                         vertexStart:firstVertex
-                         vertexCount:vertexCount
-                       instanceCount:instanceCount
-                        baseInstance:0];
+        [curRenderEncoder drawPrimitives:primType
+                             vertexStart:firstVertex
+                             vertexCount:vertexCount
+                           instanceCount:instanceCount
+                            baseInstance:0];
+    }
 }
 void CommandBufferMetal::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
-    MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
+    @autoreleasepool
+    {
+        MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
-    [curRenderEncoder drawIndexedPrimitives:primType
-                                 indexCount:indexCount
-                                  indexType:MTLIndexTypeUInt32
-                                indexBuffer:curBindIndexBuffer->handle
-                          indexBufferOffset:firstIndex
-                              instanceCount:instanceCount
-                                 baseVertex:vertexOffset
-                               baseInstance:0];
+        [curRenderEncoder drawIndexedPrimitives:primType
+                                     indexCount:indexCount
+                                      indexType:MTLIndexTypeUInt32
+                                    indexBuffer:curBindIndexBuffer->handle
+                              indexBufferOffset:firstIndex
+                                  instanceCount:instanceCount
+                                     baseVertex:vertexOffset
+                                   baseInstance:0];
+    }
 }
 
 void CommandBufferMetal::EndRenderPass()
@@ -212,7 +239,7 @@ void CommandBufferMetal::EndRenderPass()
     curBindRenderPass  = nullptr;
     curBindFramebuffer = nullptr;
     curBindPipeline    = nullptr;
-    
+
     _isRenderPassBegan = false;
 }
 
@@ -226,9 +253,11 @@ void CommandBufferMetal::UpdateBuffer(Buffer* buffer, const size_t dstOffset, co
 void CommandBufferMetal::PushDebugMark(const char* label, float* color)
 {
     HS_ASSERT(_isBegan, "CommandBuffer isn't began yet");
-
-    NSString* labelStr = [NSString stringWithCString:label encoding:NSUTF8StringEncoding];
-    [curRenderEncoder pushDebugGroup:labelStr];
+    @autoreleasepool
+    {
+        NSString* labelStr = [NSString stringWithCString:label encoding:NSUTF8StringEncoding];
+        [curRenderEncoder pushDebugGroup:labelStr];
+    }
 }
 
 void CommandBufferMetal::PopDebugMark()
@@ -238,79 +267,88 @@ void CommandBufferMetal::PopDebugMark()
 
 void CommandBufferMetal::bindBuffers(EShaderStage stage, uint8 binding, Buffer* const* buffers, const uint32* offsets, uint8 arrayCount)
 {
-    BufferMetal* const*        bufferMetals = reinterpret_cast<BufferMetal* const*>(buffers);
-    std::vector<id<MTLBuffer>> handles(arrayCount);
-    std::vector<NSUInteger>    nsOffsets(arrayCount);
-    for (size_t i = 0; i < arrayCount; i++)
+    @autoreleasepool
     {
-        nsOffsets[i] = offsets[i];
-    }
+        BufferMetal* const*        bufferMetals = reinterpret_cast<BufferMetal* const*>(buffers);
+        std::vector<id<MTLBuffer>> handles(arrayCount);
+        std::vector<NSUInteger>    nsOffsets(arrayCount);
+        for (size_t i = 0; i < arrayCount; i++)
+        {
+            nsOffsets[i] = offsets[i];
+        }
 
-    switch (stage)
-    {
-        case EShaderStage::VERTEX:
+        switch (stage)
         {
-            [curRenderEncoder setVertexBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
+            case EShaderStage::VERTEX:
+            {
+                [curRenderEncoder setVertexBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            break;
+            case EShaderStage::FRAGMENT:
+            {
+                [curRenderEncoder setFragmentBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            break;
+            default:
+            {
+                HS_LOG(crash, "Not Implemented ResourceType");
+            }
+            break;
         }
-        break;
-        case EShaderStage::FRAGMENT:
-        {
-            [curRenderEncoder setFragmentBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
     }
 }
 
 void CommandBufferMetal::bindTextures(EShaderStage stage, uint8 binding, Texture* const* textures, uint8 arrayCount)
 {
-    TextureMetal* const*        textureMetals = reinterpret_cast<TextureMetal* const*>(textures);
-    std::vector<id<MTLTexture>> handles(arrayCount);
-
-    switch (stage)
+    @autoreleasepool
     {
-        case EShaderStage::VERTEX:
+        TextureMetal* const*        textureMetals = reinterpret_cast<TextureMetal* const*>(textures);
+        std::vector<id<MTLTexture>> handles(arrayCount);
+
+        switch (stage)
         {
-            [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            case EShaderStage::VERTEX:
+            {
+                [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            case EShaderStage::FRAGMENT:
+            {
+                [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            default:
+            {
+                HS_LOG(crash, "Not Implemented ResourceType");
+            }
+            break;
         }
-        case EShaderStage::FRAGMENT:
-        {
-            [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
     }
 }
 
 void CommandBufferMetal::bindSamplers(EShaderStage stage, uint8 binding, Sampler* const* samplers, uint8 arrayCount)
 {
-    SamplerMetal* const*             samplerMetals = reinterpret_cast<SamplerMetal* const*>(samplers);
-    std::vector<id<MTLSamplerState>> handles(arrayCount);
-
-    switch (stage)
+    @autoreleasepool
     {
-        case EShaderStage::VERTEX:
+        SamplerMetal* const*             samplerMetals = reinterpret_cast<SamplerMetal* const*>(samplers);
+        std::vector<id<MTLSamplerState>> handles(arrayCount);
+
+        switch (stage)
         {
-            [curRenderEncoder setVertexSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            case EShaderStage::VERTEX:
+            {
+                [curRenderEncoder setVertexSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            break;
+            case EShaderStage::FRAGMENT:
+            {
+                [curRenderEncoder setFragmentSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
+            }
+            break;
+            default:
+            {
+                HS_LOG(crash, "Not Implemented ResourceType");
+            }
+            break;
         }
-        break;
-        case EShaderStage::FRAGMENT:
-        {
-            [curRenderEncoder setFragmentSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
     }
 }
 HS_NS_END

@@ -41,7 +41,7 @@ public:
     const RenderTargetInfo& GetInfo() const { return _info; }
 
 private:
-    RenderTargetInfo _info;
+    RenderTargetInfo      _info;
     std::vector<Texture*> _colorTextures;
     Texture*              _depthStencilTexture;
 };
@@ -55,15 +55,20 @@ struct Hasher<RenderTarget>
 
         uint32 hash = HashCombine(key.GetWidth(), key.GetHeight(), info.isSwapchainTarget);
         hash        = HashCombine(hash, Hasher<size_t>::Get(key.GetColorTextureCount()), info.useDepthStencilTexture);
-        for (size_t i = 0; i < key.GetColorTextureCount() / 2; i += 2)
+        for (size_t i = 0; i < key.GetColorTextureCount(); i++)
         {
-            hash = HashCombine(hash, Hasher<TextureInfo>::Get(key.GetColorTexture(static_cast<uint32>(i))->info), Hasher<TextureInfo>::Get(key.GetColorTexture(static_cast<uint32>(i) + 1)->info));
+            Texture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
+            hash                  = HashCombine(hash, Hasher<TextureInfo>::Get(colorTexture->info), PointerHash(colorTexture));
         }
 
-        uint32 b = (key.GetColorTextureCount() % 2 != 0) ? Hasher<TextureInfo>::Get(key.GetColorTexture(static_cast<uint32>(key.GetColorTextureCount()) - 1)->info) : 0;
-        uint32 c = info.useDepthStencilTexture ? Hasher<TextureInfo>::Get(key.GetDepthStencilTexture()->info) : 0;
+        if (info.useDepthStencilTexture)
+        {
+            Texture* depthTexture = key.GetDepthStencilTexture();
+            uint32   b            = Hasher<TextureInfo>::Get(depthTexture->info);
+            uint32   c            = PointerHash(depthTexture);
 
-        hash = HashCombine(hash, b, c);
+            hash = HashCombine(hash, b, c);
+        }
 
         return hash;
     }

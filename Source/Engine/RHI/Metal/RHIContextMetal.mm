@@ -18,7 +18,7 @@ bool RHIContextMetal::Initialize()
 {
     NSLog(@"System: %@", [NSProcessInfo processInfo]);
     NSLog(@"Available MTL devices: %@", MTLCopyAllDevices());
-    
+
     s_device   = MTLCreateSystemDefaultDevice();
     s_cmdQueue = [s_device newCommandQueue];
 
@@ -32,27 +32,31 @@ void RHIContextMetal::Finalize()
 
 uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
-
-    const uint32 maxFrameIndex = swMetal->GetMaxFrameIndex();
-    swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameIndex;
-    
-    swMetal->layer.drawableSize = CGSizeMake(swapchain->GetWidth(), swapchain->GetHeight());
-    
-    id<CAMetalDrawable> drawable = [swMetal->layer nextDrawable];
-    swMetal->drawable = drawable;
-    if(drawable == nil)
+    @autoreleasepool
     {
-        HS_CHECK(drawable, "drawable is nil");
+
+        SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
+
+        const uint32 maxFrameIndex = swMetal->GetMaxFrameIndex();
+        swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameIndex;
+
+        swMetal->layer.drawableSize = CGSizeMake(swapchain->GetWidth(), swapchain->GetHeight());
+
+        id<CAMetalDrawable> drawable = [swMetal->layer nextDrawable];
+        swMetal->drawable            = drawable;
+        if (drawable == nil)
+        {
+            HS_CHECK(drawable, "drawable is nil");
+        }
+        MTLRenderPassDescriptor* rpDesc        = [MTLRenderPassDescriptor renderPassDescriptor];
+        rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
+        rpDesc.colorAttachments[0].texture     = drawable.texture;
+        rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
+        rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+        RenderPassMetal* swRenderPassMetal = static_cast<RenderPassMetal*>(swMetal->GetRenderPass());
+        swRenderPassMetal->handle          = rpDesc;
     }
-    MTLRenderPassDescriptor* rpDesc = [MTLRenderPassDescriptor renderPassDescriptor];
-    rpDesc.colorAttachments[0].clearColor = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
-    rpDesc.colorAttachments[0].texture = drawable.texture;
-    rpDesc.colorAttachments[0].loadAction = MTLLoadActionClear;
-    rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
-    
-    RenderPassMetal* swRenderPassMetal = static_cast<RenderPassMetal*>(swMetal->GetRenderPass());
-    swRenderPassMetal->handle = rpDesc;
 }
 
 Swapchain* RHIContextMetal::CreateSwapchain(SwapchainInfo info)
@@ -338,20 +342,23 @@ void RHIContextMetal::DestroyBuffer(Buffer* buffer)
 Texture* RHIContextMetal::CreateTexture(void* image, const TextureInfo& info)
 {
     TextureMetal* textureMetal = new TextureMetal(info);
+    @autoreleasepool
+    {
 
-    MTLTextureDescriptor* desc = [MTLTextureDescriptor new];
-    desc.width                 = info.extent.width;
-    desc.height                = info.extent.height;
-    desc.depth                 = info.extent.depth;
-    desc.arrayLength           = info.arrayLength;
-    desc.mipmapLevelCount      = info.mipLevel;
-    desc.usage                 = hs_rhi_to_texture_usage(info.usage);
-    desc.sampleCount           = 1;
-    desc.storageMode           = MTLStorageModeManaged;
-    desc.pixelFormat           = hs_rhi_to_pixel_format(info.format);
-    desc.textureType           = hs_rhi_to_texture_type(info.type);
+        MTLTextureDescriptor* desc = [MTLTextureDescriptor new];
+        desc.width                 = info.extent.width;
+        desc.height                = info.extent.height;
+        desc.depth                 = info.extent.depth;
+        desc.arrayLength           = info.arrayLength;
+        desc.mipmapLevelCount      = info.mipLevel;
+        desc.usage                 = hs_rhi_to_texture_usage(info.usage);
+        desc.sampleCount           = 1;
+        desc.storageMode           = MTLStorageModeManaged;
+        desc.pixelFormat           = hs_rhi_to_pixel_format(info.format);
+        desc.textureType           = hs_rhi_to_texture_type(info.type);
 
-    textureMetal->handle = [s_device newTextureWithDescriptor:desc];
+        textureMetal->handle = [s_device newTextureWithDescriptor:desc];
+    }
 
     return static_cast<Texture*>(textureMetal);
 }
@@ -497,13 +504,16 @@ void RHIContextMetal::Submit(Swapchain* swapchain, CommandBuffer** cmdBuffers, s
 
 void RHIContextMetal::Present(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal   = static_cast<SwapchainMetal*>(swapchain);
-    CommandBuffer*  cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
+    @autoreleasepool
+    {
+        SwapchainMetal* swMetal   = static_cast<SwapchainMetal*>(swapchain);
+        CommandBuffer*  cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
 
-    CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
-    [cmdBufferMetal->handle presentDrawable:swMetal->drawable];
-    [cmdBufferMetal->handle commit];
-    [cmdBufferMetal->handle waitUntilCompleted];
+        CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
+        [cmdBufferMetal->handle presentDrawable:swMetal->drawable];
+        [cmdBufferMetal->handle commit];
+        [cmdBufferMetal->handle waitUntilCompleted];
+    }
 }
 
 void RHIContextMetal::WaitForIdle() const

@@ -80,7 +80,6 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
 
     if (_framebufferCache.find(hash) == _framebufferCache.end())
     {
-
         FramebufferInfo fbInfo{};
         fbInfo.width                  = renderTarget->GetWidth();
         fbInfo.height                 = renderTarget->GetHeight();

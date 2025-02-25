@@ -37,8 +37,6 @@ void ScenePanel::Draw()
     
     ImGuiExt::ImageOffscreen(texture, viewportSize);
 
-    
-    
     ImGui::End();
 }
 

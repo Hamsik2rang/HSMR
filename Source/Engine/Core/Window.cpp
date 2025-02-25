@@ -148,43 +148,9 @@ bool Window::PeekEvent(uint32 eventType, uint32 windowID)
     return false;
 }
 
-bool Window::dispatchEvent(uint64 eventType, uint32 windowId)
+bool Window::dispatchEvent(uint64 eventType, uint32 windowID)
 {
-    SDL_EventType event = static_cast<SDL_EventType>(eventType);
-
-    if (event == SDL_EVENT_QUIT)
-    {
-        _shouldClose = true;
-        return false;
-    }
-
-    switch (event)
-    {
-        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-        {
-            _shouldClose = true;
-        }
-        break;
-        case SDL_EVENT_WINDOW_MINIMIZED:
-        {
-            _isMinimized = true;
-        }
-        break;
-        case SDL_EVENT_WINDOW_FOCUS_GAINED:
-        {
-        }
-        break;
-        case SDL_EVENT_WINDOW_RESTORED:
-        {
-            _isMinimized = false;
-        }
-        break;
-        //...
-        default:
-            break;
-    }
-
-    return true;
+    return false;
 }
 
 void Window::Flush()

@@ -129,7 +129,7 @@ enum class ETextureType
     TEX_CUBE,
 };
 
-enum class ETextureUsage
+enum class ETextureUsage : uint16
 {
     UNKNOWN          = 0x0000,
     SHADER_READ      = 0x0001,
@@ -143,10 +143,21 @@ HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
     return static_cast<ETextureUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
 }
 
+HS_FORCEINLINE ETextureUsage operator|=(ETextureUsage lhs, ETextureUsage rhs)
+{
+    return static_cast<ETextureUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+}
+
 HS_FORCEINLINE ETextureUsage operator&(ETextureUsage lhs, ETextureUsage rhs)
 {
     return static_cast<ETextureUsage>(static_cast<uint32>(lhs) & static_cast<uint32>(rhs));
 }
+
+HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)
+{
+    return (static_cast<uint16>(lhs) & rhs) != 0;
+}
+
 
 struct TextureInfo
 {
