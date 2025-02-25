@@ -115,33 +115,24 @@ Viewport hs_rhi_from_viewport(MTLViewport vp)
 
 MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
 {
-    switch (usage)
-    {
-        case ETextureUsage::SHADER_READ:      return MTLTextureUsageShaderRead;
-        case ETextureUsage::SHADER_WRITE:     return MTLTextureUsageShaderWrite;
-        case ETextureUsage::PIXELFORMAT_VIEW: return MTLTextureUsagePixelFormatView;
-        case ETextureUsage::RENDER_TARGET:    return MTLTextureUsageRenderTarget;
+    MTLTextureUsage result = 0;
+    if ((usage & ETextureUsage::SHADER_READ) != 0) result |= MTLTextureUsageShaderRead;
+    if ((usage & ETextureUsage::SHADER_WRITE) != 0) result |= MTLTextureUsageShaderWrite;
+    if ((usage & ETextureUsage::PIXELFORMAT_VIEW) != 0) result |= MTLTextureUsagePixelFormatView;
+    if ((usage & ETextureUsage::SHADER_READ) != 0) result |= MTLTextureUsageRenderTarget;
 
-        default:
-            break;
-    }
-    HS_LOG(crash, "Unsupported MTLTextureUsage");
-    return MTLTextureUsageUnknown;
+    return result;
 }
 
 ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage)
 {
-    switch (usage)
-    {
-        case MTLTextureUsageShaderRead:      return ETextureUsage::SHADER_READ;
-        case MTLTextureUsageShaderWrite:     return ETextureUsage::SHADER_WRITE;
-        case MTLTextureUsagePixelFormatView: return ETextureUsage::PIXELFORMAT_VIEW;
-        case MTLTextureUsageRenderTarget:    return ETextureUsage::RENDER_TARGET;
+    ETextureUsage result = ETextureUsage::UNKNOWN;
+    if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SHADER_READ;
+    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::SHADER_WRITE;
+    if ((usage & MTLTextureUsagePixelFormatView) != 0) result |= ETextureUsage::PIXELFORMAT_VIEW;
+    if ((usage & MTLTextureUsageRenderTarget) != 0) result |= ETextureUsage::RENDER_TARGET;
 
-        default:                             break;
-    }
-    HS_LOG(crash, "Unsupported ETextureUsage");
-    return ETextureUsage::UNKNOWN;
+    return result;
 }
 
 MTLTextureType hs_rhi_to_texture_type(ETextureType type)
@@ -450,7 +441,6 @@ MTLVertexFormat hs_rhi_get_vertex_format_from_size(size_t size)
         case 8:  return MTLVertexFormatFloat2;
         case 12: return MTLVertexFormatFloat3;
         case 16: return MTLVertexFormatFloat4;
-            
 
         default: break;
     }
@@ -496,7 +486,7 @@ EBufferMemoryOption hs_rhi_from_buffer_option(MTLResourceOptions option)
         case MTLStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
         case MTLStorageModeManaged: return EBufferMemoryOption::MAPPED;
 
-        default:                            break;
+        default:                    break;
     }
 
     HS_LOG(crash, "Unsupported EBufferMemoryOption");

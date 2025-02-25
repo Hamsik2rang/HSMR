@@ -20,14 +20,16 @@ namespace ImGuiExt
 {
 void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
+    TextureMetal* texMetal = static_cast<TextureMetal*>(use_texture);
+
+    ImGui::Image(reinterpret_cast<ImTextureID>(texMetal->handle), image_size, uv0, uv1);
 }
 
 void InitializeBackend(Swapchain* swapchain)
 {
     SwapchainMetal*     swMetal      = static_cast<SwapchainMetal*>(swapchain);
     NativeWindowHandle* nativeHandle = reinterpret_cast<NativeWindowHandle*>(swMetal->nativeHandle);
-//    SDL_Window* window = static_cast<SDL_Window*>(nativeHandle->window);
-    
+
     id<MTLDevice> device = ((__bridge_transfer CAMetalLayer*)nativeHandle->layer).device;
     ImGui_ImplMetal_Init(device);
     ImGui_ImplSDL3_InitForMetal(static_cast<SDL_Window*>(nativeHandle->window));
@@ -35,28 +37,26 @@ void InitializeBackend(Swapchain* swapchain)
 
 void BeginRender(Swapchain* swapchain)
 {
-    SwapchainMetal*          swMetal = static_cast<SwapchainMetal*>(swapchain);
-    MTLRenderPassDescriptor* rpDesc  = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
+    @autoreleasepool
+    {
+        SwapchainMetal*          swMetal = static_cast<SwapchainMetal*>(swapchain);
+        MTLRenderPassDescriptor* rpDesc  = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
 
-    ImGui_ImplMetal_NewFrame(rpDesc);
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
+        ImGui_ImplMetal_NewFrame(rpDesc);
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+    }
 }
 
 void EndRender(Swapchain* swapchain)
 {
-    CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(swapchain->GetCommandBufferForCurrentFrame());
-    cmdBufferMetal->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
-
-    ImGui::Render();
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBufferMetal->handle, cmdBufferMetal->curRenderEncoder);
-
-    ImGuiIO& io = ImGui::GetIO();
-    // Update and Render additional Platform Windows
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    @autoreleasepool
     {
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
+        CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(swapchain->GetCommandBufferForCurrentFrame());
+        cmdBufferMetal->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
+
+        ImGui::Render();
+        ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBufferMetal->handle, cmdBufferMetal->curRenderEncoder);
     }
 }
 

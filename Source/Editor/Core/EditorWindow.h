@@ -32,6 +32,7 @@ public:
     void Render() override;
 
 private:
+    bool dispatchEvent(uint64 eventType, uint32 windowID) override;
     void setupPanels();
 
     bool onInitialize() override;

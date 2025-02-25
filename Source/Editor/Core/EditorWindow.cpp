@@ -50,7 +50,7 @@ bool EditorWindow::onInitialize()
             info.colorTextureInfos[j].extent.width  = width;
             info.colorTextureInfos[j].extent.height = height;
             info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
-            info.colorTextureInfos[j].usage         = ETextureUsage::RENDER_TARGET;
+            info.colorTextureInfos[j].usage         = ETextureUsage::RENDER_TARGET | ETextureUsage::SHADER_READ;
             info.colorTextureInfos[j].isCompressed  = false;
             info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
         }
@@ -60,7 +60,7 @@ bool EditorWindow::onInitialize()
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;
         info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
-        info.depthStencilInfo.usage                = ETextureUsage::RENDER_TARGET;
+        info.depthStencilInfo.usage                = ETextureUsage::RENDER_TARGET | ETextureUsage::SHADER_READ;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
 
@@ -107,7 +107,8 @@ void EditorWindow::onRender()
     CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
     cmdBuffer->Begin();
 
-    RenderTarget* curRT = &_renderTargets[_swapchain->GetCurrentFrameIndex()];
+    uint8 frameindex = _swapchain->GetCurrentFrameIndex();
+    RenderTarget* curRT = &_renderTargets[frameindex];
 
     // 1. Render Scene to Scene Panel
     _renderer->Render({}, curRT);
@@ -145,8 +146,7 @@ void EditorWindow::onRenderGUI()
 {
     // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
     ImGuiExt::BeginRender(_swapchain);
-    //    _renderer->Render({}, nullptr);
-
+    
     _basePanel->Draw(); // Draw panel tree.
 
     ImGuiExt::EndRender(_swapchain);
@@ -164,6 +164,59 @@ void EditorWindow::setupPanels()
     _scenePanel = new ScenePanel(this);
     _scenePanel->Setup();
     _basePanel->InsertPanel(_scenePanel);
+}
+
+bool EditorWindow::dispatchEvent(uint64 eventType, uint32 windowId)
+{
+    SDL_EventType event = static_cast<SDL_EventType>(eventType);
+
+    if (event == SDL_EVENT_QUIT)
+    {
+        _shouldClose = true;
+        return false;
+    }
+    
+    SDL_Window* window = static_cast<SDL_Window*>(_nativeHandle.window);
+
+    switch (event)
+    {
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        {
+            _shouldClose = true;
+        }
+        break;
+        case SDL_EVENT_WINDOW_MINIMIZED:
+        {
+            _isMinimized = true;
+        }
+        break;
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        {
+        }
+        break;
+        case SDL_EVENT_WINDOW_RESTORED:
+        {
+            _isMinimized = false;
+        }
+        case SDL_EVENT_WINDOW_RESIZED:
+        {
+            int w, h;
+            SDL_GetWindowSize(window, &w, &h);
+            float scale = SDL_GetWindowDisplayScale(window);
+            _width = static_cast<uint32>(w * scale);
+            _height = static_cast<uint32>(h * scale);
+            _swapchain->SetWidth(_width);
+            _swapchain->SetHeight(_height);
+            ImGuiIO& io = ImGui::GetIO();
+            io.DisplaySize = ImVec2(static_cast<float>(_width), static_cast<float>(_height));
+        }
+        break;
+        //...
+        default:
+            break;
+    }
+
+    return true;
 }
 
 HS_NS_EDITOR_END
