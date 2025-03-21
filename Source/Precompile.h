@@ -1,4 +1,4 @@
-//
+﻿//
 //  Precompile.h
 //  MetalSamples
 //
@@ -19,15 +19,28 @@ typedef int64_t int64;
 typedef uint64_t uint64;
 
 #ifndef HS_DEBUG_BREAK
-#define HS_DEBUG_BREAK __builtin_trap
+#if defined(__APPLE__)
+#define HS_DEBUG_BREAK() __builtin_trap()
+#else
+#define HS_DEBUG_BREAK() __debugbreak()
+#endif
+
 #endif
 
 #if defined(HS_EDITOR_API_EXPORT)
-#define HS_EDITOR_API __attribute__((__visibility__("default")))
+    #if defined(__APPLE__)
+        #define HS_EDITOR_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_EDITOR_API __declspec(dllexport)
+    #endif
 #elif defined(HS_EDITOR_API_IMPORT)
-#define HS_EDITOR_API
+    #if defined(__APPLE__)
+        #define HS_EDITOR_API
+    #else
+        #define HS_EDITOR_API __declspec(dllimport)
+    #endif
 #else
-#define HS_EDITOR_API
+    #define HS_EDITOR_API
 #endif
 
 #define HS_DIR_SEPERATOR '/'
@@ -51,13 +64,15 @@ typedef uint64_t uint64;
 #define HS_INT64_MAX    (0x0fffffffffffffff)
 #define HS_UINT64_MAX   (0xffffffffffffffff)
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__APPLE__)
     #define HS_FORCEINLINE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
     #define HS_FORCEINLINE __forceinline
 #else
     #define HS_FORCEINLINE inline
 #endif
+
+
 
 #define HS_NS_BEGIN \
     namespace HS    \

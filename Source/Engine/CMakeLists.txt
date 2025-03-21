@@ -226,12 +226,19 @@ target_include_directories(${TARGET_NAME}
 
 add_dependencies(${TARGET_NAME} Shader)
 
-target_link_libraries(${TARGET_NAME}
-    PUBLIC
-    ${SDL3}
-    PRIVATE
-    "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
-)
+if(APPLE)
+    target_link_libraries(${TARGET_NAME}
+        PUBLIC
+        ${SDL3}
+        PRIVATE
+        "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
+    )
+else()
+    target_link_libraries(${TARGET_NAME}
+        PUBLIC
+        ${SDL3}
+    )
+endif()
 
 # set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_GENERATE_DEBUGGING_SYMBOLS ON)
 target_compile_definitions(${TARGET_NAME} PRIVATE

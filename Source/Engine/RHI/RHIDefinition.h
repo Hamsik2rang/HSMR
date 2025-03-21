@@ -13,6 +13,7 @@
 #include "Engine/Utility/Hash.h"
 
 #include <vector>
+#include <string>
 
 HS_NS_BEGIN
 

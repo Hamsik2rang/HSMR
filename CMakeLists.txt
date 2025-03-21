@@ -28,21 +28,30 @@ message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
 message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
-if(NOT APPLE)
-    message(FATAL_ERROR "Currently, HSMR is only support MacOS.")
-endif()
+if(APPLE)
+    add_compile_definitions(__APPLE__)
 
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
-    set(HS_ARCH "arm64")
-else()
-    set(HS_ARCH "x86_64")
-endif()
+    # if(NOT APPLE)
+    # message(FATAL_ERROR "Currently, HSMR is only support MacOS.")
+    # endif()
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        set(HS_ARCH "arm64")
+    else()
+        set(HS_ARCH "x86_64")
+    endif()
 
-if(CMAKE_GENERATOR STREQUAL "Xcode")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
+    if(CMAKE_GENERATOR STREQUAL "Xcode")
+        set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
+    else()
+        set(CMAKE_OBJC_FLAGS "-fobjc-arc")
+        set(CMAKE_OBJCXX_FLAGS "-fobjc-arc")
+    endif()
+
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof -Winline-new-delete -fno-rtti")
+
 else()
-    set(CMAKE_OBJC_FLAGS "-fobjc-arc")
-    set(CMAKE_OBJCXX_FLAGS "-fobjc-arc")
+    add_compile_definitions(__WIN32__)
 endif()
 
 message(STATUS "Processor Architecture is ${HS_ARCH}")
@@ -52,9 +61,6 @@ set(HS_DEPS_DLL_DIR ${HS_DEPS_DIR}/dll)
 set(HS_DEPS_INCLUDE_DIR ${HS_DEPS_DIR}/include)
 
 set(SDL3 ${HS_DEPS_DLL_DIR}/libSDL3.dylib)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof -Winline-new-delete -fno-rtti")
 
 set(INSTALL_FOLDER "$<TARGET_FILE_DIR:Client>")
 
@@ -75,7 +81,7 @@ add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
 
 add_custom_target(
-    Rebuild CMake
+    RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}
-    COMMENT "Rebuilding CMake..."
+    COMMENT "Regenerating CMake..."
 )
