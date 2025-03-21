@@ -1,4 +1,4 @@
-//
+﻿//
 //  main.mm
 //  HSMR
 //
@@ -17,15 +17,17 @@
 #include <stdio.h>
 #include <string>
 
+#ifdef __APPLE__
 #include <unistd.h>
-
+#endif
 
 int main(int, char**)
 {
     // https://developer.apple.com/forums/thread/765445
     // to Prevent macOS bug. => apple is xxx.
+#ifdef __APPLE__
     usleep(777777);
-    
+#endif
     // TODO: Parse command arguments
     
     

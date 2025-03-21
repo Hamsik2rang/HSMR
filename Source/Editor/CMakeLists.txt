@@ -40,17 +40,13 @@ source_group("GUI\\Private" FILES ${GUI_SOURCES})
 if(APPLE)
     set(GUI_SOURCES_METAL
         GUI/Metal/ImGuiExtensionMetal.mm
-    
     )
-    
+
     list(APPEND TOTAL_FILES ${GUI_SOURCES_METAL})
     source_group("GUI\\Private\\Metal" FILES ${GUI_SOURCES_METAL})
 
 else()
-
 endif()
-
-
 
 set(PANEL_HEADERS
     Panel/Panel.h
