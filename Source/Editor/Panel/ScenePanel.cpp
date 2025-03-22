@@ -26,7 +26,9 @@ void ScenePanel::Cleanup()
 
 void ScenePanel::Draw()
 {
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     
     ImGui::SetScrollY(0.0f);
     uint32 width = _currentRenderTarget->GetWidth();
@@ -37,10 +39,14 @@ void ScenePanel::Draw()
     
     ImGuiExt::ImageOffscreen(texture, viewportSize);
 
+    ImVec2 curPanelSize = ImGui::GetWindowSize();
+    _resolution.width = static_cast<uint32>(curPanelSize.x);
+    _resolution.height = static_cast<uint32>(curPanelSize.y);
+    
     ImGui::End();
+    
+    ImGui::PopStyleVar();
 }
-
-
 
 
 HS_NS_EDITOR_END

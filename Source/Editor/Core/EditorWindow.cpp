@@ -78,24 +78,20 @@ void EditorWindow::onNextFrame()
     }
 
     _renderer->NextFrame(_swapchain);
-    uint32 width  = _swapchain->GetWidth();
-    uint32 height = _swapchain->GetHeight();
+    
+    Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
+    uint32 width  = static_cast<uint32>(resolution.width / _scale);
+    uint32 height = static_cast<uint32>(resolution.height / _scale);
 
     for (auto& renderTarget : _renderTargets)
     {
-        renderTarget.Update(width, height);
+        renderTarget.Update(resolution.width, resolution.height);
     }
 }
 
 void EditorWindow::onUpdate()
 {
-//    if (_isMinimized)
-//    {
-//        return;
-//    }
-    //....
-
-    // 렌더타겟 크기 업데이트는 여기서 합니다(onNextFrame 이후 ~ onRender 이전)
+    
 }
 
 void EditorWindow::onRender()
@@ -107,13 +103,13 @@ void EditorWindow::onRender()
     CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
     cmdBuffer->Begin();
 
-    uint8 frameindex = _swapchain->GetCurrentFrameIndex();
-    RenderTarget* curRT = &_renderTargets[frameindex];
+    uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
+    RenderTarget* curRT      = &_renderTargets[frameIndex];
 
-    // 1. Render Scene to Scene Panel
+//     1. Render Scene to Scene Panel
     _renderer->Render({}, curRT);
-
-    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(curRT);
+    
+    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
     // 2. Render GUI
     onRenderGUI();
@@ -146,7 +142,7 @@ void EditorWindow::onRenderGUI()
 {
     // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
     ImGuiExt::BeginRender(_swapchain);
-    
+
     _basePanel->Draw(); // Draw panel tree.
 
     ImGuiExt::EndRender(_swapchain);
@@ -175,7 +171,7 @@ bool EditorWindow::dispatchEvent(uint64 eventType, uint32 windowId)
         _shouldClose = true;
         return false;
     }
-    
+
     SDL_Window* window = static_cast<SDL_Window*>(_nativeHandle.window);
 
     switch (event)
@@ -203,11 +199,11 @@ bool EditorWindow::dispatchEvent(uint64 eventType, uint32 windowId)
             int w, h;
             SDL_GetWindowSize(window, &w, &h);
             float scale = SDL_GetWindowDisplayScale(window);
-            _width = static_cast<uint32>(w * scale);
-            _height = static_cast<uint32>(h * scale);
+            _width      = static_cast<uint32>(w * scale);
+            _height     = static_cast<uint32>(h * scale);
             _swapchain->SetWidth(_width);
             _swapchain->SetHeight(_height);
-            ImGuiIO& io = ImGui::GetIO();
+            ImGuiIO& io    = ImGui::GetIO();
             io.DisplaySize = ImVec2(static_cast<float>(_width), static_cast<float>(_height));
         }
         break;

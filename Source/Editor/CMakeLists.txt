@@ -5,6 +5,7 @@ set(TOTAL_FILES)
 set(CORE_HEADERS
     Core/EditorApplication.h
     Core/EditorWindow.h
+    Core/EditorCamera.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
@@ -14,6 +15,7 @@ list(APPEND TOTAL_FILES ${CORE_HEADERS})
 set(CORE_SOURCES
     Core/EditorApplication.cpp
     Core/EditorWindow.cpp
+    Core/EditorCamera.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})

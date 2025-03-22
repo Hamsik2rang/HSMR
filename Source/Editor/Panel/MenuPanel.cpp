@@ -63,6 +63,10 @@ void MenuPanel::Draw()
 
         if (ImGui::BeginMenu("Edit"))
         {
+            if (ImGui::MenuItem("Save Layout", nullptr, false))
+            {
+                
+            }
         }
         ImGui::EndMenuBar();
     }

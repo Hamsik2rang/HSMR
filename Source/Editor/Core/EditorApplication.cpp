@@ -53,7 +53,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
 void EditorApplication::Finalize()
 {
     
-    if (_window)
+    if (_window && _window->IsOpened())
     {
         _window->Shutdown();
         delete _window;

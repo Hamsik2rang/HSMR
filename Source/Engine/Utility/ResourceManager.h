@@ -12,11 +12,28 @@
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/FileSystem.h"
 
+#include "Engine/Utility/Image.h"
+#include "Engine/Utility/Mesh.h"
+
 HS_NS_BEGIN
 
-bool hs_resource_load_image(std::string& fileName, void* data, uint32& width, uint32& height, uint32& channel);
-void hs_resource_free_image(void* data);
-
+class ResourceManager
+{
+public:
+    static bool Initialize();
+    static void Finalize();
+    
+    static Image* LoadImage(const std::string& path, bool isAbsolutePath = false);
+    static void FreeImage(Image* image);
+    static Mesh* LoadMesh(const std::string& path, bool isAbsolutePath = false);
+    static void FreeMesh(Mesh* mesh);
+    
+    
+private:
+    static std::string _resourcePath;
+    
+    
+};
 
 
 

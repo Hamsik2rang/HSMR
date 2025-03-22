@@ -86,6 +86,7 @@ public:
     HS_FORCEINLINE void                      Close() { _shouldClose = true; }
     HS_FORCEINLINE void                      SetMinimize(bool value) { _isMinimized = value; }
     HS_FORCEINLINE Swapchain*                GetSwapchain() { return _swapchain; }
+    HS_FORCEINLINE float                     GetScale() { return _scale; }
 
 protected:
     virtual bool dispatchEvent(uint64 eventType, uint32 windowID);
@@ -111,6 +112,7 @@ protected:
     const char* _name;
     uint32      _width;
     uint32      _height;
+    float       _scale;
     uint64      _flags;
     uint32      _id;
 
