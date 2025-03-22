@@ -1,8 +1,4 @@
-//
-//  Hash.cpp
-//  Engine
-//
-//  Created by Yongsik Im on 2/23/25.
-//
+#include "Engine/Utility/Hash.h"
 
-#include <stdio.h>
+
+#include "ThirdParty/glm/glm.hpp"

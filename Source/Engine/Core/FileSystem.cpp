@@ -132,7 +132,7 @@ size_t hs_file_get_size(FileHandle fileHandle)
 
 std::string hs_file_get_resource_path(const std::string& relativePath)
 {
-    return std::string("Resource/") + relativePath;
+    return hs_engine_get_context()->executableDirectory + std::string("Resource/") + relativePath;
 }
 
 

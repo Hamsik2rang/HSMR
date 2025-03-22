@@ -19,7 +19,7 @@ GUIContext* s_guiContext = nullptr;
 GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
 
 GUIContext::GUIContext()
-    : layoutFileName(std::string("imgui.ini"))
+    : _defaultLayoutPath(hs_file_get_resource_path(std::string("imgui.ini")))
     , _font{nullptr}
     , _context(nullptr)
 {}
@@ -35,16 +35,15 @@ void GUIContext::Initialize()
 
     ImGuiIO& io = ImGui::GetIO();
 
-    layoutFileName = "imgui.ini";
-
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows -> Metal+SDL3에서 지원 안함
 
-    io.IniFilename = hs_file_get_resource_path(layoutFileName).c_str();
-    chmod(io.IniFilename, S_IRWXU);
-
+    const char* filePath = _defaultLayoutPath.c_str();
+    
+    io.IniFilename = filePath;
+    ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     // Setup style
     SetColorTheme(true);
 
@@ -65,6 +64,8 @@ void GUIContext::NextFrame()
 
 void GUIContext::Finalize()
 {
+    const char* filePath = _defaultLayoutPath.c_str();
+    ImGui::SaveIniSettingsToDisk(filePath);
     ImGui::DestroyContext();
 }
 
@@ -72,7 +73,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 {
     auto& styles = ImGui::GetStyle();
 
-    styles.WindowRounding = 7.0f;
+    styles.WindowRounding = 5.0f;
 
     auto& colors = styles.Colors;
     if (useWhite)
@@ -164,6 +165,11 @@ void GUIContext::SetFont(const std::string& fontPath, float fontSize)
     _font       = io.Fonts->AddFontFromFileTTF(hs_file_get_resource_path(fontPath).c_str(), 18.0f);
 
     io.Fonts->Build();
+}
+
+void GUIContext::LoadLayout(const std::string& layoutPath)
+{
+    
 }
 
 HS_NS_EDITOR_END

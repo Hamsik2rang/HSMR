@@ -28,6 +28,16 @@ struct RenderTargetInfo
     bool isSwapchainTarget = false;
 };
 
+enum class ERenderGroup : uint16
+{
+    SKYBOX = 500,
+    OPAQUE = 800,
+    ALPHA_TEST = 1000,
+    TRANSPARENT = 1100,
+    UI = 2000
+};
+
+
 struct RenderParameter
 {
 };

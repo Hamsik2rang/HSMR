@@ -34,7 +34,6 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
 {
     @autoreleasepool
     {
-
         SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
 
         const uint32 maxFrameIndex = swMetal->GetMaxFrameIndex();

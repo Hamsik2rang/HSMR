@@ -13,6 +13,8 @@
 #include "Editor/Panel/Panel.h"
 #include "Engine/Renderer/RenderTarget.h"
 
+#include "Engine/Utility/Geometry.h"
+
 namespace HS
 {
 class Framebuffer;
@@ -24,6 +26,7 @@ class HS_EDITOR_API ScenePanel : public Panel
 public:
     ScenePanel(Window* window)
         : Panel(window)
+        , _resolution(800, 600)
     {}
     ~ScenePanel() override;
 
@@ -32,9 +35,12 @@ public:
 
     void Draw() override;
 
-    void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
+    HS_FORCEINLINE void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
 
+    HS_FORCEINLINE Resolution GetResolution() const { return _resolution; }
+    
 private:
+    Resolution _resolution;
     RenderTarget* _currentRenderTarget;
 };
 

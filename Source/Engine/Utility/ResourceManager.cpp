@@ -1,17 +1,46 @@
 #include "Engine/Utility/ResourceManager.h"
 
-// Define these only in *one* .cc file.
-#define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-// #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
+#include "stb_image.h"
+
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_NO_STB_IMAGE_WRITE // 필요한 경우
+#define TINYGLTF_NO_STB_IMAGE       // 중요! - tinygltf가 내부 stb_image를 사용하지 않도록 설정
 #include "tiny_gltf.h"
 
 #include "Engine/Core/Log.h"
 
-using namespace tinygltf;
-
 HS_NS_BEGIN
+
+Image* ResourceManager::LoadImage(const std::string& path, bool isAbsolutePath)
+{
+    int width   = 0;
+    int height  = 0;
+    int channel = 0;
+
+    const char* filePath = nullptr;
+    if (isAbsolutePath)
+    {
+        filePath = path.c_str();
+    }
+    else
+    {
+        filePath = (_resourcePath + path).c_str();
+    }
+
+    uint8* rawData = nullptr;
+    rawData        = stbi_load(filePath, &width, &height, &channel, 0);
+
+    if (rawData == nullptr)
+    {
+        HS_LOG(error, "Fail to load Image!");
+        return nullptr;
+    }
+}
+
+Mesh* ResourceManager::LoadMesh(const std::string& path, bool isAbsolutePath)
+{
+}
 
 bool hs_resource_load_image(std::string& fileName, void* data, int& width, int& height, int& channel)
 {
@@ -20,10 +49,14 @@ bool hs_resource_load_image(std::string& fileName, void* data, int& width, int& 
     return (data != nullptr);
 }
 
-void hs_resource_free_image(void* data)
+void ResourceManager::FreeImage(Image* image)
 {
-    HS_ASSERT(data, "data what is requested to free is nullptr");
-    
+    uint8* data = image->GetData();
+    if (nullptr == data)
+    {
+        return;
+    }
+
     stbi_image_free(data);
 }
 

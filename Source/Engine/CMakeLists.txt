@@ -4,12 +4,12 @@ set(TOTAL_FILES)
 
 set(CORE_HEADERS
     Core/Application.h
-    Core/Scene.h
     Core/Log.h
     Core/EngineContext.h
     Core/FileSystem.h
     Core/Window.h
     Core/Event.h
+    Core/Flag.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
@@ -17,16 +17,78 @@ list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
     Core/Application.cpp
-    Core/Scene.cpp
     Core/Log.cpp
     Core/EngineContext.cpp
     Core/FileSystem.cpp
     Core/Window.cpp
     Core/Event.cpp
+    Core/Flag.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
+
+set(ECS_HEADERS
+    ECS/Entity.h
+    ECS/Scene.h
+)
+
+source_group("ECS\\Public" FILES ${ECS_HEADERS})
+list(APPEND TOTAL_FILES ${ECS_HEADERS})
+
+set(ECS_SOURCES
+    ECS/Entity.cpp
+    ECS/Scene.cpp
+)
+
+source_group("ECS\\Private" FILES ${ECS_SOURCES})
+list(APPEND TOTAL_FILES ${ECS_SOURCES})
+
+set(ECS_COMPONENT_HEADERS
+    ECS/Component/Component.h
+    ECS/Component/NameComponent.h
+    ECS/Component/TransformComponent.h
+    ECS/Component/LightComponent.h
+    ECS/Component/CameraComponent.h
+    ECS/Component/RenderComponent.h
+)
+
+source_group("ECS\\Component\\Public" FILES ${ECS_COMPONENT_HEADERS})
+list(APPEND TOTAL_FILES ${ECS_COMPONENT_HEADERS})
+
+set(ECS_COMPONENT_SOURCES
+    ECS/Component/NameComponent.cpp
+    ECS/Component/TransformComponent.cpp
+    ECS/Component/LightComponent.cpp
+    ECS/Component/CameraComponent.cpp
+    ECS/Component/RenderComponent.cpp
+)
+
+source_group("ECS\\Component\\Private" FILES ${ECS_COMPONENT_SOURCES})
+list(APPEND TOTAL_FILES ${ECS_COMPONENT_SOURCES})
+
+set(ECS_SYSTEM_HEADERS
+    ECS/System/ComponentSystem.h
+    ECS/System/NameComponentSystem.h
+    ECS/System/TransformComponentSystem.h
+    ECS/System/LightComponentSystem.h
+    ECS/System/CameraComponentSystem.h
+    ECS/System/RenderComponentSystem.h
+)
+
+source_group("ECS\\System\\Public" FILES ${ECS_SYSTEM_HEADERS})
+list(APPEND TOTAL_FILES ${ECS_SYSTEM_HEADERS})
+
+set(ECS_SYSTEM_SOURCES
+    ECS/System/NameComponentSystem.cpp
+    ECS/System/TransformComponentSystem.cpp
+    ECS/System/LightComponentSystem.cpp
+    ECS/System/CameraComponentSystem.cpp
+    ECS/System/RenderComponentSystem.cpp
+)
+
+source_group("ECS\\System\\Private" FILES ${ECS_SYSTEM_SOURCES})
+list(APPEND TOTAL_FILES ${ECS_SYSTEM_SOURCES})
 
 set(RHI_HEADERS
     RHI/RHIContext.h
@@ -101,6 +163,7 @@ set(RENDERER_SOURCES
 
 source_group("Renderer\\Private" FILES ${RENDERER_SOURCES})
 list(APPEND TOTAL_FILES ${RENDERER_SOURCES})
+
 set(OBJECT_HEADERS
     Object/Object.h
     Object/Material.h
@@ -126,6 +189,8 @@ set(UTILITY_HEADERS
     Utility/Geometry.h
     Utility/Color.h
     Utility/Hash.h
+    Utility/Image.h
+    Utility/Mesh.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
@@ -136,11 +201,14 @@ set(UTILITY_SOURCES
     Utility/Geometry.cpp
     Utility/Color.cpp
     Utility/Hash.cpp
+    Utility/Image.cpp
+    Utility/Mesh.cpp
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
 
 list(APPEND TOTAL_FILES ${UTILITY_SOURCES})
+
 set(RENDERER_PASS_HEADERS
     RendererPass/RendererPass.h
 )

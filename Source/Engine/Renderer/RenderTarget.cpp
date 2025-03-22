@@ -30,11 +30,13 @@ void RenderTarget::Create(const RenderTargetInfo& info)
     }
     else
     {
-        _colorTextures.resize(info.colorTextureCount);
+//        _colorTextures.resize(info.colorTextureCount);
 
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
-            _colorTextures[i] = rhiContext->CreateTexture(nullptr, info.colorTextureInfos[i]);
+            
+            Texture* texture = rhiContext->CreateTexture(nullptr, info.colorTextureInfos[i]);
+            _colorTextures.push_back(texture);
         }
     }
 
@@ -94,11 +96,13 @@ void RenderTarget::Clear()
 
         rc->DestroyTexture(_colorTextures[i]);
     }
+    _colorTextures.clear();
 
     if (_info.useDepthStencilTexture && nullptr != _depthStencilTexture)
     {
         rc->DestroyTexture(_depthStencilTexture);
     }
+    _depthStencilTexture = nullptr;
 
     //...
     _info   = {};

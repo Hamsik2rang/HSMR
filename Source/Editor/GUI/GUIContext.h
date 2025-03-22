@@ -34,11 +34,14 @@ public:
 
     void SetColorTheme(bool useWhite);
     void SetFont(const std::string& fontPath, float fontSize = 18.0f);
+    
+    void LoadLayout(const std::string& layoutPath);
+    void SaveLayout(const std::string& layoutPath);
 
 private:
     ImGuiContext* _context;
     ImFont*       _font;
-    std::string   layoutFileName;
+    std::string   _defaultLayoutPath;
 };
 
 GUIContext* hs_editor_get_gui_context();
