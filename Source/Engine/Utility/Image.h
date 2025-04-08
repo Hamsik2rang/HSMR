@@ -1,4 +1,4 @@
-//
+﻿//
 //  Image.h
 //  Engine
 //
@@ -20,7 +20,7 @@ public:
     Image(Image&& img);
 
     
-    uint8* GetData() { _rawData; }
+    uint8* GetData() { return _rawData; }
     size_t GetDataSize() const { return _rawDataSize; }
     uint32 GetWidth() const { return _width; }
     uint32 GetHeight() const { return _height;}

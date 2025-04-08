@@ -1,4 +1,4 @@
-#include "Editor/Panel/DockspacePanel.h"
+﻿#include "Editor/Panel/DockspacePanel.h"
 #include "ImGui/imgui.h"
 
 HS_NS_EDITOR_BEGIN
@@ -9,6 +9,7 @@ DockspacePanel::~DockspacePanel()
 
 bool DockspacePanel::Setup()
 {
+    return true;
 }
 
 void DockspacePanel::Cleanup()

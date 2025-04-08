@@ -1,4 +1,4 @@
-#include "Editor/Panel/MenuPanel.h"
+﻿#include "Editor/Panel/MenuPanel.h"
 
 #include "Engine/Core/Window.h"
 
@@ -14,6 +14,7 @@ MenuPanel::~MenuPanel()
 
 bool MenuPanel::Setup()
 {
+    return true;
 }
 
 void MenuPanel::Cleanup()

@@ -1,4 +1,4 @@
-//
+﻿//
 //  ResourceHandle.h
 //  Engine
 //
@@ -10,7 +10,6 @@
 #include "Precompile.h"
 
 #include "Engine/RHI/RHIDefinition.h"
-#include <simd/simd.h>
 
 HS_NS_BEGIN
 

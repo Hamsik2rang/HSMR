@@ -1,4 +1,4 @@
-//
+﻿//
 //  Window.h
 //  HSMR
 //
@@ -91,7 +91,7 @@ public:
 protected:
     virtual bool dispatchEvent(uint64 eventType, uint32 windowID);
 
-    virtual bool onInitialize(){};
+    virtual bool onInitialize() { return true; }
     virtual void onNextFrame() {}
     virtual void onUpdate() {}
     virtual void onRender() {}

@@ -1,4 +1,4 @@
-#include "Engine/Utility/ResourceManager.h"
+﻿#include "Engine/Utility/ResourceManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -12,7 +12,7 @@
 
 HS_NS_BEGIN
 
-Image* ResourceManager::LoadImage(const std::string& path, bool isAbsolutePath)
+Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
 {
     int width   = 0;
     int height  = 0;
@@ -38,8 +38,9 @@ Image* ResourceManager::LoadImage(const std::string& path, bool isAbsolutePath)
     }
 }
 
-Mesh* ResourceManager::LoadMesh(const std::string& path, bool isAbsolutePath)
+Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
+    return nullptr;
 }
 
 bool hs_resource_load_image(std::string& fileName, void* data, int& width, int& height, int& channel)

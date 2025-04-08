@@ -1,4 +1,4 @@
-#include "Engine/Core/FileSystem.h"
+﻿#include "Engine/Core/FileSystem.h"
 
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/Log.h"
@@ -12,6 +12,8 @@ HS_NS_BEGIN
 bool hs_file_copy(const std::string& src, const std::string& dst)
 {
     bool result = SDL_CopyFile(src.c_str(), dst.c_str());
+
+    return result;
 }
 
 bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle)

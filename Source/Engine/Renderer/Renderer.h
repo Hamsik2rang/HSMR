@@ -1,4 +1,4 @@
-//
+﻿//
 //  Renderer.h
 //  HSMR
 //

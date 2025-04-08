@@ -1,10 +1,13 @@
-#include "Engine/Core/EngineContext.h"
+﻿#include "Engine/Core/EngineContext.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/Core/FileSystem.h"
 
+#ifdef __APPLE__
 #include "Engine/RHI/Metal/RHIContextMetal.h"
+#else
 
+#endif
 #include <SDL3/SDL.h>
 #include <string>
 
@@ -43,11 +46,13 @@ EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rh
 
     switch (rhiPlatform)
     {
+#ifdef __APPLE__
         case ERHIPlatform::METAL:
         {
             s_engineContext->rhiContext = new RHIContextMetal();
         }
         break;
+#endif
         default:
             break;
     }
@@ -84,7 +89,7 @@ void hs_engine_set_rhi_context(RHIContext* rhiContext)
     hs_engine_get_context()->rhiContext = rhiContext;
 }
 
-EngineContext* hs_engine_destroy_context()
+void hs_engine_destroy_context()
 {
     s_engineContext->rhiContext->Finalize();
     

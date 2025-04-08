@@ -1,4 +1,4 @@
-//
+﻿//
 //  EngineContext.h
 //  Engine
 //
@@ -43,7 +43,7 @@ struct EngineContext
 EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rhiPlatform);
 EngineContext* hs_engine_get_context();
 void hs_engine_set_context(EngineContext* context);
-EngineContext* hs_engine_destroy_context();
+void hs_engine_destroy_context();
 RHIContext* hs_engine_get_rhi_context();
 void hs_engine_set_rhi_context(void* rhiContext);
 

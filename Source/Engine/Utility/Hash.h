@@ -1,4 +1,4 @@
-//
+﻿//
 //  Hash.h
 //  Engine
 //
@@ -41,16 +41,6 @@ struct Hasher<uint64>
         hash = hash + (hash << 6);
         hash = hash ^ (hash >> 22);
         return static_cast<uint32>(hash);
-    }
-};
-
-template <>
-struct Hasher<size_t>
-{
-    static uint32 Get(const size_t& key)
-    {
-        uint64 hash = static_cast<uint64>(key);
-        return Hasher<uint64>::Get(hash);
     }
 };
 

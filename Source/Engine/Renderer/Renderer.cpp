@@ -1,4 +1,4 @@
-//
+﻿//
 //  Renderer.mm
 //  HSMR
 //
@@ -98,6 +98,7 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
 
 GraphicsPipeline* Renderer::RHIHandleCache::GetGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
+    return nullptr;
 }
 
 Renderer::Renderer(RHIContext* context)

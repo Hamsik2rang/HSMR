@@ -1,4 +1,4 @@
-#include "Editor/GUI/GUIContext.h"
+﻿#include "Editor/GUI/GUIContext.h"
 
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/Log.h"
@@ -6,7 +6,7 @@
 
 #include "ImGui/imgui.h"
 #include "ImGui/backends/imgui_impl_sdl3.h"
-#include "ImGui/backends/imgui_impl_metal.h"
+//#include "ImGui/backends/imgui_impl_metal.h"
 
 #include "Engine/Renderer/Renderer.h"
 
@@ -170,6 +170,11 @@ void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 void GUIContext::LoadLayout(const std::string& layoutPath)
 {
     
+}
+
+void GUIContext::SaveLayout(const std::string& layoutPath)
+{
+
 }
 
 HS_NS_EDITOR_END
