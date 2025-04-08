@@ -1,4 +1,4 @@
-//
+﻿//
 //  BuiltInMaterialLayout.h
 //  Engine
 //
@@ -7,18 +7,30 @@
 #ifndef __HS_BUILTIN_MATERIAL_LAYOUT_H__
 #define __HS_BUILTIN_MATERIAL_LAYOUT_H__
 
+#if defined(__APPLE__)
 #include <simd/simd.h>
 
+using float4 = vector_float4;
+
+#else
+#include <glm/glm.hpp>
+
+using float4 = glm::vec4;
+#endif
+
 #if defined(HS_SHADER_FILE)
+
+#if defined(__APPLE__)
     #define ATTR_NUM(x) [[attribute(x)]]
     #define ATTR_KEY(x) [[x]]
+#else
+    #define ATTR_NUM(x) 
+    #define ATTR_KEY(x)
+#endif
 
 #else
     #define ATTR_NUM(x)
     #define ATTR_KEY(x)
-
-using float4 = vector_float4;
-
 #endif
 
 #if defined(HS_BASIC_SHADER) || !defined(HS_SHADER_FILE)
@@ -37,7 +49,7 @@ struct VSINPUT_BASIC
 struct FSINPUT_BASIC
 {
     float4 pos ATTR_KEY(position);
-    float4     color;
+    float4 color;
 };
 
 #endif

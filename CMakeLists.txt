@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.29.0)
+cmake_minimum_required(VERSION 3.22.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -50,17 +50,25 @@ if(APPLE)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof -Winline-new-delete -fno-rtti")
 
+    set(HS_DEPS_LIB_DIR ${HS_DEPS_DIR}/lib/mac/${CMAKE_CFG_INTDIR})
+    set(HS_DEPS_DLL_DIR ${HS_DEPS_DIR}/dll/mac/${CMAKE_CFG_INTDIR})
+    set(HS_DEPS_INCLUDE_DIR ${HS_DEPS_DIR}/include)
+
 else()
     add_compile_definitions(__WIN32__)
+
+    set(HS_DEPS_LIB_DIR ${HS_DEPS_DIR}/lib/win/${CMAKE_CFG_INTDIR})
+    set(HS_DEPS_DLL_DIR ${HS_DEPS_DIR}/dll/win/${CMAKE_CFG_INTDIR})
+    set(HS_DEPS_INCLUDE_DIR ${HS_DEPS_DIR}/include)
 endif()
 
 message(STATUS "Processor Architecture is ${HS_ARCH}")
 
-set(HS_DEPS_LIB_DIR ${HS_DEPS_DIR}/lib)
-set(HS_DEPS_DLL_DIR ${HS_DEPS_DIR}/dll)
-set(HS_DEPS_INCLUDE_DIR ${HS_DEPS_DIR}/include)
-
-set(SDL3 ${HS_DEPS_DLL_DIR}/libSDL3.dylib)
+if(APPLE)
+    set(SDL3 ${HS_DEPS_DLL_DIR}/libSDL3.dylib)
+else()
+    set(SDL3 ${HS_DEPS_DLL_DIR}/SDL3.lib)
+endif()
 
 set(INSTALL_FOLDER "$<TARGET_FILE_DIR:Client>")
 

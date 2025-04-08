@@ -1,4 +1,4 @@
-//
+﻿//
 //  RenderPass.h
 //  Engine
 //
@@ -51,7 +51,7 @@ struct Hasher<RenderPass>
 {
     static uint32 Get(const RenderPass& key)
     {
-        
+        return 0;
     }
 };
 

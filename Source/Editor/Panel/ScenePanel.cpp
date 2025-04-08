@@ -1,4 +1,4 @@
-#include "Editor/Panel/ScenePanel.h"
+﻿#include "Editor/Panel/ScenePanel.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -16,7 +16,7 @@ ScenePanel::~ScenePanel()
 
 bool ScenePanel::Setup()
 {
-    
+    return true;
 }
 
 void ScenePanel::Cleanup()

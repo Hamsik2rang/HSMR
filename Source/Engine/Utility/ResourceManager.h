@@ -1,4 +1,4 @@
-//
+﻿//
 //  ResourceManager.h
 //  Engine
 //
@@ -23,9 +23,9 @@ public:
     static bool Initialize();
     static void Finalize();
     
-    static Image* LoadImage(const std::string& path, bool isAbsolutePath = false);
+    static Image* LoadImageFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeImage(Image* image);
-    static Mesh* LoadMesh(const std::string& path, bool isAbsolutePath = false);
+    static Mesh* LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeMesh(Mesh* mesh);
     
     
