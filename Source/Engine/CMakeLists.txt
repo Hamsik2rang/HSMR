@@ -262,13 +262,19 @@ set(THIRDPARTY_IMGUI_BACKENDS
 )
 
 if(APPLE)
-    list(APPEND THIRDPARTY_IMGUI_BACKENDS FILES
+    list(APPEND THIRDPARTY_IMGUI_BACKENDS
         ThirdParty/ImGui/backends/imgui_impl_metal.h
         ThirdParty/ImGui/backends/imgui_impl_metal.mm
         ThirdParty/ImGui/backends/imgui_impl_osx.h
         ThirdParty/ImGui/backends/imgui_impl_osx.mm
     )
 else()
+    list(APPEND THIRDPARTY_IMGUI_BACKENDS
+        ThirdParty/ImGui/backends/imgui_impl_win32.h
+        ThirdParty/ImGui/backends/imgui_impl_win32.cpp
+        ThirdParty/ImGui/backends/imgui_impl_vulkan.h
+        ThirdParty/ImGui/backends/imgui_impl_vulkan.cpp
+    )
 endif()
 
 source_group("ThirdParty\\ImGui\\backends" FILES ${THIRDPARTY_IMGUI_BACKENDS})
@@ -302,14 +308,15 @@ target_include_directories(${TARGET_NAME}
 if(APPLE)
     add_dependencies(${TARGET_NAME} Shader) # TODO: HLSL 도입시 윈도우에도 추가할 것!
     target_link_libraries(${TARGET_NAME}
-        PRIVATE
+        PUBLIC
         ${SDL3}
+        PRIVATE
         "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PUBLIC
-        ${SDL3}
+        ${SDL3} ${VULKAN} ${SPIRV}
     )
 endif()
 

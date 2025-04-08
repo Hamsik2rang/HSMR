@@ -5,10 +5,7 @@
 #include "Engine/Core/FileSystem.h"
 
 #include "ImGui/imgui.h"
-#include "ImGui/backends/imgui_impl_sdl3.h"
-//#include "ImGui/backends/imgui_impl_metal.h"
 
-#include "Engine/Renderer/Renderer.h"
 
 #include <string>
 
