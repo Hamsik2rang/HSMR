@@ -48,6 +48,12 @@ if(APPLE)
     source_group("GUI\\Private\\Metal" FILES ${GUI_SOURCES_METAL})
 
 else()
+    set(GUI_SOURCES_VULKAN
+        GUI/Vulkan/ImGuiExtensionVulkan.cpp
+    )
+
+    list(APPEND TOTAL_FILES ${GUI_SOURCES_VULKAN})
+    source_group("GUI\\Private\\Vulkan" FILES ${GUI_SOURCES_METAL})
 endif()
 
 set(PANEL_HEADERS

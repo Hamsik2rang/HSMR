@@ -1,4 +1,4 @@
-//
+﻿//
 //  RendererPass.h
 //  HSMR
 //
@@ -11,7 +11,6 @@
 
 #include <typeinfo>
 
-#include "Engine/ThirdParty/ImGui/imgui.h"
 #include "Engine/Renderer//RenderDefinition.h"
 #include "Engine/RHI/RenderHandle.h"
 #include "Engine/Renderer/RenderTarget.h"

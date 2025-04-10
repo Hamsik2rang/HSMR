@@ -1,11 +1,11 @@
-#include "Editor/Core/EditorApplication.h"
+﻿#include "Editor/Core/EditorApplication.h"
 
 #include "Engine/Core/Log.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
-#include "ImGui/backends/imgui_impl_sdl3.h"
+#include "ImGui/imgui_impl_sdl3.h"
 
 HS_NS_EDITOR_BEGIN
 

@@ -1,4 +1,4 @@
-//
+﻿//
 //  Application.h
 //  HSMR
 //
@@ -10,7 +10,6 @@
 #include "Precompile.h"
 
 #include "Engine/Core/EngineContext.h"
-#include "Engine/ThirdParty/ImGui/imgui.h"
 #include "SDL3/SDL.h"
 
 HS_NS_BEGIN

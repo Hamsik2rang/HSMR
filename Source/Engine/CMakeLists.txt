@@ -257,23 +257,23 @@ source_group("ThirdParty\\ImGui" FILES ${THIRDPARTY_IMGUI})
 
 set(THIRDPARTY_IMGUI_BACKENDS
 
-    ThirdParty/ImGui/backends/imgui_impl_sdl3.h
-    ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp
+    ThirdParty/ImGui/imgui_impl_sdl3.h
+    ThirdParty/ImGui/imgui_impl_sdl3.cpp
 )
 
 if(APPLE)
     list(APPEND THIRDPARTY_IMGUI_BACKENDS
-        ThirdParty/ImGui/backends/imgui_impl_metal.h
-        ThirdParty/ImGui/backends/imgui_impl_metal.mm
-        ThirdParty/ImGui/backends/imgui_impl_osx.h
-        ThirdParty/ImGui/backends/imgui_impl_osx.mm
+        ThirdParty/ImGui/imgui_impl_metal.h
+        ThirdParty/ImGui/imgui_impl_metal.mm
+        ThirdParty/ImGui/imgui_impl_osx.h
+        ThirdParty/ImGui/imgui_impl_osx.mm
     )
 else()
     list(APPEND THIRDPARTY_IMGUI_BACKENDS
-        ThirdParty/ImGui/backends/imgui_impl_win32.h
-        ThirdParty/ImGui/backends/imgui_impl_win32.cpp
-        ThirdParty/ImGui/backends/imgui_impl_vulkan.h
-        ThirdParty/ImGui/backends/imgui_impl_vulkan.cpp
+        ThirdParty/ImGui/imgui_impl_win32.h
+        ThirdParty/ImGui/imgui_impl_win32.cpp
+        ThirdParty/ImGui/imgui_impl_vulkan.h
+        ThirdParty/ImGui/imgui_impl_vulkan.cpp
     )
 endif()
 
