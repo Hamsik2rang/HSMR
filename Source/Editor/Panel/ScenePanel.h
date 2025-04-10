@@ -1,4 +1,4 @@
-//
+﻿//
 //  ScenePanel.hpp
 //  Editor
 //
@@ -12,6 +12,7 @@
 
 #include "Editor/Panel/Panel.h"
 #include "Engine/Renderer/RenderTarget.h"
+#include "Editor/GUI/ImGuiExtension.h"
 
 #include "Engine/Utility/Geometry.h"
 
@@ -19,6 +20,7 @@ namespace HS
 {
 class Framebuffer;
 }
+
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API ScenePanel : public Panel

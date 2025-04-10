@@ -9,10 +9,9 @@
 
 #include "Precompile.h"
 
-#include <string>
+#include "ImGui/imgui.h"
 
-class ImGuiContext;
-class ImFont;
+#include <string>
 
 namespace HS
 {
@@ -29,22 +28,20 @@ public:
 
     void Initialize();
     void Finalize();
-
     void NextFrame();
-
     void SetColorTheme(bool useWhite);
     void SetFont(const std::string& fontPath, float fontSize = 18.0f);
-    
+
     void LoadLayout(const std::string& layoutPath);
     void SaveLayout(const std::string& layoutPath);
 
 private:
-    ImGuiContext* _context;
-    ImFont*       _font;
-    std::string   _defaultLayoutPath;
+    ImGuiContext* _context;  // 네임스페이스 없이 사용
+    ImFont* _font;
+    std::string  _defaultLayoutPath;
 };
 
-GUIContext* hs_editor_get_gui_context();
+HS_EDITOR_API GUIContext* hs_editor_get_gui_context();
 
 HS_NS_EDITOR_END
 

@@ -239,56 +239,6 @@ set(FORWARD_PASS_SOURCES
 source_group("RendererPass\\Forward\\Private" FILES ${FORWARD_PASS_SOURCES})
 list(APPEND TOTAL_FILES ${FORWARD_PASS_SOURCES})
 
-set(THIRDPARTY_IMGUI
-    ThirdParty/ImGui/imconfig.h
-    ThirdParty/ImGui/imgui_internal.h
-    ThirdParty/ImGui/imgui.h
-    ThirdParty/ImGui/imstb_rectpack.h
-    ThirdParty/ImGui/imstb_textedit.h
-    ThirdParty/ImGui/imstb_truetype.h
-    ThirdParty/ImGui/imgui.cpp
-    ThirdParty/ImGui/imgui_demo.cpp
-    ThirdParty/ImGui/imgui_draw.cpp
-    ThirdParty/ImGui/imgui_tables.cpp
-    ThirdParty/ImGui/imgui_widgets.cpp
-)
-
-source_group("ThirdParty\\ImGui" FILES ${THIRDPARTY_IMGUI})
-
-set(THIRDPARTY_IMGUI_BACKENDS
-
-    ThirdParty/ImGui/imgui_impl_sdl3.h
-    ThirdParty/ImGui/imgui_impl_sdl3.cpp
-)
-
-if(APPLE)
-    list(APPEND THIRDPARTY_IMGUI_BACKENDS
-        ThirdParty/ImGui/imgui_impl_metal.h
-        ThirdParty/ImGui/imgui_impl_metal.mm
-        ThirdParty/ImGui/imgui_impl_osx.h
-        ThirdParty/ImGui/imgui_impl_osx.mm
-    )
-else()
-    list(APPEND THIRDPARTY_IMGUI_BACKENDS
-        ThirdParty/ImGui/imgui_impl_win32.h
-        ThirdParty/ImGui/imgui_impl_win32.cpp
-        ThirdParty/ImGui/imgui_impl_vulkan.h
-        ThirdParty/ImGui/imgui_impl_vulkan.cpp
-    )
-endif()
-
-source_group("ThirdParty\\ImGui\\backends" FILES ${THIRDPARTY_IMGUI_BACKENDS})
-
-list(APPEND THIRDPARTY_IMGUI
-    ${THIRDPARTY_IMGUI_BACKENDS}
-)
-
-set(THIRDPARTY
-    ${THIRDPARTY_IMGUI}
-)
-
-list(APPEND TOTAL_FILES ${THIRDPARTY})
-
 set(SHADER_LAYOUT ${HS_RES_SHADER_DIR}/MSL/BuiltInMaterialLayout.h)
 
 source_group("Renderer\\Reference" FILES ${SHADER_LAYOUT})
