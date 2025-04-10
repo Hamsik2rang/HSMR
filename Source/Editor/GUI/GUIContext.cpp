@@ -4,15 +4,13 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Core/FileSystem.h"
 
-#include "ImGui/imgui.h"
-
 #include <string>
 
 HS_NS_EDITOR_BEGIN
 
-GUIContext* s_guiContext = nullptr;
+HS_EDITOR_API GUIContext* s_guiContext = nullptr;
 
-GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
+HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
 
 GUIContext::GUIContext()
 	: _defaultLayoutPath(hs_file_get_resource_path(std::string("imgui.ini")))
