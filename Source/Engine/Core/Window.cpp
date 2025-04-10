@@ -1,4 +1,4 @@
-#include "Engine/Core/Window.h"
+﻿#include "Engine/Core/Window.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/RHI/Swapchain.h"
@@ -62,6 +62,8 @@ uint32 Window::Initialize()
 
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
+
+    return 0;
 }
 
 void Window::NextFrame()

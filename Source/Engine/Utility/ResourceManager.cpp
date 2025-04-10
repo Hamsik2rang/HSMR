@@ -36,6 +36,8 @@ Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolu
         HS_LOG(error, "Fail to load Image!");
         return nullptr;
     }
+
+    return nullptr;
 }
 
 Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
