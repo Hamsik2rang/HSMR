@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // DEAR IMGUI COMPILE-TIME OPTIONS
 // Runtime options (clipboard callbacks, enabling various features, etc.) can generally be set via the ImGuiIO structure.
 // You can use ImGui::SetAllocatorFunctions() before calling ImGui::CreateContext() to rewire memory allocation functions.
@@ -25,7 +25,7 @@
 // - Windows DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
 //   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for more details.
 #ifdef _MSC_VER
-#ifdef HS_EDITOR_API_EXPORT
+#if defined(HS_EDITOR_API_EXPORT)
 #define IMGUI_API __declspec(dllexport)
 #elif defined(HS_EDITOR_API_IMPORT)
 #define IMGUI_API __declspec(dllimport)

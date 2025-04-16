@@ -1,4 +1,4 @@
-//
+﻿//
 //  Panel.h
 //  HSMR
 //
@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Engine/Core/Window.h"
+#include "Editor/GUI/GUIContext.h"
 
 #include <vector>
 
