@@ -1,9 +1,5 @@
 ﻿#include "Editor/Panel/ScenePanel.h"
 
-#include "Editor/GUI/GUIContext.h"
-#include "Editor/GUI/ImGuiExtension.h"
-
-#include "Engine/RHI/RenderHandle.h"
 #include "Engine/RHI/ResourceHandle.h"
 
 
