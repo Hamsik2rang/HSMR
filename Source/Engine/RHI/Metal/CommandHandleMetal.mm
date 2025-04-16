@@ -87,7 +87,7 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
                 curRenderPassDesc.depthAttachment.texture     = static_cast<TextureMetal*>(framebuffer->info.depthStencilBuffer)->handle;
                 curRenderPassDesc.depthAttachment.loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
                 curRenderPassDesc.depthAttachment.storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
-                curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depth);
+                curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depthStencil.depth);
             }
         }
 
