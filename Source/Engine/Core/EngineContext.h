@@ -25,6 +25,7 @@ enum class ERHIPlatform
 {
     NONE  = 0,
     METAL = 1,
+    VULKAN = 2,
     //...
 };
 

@@ -1,4 +1,4 @@
-//
+﻿//
 //  Log.hpp
 //  Engine
 //
@@ -9,9 +9,11 @@
 #define __HS_LOG_H__
 
 #include "Precompile.h"
+#include "Engine/Core/Exception.h"
 
 #include <cstdio>
 #include <cstdarg>
+#include <stdexcept>
 
 HS_NS_BEGIN
 
@@ -54,13 +56,28 @@ namespace LogSymbol
     } while (0)
 
 #ifdef _DEBUG
+
 #define HS_ASSERT(x, fmt, ...) do { const volatile bool b = (x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
 #define HS_CHECK(x, msg) do { const volatile bool b = (x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::CRASH, msg); } } while(0)
+
+#define HS_THROW(fmt, ...) \
+    do { \
+        HS::Log::Print( __FILE__, __LINE__, HS::LogSymbol::crash, fmt, ##__VA_ARGS__); \
+        HS_DEBUG_BREAK(); \
+        throw HS::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+    } while (false)
+
 
 #else
 
 #define HS_ASSERT(x, fmt, ...)
 #define HS_CHECK(x, msg)
+
+#define HS_THROW(fmt, ...) \
+    do { \x
+        HS::Log::Print( __FILE__, __LINE__, HS::LogSymbol::crash, fmt, ##__VA_ARGS__); \
+        throw HS::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+    } while (false)
 
 #endif
 
