@@ -52,6 +52,12 @@ EngineContext* hs_engine_create_context(const std::string& name, ERHIPlatform rh
             s_engineContext->rhiContext = new RHIContextMetal();
         }
         break;
+#else
+        case ERHIPlatform::VULKAN:
+        {
+
+        }
+        break;
 #endif
         default:
             break;

@@ -29,9 +29,12 @@ int main(int, char**)
     usleep(777777);
 #endif
     // TODO: Parse command arguments
-    
-    
-    HS::EngineContext* engineContext = HS::hs_engine_create_context(std::string("HSMR"), HS::ERHIPlatform::METAL);
+#ifdef __APPLE__
+	HS::ERHIPlatform rhiPlatform = HS::ERHIPlatform::METAL;
+#else
+    HS::ERHIPlatform rhiPlatform = HS::ERHIPlatform::VULKAN;
+#endif
+    HS::EngineContext* engineContext = HS::hs_engine_create_context(std::string("HSMR"), rhiPlatform);
 
     HS::Editor::EditorApplication* editorApp = new HS::Editor::EditorApplication(engineContext->name);
     

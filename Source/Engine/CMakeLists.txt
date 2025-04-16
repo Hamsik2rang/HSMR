@@ -1,4 +1,4 @@
-set(TARGET_NAME Engine)
+﻿set(TARGET_NAME Engine)
 
 set(TOTAL_FILES)
 
@@ -10,6 +10,7 @@ set(CORE_HEADERS
     Core/Window.h
     Core/Event.h
     Core/Flag.h
+    Core/Exception.h
 )
 
 source_group("Core\\Public" FILES ${CORE_HEADERS})
@@ -23,6 +24,7 @@ set(CORE_SOURCES
     Core/Window.cpp
     Core/Event.cpp
     Core/Flag.cpp
+    Core/Exception.cpp
 )
 
 source_group("Core\\Private" FILES ${CORE_SOURCES})
@@ -139,8 +141,34 @@ if(APPLE)
 
     source_group("RHI\\Metal\\Private" FILES ${RHI_METAL_SOURCES})
     list(APPEND TOTAL_FILES ${RHI_METAL_SOURCES})
-
 else()
+    set(RHI_VULKAN_HEADERS
+        RHI/Vulkan/RHIContextVulkan.h
+        RHI/Vulkan/RHIDefinitionVulkan.h
+        RHI/Vulkan/RHIUtilityVulkan.h
+        RHI/Vulkan/SwapchainVulkan.h
+        RHI/Vulkan/RenderHandleVulkan.h
+        RHI/Vulkan/CommandHandleVulkan.h
+        RHI/Vulkan/ResourceHandleVulkan.h
+        RHI/Vulkan/RHIDeviceVulkan.h
+    )
+
+    source_group("RHI\\Vulkan\\Public" FILES ${RHI_VULKAN_HEADERS})
+    list(APPEND TOTAL_FILES ${RHI_VULKAN_HEADERS})
+
+    set(RHI_VULKAN_SOURCES
+        RHI/Vulkan/RHIContextVulkan.cpp
+        RHI/Vulkan/RHIDefinitionVulkan.cpp
+        RHI/Vulkan/RHIUtilityVulkan.cpp
+        RHI/Vulkan/SwapchainVulkan.cpp
+        RHI/Vulkan/RenderHandleVulkan.cpp
+        RHI/Vulkan/CommandHandleVulkan.cpp
+        RHI/Vulkan/ResourceHandleVulkan.cpp
+        RHI/Vulkan/RHIDeviceVulkan.cpp
+    )
+
+    source_group("RHI\\Vulkan\\Private" FILES ${RHI_VULKAN_SOURCES})
+    list(APPEND TOTAL_FILES ${RHI_VULKAN_SOURCES})
 endif()
 
 set(RENDERER_HEADERS
