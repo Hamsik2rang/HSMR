@@ -11,8 +11,8 @@
 
 #include "Engine/Core/Window.h"
 
-#include "ImGui/backends/imgui_impl_sdl3.h"
-#include "ImGui/backends/imgui_impl_metal.h"
+#include "ImGui/imgui_impl_sdl3.h"
+#include "ImGui/imgui_impl_metal.h"
 
 using namespace HS;
 
