@@ -1,7 +1,7 @@
-#include "Engine/Core/Log.h"
+﻿#include "Engine/Core/Log.h"
 
 HS_NS_BEGIN
-
+#if defined(__APPLE__)
 static const char* log_color_red = "🔴";
 static const char* log_color_green = "🟢";
 static const char* log_color_yellow = "🟡";
@@ -9,7 +9,16 @@ static const char* log_color_cyan = "🔵";
 static const char* log_color_white = "⚪️";
 static const char* log_color_magenta = "🟣";
 static const char* log_color_reset = "";
+#else
+static const char* log_color_red = "\x1b[31m";
+static const char* log_color_green = "\x1b[32m";
+static const char* log_color_yellow = "\x1b[33m";
+static const char* log_color_cyan = "\x1b[34m";
+static const char* log_color_white = "\x1b[35m";
+static const char* log_color_magenta = "\x1b[36m";
+static const char* log_color_reset = "\x1b[0m";
 
+#endif
 static const char* log_tag_info = "[INFO]";
 static const char* log_tag_debug = "[DEBUG]";
 static const char* log_tag_warning = "[WARNING]";
