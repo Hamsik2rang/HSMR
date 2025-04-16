@@ -1,4 +1,4 @@
-﻿//
+//
 //  Hash.h
 //  Engine
 //
@@ -33,6 +33,23 @@ struct Hasher<uint64>
     static uint32 Get(const uint64& key)
     {
         uint64 hash = key;
+
+        hash = (~hash) + (hash << 18); // key = (key << 18) - key - 1;
+        hash = hash ^ (hash >> 31);
+        hash = hash * 21; // key = (key + (key << 2)) + (key << 4);
+        hash = hash ^ (hash >> 11);
+        hash = hash + (hash << 6);
+        hash = hash ^ (hash >> 22);
+        return static_cast<uint32>(hash);
+    }
+};
+
+template <>
+struct Hasher<unsigned long>
+{
+    static uint32 Get(const unsigned long& key)
+    {
+        unsigned long hash = key;
 
         hash = (~hash) + (hash << 18); // key = (key << 18) - key - 1;
         hash = hash ^ (hash >> 31);
