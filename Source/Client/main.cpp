@@ -23,13 +23,13 @@
 
 int main(int, char**)
 {
+    // TODO: Parse command arguments
+
     // https://developer.apple.com/forums/thread/765445
     // to Prevent macOS bug. => apple is xxx.
 #ifdef __APPLE__
     usleep(777777);
-#endif
-    // TODO: Parse command arguments
-#ifdef __APPLE__
+
 	HS::ERHIPlatform rhiPlatform = HS::ERHIPlatform::METAL;
 #else
     HS::ERHIPlatform rhiPlatform = HS::ERHIPlatform::VULKAN;
