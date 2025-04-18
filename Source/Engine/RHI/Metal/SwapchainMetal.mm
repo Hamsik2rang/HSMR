@@ -16,7 +16,7 @@ HS_NS_BEGIN
 
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
-    , frameIndex(0)
+    , _frameIndex(0)
     , _maxFrameIndex(3)
 {
     NativeWindowHandle* nh = reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle);

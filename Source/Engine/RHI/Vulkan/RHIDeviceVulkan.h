@@ -13,20 +13,21 @@ HS_NS_BEGIN
 class RHIDeviceVulkan final
 {
 public:
-	RHIDeviceVulkan(VkInstance instance);
+	RHIDeviceVulkan() = default;
 	~RHIDeviceVulkan();
 	
+	bool Create(VkInstance instance);
 	void Destroy();
 	
 	struct QueueFamilyIndices
 	{
 		uint32 graphics;
 		uint32 compute;
-		uint32 blit;
+		uint32 transfer;
 	} queueFamilyIndices;
 
-	VkDevice logicalDevice;
-	VkPhysicalDevice physicalDevice;
+	VkDevice logicalDevice = VK_NULL_HANDLE;
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
