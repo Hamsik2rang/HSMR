@@ -5,6 +5,7 @@
 #include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+#include "Engine/RHI/Vulkan/SwapchainVulkan.h"
 
 #include <SDL3/SDL_vulkan.h>
 
@@ -96,7 +97,10 @@ bool RHIContextVulkan::Initialize()
 		return false;
 	}
 
-
+	if (false == _device.Create(_instance))
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -115,6 +119,9 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 {
 	// Create a Vulkan swapchain
+
+	VkSurfaceKHR surface = createSurface(*reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle));
+	new SwapchainVulkan();
 	return nullptr;
 }
 
@@ -356,6 +363,15 @@ bool RHIContextVulkan::createInstance()
 
 		VK_CHECK_RESULT_AND_RETURN(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
 	}
+}
+
+VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindowHandle& windowHandle)
+{
+	SDL_Window* window = static_cast<SDL_Window*>(windowHandle.window);
+	VkSurfaceKHR surface;
+	SDL_Vulkan_CreateSurface(window, _instance, nullptr, &surface);
+
+	return surface;
 }
 
 void RHIContextVulkan::cleanup()

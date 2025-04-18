@@ -88,7 +88,7 @@ public:
 
 private:
 	bool createInstance();
-	bool createDevice();
+	VkSurfaceKHR createSurface(const NativeWindowHandle& windowHandle);
 
 	VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger, const VkAllocationCallbacks* npAllocator);
 	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* npAllocator);
@@ -98,7 +98,6 @@ private:
 	RHIDeviceVulkan _device;
 
 	VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
-
 };
 
 

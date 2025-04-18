@@ -29,23 +29,23 @@ public:
 
     void* nativeHandle;
 
-    uint8          GetMaxFrameIndex() const override { return _maxFrameIndex; }
-    uint8          GetCurrentFrameIndex() const override { return frameIndex; }
-    CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[frameIndex]; }
-    CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
+    HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
+    HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[_frameIndex]; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
         HS_ASSERT(index < _commandBuffers.size(), "Count of commandbuffer is less than index");
         return _commandBuffers[index];
     }
-    RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[frameIndex]; }
+    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[_frameIndex]; }
 
-    uint8 frameIndex;
-
-private:
+    
+    private:
     void setRenderTargets() override;
     void setRenderPass() override;
-
-    uint8 _maxFrameIndex = 3;
+    
+    uint8 _frameIndex;
+    uint8 _maxFrameCount = 3;
 
     std::vector<CommandBuffer*> _commandBuffers;
 };
