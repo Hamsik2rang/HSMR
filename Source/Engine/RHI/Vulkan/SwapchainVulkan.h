@@ -13,15 +13,10 @@ class RHIContext;
 
 class SwapchainVulkan final : public Swapchain
 {
-public:
+	friend class RHIContextVulkan;
+private:
 	SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiContext, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface);
 	~SwapchainVulkan() override;
-
-	uint8 GetMaxFrameCount() const override { return maxFrameCount; }
-	uint8 GetCurrentFrameIndex() const override { return frameIndex; }
-	CommandBuffer* GetCommandBufferForCurrentFrame() const override;
-	CommandBuffer* GetCommandBufferByIndex(uint8 index) const override;
-	RenderTarget GetRenderTargetForCurrentFrame() const override;
 
 	void setRenderTargets() override;
 	void setRenderPass() override;

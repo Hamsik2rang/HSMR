@@ -29,16 +29,16 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
     drawable = [layer nextDrawable];
 
-    _maxFrameIndex = layer.maximumDrawableCount;
+    maxFrameIndex = layer.maximumDrawableCount;
 
-    _commandBuffers.resize(_maxFrameIndex);
-    _renderTargets.resize(_maxFrameIndex);
+    commandBuffers.resize(_maxFrameIndex);
+    renderTargets.resize(_maxFrameIndex);
 
     RHIContext* rhiContext = hs_engine_get_rhi_context();
 
     for (uint8 i = 0; i < _maxFrameIndex; i++)
     {
-        _commandBuffers[i] = rhiContext->CreateCommandBuffer();
+        commandBuffers[i] = rhiContext->CreateCommandBuffer();
     }
 
     setRenderTargets();
@@ -47,7 +47,7 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
 SwapchainMetal::~SwapchainMetal()
 {
-    for (auto& cmdBuffer : _commandBuffers)
+    for (auto& cmdBuffer : commandBuffers)
     {
         if (nullptr == cmdBuffer)
         {
@@ -55,7 +55,7 @@ SwapchainMetal::~SwapchainMetal()
             cmdBuffer = nullptr;
         }
     }
-    _commandBuffers.clear();
+    commandBuffers.clear();
 }
 
 void SwapchainMetal::setRenderTargets()
