@@ -1,12 +1,13 @@
-﻿#include "Engine/Utility/ResourceManager.h"
+#include "Engine/Utility/ResourceManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define TINYGLTF_NO_STB_IMAGE_WRITE // 필요한 경우
-#define TINYGLTF_NO_STB_IMAGE       // 중요! - tinygltf가 내부 stb_image를 사용하지 않도록 설정
-#include "tiny_gltf.h"
+//#define TINYGLTF_IMPLEMENTATION
+//#define TINYGLTF_NO_STB_IMAGE_WRITE // 필요한 경우
+//#define TINYGLTF_NO_STB_IMAGE       // 중요! - tinygltf가 내부 stb_image를 사용하지 않도록 설정
+//#include "tiny_gltf.h"
+#include ""
 
 #include "Engine/Core/Log.h"
 
@@ -42,6 +43,9 @@ Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolu
 
 Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
+    
+    
+    
     return nullptr;
 }
 
