@@ -23,7 +23,7 @@ ForwardOpaquePass::~ForwardOpaquePass()
 
 void ForwardOpaquePass::OnBeforeRendering(uint32_t frameIndex)
 {
-    _frameIndex = frameIndex;
+    frameIndex = frameIndex;
 }
 
 void ForwardOpaquePass::Configure(RenderTarget* renderTarget)

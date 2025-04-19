@@ -69,6 +69,12 @@ else()
     set(SDL3 ${HS_DEPS_DLL_DIR}/SDL3.lib)
 endif()
 
+if(APPLE)
+    set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.5.4.3.dylib)
+else() # TODO
+    set(ASSIMP)
+endif()
+
 if(WIN32)
     set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
     set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)

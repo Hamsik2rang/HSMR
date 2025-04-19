@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIContext.h
 //  Engine
 //
@@ -68,8 +68,8 @@ public:
     //    virtual CommandQueue* CreateCommandQueue() =0;
     //    virtual void DestroyCommandQueue(CommandQueue* cmdQueue) = 0;
 
-    virtual CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0)   = 0;
-    virtual void         DestroyCommandPool(CommandPool* cmdPool) = 0;
+    virtual CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) = 0;
+    virtual void         DestroyCommandPool(CommandPool* cmdPool)       = 0;
 
     virtual CommandBuffer* CreateCommandBuffer()                          = 0;
     virtual void           DestroyCommandBuffer(CommandBuffer* cmdBuffer) = 0;

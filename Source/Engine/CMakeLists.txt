@@ -287,7 +287,7 @@ if(APPLE)
     add_dependencies(${TARGET_NAME} Shader) # TODO: HLSL 도입시 윈도우에도 추가할 것!
     target_link_libraries(${TARGET_NAME}
         PUBLIC
-        ${SDL3}
+        ${SDL3} ${ASSIMP}
         PRIVATE
         "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
     )
