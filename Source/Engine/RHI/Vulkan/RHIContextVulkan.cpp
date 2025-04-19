@@ -7,6 +7,8 @@
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
 #include "Engine/RHI/Vulkan/SwapchainVulkan.h"
 
+#include "Engine/Core/Window.h"
+
 #include <SDL3/SDL_vulkan.h>
 
 
@@ -118,11 +120,10 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 
 Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 {
-	// Create a Vulkan swapchain
-
 	VkSurfaceKHR surface = createSurface(*reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle));
-	new SwapchainVulkan();
-	return nullptr;
+	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, &_device, surface);
+
+	return static_cast<Swapchain*>(swapchainVK);
 }
 
 void RHIContextVulkan::DestroySwapchain(Swapchain* swapchain)
@@ -242,9 +243,16 @@ void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
 	// Destroy the Vulkan resource set
 }
 
-CommandPool* RHIContextVulkan::CreateCommandPool()
+CommandPool* RHIContextVulkan::CreateCommandPool(uint32 queueFamilyIndex)
 {
 	// Create a Vulkan command pool
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.pNext = nullptr;
+	poolInfo.flags = 0;
+	poolInfo.queueFamilyIndex = queueFamilyIndex;
+
+	VkCommandPool commandPool;
 	return nullptr;
 }
 
@@ -256,12 +264,26 @@ void RHIContextVulkan::DestroyCommandPool(CommandPool* commandPool)
 CommandBuffer* RHIContextVulkan::CreateCommandBuffer()
 {
 	// Create a Vulkan command buffer
-	return nullptr;
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = _defaultCommandPool;
+	allocInfo.commandBufferCount = 1;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+	VkCommandBuffer vkCommandBuffer;
+	vkAllocateCommandBuffers(_device, nullptr, &vkCommandBuffer);
+
+	CommandBufferVulkan* commandBuffer = new CommandBufferVulkan();
+	commandBuffer->commandBufferVK = vkCommandBuffer;
+
+	return static_cast<CommandBuffer*>(commandBuffer);
 }
 
 void RHIContextVulkan::DestroyCommandBuffer(CommandBuffer* commandBuffer)
 {
 	// Destroy the Vulkan command buffer
+	CommandBufferVulkan* commandBufferVK = static_cast<CommandBufferVulkan*>(commandBuffer);
+	delete commandBuffer;
 }
 
 

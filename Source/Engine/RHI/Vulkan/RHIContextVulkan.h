@@ -68,7 +68,7 @@ public:
 	// CommandQueue* CreateCommandQueue() override;
 	// void DestroyCommandQueue(CommandQueue* cmdQueue) override;
 
-	CommandPool* CreateCommandPool() override;
+	CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) override;
 	void         DestroyCommandPool(CommandPool* cmdPool) override;
 
 	CommandBuffer* CreateCommandBuffer() override;
@@ -96,6 +96,7 @@ private:
 
 	VkInstance _instance = VK_NULL_HANDLE;
 	RHIDeviceVulkan _device;
+	VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
 
 	VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
 };
