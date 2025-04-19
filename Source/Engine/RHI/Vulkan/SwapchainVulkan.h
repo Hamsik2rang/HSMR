@@ -8,34 +8,34 @@
 
 HS_NS_BEGIN
 
-class RHIDeviceVulkan;
 class CommandBufferVulkan;
+class RHIContext;
 
 class SwapchainVulkan final : public Swapchain
 {
 public:
-	SwapchainVulkan(const SwapchainInfo& info, RHIDeviceVulkan* pDeviceVulkan, VkSurfaceKHR surface);
+	SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiContext, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface);
 	~SwapchainVulkan() override;
 
-	uint8 GetMaxFrameCount() const override { return _maxFrameCount; }
-	uint8 GetCurrentFrameIndex() const override { return _frameIndex; }
+	uint8 GetMaxFrameCount() const override { return maxFrameCount; }
+	uint8 GetCurrentFrameIndex() const override { return frameIndex; }
 	CommandBuffer* GetCommandBufferForCurrentFrame() const override;
 	CommandBuffer* GetCommandBufferByIndex(uint8 index) const override;
 	RenderTarget GetRenderTargetForCurrentFrame() const override;
 
-private:
 	void setRenderTargets() override;
 	void setRenderPass() override;
 
-	VkSurfaceKHR _surface;
-	VkSurfaceCapabilitiesKHR _surfaceCapabilities;
+	VkSurfaceKHR surface;
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 
-	RHIDeviceVulkan* _pDeviceVulkan;
-	VkSwapchainKHR _swapchain = VK_NULL_HANDLE;
-	uint8 _frameIndex = 0;
-	uint8 _maxFrameCount = 3;
+	RHIContext* rhiContext;
+	RHIDeviceVulkan& deviceVulkan;
+	VkSwapchainKHR vkSwapchain = VK_NULL_HANDLE;
+	uint8 frameIndex = 0;
+	uint8 maxFrameCount = 3;
 
-	CommandBufferVulkan* _commandBuffers;
+	CommandBufferVulkan** commandBufferVKs;
 };
 
 HS_NS_END
