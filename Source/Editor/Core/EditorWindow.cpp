@@ -1,4 +1,4 @@
-﻿#include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
 #include "Engine/RHI/Swapchain.h"
@@ -38,7 +38,7 @@ bool EditorWindow::onInitialize()
 
     _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
 
-    _renderTargets.resize(_swapchain->GetMaxFrameIndex());
+    _renderTargets.resize(_swapchain->GetMaxFrameCount());
     
     uint32 width  = _swapchain->GetWidth();
     uint32 height = _swapchain->GetHeight();

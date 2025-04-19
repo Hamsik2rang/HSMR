@@ -36,8 +36,8 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
     {
         SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
 
-        const uint32 maxFrameIndex = swMetal->GetMaxFrameIndex();
-        swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameIndex;
+        const uint32 maxFrameCount = swMetal->maxFrameCount;
+        swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameCount;
 
         swMetal->layer.drawableSize = CGSizeMake(swapchain->GetWidth(), swapchain->GetHeight());
 
@@ -440,7 +440,7 @@ void RHIContextMetal::DestroyResourceSetPool(ResourceSetPool* resSetPool)
     delete resSetPoolMetal;
 }
 
-CommandPool* RHIContextMetal::CreateCommandPool()
+CommandPool* RHIContextMetal::CreateCommandPool(uint32 queueFamilyIndices)
 {
     CommandPoolMetal* cmdPoolMetal = new CommandPoolMetal();
 

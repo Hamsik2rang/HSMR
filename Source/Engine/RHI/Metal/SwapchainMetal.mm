@@ -16,8 +16,8 @@ HS_NS_BEGIN
 
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
-    , _frameIndex(0)
-    , _maxFrameIndex(3)
+    , frameIndex(0)
+    , maxFrameCount(3)
 {
     NativeWindowHandle* nh = reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle);
 
@@ -29,16 +29,16 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
     drawable = [layer nextDrawable];
 
-    maxFrameIndex = layer.maximumDrawableCount;
+    maxFrameCount = layer.maximumDrawableCount;
 
-    commandBuffers.resize(_maxFrameIndex);
-    renderTargets.resize(_maxFrameIndex);
+    commandBufferMTLs = new CommandBuffer*[maxFrameCount];
+    _renderTargets.resize(maxFrameCount);
 
     RHIContext* rhiContext = hs_engine_get_rhi_context();
 
-    for (uint8 i = 0; i < _maxFrameIndex; i++)
+    for (uint8 i = 0; i < maxFrameCount; i++)
     {
-        commandBuffers[i] = rhiContext->CreateCommandBuffer();
+        commandBufferMTLs[i] = rhiContext->CreateCommandBuffer();
     }
 
     setRenderTargets();
@@ -47,15 +47,16 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
 SwapchainMetal::~SwapchainMetal()
 {
-    for (auto& cmdBuffer : commandBuffers)
+    for (uint8 i = 0; i < maxFrameCount; i++)
     {
+        auto* cmdBuffer = commandBufferMTLs[i];
         if (nullptr == cmdBuffer)
         {
             delete cmdBuffer;
             cmdBuffer = nullptr;
         }
     }
-    commandBuffers.clear();
+    delete[] commandBufferMTLs;
 }
 
 void SwapchainMetal::setRenderTargets()

@@ -20,7 +20,7 @@ class CommandBuffer;
 class SwapchainMetal : public Swapchain
 {
     friend class RHIContextMetal;
-private:
+public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
 
@@ -33,10 +33,23 @@ private:
     void*               view;
     void* nativeHandle;
 
+    HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return maxFrameCount; }
+    HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return frameIndex; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return commandBufferMTLs[frameIndex]; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
+    {
+        HS_ASSERT(index < maxFrameCount, "Count of commandbuffer is less than index");
+        return commandBufferMTLs[index];
+    }
+    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[frameIndex]; }
+    
     uint8 frameIndex;
     uint8 maxFrameCount = 3;
 
-    CommandBufferMetal** commandBuffers;
+    void setRenderTargets() override;
+    void setRenderPass() override;
+
+    CommandBuffer** commandBufferMTLs;
 };
 
 HS_NS_END
