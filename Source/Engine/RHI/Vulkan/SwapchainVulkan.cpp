@@ -73,12 +73,45 @@ RenderTarget SwapchainVulkan::GetRenderTargetForCurrentFrame() const
 
 void SwapchainVulkan::setRenderTargets()
 {
-	// Set render targets for the swapchain
+    RenderTargetInfo info{};
+    info.isSwapchainTarget      = true;
+    info.colorTextureCount      = 1;
+    info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
+
+    TextureInfo colorTextureInfo{};
+    colorTextureInfo.extent.width         = _info.width;
+    colorTextureInfo.extent.height        = _info.height;
+    colorTextureInfo.extent.depth         = 1;
+    colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
+    colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;
+    colorTextureInfo.arrayLength          = 1;
+    colorTextureInfo.mipLevel             = 1;
+    colorTextureInfo.isCompressed         = false;
+    colorTextureInfo.useGenerateMipmap    = false;
+    colorTextureInfo.isDepthStencilBuffer = false;
+    colorTextureInfo.type                 = ETextureType::TEX_2D;
+
+    info.colorTextureInfos.emplace_back(colorTextureInfo);
+
+    for (auto& renderTarget : _renderTargets)
+    {
+        renderTarget.Create(info);
+    }
 }
 
 void SwapchainVulkan::setRenderPass()
 {
-	// Set render pass for the swapchain
+    RenderPassInfo info{};
+    info.isSwapchainRenderPass = true;
+    info.colorAttachmentCount  = 1;
+    Attachment colorAttachment{};
+    colorAttachment.format         = EPixelFormat::B8G8A8R8_UNORM;
+    colorAttachment.clearValue     = ClearValue(0.5, 0.5, 0.5, 1.0);
+    colorAttachment.loadAction     = ELoadAction::CLEAR;
+    colorAttachment.storeAction    = EStoreAction::STORE;
+    colorAttachment.isDepthStencil = false;
+
+    _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
 }
 
 HS_NS_END
