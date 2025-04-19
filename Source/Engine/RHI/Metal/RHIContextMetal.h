@@ -64,7 +64,7 @@ public:
     //     CommandQueue* CreateCommandQueue() override;
     //     void DestroyCommandQueue(CommandQueue* cmdQueue) override;
 
-    CommandPool* CreateCommandPool() override;
+    CommandPool* CreateCommandPool(uint32 queuePamilyIndex) override;
     void         DestroyCommandPool(CommandPool* cmdPool) override;
 
     CommandBuffer* CreateCommandBuffer() override;

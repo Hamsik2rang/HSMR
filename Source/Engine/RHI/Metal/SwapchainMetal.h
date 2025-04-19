@@ -19,6 +19,7 @@ class CommandBuffer;
 
 class SwapchainMetal : public Swapchain
 {
+    friend class RHIContextMetal;
 public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
@@ -29,25 +30,23 @@ public:
 
     void* nativeHandle;
 
-    HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
-    HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
-    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[_frameIndex]; }
+    HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return maxFrameCount; }
+    HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return frameIndex; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return commandBufferMTLs[frameIndex]; }
     HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
-        HS_ASSERT(index < _commandBuffers.size(), "Count of commandbuffer is less than index");
-        return _commandBuffers[index];
+        HS_ASSERT(index < maxFrameCount, "Count of commandbuffer is less than index");
+        return commandBufferMTLs[index];
     }
-    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[_frameIndex]; }
-
+    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[frameIndex]; }
     
-    private:
+    uint8 frameIndex;
+    uint8 maxFrameCount = 3;
+
     void setRenderTargets() override;
     void setRenderPass() override;
-    
-    uint8 _frameIndex;
-    uint8 _maxFrameCount = 3;
 
-    std::vector<CommandBuffer*> _commandBuffers;
+    CommandBuffer** commandBufferMTLs;
 };
 
 HS_NS_END
