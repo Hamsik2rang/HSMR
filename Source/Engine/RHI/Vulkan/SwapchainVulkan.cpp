@@ -45,6 +45,9 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	{
 		commandBufferVKs[i] = static_cast<CommandBufferVulkan*>(rhiContext->CreateCommandBuffer());
 	}
+
+	setRenderTargets();
+	setRenderPass();
 }
 
 SwapchainVulkan::~SwapchainVulkan()
@@ -56,24 +59,17 @@ SwapchainVulkan::~SwapchainVulkan()
 	}
 }
 
-CommandBuffer* SwapchainVulkan::GetCommandBufferForCurrentFrame() const
-{
-	return nullptr;
-}
-
-CommandBuffer* SwapchainVulkan::GetCommandBufferByIndex(uint8 index) const
-{
-	return nullptr;
-}
-
-RenderTarget SwapchainVulkan::GetRenderTargetForCurrentFrame() const
-{
-	return RenderTarget();
-}
-
 void SwapchainVulkan::setRenderTargets()
 {
 	// Set render targets for the swapchain
+	for (uint8 i = 0; i < maxFrameCount; i++)
+	{
+		RenderTargetInfo rtInfo{};
+		rtInfo.colorTextureCount = 1;
+		rtInfo.isSwapchainTarget = true;
+		
+		_renderTargets.push_back(RenderTarget());
+	}
 }
 
 void SwapchainVulkan::setRenderPass()
