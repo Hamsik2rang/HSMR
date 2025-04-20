@@ -1,2 +1,2 @@
 # HSMR
-HS Metal Renderer - Lightweight renderer what supports Metal API on MacOS.
+HS Mini Renderer - Lightweight renderer what supports Metal and Vulkan API on Cross-platform.
