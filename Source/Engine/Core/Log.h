@@ -57,8 +57,8 @@ namespace LogSymbol
 
 #ifdef _DEBUG
 
-#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = (x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
-#define HS_CHECK(x, msg) do { const volatile bool b = (x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::CRASH, msg); } } while(0)
+#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = !!(x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
+#define HS_CHECK(x, msg) do { const volatile bool b = !!(x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::CRASH, msg); } } while(0)
 
 #define HS_THROW(fmt, ...) \
     do { \

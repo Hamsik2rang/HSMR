@@ -1,11 +1,15 @@
 ﻿//
 //  Precompile.h
-//  MetalSamples
+//  HSMR
 //
 //  Created by Yongsik Im on 2/2/25.
 //
 #ifndef __HS_PRECOMPILE_H__
 #define __HS_PRECOMPILE_H__
+
+#ifdef _WIN32
+#pragma warning(disable: 4819)
+#endif 
 
 #include <stdint.h>
 
@@ -97,14 +101,13 @@ typedef uint64_t uint64;
 namespace HS
 {
     template<typename Tp>
-    using Scope = std::unique_ptr<Tp>;
+    using Scoped = std::unique_ptr<Tp>;
 
     template <typename Tp, typename ...Args>
-    constexpr Scope<Tp> CreateScope(Args&& ... args)
+    constexpr Scoped<Tp> MakeScoped(Args&& ... args)
     {
         return std::make_unique<Tp>(std::forward<Args>(args)...);
     }
-
 }
 
 #endif
