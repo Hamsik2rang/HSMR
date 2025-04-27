@@ -2,27 +2,77 @@
 
 #include "Engine/RHI/Vulkan/RHIContextVulkan.h"
 #include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
-#include "Engine/Core/EngineContext.h"
+
+#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 
 HS_NS_BEGIN
 
-SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiContext, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface)
+SwapchainVulkan::SwapchainVulkan(SwapchainInfo& info, RHIContext* rhiContext, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface)
 	: Swapchain(info)
 	, deviceVulkan(deviceVulkan)
-	, vkSwapchain(VK_NULL_HANDLE)
+	, handle(VK_NULL_HANDLE)
 	, surface(surface)
 	, frameIndex(0)
 	, maxFrameCount(3)
 {
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(deviceVulkan.physicalDevice, surface, &surfaceCapabilities);
-
 	VkSwapchainCreateInfoKHR createInfo{};
+
+	VkExtent2D extent{};
+	if (surfaceCapabilities.currentExtent.width != (HS_UINT32_MAX)-1)
+	{
+		_info.width = surfaceCapabilities.currentExtent.width;
+		_info.height = surfaceCapabilities.currentExtent.height;
+	}
+		extent.height = _info.height;
+		extent.width = _info.width;
+
+	uint32 presentModeCount = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(deviceVulkan.physicalDevice, surface, &presentModeCount, nullptr);
+	HS_ASSERT(presentModeCount > 0, "This surface doesn't have any present mode.");
+	std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(deviceVulkan.physicalDevice, surface, &presentModeCount, presentModes.data());
+
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	{
+		for (size_t i = 0; i < presentModeCount; i++)
+		{
+			if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
+			{
+				presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				break;
+			}
+			if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
+			{
+				presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+			}
+		}
+	}
+
+	uint32 desiredNumOfSwapchainImages = surfaceCapabilities.minImageCount + 1;
+	if ((surfaceCapabilities.maxImageCount > 0) && (desiredNumOfSwapchainImages > surfaceCapabilities.maxImageCount))
+	{
+		desiredNumOfSwapchainImages = surfaceCapabilities.maxImageCount;
+	}
+
+	// Find the transformation of the surface
+	VkSurfaceTransformFlagsKHR preTransform;
+	if (surfaceCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR)
+	{
+		// We prefer a non-rotated transform
+		preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	}
+	else
+	{
+		preTransform = surfaceCapabilities.currentTransform;
+	}
+
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	createInfo.flags = 0;
 	createInfo.surface = surface;
-	createInfo.minImageCount = surfaceCapabilities.minImageCount;
-	createInfo.imageExtent.width = surfaceCapabilities.currentExtent.width;
-	createInfo.imageExtent.height = surfaceCapabilities.currentExtent.height;
+	createInfo.minImageCount = desiredNumOfSwapchainImages;
+	createInfo.imageExtent.width = extent.width;
+	createInfo.imageExtent.height = extent.height;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 	createInfo.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
@@ -30,14 +80,14 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	createInfo.queueFamilyIndexCount = 0;
 	createInfo.pQueueFamilyIndices = nullptr;
-	createInfo.preTransform = surfaceCapabilities.currentTransform;
+	createInfo.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(preTransform);
 	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = VK_NULL_HANDLE;
+	createInfo.oldSwapchain = handle;
 	createInfo.pNext = nullptr;
 	
-	vkCreateSwapchainKHR(deviceVulkan, &createInfo, nullptr, &vkSwapchain);
+	vkCreateSwapchainKHR(deviceVulkan, &createInfo, nullptr, &handle);
 
 	maxFrameCount = surfaceCapabilities.minImageCount;
 	commandBufferVKs = new CommandBufferVulkan*[maxFrameCount];
@@ -46,23 +96,64 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 		commandBufferVKs[i] = static_cast<CommandBufferVulkan*>(rhiContext->CreateCommandBuffer());
 	}
 
+	if (handle)
+	{
+		for (int i = 0; i < maxFrameCount ; i++)
+		{
+			_renderPass[i].Release();
+		}
+	}
+
 	setRenderTargets();
 	setRenderPass();
 }
 
 SwapchainVulkan::~SwapchainVulkan()
 {
-	if (vkSwapchain != VK_NULL_HANDLE)
+	if (handle != VK_NULL_HANDLE)
 	{
-		vkDestroySwapchainKHR(deviceVulkan, vkSwapchain, nullptr);
-		vkSwapchain = VK_NULL_HANDLE;
+		vkDestroySwapchainKHR(deviceVulkan, handle, nullptr);
+		handle = VK_NULL_HANDLE;
 	}
 }
 
 void SwapchainVulkan::setRenderTargets()
 {
+	uint32 swapchainImageCount = 0;
+	vkGetSwapchainImagesKHR(deviceVulkan, handle, &swapchainImageCount, nullptr);
+	HS_ASSERT(static_cast<uint32>(maxFrameCount) == swapchainImageCount, "Swapchain image count is not same with max frame count.");
+
+	vkImages.resize(swapchainImageCount);
+	vkGetSwapchainImagesKHR(deviceVulkan, handle, &swapchainImageCount, vkImages.data());
+
+	vkImageViews.resize(vkImages.size());
+	_renderTargets.resize(vkImages.size());
+	for (int i = 0; i < vkImages.size(); i++)
+	{
+		VkImageViewCreateInfo colorAttachmentView = {};
+		colorAttachmentView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		colorAttachmentView.pNext = NULL;
+		colorAttachmentView.format = VK_FORMAT_B8G8R8A8_UNORM;
+		colorAttachmentView.components = {
+			VK_COMPONENT_SWIZZLE_R,
+			VK_COMPONENT_SWIZZLE_G,
+			VK_COMPONENT_SWIZZLE_B,
+			VK_COMPONENT_SWIZZLE_A
+		};
+		colorAttachmentView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		colorAttachmentView.subresourceRange.baseMipLevel = 0;
+		colorAttachmentView.subresourceRange.levelCount = 1;
+		colorAttachmentView.subresourceRange.baseArrayLayer = 0;
+		colorAttachmentView.subresourceRange.layerCount = 1;
+		colorAttachmentView.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		colorAttachmentView.flags = 0;
+		colorAttachmentView.image = vkImages[i];
+		VK_CHECK_RESULT(vkCreateImageView(deviceVulkan, &colorAttachmentView, nullptr, &vkImageViews[i]));
+	}
+
     RenderTargetInfo info{};
     info.isSwapchainTarget      = true;
+	info.swapchain				= this;
     info.colorTextureCount      = 1;
     info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
@@ -89,17 +180,17 @@ void SwapchainVulkan::setRenderTargets()
 
 void SwapchainVulkan::setRenderPass()
 {
-    RenderPassInfo info{};
-    info.isSwapchainRenderPass = true;
-    info.colorAttachmentCount  = 1;
-    Attachment colorAttachment{};
-    colorAttachment.format         = EPixelFormat::B8G8A8R8_UNORM;
-    colorAttachment.clearValue     = ClearValue(0.5, 0.5, 0.5, 1.0);
-    colorAttachment.loadAction     = ELoadAction::CLEAR;
-    colorAttachment.storeAction    = EStoreAction::STORE;
-    colorAttachment.isDepthStencil = false;
+    //RenderPassInfo info{};
+    //info.isSwapchainRenderPass = true;
+    //info.colorAttachmentCount  = 1;
+    //Attachment colorAttachment{};
+    //colorAttachment.format         = EPixelFormat::B8G8A8R8_UNORM;
+    //colorAttachment.clearValue     = ClearValue(0.5, 0.5, 0.5, 1.0);
+    //colorAttachment.loadAction     = ELoadAction::CLEAR;
+    //colorAttachment.storeAction    = EStoreAction::STORE;
+    //colorAttachment.isDepthStencil = false;
 
-    _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+    //_renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
 }
 
 HS_NS_END

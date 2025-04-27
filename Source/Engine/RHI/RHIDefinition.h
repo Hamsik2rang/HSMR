@@ -17,6 +17,8 @@
 
 HS_NS_BEGIN
 
+class Swapchain;
+
 class RHIHandle
 {
 public:
@@ -178,6 +180,7 @@ struct TextureInfo
 
 	bool isCompressed = false;
 	bool isSwapchainTexture = false;
+	Swapchain* swapchain = nullptr;
 	bool isDepthStencilBuffer = false;
 	bool useGenerateMipmap = false;
 };
@@ -301,6 +304,14 @@ struct ClearValue
 			float stencil;
 		}depthStencil;
 	};
+};
+
+struct Area
+{
+	uint32 x;
+	uint32 y;
+	uint32 width;
+	uint32 height;
 };
 
 struct Attachment
@@ -744,6 +755,32 @@ struct Hasher<TextureInfo>
 		hash = HashCombine(hash, key.isCompressed, key.isSwapchainTexture);
 		hash = HashCombine(hash, key.isDepthStencilBuffer, key.useGenerateMipmap);
 
+		return hash;
+	}
+};
+
+template <>
+struct Hasher<SamplerInfo>
+{
+	static uint32 Get(const SamplerInfo& key)
+	{
+		uint32 hash = 0;
+		hash = HashCombine(static_cast<uint32>(key.type), static_cast<uint32>(key.minFilter), static_cast<uint32>(key.magFilter));
+		hash = HashCombine(hash, static_cast<uint32>(key.mipFilter), static_cast<uint32>(key.addressU));
+		hash = HashCombine(hash, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
+		hash = HashCombine(hash, key.isPixelCoordinate);
+
+		return hash;
+	}
+};
+
+template <>
+struct Hasher<BufferInfo>
+{
+	static uint32 Get(const BufferInfo& key)
+	{
+		uint32 hash = 0;
+		hash = HashCombine(static_cast<uint32>(key.usage), static_cast<uint32>(key.memoryOption));
 		return hash;
 	}
 };

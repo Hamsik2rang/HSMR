@@ -1,18 +1,57 @@
-﻿#ifndef __HS_COMMAND_HANDLE_VULKAN_H__
+﻿//
+//  CommandHandleVulkan.h
+//  Engine
+//
+//  Created by Yongsik Im on 4/27/25.
+//
+#ifndef __HS_COMMAND_HANDLE_VULKAN_H__
 #define __HS_COMMAND_HANDLE_VULKAN_H__
-
 
 #include "Precompile.h"
 
 #include "Engine/RHI/CommandHandle.h"
 #include "Engine/RHI/ResourceHandle.h"
 
+#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
 
 HS_NS_BEGIN
 
-class CommandBufferVulkan : public CommandBuffer
+struct SemaphoreVulkan : public Semaphore
 {
-public:
+	SemaphoreVulkan(RHIDeviceVulkan device);
+	~SemaphoreVulkan() override;
+
+	VkSemaphore handle;
+	RHIDeviceVulkan& deviceVulkan;
+};
+
+struct FenceVulkan : public Fence
+{
+	FenceVulkan(RHIDeviceVulkan device);
+	~FenceVulkan() override;
+
+	VkFence handle;
+	RHIDeviceVulkan& deviceVulkan;
+};
+
+struct CommandQueueVulkan : public CommandQueue
+{
+	CommandQueueVulkan();
+	~CommandQueueVulkan() override;
+
+	uint32 queueIndex;
+};
+
+struct CommandPoolVulkan : public CommandPool
+{
+	CommandPoolVulkan(RHIDeviceVulkan device);
+	~CommandPoolVulkan() override;
+
+	VkCommandPool handle;
+};
+
+struct CommandBufferVulkan : public CommandBuffer
+{
 	CommandBufferVulkan();
 	~CommandBufferVulkan() override;
 	void Begin() override;
@@ -38,8 +77,9 @@ public:
 	void PushDebugMark(const char* label, float color[4]);
 	void PopDebugMark();
 
-	VkCommandBuffer commandBufferVK = VK_NULL_HANDLE;
+	VkCommandBuffer handle = VK_NULL_HANDLE;
 };
+
 HS_NS_END
 
 #endif

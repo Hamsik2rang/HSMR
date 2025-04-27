@@ -36,7 +36,7 @@ protected:
     Framebuffer(const FramebufferInfo& info);
 };
 
-struct GraphicsPipeline : public RHIHandle
+class GraphicsPipeline : public RHIHandle
 {
 public:
     ~GraphicsPipeline() override;
@@ -44,6 +44,16 @@ public:
     const GraphicsPipelineInfo info;
 protected:
     GraphicsPipeline(const GraphicsPipelineInfo& info);
+};
+
+class ComputePipeline : public RHIHandle
+{
+public:
+    ~ComputePipeline() override;
+
+	const ComputePipelineInfo info;
+protected:
+    ComputePipeline(const ComputePipelineInfo& info);
 };
 
 template<>
