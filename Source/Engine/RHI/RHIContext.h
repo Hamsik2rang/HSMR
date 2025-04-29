@@ -1,4 +1,4 @@
-//
+﻿//
 //  RHIContext.h
 //  Engine
 //
@@ -26,6 +26,9 @@ public:
 
     virtual bool Initialize() = 0;
     virtual void Finalize()   = 0;
+
+    virtual void Suspend(Swapchain* swapchain) = 0;
+    virtual void Restore(Swapchain* swapchain) = 0;
 
     virtual uint32 AcquireNextImage(Swapchain* swapchain) = 0;
 

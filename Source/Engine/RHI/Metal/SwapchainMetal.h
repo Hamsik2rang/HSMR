@@ -24,10 +24,13 @@ public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
 
+    void setRenderTargets() override;
+    void setRenderPass() override;
+    
+
     CAMetalLayer*       layer;
     id<CAMetalDrawable> drawable;
     void*               view;
-
     void* nativeHandle;
 
     HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return maxFrameCount; }
