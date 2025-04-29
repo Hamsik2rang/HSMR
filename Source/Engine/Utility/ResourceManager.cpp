@@ -3,15 +3,22 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-//#define TINYGLTF_IMPLEMENTATION
-//#define TINYGLTF_NO_STB_IMAGE_WRITE // 필요한 경우
-//#define TINYGLTF_NO_STB_IMAGE       // 중요! - tinygltf가 내부 stb_image를 사용하지 않도록 설정
-//#include "tiny_gltf.h"
-#include ""
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "Engine/Core/Log.h"
 
 HS_NS_BEGIN
+
+static hs_mesh_process_node(aiNode* pNode, const aiScene* pScene, Model& model)
+{
+    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    {
+        aiMesh* pMesh = scene->mMeshes[pNode->mMeshes[i]];
+        model.meshes.push_back(processMesh(pMesh, pScene));
+    }
+}
 
 Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
 {
@@ -37,15 +44,21 @@ Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolu
         HS_LOG(error, "Fail to load Image!");
         return nullptr;
     }
+    
+    Image* pImagee = new Image(rawData, width, height, channel);
 
-    return nullptr;
+    return pImagee;
 }
 
 Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
-    
-    
-    
+    Assimp::Importer importer;
+    const aiScene*   scene = importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenNormals | aiProcess_ConvertToLeftHanded);
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        HS_LOG(error, "ResourceManager cannot import mesh (%s)", path.c_str());
+    }
+
     return nullptr;
 }
 
