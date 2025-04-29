@@ -1,4 +1,4 @@
-//
+﻿//
 //  Swapchian.h
 //  Engine
 //
@@ -29,11 +29,11 @@ public:
     //    HS_FORCEINLINE const std::vector<CommandBuffer*>& GetSubmittedCmdBuffers() const {return _submittedCmdBuffers;}
     //    HS_FORCEINLINE void ClearSubmittedCmdBuffers() { _submittedCmdBuffers.clear();}
 
-    virtual uint8          GetMaxFrameCount() const                   = 0;
-    virtual uint8          GetCurrentFrameIndex() const               = 0;
-    virtual CommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
+    virtual uint8          GetMaxFrameIndex() const = 0;
+    virtual uint8          GetCurrentFrameIndex() const = 0;
+    virtual CommandBuffer* GetCommandBufferForCurrentFrame() const = 0;
     virtual CommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
-    virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
+    virtual RenderTarget   GetRenderTargetForCurrentFrame() const = 0;
 
     HS_FORCEINLINE uint32 GetWidth() { return _info.width; }
     HS_FORCEINLINE uint32 GetHeight() { return _info.height; }

@@ -1,4 +1,4 @@
-#ifndef __HS_FORWARD_RENDERER_H__
+﻿#ifndef __HS_FORWARD_RENDERER_H__
 #define __HS_FORWARD_RENDERER_H__
 
 #include "Precompile.h"
@@ -15,10 +15,9 @@ public:
     
     //...
     
-    RenderTargetInfo GetBareboneRenderTargetInfo() override { return s_bareboneRenderTargetInfo; }
+    RenderTargetInfo GetBareboneRenderTargetInfo() override;
 
 private:
-    const static RenderTargetInfo s_bareboneRenderTargetInfo;
 };
 
 HS_NS_END

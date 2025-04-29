@@ -1,4 +1,4 @@
-//
+﻿//
 //  RenderDefinition.h
 //  Engine
 //
@@ -26,6 +26,7 @@ struct RenderTargetInfo
     //    TexutureInfo resolveStencilInfo; //TODO
 
     bool isSwapchainTarget = false;
+    Swapchain* swapchain;
 };
 
 enum class ERenderGroup : uint16
