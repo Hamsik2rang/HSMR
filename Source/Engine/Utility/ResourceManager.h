@@ -1,4 +1,4 @@
-﻿//
+//
 //  ResourceManager.h
 //  Engine
 //
