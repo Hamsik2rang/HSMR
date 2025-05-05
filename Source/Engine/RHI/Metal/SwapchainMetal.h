@@ -24,10 +24,6 @@ public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
 
-    void setRenderTargets() override;
-    void setRenderPass() override;
-    
-
     CAMetalLayer*       layer;
     id<CAMetalDrawable> drawable;
     void*               view;
@@ -45,10 +41,11 @@ public:
     
     uint8 frameIndex;
     uint8 maxFrameCount = 3;
-
+    
+protected:
     void setRenderTargets() override;
     void setRenderPass() override;
-
+    
     CommandBuffer** commandBufferMTLs;
 };
 

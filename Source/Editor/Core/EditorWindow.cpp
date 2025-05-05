@@ -1,4 +1,4 @@
-﻿#include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
 #include "Engine/RHI/Swapchain.h"

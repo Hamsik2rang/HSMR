@@ -16,26 +16,31 @@ HS_NS_BEGIN
 class Image : public Object
 {
 public:
-    Image() : Object(Object::EType::IMAGE) {}
-    Image(const char* path);
-    Image(void* data, uint32 width, uint32 height, uint32 channel);
-    Image(Image& image);
-    Image(Image&& image);
-    
+    explicit Image() noexcept
+        : Object(Object::EType::IMAGE)
+    {}
+    Image(const char* path) noexcept;
+    Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept;
+    Image(const Image& o) noexcept;
+    Image(Image&& o) noexcept;
+
     ~Image() override;
-    
+
+    HS_FORCEINLINE const uint8* GetData() const { return _rawData.get(); }
+    HS_FORCEINLINE size_t GetDataSize() const { return _rawDataSize; }
+    HS_FORCEINLINE uint32 GetWidth() const { return _width; }
+    HS_FORCEINLINE uint32 GetHeight() const { return _height; }
+    HS_FORCEINLINE uint8  GetChannel() const { return _channel; }
+
 private:
-    void* _rawData;
-    uint32 _rawDataSize;
+    Scoped<uint8[]> _rawData;
+    size_t _rawDataSize;
+
     uint32 _width;
     uint32 _height;
-    uint32 _channel;
+    uint8  _channel;
 };
-
-
 
 HS_NS_END
 
-
 #endif
-

@@ -217,8 +217,6 @@ set(UTILITY_HEADERS
     Utility/Geometry.h
     Utility/Color.h
     Utility/Hash.h
-    Utility/Image.h
-    Utility/Mesh.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
@@ -229,8 +227,6 @@ set(UTILITY_SOURCES
     Utility/Geometry.cpp
     Utility/Color.cpp
     Utility/Hash.cpp
-    Utility/Image.cpp
-    Utility/Mesh.cpp
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})

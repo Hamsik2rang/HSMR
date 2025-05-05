@@ -8,19 +8,20 @@
 #include <assimp/postprocess.h>
 
 #include "Engine/Core/Log.h"
+#include "Engine/Object/Mesh.h"
 
 HS_NS_BEGIN
 
-static hs_mesh_process_node(aiNode* pNode, const aiScene* pScene, Model& model)
+bool hs_process_mesh(aiMesh* pAiMesh, const aiScene* pAiScene)
 {
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    Mesh* pOutMesh = new Mesh();
+    if (pAiScene->mName.length > 0)
     {
-        aiMesh* pMesh = scene->mMeshes[pNode->mMeshes[i]];
-        model.meshes.push_back(processMesh(pMesh, pScene));
+        //..
     }
 }
 
-Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
+Scoped<Image> ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
 {
     int width   = 0;
     int height  = 0;
@@ -44,10 +45,10 @@ Image* ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolu
         HS_LOG(error, "Fail to load Image!");
         return nullptr;
     }
-    
-    Image* pImagee = new Image(rawData, width, height, channel);
 
-    return pImagee;
+    Scoped<Image> pImage = MakeScoped<Image>(rawData, width, height, channel);
+
+    return pImage;
 }
 
 Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)

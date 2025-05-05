@@ -22,6 +22,9 @@ public:
 
     bool Initialize() override;
     void Finalize() override;
+    
+    void Suspend(Swapchain* swapchain) override;
+    void Restore(Swapchain* swapchain) override;
 
     uint32 AcquireNextImage(Swapchain* swapchain) override;
 
@@ -60,9 +63,6 @@ public:
 
     ResourceSetPool* CreateResourceSetPool() override;
     void             DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
-    //
-    //     CommandQueue* CreateCommandQueue() override;
-    //     void DestroyCommandQueue(CommandQueue* cmdQueue) override;
 
     CommandPool* CreateCommandPool(uint32 queuePamilyIndex) override;
     void         DestroyCommandPool(CommandPool* cmdPool) override;

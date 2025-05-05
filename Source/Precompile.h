@@ -1,4 +1,4 @@
-﻿//
+//
 //  Precompile.h
 //  HSMR
 //
@@ -7,11 +7,21 @@
 #ifndef __HS_PRECOMPILE_H__
 #define __HS_PRECOMPILE_H__
 
+#if defined __cplusplus
+#include <cstdint>
+#include <vector>
+#include <string>
+
+#else
+#include <stdint.h>
+#include <cstring>
+
+#endif
+
 #ifdef _WIN32
 #pragma warning(disable: 4819)
-#endif 
+#endif
 
-#include <stdint.h>
 
 typedef int8_t int8;
 typedef uint8_t uint8;
