@@ -12,8 +12,8 @@
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/FileSystem.h"
 
-#include "Engine/Utility/Image.h"
-#include "Engine/Utility/Mesh.h"
+#include "Engine/Object/Image.h"
+#include "Engine/Object/Mesh.h"
 
 HS_NS_BEGIN
 
@@ -23,9 +23,9 @@ public:
     static bool Initialize();
     static void Finalize();
     
-    static Image* LoadImageFromFile(const std::string& path, bool isAbsolutePath = false);
+    static Scoped<Image> LoadImageFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeImage(Image* image);
-    static Mesh* LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
+    static Scoped<Mesh> LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeMesh(Mesh* mesh);
     
     

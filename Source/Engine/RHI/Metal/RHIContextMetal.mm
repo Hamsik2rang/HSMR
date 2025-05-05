@@ -30,6 +30,16 @@ void RHIContextMetal::Finalize()
     //...
 }
 
+void RHIContextMetal::Suspend(Swapchain* swapchain)
+{
+    
+}
+
+void RHIContextMetal::Restore(Swapchain* swapchain)
+{
+    
+}
+
 uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
 {
     @autoreleasepool
