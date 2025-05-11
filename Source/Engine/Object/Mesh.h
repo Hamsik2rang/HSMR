@@ -22,7 +22,6 @@ public:
     ~Mesh() override;
     
     HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(subMesh); }
-    HS_FORCEINLINE
     
     HS_FORCEINLINE void SetPosition(std::vector<float>&& position) { _position = std::move(position); }
     HS_FORCEINLINE const std::vector<float>& GetPosition() const { return _position; }
@@ -34,7 +33,6 @@ private:
     std::vector<float> _color;
     std::vector<float> _tangent;
     std::vector<float> _bitangent;
-    //... TODO: Animation
     
     std::vector<Mesh*> _subMeshes;
 };

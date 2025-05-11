@@ -30,6 +30,32 @@ set(CORE_SOURCES
 source_group("Core\\Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
+set(PLATFORM_HEADERS
+    Platform/PlatformCommon.h
+)
+
+source_group("Platform\\Public" FILES ${PLATFORM_HEADERS})
+list(APPEND TOTAL_FILES ${PLATFORM_HEADERS})
+
+if(APPLE)
+    set(PLATFORM_OSX
+        Platform/OSX/PlatformOSX.h
+        Platform/OSX/PlatformOSX.mm
+    )
+
+    source_group("Platform\\Private\\OSX" FILES ${PLATFORM_OSX})
+    list(APPEND TOTAL_FILES ${PLATFORM_OSX})
+
+else()
+    set(PLATFORM_WINDOWS
+        Platform/Windows/PlatformWindows.h
+        Platform/Windows/PlatformWindows.cpp
+    )
+
+    source_group("Platform\\Private\\Windows" FILES ${PLATFORM_WINDOWS})
+    list(APPEND TOTAL_FILES ${PLATFORM_WINDOWS})
+endif()
+
 set(ECS_HEADERS
     ECS/Entity.h
     ECS/Scene.h

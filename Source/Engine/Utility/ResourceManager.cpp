@@ -51,7 +51,7 @@ Scoped<Image> ResourceManager::LoadImageFromFile(const std::string& path, bool i
     return pImage;
 }
 
-Mesh* ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
+Scoped<Mesh> ResourceManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
     Assimp::Importer importer;
     const aiScene*   scene = importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_GenNormals | aiProcess_ConvertToLeftHanded);
@@ -72,13 +72,13 @@ bool hs_resource_load_image(std::string& fileName, void* data, int& width, int& 
 
 void ResourceManager::FreeImage(Image* image)
 {
-    uint8* data = image->GetData();
+    uint8* data = image->GetRawData();
     if (nullptr == data)
     {
         return;
     }
 
-    stbi_image_free(data);
+    stbi_image_free(static_cast<void*>(data));
 }
 
 HS_NS_END

@@ -26,8 +26,8 @@ public:
 
     ~Image() override;
 
-    HS_FORCEINLINE const uint8* GetData() const { return _rawData.get(); }
-    HS_FORCEINLINE size_t GetDataSize() const { return _rawDataSize; }
+    HS_FORCEINLINE uint8* GetRawData() const { return _rawData.get(); }
+    HS_FORCEINLINE size_t GetRawDataSize() const { return _rawDataSize; }
     HS_FORCEINLINE uint32 GetWidth() const { return _width; }
     HS_FORCEINLINE uint32 GetHeight() const { return _height; }
     HS_FORCEINLINE uint8  GetChannel() const { return _channel; }
