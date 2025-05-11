@@ -22,6 +22,29 @@ source_group("Core\\Private" FILES ${CORE_SOURCES})
 
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
+set(ENTRY_POINT_HEADERS
+    EntryPoint/EditorMain.h
+)
+
+source_group("EntryPoint\\Public" FILES ${ENTRY_POINT_HEADERS})
+
+list(APPEND TOTAL_FILES ${ENTRY_POINT_HEADERS})
+
+if(APPLE)
+    set(ENTRY_POINT_SOURCES
+        EntryPoint/OSX/EditorMain.mm
+    )
+
+else()
+    set(ENTRY_POINT_SOURCES
+        EntryPoint/Windows/EditorMain.cpp
+    )
+endif()
+
+source_group("EntryPoint\\Private" FILES ${ENTRY_POINT_SOURCES})
+
+list(APPEND TOTAL_FILES ${ENTRY_POINT_SOURCES})
+
 set(GUI_HEADERS
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
@@ -137,7 +160,7 @@ add_library(${TARGET_NAME}
 )
 
 target_link_libraries(${TARGET_NAME}
-    PUBLIC
+    PRIVATE
     Engine
 )
 
@@ -151,7 +174,10 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
 )
 
-target_compile_definitions(${TARGET_NAME} PRIVATE
+target_compile_definitions(${TARGET_NAME}
+    PUBLIC
+    HS_EDITOR_MODE
+    PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
