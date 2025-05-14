@@ -57,7 +57,11 @@ typedef uint64_t uint64;
     #define HS_EDITOR_API
 #endif
 
-#define HS_DIR_SEPERATOR '/'
+#if defined(__APPLE__)
+    #define HS_DIR_SEPERATOR '/'
+#else
+    #define HS_DIR_SEPERATOR '\\'
+#endif
 
 #define HS_CHAR_INIT_LENGTH 512
 #define HS_CHAR_INIT_SHORT_LENGTH 256
@@ -114,7 +118,7 @@ namespace HS
     using Scoped = std::unique_ptr<Tp>;
 
     template <typename Tp, typename ...Args>
-    constexpr Scoped<Tp> MakeScoped(Args&& ... args)
+    constexpr Scoped<Tp> hs_make_scoped(Args&& ... args)
     {
         return std::make_unique<Tp>(std::forward<Args>(args)...);
     }

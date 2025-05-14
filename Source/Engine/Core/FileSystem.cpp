@@ -1,9 +1,11 @@
-﻿#include "Engine/Core/FileSystem.h"
+#include "Engine/Core/FileSystem.h"
 
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/Log.h"
 
 #include <SDL3/SDL.h>
+
+#include <string>
 
 #define HS_DIRECTORY_SEPERATOR '/'
 
@@ -64,7 +66,7 @@ size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize)
         return 0;
     }
     size_t readSize = SDL_ReadIO(reinterpret_cast<SDL_IOStream*>(fileHandle), buffer, byteSize);
-    
+
     return readSize;
 }
 
@@ -76,7 +78,7 @@ size_t hs_file_wrtie(FileHandle fileHandle, void* buffer, size_t byteSize)
     }
 
     size_t writeSize = SDL_WriteIO(reinterpret_cast<SDL_IOStream*>(fileHandle), buffer, byteSize);
-    
+
     return writeSize;
 }
 
@@ -96,15 +98,15 @@ bool hs_file_flush(FileHandle fileHandle)
     {
         return false;
     }
-//    // SDL3에는 직접적인 flush 함수가 없어서 현재 위치에서의 seek로 대체
-//    SDL_RWops* file       = reinterpret_cast<SDL_RWops*>(fileHandle);
-//    Sint64     currentPos = SDL_RWtell(file);
-//    if (currentPos < 0)
-//    {
-//        return false;
-//    }
-//    return SDL_RWseek(file, currentPos, RW_SEEK_SET) >= 0;
-    
+    //    // SDL3에는 직접적인 flush 함수가 없어서 현재 위치에서의 seek로 대체
+    //    SDL_RWops* file       = reinterpret_cast<SDL_RWops*>(fileHandle);
+    //    Sint64     currentPos = SDL_RWtell(file);
+    //    if (currentPos < 0)
+    //    {
+    //        return false;
+    //    }
+    //    return SDL_RWseek(file, currentPos, RW_SEEK_SET) >= 0;
+
     return false;
 }
 
@@ -116,8 +118,8 @@ bool hs_file_is_eof(FileHandle fileHandle)
     }
 
     SDL_IOStream* file       = reinterpret_cast<SDL_IOStream*>(fileHandle);
-    Sint64     currentPos = SDL_TellIO(file);
-    Sint64     size       = SDL_GetIOSize(file);
+    Sint64        currentPos = SDL_TellIO(file);
+    Sint64        size       = SDL_GetIOSize(file);
 
     if (currentPos < 0 || size < 0)
     {
@@ -132,10 +134,35 @@ size_t hs_file_get_size(FileHandle fileHandle)
     return SDL_GetIOSize(reinterpret_cast<SDL_IOStream*>(fileHandle));
 }
 
+std::string hs_file_get_directory(const std::string& absolutePath)
+{
+    auto index = absolutePath.find_last_of(HS_DIR_SEPERATOR);
+    if (index == std::string::npos)
+    {
+        HS_THROW("Invalid Path!");
+        return std::string();
+    }
+    std::string s = absolutePath.substr(0, index + 1);
+
+    return s;
+}
+
+std::string hs_file_get_extension(const std::string& filePath)
+{
+    auto index = filePath.find_last_of(".");
+    if (index == std::string::npos)
+    {
+        HS_THROW("Invalid Path!");
+        return std::string();
+    }
+    std::string s = filePath.substr(0, index + 1);
+
+    return s;
+}
+
 std::string hs_file_get_resource_path(const std::string& relativePath)
 {
     return hs_engine_get_context()->executableDirectory + std::string("Resource/") + relativePath;
 }
-
 
 HS_NS_END

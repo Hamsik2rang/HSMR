@@ -28,7 +28,6 @@ public:
     static Scoped<Mesh> LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeMesh(Mesh* mesh);
     
-    
 private:
     static std::string _resourcePath;
     
