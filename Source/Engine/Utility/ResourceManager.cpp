@@ -46,7 +46,7 @@ Scoped<Image> ResourceManager::LoadImageFromFile(const std::string& path, bool i
         return nullptr;
     }
 
-    Scoped<Image> pImage = MakeScoped<Image>(rawData, width, height, channel);
+    Scoped<Image> pImage = hs_make_scoped<Image>(rawData, width, height, channel);
 
     return pImage;
 }

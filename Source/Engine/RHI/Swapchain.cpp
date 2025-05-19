@@ -1,4 +1,4 @@
-﻿#include "Engine/RHI/Swapchain.h"
+#include "Engine/RHI/Swapchain.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/Core/Window.h"

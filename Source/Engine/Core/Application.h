@@ -1,8 +1,8 @@
-﻿//
+//
 //  Application.h
 //  HSMR
 //
-//  Created by Yongsik Im on 2/2/25.
+//  Created by Yongsik Im on 2025.2.7
 //
 #ifndef __HS_APPLICATION_H__
 #define __HS_APPLICATION_H__
@@ -10,7 +10,13 @@
 #include "Precompile.h"
 
 #include "Engine/Core/EngineContext.h"
-#include "SDL3/SDL.h"
+
+#include "Engine/Platform/PlatformApplication.h"
+
+namespace HS
+{
+class Renderer;
+}
 
 HS_NS_BEGIN
 
@@ -21,22 +27,21 @@ class Window;
 class Application
 {
 public:
-    Application(const std::string& appName)
-        : _name(appName)
-    {}
-    virtual ~Application() {}
+    Application(const char* appName) noexcept;
+    virtual ~Application() = default;
 
     virtual bool Initialize(EngineContext* engineContext) = 0;
     virtual void Run()                                    = 0;
     virtual void Finalize()                               = 0;
 
 protected:
-    std::string _name;
+    const char* _name;
 
     EngineContext* _engineContext;
     Window*        _window;
-    bool           _isInitialized = false;
 };
+
+Application* hs_get_application();
 
 HS_NS_END
 

@@ -15,7 +15,7 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, uint64 flags)
+EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags)
     : Window(name, width, height, flags)
 {
 }
@@ -39,7 +39,7 @@ bool EditorWindow::onInitialize()
     _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
 
     _renderTargets.resize(_swapchain->GetMaxFrameCount());
-    
+
     uint32 width  = _swapchain->GetWidth();
     uint32 height = _swapchain->GetHeight();
     for (size_t i = 0; i < _renderTargets.size(); i++)
@@ -74,16 +74,16 @@ bool EditorWindow::onInitialize()
 
 void EditorWindow::onNextFrame()
 {
-    if (_isMinimized)
+    if (_nativeWindow.isMinimized)
     {
         return;
     }
 
     _renderer->NextFrame(_swapchain);
-    
+
     Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
-    uint32 width  = static_cast<uint32>(resolution.width / _scale);
-    uint32 height = static_cast<uint32>(resolution.height / _scale);
+    uint32     width      = static_cast<uint32>(resolution.width / _nativeWindow.scale);
+    uint32     height     = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 
     for (auto& renderTarget : _renderTargets)
     {
@@ -93,12 +93,11 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate()
 {
-    
 }
 
 void EditorWindow::onRender()
 {
-    if (_isMinimized)
+    if (_nativeWindow.isMinimized)
     {
         return;
     }
@@ -108,9 +107,9 @@ void EditorWindow::onRender()
     uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
     RenderTarget* curRT      = &_renderTargets[frameIndex];
 
-//     1. Render Scene to Scene Panel
+    //     1. Render Scene to Scene Panel
     _renderer->Render({}, curRT);
-    
+
     static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
     // 2. Render GUI
@@ -121,7 +120,7 @@ void EditorWindow::onRender()
 
 void EditorWindow::onPresent()
 {
-    if (_isMinimized)
+    if (_nativeWindow.isMinimized)
     {
         return;
     }
@@ -164,49 +163,50 @@ void EditorWindow::setupPanels()
     _basePanel->InsertPanel(_scenePanel);
 }
 
-bool EditorWindow::dispatchEvent(uint64 eventType, uint32 windowId)
+bool EditorWindow::dispatchEvent(EWindowEvent event, uint32 windowId)
 {
-    SDL_EventType event = static_cast<SDL_EventType>(eventType);
-
-    if (event == SDL_EVENT_QUIT)
+    if (event == EWindowEvent::CLOSE)
     {
         _shouldClose = true;
         return false;
     }
 
-    SDL_Window* window = static_cast<SDL_Window*>(_nativeHandle.window);
-
     switch (event)
     {
-        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+        case EWindowEvent::MINIMIZE:
         {
-            _shouldClose = true;
+            // handle._isMinimize;
         }
         break;
-        case SDL_EVENT_WINDOW_MINIMIZED:
-        {
-            _isMinimized = true;
-        }
-        break;
-        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case EWindowEvent::FOCUS_IN:
         {
         }
         break;
-        case SDL_EVENT_WINDOW_RESTORED:
+        case EWindowEvent::FOCUS_OUT:
         {
-            _isMinimized = false;
         }
-        case SDL_EVENT_WINDOW_RESIZED:
+        break;
+        case EWindowEvent::RESTORE:
         {
-            int w, h;
-            SDL_GetWindowSize(window, &w, &h);
-            float scale = SDL_GetWindowDisplayScale(window);
-            _width      = static_cast<uint32>(w * scale);
-            _height     = static_cast<uint32>(h * scale);
-            _swapchain->SetWidth(_width);
-            _swapchain->SetHeight(_height);
-            ImGuiIO& io    = ImGui::GetIO();
-            io.DisplaySize = ImVec2(static_cast<float>(_width), static_cast<float>(_height));
+            //...
+        }
+        break;
+        case EWindowEvent::RESIZE_ENTER:
+        {
+            
+        }
+            break;
+        case EWindowEvent::RESIZE_EXIT:
+        {
+//            int w, h;
+//            SDL_GetWindowSize(window, &w, &h);
+//            float scale = SDL_GetWindowDisplayScale(window);
+//            _width      = static_cast<uint32>(w * scale);
+//            _height     = static_cast<uint32>(h * scale);
+//            _swapchain->SetWidth(_width);
+//            _swapchain->SetHeight(_height);
+//            ImGuiIO& io    = ImGui::GetIO();
+//            io.DisplaySize = ImVec2(static_cast<float>(_width), static_cast<float>(_height));
         }
         break;
         //...

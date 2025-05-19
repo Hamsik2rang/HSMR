@@ -19,15 +19,14 @@
 
 #include <SDL3/SDL.h>
 
+namespace HS { class EngineContext; }
+namespace HS { class RendererPass; }
+namespace HS { class Scene; }
+namespace HS { class Swapchain; }
+namespace HS { class Framebuffer; }
+namespace HS { struct NativeWindow; }
+
 HS_NS_BEGIN
-
-class EngineContext;
-class RendererPass;
-class Scene;
-class Swapchain;
-class Framebuffer;
-
-struct NativeWindowHandle;
 
 class Renderer
 {

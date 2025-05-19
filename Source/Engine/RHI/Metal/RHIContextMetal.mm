@@ -32,12 +32,10 @@ void RHIContextMetal::Finalize()
 
 void RHIContextMetal::Suspend(Swapchain* swapchain)
 {
-    
 }
 
 void RHIContextMetal::Restore(Swapchain* swapchain)
 {
-    
 }
 
 uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
@@ -49,22 +47,10 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
         const uint32 maxFrameCount = swMetal->maxFrameCount;
         swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameCount;
 
-        swMetal->layer.drawableSize = CGSizeMake(swapchain->GetWidth(), swapchain->GetHeight());
-
-        id<CAMetalDrawable> drawable = [swMetal->layer nextDrawable];
-        swMetal->drawable            = drawable;
-        if (drawable == nil)
-        {
-            HS_CHECK(drawable, "drawable is nil");
-        }
-        MTLRenderPassDescriptor* rpDesc        = [MTLRenderPassDescriptor renderPassDescriptor];
-        rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
-        rpDesc.colorAttachments[0].texture     = drawable.texture;
-        rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
-        rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+        MTKView* view = (MTKView*)(swMetal->_view);
 
         RenderPassMetal* swRenderPassMetal = static_cast<RenderPassMetal*>(swMetal->GetRenderPass());
-        swRenderPassMetal->handle          = rpDesc;
+        swRenderPassMetal->handle          = [view currentRenderPassDescriptor];
     }
 }
 
@@ -519,7 +505,7 @@ void RHIContextMetal::Present(Swapchain* swapchain)
         CommandBuffer*  cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
 
         CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
-        [cmdBufferMetal->handle presentDrawable:swMetal->drawable];
+        [cmdBufferMetal->handle presentDrawable:[swMetal->_view currentDrawable]];
         [cmdBufferMetal->handle commit];
         [cmdBufferMetal->handle waitUntilCompleted];
     }

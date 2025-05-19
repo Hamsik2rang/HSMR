@@ -27,12 +27,15 @@ void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const Im
 
 void InitializeBackend(Swapchain* swapchain)
 {
-    SwapchainMetal*     swMetal      = static_cast<SwapchainMetal*>(swapchain);
-    NativeWindowHandle* nativeHandle = reinterpret_cast<NativeWindowHandle*>(swMetal->nativeHandle);
+    SwapchainMetal* swMetal      = static_cast<SwapchainMetal*>(swapchain);
+    NativeWindow*   nativeHandle = reinterpret_cast<NativeWindow*>(swMetal->nativeHandle);
+    
+    NSWindow* window = (__bridge_transfer NSWindow*)(nativeHandle->handle);
 
-    id<MTLDevice> device = ((__bridge_transfer CAMetalLayer*)nativeHandle->layer).device;
+    MTKView*        mtkView      = (MTKView*)[window contentViewController].view;
+
+    id<MTLDevice> device = ((CAMetalLayer*)mtkView.layer).device;
     ImGui_ImplMetal_Init(device);
-    ImGui_ImplSDL3_InitForMetal(static_cast<SDL_Window*>(nativeHandle->window));
 }
 
 void BeginRender(Swapchain* swapchain)

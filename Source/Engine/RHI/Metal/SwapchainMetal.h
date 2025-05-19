@@ -13,6 +13,8 @@
 
 #include "Engine/RHI/Metal/RHIUtilityMetal.h"
 
+#import <MetalKit/MetalKit.h>
+
 HS_NS_BEGIN
 
 class CommandBuffer;
@@ -24,9 +26,6 @@ public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
 
-    CAMetalLayer*       layer;
-    id<CAMetalDrawable> drawable;
-    void*               view;
     void* nativeHandle;
 
     HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return maxFrameCount; }
@@ -45,6 +44,8 @@ public:
 protected:
     void setRenderTargets() override;
     void setRenderPass() override;
+    
+    MTKView* _view;
     
     CommandBuffer** commandBufferMTLs;
 };

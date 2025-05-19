@@ -23,7 +23,7 @@ public:
     {}
     ~Mesh() override;
 
-    HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(hs_make_scoped<Mesh>(subMesh)); }
+    HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(subMesh); }
 
     HS_FORCEINLINE void  SetPosition(std::vector<float>&& position) { _position = std::move(position); }
     HS_FORCEINLINE void  SetPosition(const std::vector<float>& position) { _position = position; }
@@ -65,7 +65,7 @@ private:
     std::vector<float> _tangent;
     std::vector<float> _bitangent;
 
-    std::vector<Scoped<Mesh>>  _subMeshes;
+    std::vector<Mesh*>  _subMeshes;
     std::vector<uint32> _indices;
 };
 

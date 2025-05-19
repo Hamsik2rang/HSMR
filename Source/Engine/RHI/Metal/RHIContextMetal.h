@@ -22,7 +22,7 @@ public:
 
     bool Initialize() override;
     void Finalize() override;
-    
+
     void Suspend(Swapchain* swapchain) override;
     void Restore(Swapchain* swapchain) override;
 
