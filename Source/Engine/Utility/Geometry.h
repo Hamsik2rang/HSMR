@@ -33,4 +33,29 @@ struct Resolution
     }
 };
 
+struct Rect
+{
+    float x;
+    float y;
+    float width;
+    float height;
+
+    Rect(float x, float y, float width, float height) noexcept
+        : x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+    {}
+
+    bool operator==(const Rect& rhs) const
+    {
+        return ((x == rhs.x) && (y == rhs.y) && (width == rhs.width) && (height == rhs.height));
+    }
+    
+    bool operator!=(const Rect& rhs) const
+    {
+        return (*this == rhs);
+    }
+};
+
 #endif /* __HS_GEOMETRY_H__ */

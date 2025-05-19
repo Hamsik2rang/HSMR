@@ -2,7 +2,7 @@
 //  Event.h
 //  Engine
 //
-//  Created by Yongsik Im on 2/8/25.
+//  Created by Yongsik Im on 2025.2.8
 //
 
 #ifndef __HS_EVENT_H__
@@ -11,14 +11,15 @@
 
 #include "Precompile.h"
 
-struct Event
-{
-    union
-    {
-        uint64 type;
-        uint8 padding[128];
-    };
-};
+HS_NS_BEGIN
 
+//
+//struct Event
+//{
+//    //...
+//};
+//
+
+HS_NS_END
 
 #endif /* __HS_EVENT_H__ */

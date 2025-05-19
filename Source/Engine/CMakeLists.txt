@@ -31,7 +31,9 @@ source_group("Core\\Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(PLATFORM_HEADERS
-    Platform/PlatformCommon.h
+    Platform/PlatformDefinition.h
+    Platform/PlatformApplication.h
+    Platform/PlatformWindow.h
 )
 
 source_group("Platform\\Public" FILES ${PLATFORM_HEADERS})
@@ -39,8 +41,10 @@ list(APPEND TOTAL_FILES ${PLATFORM_HEADERS})
 
 if(APPLE)
     set(PLATFORM_OSX
-        Platform/OSX/PlatformOSX.h
-        Platform/OSX/PlatformOSX.mm
+        Platform/Mac/PlatformApplicationMac.h
+        Platform/Mac/PlatformApplicationMac.mm
+        Platform/Mac/PlatformWindowMac.h
+        Platform/Mac/PlatformWindowMac.mm
     )
 
     source_group("Platform\\Private\\OSX" FILES ${PLATFORM_OSX})
@@ -48,13 +52,35 @@ if(APPLE)
 
 else()
     set(PLATFORM_WINDOWS
-        Platform/Windows/PlatformWindows.h
-        Platform/Windows/PlatformWindows.cpp
+        Platform/Windows/PlatformApplicationWindows.h
+        Platform/Windows/PlatformApplicationWindows.cpp
+        Platform/Windows/PlatformWindowWindows.h
+        Platform/Windows/PlatformWindowWindows.cpp
     )
 
     source_group("Platform\\Private\\Windows" FILES ${PLATFORM_WINDOWS})
     list(APPEND TOTAL_FILES ${PLATFORM_WINDOWS})
 endif()
+
+set(MATH_HEADERS
+    Math/Math.h
+    Math/Vec3f.h
+    Math/Vec4f.h
+    Math/Mat4f.h
+)
+
+source_group("Math\\Public" FILES ${MATH_HEADERS})
+list(APPEND TOTAL_FILES ${MATH_HEADERS})
+
+set(MATH_SOURCES
+    Math/Math.cpp
+    Math/Vec3f.cpp
+    Math/Vec4f.cpp
+    Math/Mat4f.cpp
+)
+
+source_group("Math\\Private" FILES ${MATH_SOURCES})
+list(APPEND TOTAL_FILES ${MATH_SOURCES})
 
 set(ECS_HEADERS
     ECS/Entity.h

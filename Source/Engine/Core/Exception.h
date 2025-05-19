@@ -1,4 +1,10 @@
-﻿#ifndef __HS_EXCEPTION_H__
+//
+//  FileSystem.h
+//  Engine
+//
+//  Created by Yongsik Im on 2025.2.8
+//
+#ifndef __HS_EXCEPTION_H__
 #define __HS_EXCEPTION_H__
 
 #include "Precompile.h"

@@ -1,4 +1,4 @@
-﻿set(TARGET_NAME Editor)
+set(TARGET_NAME Editor)
 
 set(TOTAL_FILES)
 

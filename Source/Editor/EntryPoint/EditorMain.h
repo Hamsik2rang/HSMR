@@ -6,8 +6,4 @@
 //
 #include "Precompile.h"
 
-extern "C" {
-
-HS_EDITOR_API int hs_editor_main(int argc, char* argv[]);
-
-}
+int HS_EDITOR_API hs_editor_main(int argc, char* argv[]);

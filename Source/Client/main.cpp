@@ -8,15 +8,16 @@
 #ifdef HS_EDITOR_MODE
 #include "Editor/EntryPoint/EditorMain.h"
 
-//extern HS_EDITOR_API int hs_editor_main(int argc, char* argv[]);
-
+#define hs_main(argc, argv) hs_editor_main((argc), (argv))
 #else
-// extern int hs_play_main(int argc, char* argv[]);
+// #include ...
+
+// #define hs_main(argc, argv) hs_play_main((argc), (argv))
 #endif
 
 int main(int argc, char* argv[])
 {
-    return hs_editor_main(argc, argv);
+    return hs_main(argc, argv);
 }
 
 
