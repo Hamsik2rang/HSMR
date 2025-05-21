@@ -17,7 +17,6 @@
 @interface HSViewController : NSViewController <NSWindowDelegate>
 
 @property (nonatomic, strong) NSWindow* window;
-@property (nonatomic, strong) MTKView*  mtkView;
 
 @end
 

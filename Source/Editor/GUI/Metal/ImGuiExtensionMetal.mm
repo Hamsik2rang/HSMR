@@ -1,6 +1,7 @@
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Engine/Core/EngineContext.h"
+#include "Engine/Core/Window.h"
 
 #include "Engine/RHI/Metal/RHIContextMetal.h"
 #include "Engine/RHI/Metal/RHIUtilityMetal.h"
@@ -9,9 +10,8 @@
 #include "Engine/RHI/Metal/CommandHandleMetal.h"
 #include "Engine/RHI/Metal/SwapchainMetal.h"
 
-#include "Engine/Core/Window.h"
+#include "Engine/Platform/Mac/PlatformWindowMac.h"
 
-#include "ImGui/imgui_impl_sdl3.h"
 #include "ImGui/imgui_impl_metal.h"
 
 using namespace HS;
@@ -27,14 +27,12 @@ void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const Im
 
 void InitializeBackend(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal      = static_cast<SwapchainMetal*>(swapchain);
-    NativeWindow*   nativeHandle = reinterpret_cast<NativeWindow*>(swMetal->nativeHandle);
-    
-    NSWindow* window = (__bridge_transfer NSWindow*)(nativeHandle->handle);
+    const auto& nativeWindow = swapchain->GetInfo().nativeWindow;
+    NSWindow* window = (__bridge_transfer NSWindow*)(nativeWindow->handle);
 
-    MTKView*        mtkView      = (MTKView*)[window contentViewController].view;
+    CAMetalLayer* layer = (CAMetalLayer*)[[(HSViewController*)[window delegate] view] layer];
 
-    id<MTLDevice> device = ((CAMetalLayer*)mtkView.layer).device;
+    id<MTLDevice> device = layer.device;
     ImGui_ImplMetal_Init(device);
 }
 
@@ -46,7 +44,6 @@ void BeginRender(Swapchain* swapchain)
         MTLRenderPassDescriptor* rpDesc  = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
 
         ImGui_ImplMetal_NewFrame(rpDesc);
-        ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
     }
 }
@@ -66,7 +63,6 @@ void EndRender(Swapchain* swapchain)
 void FinalizeBackend()
 {
     ImGui_ImplMetal_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
 }
 
 }; // namespace ImGuiExt

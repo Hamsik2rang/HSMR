@@ -18,6 +18,7 @@ HS_NS_EDITOR_BEGIN
 EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags)
     : Window(name, width, height, flags)
 {
+    onInitialize();
 }
 
 EditorWindow::~EditorWindow()

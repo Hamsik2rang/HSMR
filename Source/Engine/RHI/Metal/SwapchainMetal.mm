@@ -12,7 +12,6 @@
 #include "Engine/RHI/Metal/CommandHandleMetal.h"
 #include "Engine/RHI/Metal/ResourceHandleMetal.h"
 
-
 #import <MetalKit/MetalKit.h>
 
 HS_NS_BEGIN
@@ -21,14 +20,12 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
     , frameIndex(0)
     , maxFrameCount(3)
+    , _drawable(nil)
 {
     const NativeWindow* nh = info.nativeWindow;
 
-    NSWindow* window = (__bridge_transfer NSWindow*)(nh->handle);
-    HSViewController* vc = (HSViewController*)[window delegate];
-    _view = (MTKView*)vc.view;
-
-    maxFrameCount = [(CAMetalLayer*)(_view.layer) maximumDrawableCount];
+    NSWindow*         window = (__bridge_transfer NSWindow*)(nh->handle);
+    HSViewController* vc     = (HSViewController*)[window delegate];
 
     commandBufferMTLs = new CommandBuffer*[maxFrameCount];
     _renderTargets.resize(maxFrameCount);

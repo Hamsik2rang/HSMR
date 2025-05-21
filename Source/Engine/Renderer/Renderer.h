@@ -17,8 +17,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include <SDL3/SDL.h>
-
 namespace HS { class EngineContext; }
 namespace HS { class RendererPass; }
 namespace HS { class Scene; }

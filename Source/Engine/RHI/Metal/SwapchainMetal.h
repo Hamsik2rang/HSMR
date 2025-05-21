@@ -45,8 +45,7 @@ protected:
     void setRenderTargets() override;
     void setRenderPass() override;
     
-    MTKView* _view;
-    
+    id<CAMetalDrawable> _drawable;
     CommandBuffer** commandBufferMTLs;
 };
 

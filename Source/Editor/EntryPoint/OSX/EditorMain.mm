@@ -21,6 +21,11 @@ int hs_editor_main(int argc, char* argv[])
     
     EngineContext* engineContext = hs_engine_create_context("HSMR", ERHIPlatform::METAL);
     
+    if([NSApp delegate] == nil)
+    {
+        auto bp = true;
+    }
+    
     hsApp->Initialize(engineContext);
     
     [NSApp run];

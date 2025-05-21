@@ -9,9 +9,11 @@
 #include "Engine/Core/FileSystem.h"
 #include "Engine/Core/EngineContext.h"
 
+#include "Engine/Platform/Mac/PlatformWindowMac.h"
+
 HS_NS_BEGIN
 
-id<MTLDevice>       s_device   = nil;
+id<MTLDevice> s_device         = nil;
 id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
 bool RHIContextMetal::Initialize()
@@ -47,10 +49,24 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
         const uint32 maxFrameCount = swMetal->maxFrameCount;
         swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameCount;
 
-        MTKView* view = (MTKView*)(swMetal->_view);
+        auto nativeWindow    = swapchain->GetInfo().nativeWindow;
+        HSViewController* vc = (HSViewController*)[(__bridge_transfer NSWindow*)(nativeWindow->handle) delegate];
+        CAMetalLayer* layer  = (CAMetalLayer*)[vc.view layer];
+
+        swMetal->_drawable = [layer nextDrawable];
+
+        if (swMetal->_drawable == nil)
+        {
+            HS_CHECK(swMetal->_drawable, "drawable is nil");
+        }
+        MTLRenderPassDescriptor* rpDesc        = [MTLRenderPassDescriptor renderPassDescriptor];
+        rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
+        rpDesc.colorAttachments[0].texture     = swMetal->_drawable.texture;
+        rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
+        rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
 
         RenderPassMetal* swRenderPassMetal = static_cast<RenderPassMetal*>(swMetal->GetRenderPass());
-        swRenderPassMetal->handle          = [view currentRenderPassDescriptor];
+        swRenderPassMetal->handle          = rpDesc;
     }
 }
 
@@ -154,7 +170,7 @@ GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipeline
         if (info.depthStencilDesc.depthTestEnable)
         {
             const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
-            MTLPixelFormat    depthStencilFormat     = hs_rhi_to_pixel_format(depthStencilAttachment.format);
+            MTLPixelFormat depthStencilFormat        = hs_rhi_to_pixel_format(depthStencilAttachment.format);
             // TODO: 스텐실 처리 추가
         }
 
@@ -169,7 +185,7 @@ GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipeline
         if (info.renderPass->info.useDepthStencilAttachment)
         {
             MTLDepthStencilDescriptor* depthStencilDesc = [MTLDepthStencilDescriptor new];
-            bool                       stencilTest      = info.depthStencilDesc.stencilTestEnable;
+            bool stencilTest                            = info.depthStencilDesc.stencilTestEnable;
 
             if (!info.depthStencilDesc.depthTestEnable)
             {
@@ -211,7 +227,7 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, cons
     }
     size_t byteCodeSize = hs_file_get_size(handle);
 
-    char*  buffer   = new char[byteCodeSize];
+    char* buffer    = new char[byteCodeSize];
     size_t readSize = hs_file_read(handle, buffer, byteCodeSize);
     if (readSize != byteCodeSize)
     {
@@ -242,7 +258,7 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, 
     @autoreleasepool
     {
         NSError* error = nil;
-        NSURL*   url   = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
+        NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
 
         //        NSString*          source = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
         //        MTLCompileOptions* option = [MTLCompileOptions new];
@@ -501,11 +517,11 @@ void RHIContextMetal::Present(Swapchain* swapchain)
 {
     @autoreleasepool
     {
-        SwapchainMetal* swMetal   = static_cast<SwapchainMetal*>(swapchain);
-        CommandBuffer*  cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
+        SwapchainMetal* swMetal  = static_cast<SwapchainMetal*>(swapchain);
+        CommandBuffer* cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
 
         CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
-        [cmdBufferMetal->handle presentDrawable:[swMetal->_view currentDrawable]];
+        [cmdBufferMetal->handle presentDrawable:swMetal->_drawable];
         [cmdBufferMetal->handle commit];
         [cmdBufferMetal->handle waitUntilCompleted];
     }
