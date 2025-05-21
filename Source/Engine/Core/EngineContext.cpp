@@ -6,9 +6,8 @@
 #ifdef __APPLE__
     #include "Engine/RHI/Metal/RHIContextMetal.h"
 #else
-
+#include "Engine/RHI/Vulkan/RHIContextVulkan.h"
 #endif
-#include <SDL3/SDL.h>
 #include <string>
 
 HS_NS_BEGIN
@@ -21,21 +20,6 @@ EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatfo
     {
         return s_engineContext;
     }
-
-    // Setup SDL
-    // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
-    // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
-    {
-        printf("Error: %s\n", SDL_GetError());
-        return nullptr;
-    }
-
-    // Inform SDL that we will be using metal for rendering. Without this hint initialization of metal renderer may fail.
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
-
-    // Enable native IME.
-    SDL_SetHint(SDL_HINT_IME_IMPLEMENTED_UI, "1");
 
     s_engineContext                      = new EngineContext();
     s_engineContext->name                = name;

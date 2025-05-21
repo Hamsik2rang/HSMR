@@ -7,8 +7,6 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
-#include "ImGui/imgui_impl_sdl3.h"
-
 HS_NS_EDITOR_BEGIN
 
 EditorApplication::EditorApplication(const char* appName) noexcept
@@ -46,7 +44,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
         return false;
     }
 
-    hs_platform_window_show();
+    hs_platform_window_show(_window->GetNativeWindow());
     
     _isInitialized = true;
 

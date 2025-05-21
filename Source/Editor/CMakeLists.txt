@@ -1,4 +1,4 @@
-set(TARGET_NAME Editor)
+﻿set(TARGET_NAME Editor)
 
 set(TOTAL_FILES)
 
@@ -120,11 +120,7 @@ set(THIRDPARTY_IMGUI
 
 source_group("ThirdParty\\ImGui" FILES ${THIRDPARTY_IMGUI})
 
-set(THIRDPARTY_IMGUI_BACKENDS
-
-    ThirdParty/ImGui/imgui_impl_sdl3.h
-    ThirdParty/ImGui/imgui_impl_sdl3.cpp
-)
+set(THIRDPARTY_IMGUI_BACKENDS)
 
 if(APPLE)
     list(APPEND THIRDPARTY_IMGUI_BACKENDS

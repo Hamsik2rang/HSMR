@@ -35,6 +35,8 @@
     {
         _app = hsApp;
     }
+    
+    return self;
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification
@@ -50,14 +52,14 @@ void hs_platform_init(Application* hsApp)
 {
     usleep(777777);
     
-    @autoreleasepool
-    {
+//    @autoreleasepool
+//    {
         NSApplication* app = [NSApplication sharedApplication];
         [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
         HSApplicationDelegate* appDelegate = [[HSApplicationDelegate alloc] initWithHSApplication:hsApp];
         [app setDelegate:appDelegate];
-    }
+//    }
 }
 
 void hs_platform_shutdown(Application* hsApp)

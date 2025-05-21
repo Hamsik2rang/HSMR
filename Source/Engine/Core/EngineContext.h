@@ -13,8 +13,6 @@
 #include "Engine/Core/Log.h"
 #include "Engine/RHI/RHIContext.h"
 
-#include <SDL3/SDL.h>
-
 #include <string>
 
 HS_NS_BEGIN

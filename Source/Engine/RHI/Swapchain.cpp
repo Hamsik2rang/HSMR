@@ -3,8 +3,6 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Core/Window.h"
 
-#include <SDL3/SDL.h>
-
 HS_NS_BEGIN
 
 Swapchain::Swapchain(const SwapchainInfo& info)

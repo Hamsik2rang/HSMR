@@ -5,20 +5,9 @@
 #include <cstring>
 #include <unordered_map>
 #include <queue>
+#include <utility>
 
 @implementation HSViewController
-
-- (void)loadView
-{
-    NSRect frame = [_window frame];
-    self.view    = [[MTKView alloc] initWithFrame:frame device:MTLCreateSystemDefaultDevice()];
-
-    _mtkView = (MTKView*)self.view;
-    if (nil == _mtkView.device)
-    {
-        HS_LOG(crash, "MTLDevice is not created!");
-    }
-}
 
 - (void)viewDidLoad
 {
@@ -26,8 +15,9 @@
 
     self.view.window.delegate = self;
 
-    // 윈도우 표시 - 이 부분이 누락되었을 수 있음
-    [_window makeKeyAndOrderFront:nil];
+    [self.view setWantsLayer:YES];
+    self.view.layer = [CAMetalLayer layer];
+
     [NSApp activateIgnoringOtherApps:YES];
 }
 
@@ -48,24 +38,23 @@
     auto bp = true;
 }
 
-- (void)windowDidBecomeMain:(NSNotification *)notification
+- (void)windowDidBecomeMain:(NSNotification*)notification
 {
     // 윈도우가 메인 윈도우가 되었을 때
     NSLog(@"Window became main");
 }
 
-- (void)windowDidBecomeKey:(NSNotification *)notification
+- (void)windowDidBecomeKey:(NSNotification*)notification
 {
     // 윈도우가 키 윈도우가 되었을 때
     NSLog(@"Window became key");
 }
 
-- (void)windowDidExpose:(NSNotification *)notification
+- (void)windowDidExpose:(NSNotification*)notification
 {
     // 윈도우가 처음 화면에 표시될 때
     NSLog(@"Window did expose");
 }
-
 
 - (void)windowWillClose:(NSNotification*)notification
 {
@@ -103,6 +92,11 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
     outNativeWindow.maxHeight = static_cast<uint32>(screenRect.size.height);
 
     outNativeWindow.scale = static_cast<float>(mainScreen.backingScaleFactor);
+    
+    if(g_eventQueueTable.find(&outNativeWindow) == g_eventQueueTable.end())
+    {
+        g_eventQueueTable.insert({&outNativeWindow, {}});
+    }
 }
 
 void hs_platform_window_destroy(NativeWindow& window)
@@ -120,8 +114,10 @@ void hs_platform_window_destroy(NativeWindow& window)
 #endif
 }
 
-void hs_platform_window_show()
+void hs_platform_window_show(const NativeWindow& nativeWindow)
 {
+    NSWindow* window = (__bridge_transfer NSWindow*)(nativeWindow.handle);
+    [window makeKeyAndOrderFront:nil];
 }
 
 bool hs_platform_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent)

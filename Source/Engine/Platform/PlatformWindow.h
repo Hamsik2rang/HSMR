@@ -121,7 +121,7 @@ struct NativeWindow
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
 void hs_platform_window_destroy(NativeWindow& nativeWindow);
 
-void hs_platform_window_show();
+void hs_platform_window_show(const NativeWindow& nativeWindow);
 
 bool         hs_platform_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent);
 void         hs_platform_window_push_event(const NativeWindow* pWindow, EWindowEvent event);
