@@ -1,22 +1,48 @@
 #include "Engine/Platform/Mac/PlatformWindowMac.h"
 
 #include "Engine/Core/EngineContext.h"
+#include "Engine/Core/Window.h"
 
 #include <cstring>
 #include <unordered_map>
 #include <queue>
 #include <utility>
 
+#import <MetalKit/MetalKit.h>
+#import <QuartzCore/CAMetalLayer.h>
+
 @implementation HSViewController
+{
+    CGSize _curDrawableSize;
+}
+- (void)loadView
+{
+    NSRect frame = NSMakeRect(0, 0, _window.frame.size.width, _window.frame.size.height);
+    self.view    = [[NSView alloc] initWithFrame:frame];
+
+    [self.view setWantsLayer:YES];
+
+    CAMetalLayer* layer   = [CAMetalLayer new];
+    layer.device          = MTLCreateSystemDefaultDevice();
+    layer.pixelFormat     = MTLPixelFormatBGRA8Unorm;
+    layer.colorspace      = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    layer.framebufferOnly = YES;
+    layer.drawableSize    = self.view.bounds.size;
+    layer.contentsScale   = [[NSScreen mainScreen] backingScaleFactor];
+
+    self.view.layer = layer;
+
+    CGSize backingDrawableSize = CGSizeMake(layer.drawableSize.width * layer.contentsScale, layer.drawableSize.height * layer.contentsScale);
+    _curDrawableSize           = backingDrawableSize;
+    [layer setDrawableSize:_curDrawableSize];
+}
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
-    self.view.window.delegate = self;
-
-    [self.view setWantsLayer:YES];
-    self.view.layer = [CAMetalLayer layer];
+    [_window setContentView:self.view];
+    [_window makeFirstResponder:self.view];
 
     [NSApp activateIgnoringOtherApps:YES];
 }
@@ -27,7 +53,7 @@
     if (nil != self)
     {
         _window = window;
-        [_window setContentViewController:self];
+        [_window setDelegate:self];
     }
 
     return self;
@@ -35,7 +61,6 @@
 
 - (void)viewWillAppear
 {
-    auto bp = true;
 }
 
 - (void)windowDidBecomeMain:(NSNotification*)notification
@@ -58,104 +83,86 @@
 
 - (void)windowWillClose:(NSNotification*)notification
 {
+    [_window setDelegate:nil];
+    [_window setContentViewController:nil];
+
+    _window = nil;
+}
+
+- (BOOL)windowShouldClose:(NSWindow*)sender
+{
+    NSLog(@"Window should close");
+    return YES; // 윈도우 닫기 허용
+}
+
+- (CGSize)getBackingViewSize
+{
+    return _curDrawableSize;
 }
 
 @end
 
 HS_NS_BEGIN
 
-std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> g_eventQueueTable;
-
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
+    NSRect frame     = NSMakeRect(0, 0, (CGFloat)width, (CGFloat)height);
+    NSWindow* window = [[NSWindow alloc] initWithContentRect:frame styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
+
+    [window setTitle:@"HSMR"];
+
+    HSViewController* vc = [[HSViewController alloc] initWithWindow:window];
+    [window setContentViewController:vc];
+
+    outNativeWindow.handle = (__bridge void*)window;
+
+    NSScreen* mainScreen = [NSScreen mainScreen];
+    NSRect screenRect    = mainScreen.frame;
+
+    outNativeWindow.maxWidth  = static_cast<uint32>(screenRect.size.width);
+    outNativeWindow.maxHeight = static_cast<uint32>(screenRect.size.height);
+    outNativeWindow.scale     = static_cast<float>(mainScreen.backingScaleFactor);
     outNativeWindow.title     = name;
     outNativeWindow.width     = width;
     outNativeWindow.height    = height;
     outNativeWindow.minWidth  = 1;
     outNativeWindow.minHeight = 1;
-
-    NSRect    frame  = NSMakeRect(0, 0, (CGFloat)width, (CGFloat)height);
-    NSWindow* window = [[NSWindow alloc] initWithContentRect:frame styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
-
-    [window setTitle:@"HSMR"];
-    [window center];
-    [window makeKeyAndOrderFront:nil];
-
-    [window setContentViewController:[[HSViewController alloc] initWithWindow:window]];
-
-    outNativeWindow.handle = (__bridge_retained void*)window;
-
-    NSScreen* mainScreen = [NSScreen mainScreen];
-    NSRect    screenRect = mainScreen.frame;
-
-    outNativeWindow.maxWidth  = static_cast<uint32>(screenRect.size.width);
-    outNativeWindow.maxHeight = static_cast<uint32>(screenRect.size.height);
-
-    outNativeWindow.scale = static_cast<float>(mainScreen.backingScaleFactor);
-    
-    if(g_eventQueueTable.find(&outNativeWindow) == g_eventQueueTable.end())
-    {
-        g_eventQueueTable.insert({&outNativeWindow, {}});
-    }
 }
 
 void hs_platform_window_destroy(NativeWindow& window)
 {
-    NSWindow* handle = (__bridge_transfer NSWindow*)window.handle;
-
-    while (false == g_eventQueueTable[&window].empty())
-    {
-        g_eventQueueTable[&window].pop();
-    }
-    g_eventQueueTable.erase(&window);
-
-#ifndef HS_OBJC_ARC
-    [handle dealloc];
-#endif
+    NSWindow* handle = (__bridge NSWindow*)window.handle;
+    [handle release];
 }
 
 void hs_platform_window_show(const NativeWindow& nativeWindow)
 {
-    NSWindow* window = (__bridge_transfer NSWindow*)(nativeWindow.handle);
+    NSWindow* window = (__bridge NSWindow*)(nativeWindow.handle);
+    [window center];
     [window makeKeyAndOrderFront:nil];
+    [window setIsVisible:YES];
+    [window makeMainWindow];
+    [window becomeKeyWindow];
 }
 
-bool hs_platform_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent)
+void hs_platform_window_poll_event()
 {
-    HS_ASSERT(g_eventQueueTable.find(pWindow) != g_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
-
-    outEvent = EWindowEvent::NONE;
-
-    auto& eventQueue = g_eventQueueTable[pWindow];
-    if (eventQueue.empty())
+    @autoreleasepool
     {
-        return false;
+        while (true)
+        {
+            NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                                untilDate:[NSDate distantPast]
+                                                   inMode:NSDefaultRunLoopMode
+                                                  dequeue:YES];
+            if (event == nil)
+            {
+                break;
+            }
+
+            [NSApp sendEvent:event];
+        }
     }
-
-    outEvent = eventQueue.front();
-    return true;
-}
-
-void hs_platform_window_push_event(const NativeWindow* pWindow, EWindowEvent event)
-{
-    HS_ASSERT(g_eventQueueTable.find(pWindow) != g_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
-
-    auto& eventQueue = g_eventQueueTable[pWindow];
-
-    eventQueue.push(event);
-}
-
-EWindowEvent hs_platform_window_pop_event(const NativeWindow* pWindow)
-{
-    HS_ASSERT(g_eventQueueTable.find(pWindow) != g_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
-
-    auto& eventQueue = g_eventQueueTable[pWindow];
-
-    EWindowEvent event = eventQueue.front();
-
-    eventQueue.pop();
-
-    return event;
 }
 
 HS_NS_END

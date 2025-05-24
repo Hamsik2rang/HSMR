@@ -28,7 +28,7 @@ public:
     
 private:
     GUIContext* _guiContext;
-    
+
     bool _isInitialized = false;
     float _deltaTime = 0.0f;
 };

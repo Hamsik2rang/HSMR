@@ -19,6 +19,14 @@ class RenderTarget;
 class Renderer;
 } // namespace HS
 
+namespace HS
+{
+namespace Editor
+{
+class GUIContext;
+}
+} // namespace HS
+
 HS_NS_EDITOR_BEGIN
 
 class Panel;
@@ -44,10 +52,10 @@ private:
     void onRenderGUI();
 
     std::vector<RenderTarget> _renderTargets;
-
-    Panel*    _basePanel;
-    Panel*    _menuPanel;
-    Panel*    _scenePanel;
+    
+    Panel* _basePanel;
+    Panel* _menuPanel;
+    Panel* _scenePanel;
 };
 
 HS_NS_EDITOR_END

@@ -12,16 +12,18 @@
 #include "Engine/Platform/PlatformWindow.h"
 
 #import <Cocoa/Cocoa.h>
-#import <MetalKit/MetalKit.h>
 
-@interface HSViewController : NSViewController <NSWindowDelegate>
+
+@interface HSViewController : NSViewController<NSWindowDelegate>
 
 @property (nonatomic, strong) NSWindow* window;
+
+- (instancetype)initWithWindow:(NSWindow*)window;
+- (CGSize)getBackingViewSize;
 
 @end
 
 HS_NS_BEGIN
-
 
 HS_NS_END
 

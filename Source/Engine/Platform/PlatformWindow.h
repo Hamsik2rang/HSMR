@@ -120,15 +120,11 @@ struct NativeWindow
 
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
 void hs_platform_window_destroy(NativeWindow& nativeWindow);
-
 void hs_platform_window_show(const NativeWindow& nativeWindow);
+void hs_platform_window_poll_event();
 
-bool         hs_platform_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent);
-void         hs_platform_window_push_event(const NativeWindow* pWindow, EWindowEvent event);
-EWindowEvent hs_platform_window_pop_event(const NativeWindow* pWindow);
-
-void hs_window_set_position(uint16 x, uint16 y);
-void hs_window_get_position();
+void hs_platform_window_set_position(uint16 x, uint16 y);
+void hs_platform_window_get_position();
 
 HS_NS_END
 

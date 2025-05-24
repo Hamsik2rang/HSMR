@@ -1,4 +1,4 @@
-﻿#include "Editor/Panel/ScenePanel.h"
+#include "Editor/Panel/ScenePanel.h"
 
 #include "Engine/RHI/ResourceHandle.h"
 

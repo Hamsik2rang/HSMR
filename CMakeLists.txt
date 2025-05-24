@@ -41,7 +41,7 @@ if(APPLE)
     endif()
 
     if(CMAKE_GENERATOR STREQUAL "Xcode")
-        set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
+        set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC NO)
     else()
         set(CMAKE_OBJC_FLAGS "-fobjc-arc")
         set(CMAKE_OBJCXX_FLAGS "-fobjc-arc")

@@ -24,9 +24,9 @@ EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatfo
     s_engineContext                      = new EngineContext();
     s_engineContext->name                = name;
     s_engineContext->rhiPlatform         = rhiPlatform;
-    s_engineContext->executableDirectory = SDL_GetBasePath();
-    s_engineContext->executablePath      = s_engineContext->executableDirectory + s_engineContext->name;
-    s_engineContext->resourceDirectory   = s_engineContext->executableDirectory + std::string("Resource/");
+    s_engineContext->executablePath      = hs_file_get_executable_path();
+    s_engineContext->executableDirectory = hs_file_get_directory(s_engineContext->executablePath);
+    s_engineContext->resourceDirectory   = hs_file_get_default_resource_directory();
 
     switch (rhiPlatform)
     {
