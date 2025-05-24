@@ -170,6 +170,8 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
 )
 
+add_dependencies(${TARGET_NAME} Engine)
+
 target_compile_definitions(${TARGET_NAME}
     PUBLIC
     HS_EDITOR_MODE

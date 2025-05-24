@@ -38,7 +38,7 @@ protected:
     const char* _name;
 
     EngineContext* _engineContext;
-    Window*        _window;
+    Window* _window;
 };
 
 Application* hs_get_application();

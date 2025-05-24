@@ -20,8 +20,6 @@ Swapchain::~Swapchain()
     }
     
     _renderTargets.clear();
-    
-    
 }
 
 HS_NS_END

@@ -23,18 +23,19 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     , _drawable(nil)
 {
     const NativeWindow* nh = info.nativeWindow;
+    nativeHandle = nh->handle;
 
-    NSWindow*         window = (__bridge_transfer NSWindow*)(nh->handle);
+    NSWindow*         window = (__bridge NSWindow*)(nh->handle);
     HSViewController* vc     = (HSViewController*)[window delegate];
 
-    commandBufferMTLs = new CommandBuffer*[maxFrameCount];
+    _commandBufferMTLs = new CommandBuffer*[maxFrameCount];
     _renderTargets.resize(maxFrameCount);
 
     RHIContext* rhiContext = hs_engine_get_rhi_context();
 
     for (uint8 i = 0; i < maxFrameCount; i++)
     {
-        commandBufferMTLs[i] = rhiContext->CreateCommandBuffer();
+        _commandBufferMTLs[i] = rhiContext->CreateCommandBuffer();
     }
 
     setRenderTargets();
@@ -45,14 +46,14 @@ SwapchainMetal::~SwapchainMetal()
 {
     for (uint8 i = 0; i < maxFrameCount; i++)
     {
-        auto* cmdBuffer = commandBufferMTLs[i];
+        auto* cmdBuffer = _commandBufferMTLs[i];
         if (nullptr == cmdBuffer)
         {
             delete cmdBuffer;
             cmdBuffer = nullptr;
         }
     }
-    delete[] commandBufferMTLs;
+    delete[] _commandBufferMTLs;
 }
 
 void SwapchainMetal::setRenderTargets()
@@ -63,8 +64,8 @@ void SwapchainMetal::setRenderTargets()
     info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
     TextureInfo colorTextureInfo{};
-    colorTextureInfo.extent.width         = (_info.nativeWindow)->width;
-    colorTextureInfo.extent.height        = (_info.nativeWindow)->height;
+    colorTextureInfo.extent.width         = (_info.nativeWindow)->width * (_info.nativeWindow)->scale;
+    colorTextureInfo.extent.height        = (_info.nativeWindow)->height * (_info.nativeWindow)->scale;
     colorTextureInfo.extent.depth         = 1;
     colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
     colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;
@@ -94,6 +95,7 @@ void SwapchainMetal::setRenderPass()
     colorAttachment.loadAction     = ELoadAction::CLEAR;
     colorAttachment.storeAction    = EStoreAction::STORE;
     colorAttachment.isDepthStencil = false;
+    info.colorAttachments.push_back(colorAttachment);
 
     _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
 }

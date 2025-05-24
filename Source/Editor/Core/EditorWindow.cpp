@@ -67,7 +67,7 @@ bool EditorWindow::onInitialize()
 
         _renderTargets[i].Create(info);
     }
-
+    
     setupPanels();
 
     return true;

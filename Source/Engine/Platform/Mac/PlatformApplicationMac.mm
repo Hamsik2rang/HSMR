@@ -1,15 +1,14 @@
 #include "Engine/Platform/Mac/PlatformApplicationMac.h"
 
 #include "Engine/Core/Application.h"
+#include "Engine/Core/EngineContext.h"
 
 #include <unistd.h>
 #import <Cocoa/Cocoa.h>
 
-
 @interface HSApplicationDelegate : NSObject <NSApplicationDelegate>
 
 @end
-
 
 @implementation HSApplicationDelegate
 {
@@ -18,10 +17,13 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
 {
-    @autoreleasepool
-    {
-        _app->Run();
-    }
+    //...
+}
+
+- (void)applicationWillTerminate:(NSNotification*)notification
+{
+    _app->Finalize();
+    HS::hs_engine_destroy_context();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
@@ -35,13 +37,8 @@
     {
         _app = hsApp;
     }
-    
-    return self;
-}
 
-- (void)applicationWillTerminate:(NSNotification*)notification
-{
-    _app->Finalize();
+    return self;
 }
 
 @end
@@ -50,16 +47,15 @@ HS_NS_BEGIN
 
 void hs_platform_init(Application* hsApp)
 {
+    // https://developer.apple.com/forums/thread/765445
+    // to Prevent macOS bug. => apple is xxx.
     usleep(777777);
-    
-//    @autoreleasepool
-//    {
-        NSApplication* app = [NSApplication sharedApplication];
-        [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-        HSApplicationDelegate* appDelegate = [[HSApplicationDelegate alloc] initWithHSApplication:hsApp];
-        [app setDelegate:appDelegate];
-//    }
+    NSApplication* app = [NSApplication sharedApplication];
+    [app setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    HSApplicationDelegate* appDelegate = [[HSApplicationDelegate alloc] initWithHSApplication:hsApp];
+    [app setDelegate:appDelegate];
 }
 
 void hs_platform_shutdown(Application* hsApp)

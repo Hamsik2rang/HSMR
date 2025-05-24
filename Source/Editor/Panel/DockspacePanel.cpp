@@ -1,4 +1,4 @@
-﻿#include "Editor/Panel/DockspacePanel.h"
+#include "Editor/Panel/DockspacePanel.h"
 
 #include "ImGui/imgui.h"
 

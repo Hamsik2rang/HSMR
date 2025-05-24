@@ -7,6 +7,10 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
+#if defined(__APPLE__)
+#include "Engine/Platform/Mac/AutoReleasePool.h"
+#endif
+
 HS_NS_EDITOR_BEGIN
 
 EditorApplication::EditorApplication(const char* appName) noexcept
@@ -37,7 +41,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
     windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 1600, 1050, windowFlags);
+    _window = new EditorWindow("EditorApp BaseWindow", 640, 360, windowFlags);
     if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");
@@ -84,6 +88,9 @@ void EditorApplication::Run()
 
     while (_window->IsOpened())
     {
+#if defined(__APPLE__)
+        AutoReleasePool pool;
+#endif
         _window->ProcessEvent();
 
         _window->NextFrame();

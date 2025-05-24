@@ -45,6 +45,10 @@ if(APPLE)
         Platform/Mac/PlatformApplicationMac.mm
         Platform/Mac/PlatformWindowMac.h
         Platform/Mac/PlatformWindowMac.mm
+        Platform/Mac/PlatformFileSystemMac.h
+        Platform/Mac/PlatformFileSystemMac.mm
+        Platform/Mac/AutoReleasePool.h
+        Platform/Mac/AutoReleasePool.mm
     )
 
     source_group("Platform\\Private\\OSX" FILES ${PLATFORM_OSX})
@@ -56,6 +60,8 @@ else()
         Platform/Windows/PlatformApplicationWindows.cpp
         Platform/Windows/PlatformWindowWindows.h
         Platform/Windows/PlatformWindowWindows.cpp
+        Platform/Windows/PlatformFileSystemWindows.h
+        Platform/Windows/PlatformFileSystemWindows.cpp
     )
 
     source_group("Platform\\Private\\Windows" FILES ${PLATFORM_WINDOWS})
