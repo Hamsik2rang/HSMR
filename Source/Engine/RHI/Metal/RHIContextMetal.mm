@@ -130,7 +130,7 @@ GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipeline
         const auto& curAttribute = info.vertexInputDesc.attributes[i];
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
-        vertexDesc.attributes[i].bufferIndex = curAttribute.location;
+        vertexDesc.attributes[i].bufferIndex = curAttribute.binding;
         vertexDesc.attributes[i].format      = hs_rhi_get_vertex_format_from_size(curAttribute.formatSize);
     }
 
@@ -309,7 +309,7 @@ void RHIContextMetal::DestroyShader(Shader* shader)
     delete shaderMetal;
 }
 
-Buffer* RHIContextMetal::CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
+Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
 {
     BufferInfo info{};
     info.usage        = usage;
@@ -319,7 +319,7 @@ Buffer* RHIContextMetal::CreateBuffer(void* data, size_t dataSize, EBufferUsage 
 
     return result;
 }
-Buffer* RHIContextMetal::CreateBuffer(void* data, size_t dataSize, const BufferInfo& info)
+Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info)
 {
     BufferMetal* bufferMetal = new BufferMetal(info);
 

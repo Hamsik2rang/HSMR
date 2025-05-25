@@ -28,7 +28,6 @@ public:
     void SetShaderParameter(const char* name);
     
 private:
-    Shader* _shader;
 
 };
 

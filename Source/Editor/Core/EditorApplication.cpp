@@ -1,8 +1,10 @@
 #include "Editor/Core/EditorApplication.h"
 
+#include "Engine/Core/Log.h"
 #include "Engine/Platform/PlatformApplication.h"
 #include "Engine/Platform/PlatformWindow.h"
-#include "Engine/Core/Log.h"
+#include "Engine/Utility/ResourceManager.h"
+
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
@@ -35,6 +37,8 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     
     _guiContext = new GUIContext();
     _guiContext->Initialize();
+    
+    ResourceManager::Initialize();
 
     EWindowFlags windowFlags = EWindowFlags::NONE;
     windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
@@ -50,6 +54,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
 
     hs_platform_window_show(_window->GetNativeWindow());
     
+
     _isInitialized = true;
 
     return _isInitialized;

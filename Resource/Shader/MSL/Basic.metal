@@ -10,7 +10,7 @@ using namespace metal;
 vertex FSINPUT_BASIC VSENTRY_BASIC(
                                         VSINPUT_BASIC input ATTR_KEY(stage_in))
 {
-    FSInput_Basic output;
+    FSINPUT_BASIC output;
     
     output.pos = input.pos;
     output.color = input.color;
