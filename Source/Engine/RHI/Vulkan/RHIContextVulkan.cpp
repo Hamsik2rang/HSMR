@@ -290,7 +290,7 @@ CommandBuffer* RHIContextVulkan::CreateCommandBuffer()
 	vkAllocateCommandBuffers(_device, nullptr, &vkCommandBuffer);
 
 	CommandBufferVulkan* commandBuffer = new CommandBufferVulkan();
-	commandBuffer->commandBufferVK = vkCommandBuffer;
+	commandBuffer->handle = vkCommandBuffer;
 
 	return static_cast<CommandBuffer*>(commandBuffer);
 }
@@ -346,6 +346,18 @@ void RHIContextVulkan::WaitForIdle() const
 	// Wait for the Vulkan device to be idle
 
 }
+
+void RHIContextVulkan::cleanup()
+{
+	if (s_enableValidationLayers)
+	{
+		destroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
+	}
+	delete _device;
+
+	vkDestroyInstance(_instance, nullptr);
+}
+#pragma region >>> Implementation create functions
 
 bool RHIContextVulkan::createInstance()
 {
@@ -434,15 +446,28 @@ VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindowHandle& windowHan
 	return surface;
 }
 
-void RHIContextVulkan::cleanup()
+VkRenderPass createRenderPass(const RenderPassInfo& info)
 {
-	if (s_enableValidationLayers)
+	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
+	
+	std::vector<VkAttachmentDescription> attachments(attachmentCount);
+	int index = 0;
+	for (; index < info.colorAttachmentCount; index++)
 	{
-		destroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
-	}
-	delete _device;
+		attachments[index].flags = 0;
+		attachments[index].format = info.colorAttachments[index].format;
 
-	vkDestroyInstance(_instance, nullptr);
+	}
+
+	VkRenderPassCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	createInfo.attachmentCount = attachmentCount;
+	createInfo.pNext = nullptr;
+	createInfo.subpassCount = 1;
+
+
 }
+
+#pragma endregion 
 
 HS_NS_END

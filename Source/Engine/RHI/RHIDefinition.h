@@ -327,8 +327,9 @@ struct RenderPassInfo
 {
 	std::vector<Attachment> colorAttachments;
 	Attachment              depthStencilAttachment;
-	size_t                  colorAttachmentCount;
+	uint8					colorAttachmentCount;
 
+	Area renderArea;
 	bool useDepthStencilAttachment = false;
 	bool isSwapchainRenderPass = false;
 };

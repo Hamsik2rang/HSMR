@@ -38,7 +38,6 @@ class Buffer : public RHIHandle
 public:
 	~Buffer() override;
 
-
 	const BufferInfo info;
 
 	void* byte;
@@ -52,12 +51,12 @@ class Shader : public RHIHandle
 public:
 	~Shader() override;
 
-	const ShaderInfo info;
-	const char* byteCode;
-	const size_t     byteCodeSize;
+	const ShaderInfo	info;
+	const char*			byteCode;
+	const size_t		byteCodeSize;
 
 protected:
-	Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info);
+	explicit Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info) noexcept;
 };
 
 class ResourceLayout : public RHIHandle

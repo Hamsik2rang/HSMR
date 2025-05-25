@@ -92,7 +92,7 @@ public:
 protected:
     CommandBuffer();
     bool _isBegan = false;
-
+    //TODO: 커맨드 종류별로 버퍼 분할하기
     bool _isGraphicsBegan = false;
     bool _isComputeBegan = false;
     bool _isBlitBegan = false;

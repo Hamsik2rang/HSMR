@@ -90,4 +90,14 @@ std::string hs_rhi_vkresult_to_string(VkResult result)
     return "";
 }
 
+VkFormat hs_rhi_vulkan_to_format(EPixelFormat format)
+{
+
+}
+
+EPixelFormat hs_rhi_vulkan_from_format(VkFormat format)
+{
+
+}
+
 HS_NS_END

@@ -1,4 +1,4 @@
-#include "Engine/RHI/ResourceHandle.h"
+﻿#include "Engine/RHI/ResourceHandle.h"
 
 HS_NS_BEGIN
 
@@ -11,11 +11,7 @@ Texture::Texture(const TextureInfo& info)
 
 Texture::~Texture()
 {
-    if (nullptr != data)
-    {
-        delete data;
-        data = nullptr;
-    }
+
 }
 
 Sampler::Sampler(const SamplerInfo& info)
@@ -28,7 +24,7 @@ Sampler::~Sampler()
 {
 }
 
-Shader::Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info)
+Shader::Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info) noexcept
     : RHIHandle(EType::SHADER)
     , byteCode(byteCode)
     , byteCodeSize(byteCodeSize)
