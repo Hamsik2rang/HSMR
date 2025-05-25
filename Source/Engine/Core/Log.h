@@ -1,8 +1,8 @@
-﻿//
+//
 //  Log.hpp
 //  Engine
 //
-//  Created by Yongsik Im on 2/6/25.
+//  Created by Yongsik Im on 2025.2.6
 //
 
 #ifndef __HS_LOG_H__

@@ -1,6 +1,7 @@
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Engine/Core/EngineContext.h"
+#include "Engine/Core/Window.h"
 
 #include "Engine/RHI/Metal/RHIContextMetal.h"
 #include "Engine/RHI/Metal/RHIUtilityMetal.h"
@@ -9,10 +10,10 @@
 #include "Engine/RHI/Metal/CommandHandleMetal.h"
 #include "Engine/RHI/Metal/SwapchainMetal.h"
 
-#include "Engine/Core/Window.h"
+#include "Engine/Platform/Mac/PlatformWindowMac.h"
 
-#include "ImGui/imgui_impl_sdl3.h"
 #include "ImGui/imgui_impl_metal.h"
+#include "ImGui/imgui_impl_osx.h"
 
 using namespace HS;
 
@@ -27,43 +28,54 @@ void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const Im
 
 void InitializeBackend(Swapchain* swapchain)
 {
-    SwapchainMetal*     swMetal      = static_cast<SwapchainMetal*>(swapchain);
-    NativeWindowHandle* nativeHandle = reinterpret_cast<NativeWindowHandle*>(swMetal->nativeHandle);
+    const auto& nativeWindow = swapchain->GetInfo().nativeWindow;
+    NSWindow* window         = (__bridge NSWindow*)(nativeWindow->handle);
 
-    id<MTLDevice> device = ((__bridge_transfer CAMetalLayer*)nativeHandle->layer).device;
+    NSView* view        = [(HSViewController*)[window delegate] view];
+    CAMetalLayer* layer = (CAMetalLayer*)[view layer];
+
+    id<MTLDevice> device = [layer device];
     ImGui_ImplMetal_Init(device);
-    ImGui_ImplSDL3_InitForMetal(static_cast<SDL_Window*>(nativeHandle->window));
+    ImGui_ImplOSX_Init(view);
 }
 
 void BeginRender(Swapchain* swapchain)
 {
-    @autoreleasepool
-    {
-        SwapchainMetal*          swMetal = static_cast<SwapchainMetal*>(swapchain);
-        MTLRenderPassDescriptor* rpDesc  = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
+    SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
+    NSWindow* window        = (__bridge NSWindow*)swMetal->nativeHandle;
+    HSViewController* vc = (HSViewController*)[window delegate];
+    NSView* view            = [vc view];
 
-        ImGui_ImplMetal_NewFrame(rpDesc);
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
-    }
+    const NativeWindow* nativeWindow = (swapchain->GetInfo().nativeWindow);
+    
+    CGSize backingSize = [vc getBackingViewSize];
+    float backingScaleFactor = [window backingScaleFactor];
+    
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize.x = backingSize.width;
+    io.DisplaySize.y = backingSize.height;
+    io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
+    
+    MTLRenderPassDescriptor* rpDesc = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
+
+    ImGui_ImplMetal_NewFrame(rpDesc);
+    ImGui_ImplOSX_NewFrame(view);
+    ImGui::NewFrame();
 }
 
 void EndRender(Swapchain* swapchain)
 {
-    @autoreleasepool
-    {
-        CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(swapchain->GetCommandBufferForCurrentFrame());
-        cmdBufferMetal->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
+    CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(swapchain->GetCommandBufferForCurrentFrame());
+    cmdBufferMetal->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
 
-        ImGui::Render();
-        ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBufferMetal->handle, cmdBufferMetal->curRenderEncoder);
-    }
+    ImGui::Render();
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBufferMetal->handle, cmdBufferMetal->curRenderEncoder);
 }
 
 void FinalizeBackend()
 {
     ImGui_ImplMetal_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
+    ImGui_ImplOSX_Shutdown();
 }
 
 }; // namespace ImGuiExt

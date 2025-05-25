@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIContext.h
 //  Engine
 //
@@ -46,6 +46,7 @@ public:
 
     virtual Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true)                         = 0;
     virtual Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) = 0;
+    
     virtual void    DestroyShader(Shader* shader)                                                                                            = 0;
 
     virtual Buffer* CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) = 0;
@@ -67,9 +68,6 @@ public:
 
     virtual ResourceSetPool* CreateResourceSetPool()                        = 0;
     virtual void             DestroyResourceSetPool(ResourceSetPool* dPool) = 0;
-    //
-    //    virtual CommandQueue* CreateCommandQueue() =0;
-    //    virtual void DestroyCommandQueue(CommandQueue* cmdQueue) = 0;
 
     virtual CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) = 0;
     virtual void         DestroyCommandPool(CommandPool* cmdPool)       = 0;
