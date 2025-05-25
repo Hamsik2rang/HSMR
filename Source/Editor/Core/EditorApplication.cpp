@@ -41,7 +41,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
     windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 640, 360, windowFlags);
+    _window = new EditorWindow("EditorApp BaseWindow", 1280, 720, windowFlags);
     if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");

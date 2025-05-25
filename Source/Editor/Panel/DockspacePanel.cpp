@@ -19,19 +19,22 @@ void DockspacePanel::Cleanup()
 
 void DockspacePanel::Draw()
 {
-    ImGuiWindowFlags   windowFlags    = ImGuiWindowFlags_NoDocking;
+    ImGuiWindowFlags windowFlags      = ImGuiWindowFlags_NoDocking;
     ImGuiDockNodeFlags dockspaceFlags = 0; /*= ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoBackground*/
 
+    windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    dockspaceFlags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+    
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-    windowFlags |= ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
     static bool open = true;
 
@@ -44,6 +47,7 @@ void DockspacePanel::Draw()
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
         ImGuiID dockspaceID = ImGui::GetID("Dockspace Panel");
+        
         ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
     }
 

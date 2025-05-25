@@ -30,7 +30,9 @@
     layer.framebufferOnly = YES;
     layer.drawableSize    = self.view.bounds.size;
     layer.contentsScale   = [[NSScreen mainScreen] backingScaleFactor];
-
+    
+    auto curDrawableSize = layer.drawableSize;
+    
     self.view.layer = layer;
 
     [self resizeDrawable];
@@ -64,11 +66,7 @@
 
 - (void)windowDidResize:(NSNotification*)notification
 {
-    NSRect frame = [_window frame];
-    [self.view setFrameSize:frame.size];
     [self resizeDrawable];
-
-    NSLog(@"frameSize : %f %f", frame.size.width, frame.size.height);
 }
 
 - (void)
@@ -114,10 +112,11 @@
 
 - (void)resizeDrawable
 {
-    NSRect frameRect        = [_window frame];
-    NSRect backingFrameRect = [_window convertRectToBacking:frameRect];
+    NSRect contentViewSize        = [_window contentView].frame;
+    NSRect backingFrameRect = [_window convertRectToBacking:contentViewSize];
 
     CAMetalLayer* layer        = (CAMetalLayer*)self.view.layer;
+    
     CGSize backingDrawableSize = CGSizeMake(backingFrameRect.size.width, backingFrameRect.size.height);
     _curDrawableSize           = backingDrawableSize;
     [layer setDrawableSize:_curDrawableSize];
