@@ -70,6 +70,7 @@ endif()
 
 set(MATH_HEADERS
     Math/Math.h
+    Math/Vec2f.h
     Math/Vec3f.h
     Math/Vec4f.h
     Math/Mat4f.h
@@ -80,6 +81,7 @@ list(APPEND TOTAL_FILES ${MATH_HEADERS})
 
 set(MATH_SOURCES
     Math/Math.cpp
+    Math/Vec2f.cpp
     Math/Vec3f.cpp
     Math/Vec4f.cpp
     Math/Mat4f.cpp

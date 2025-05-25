@@ -1,5 +1,5 @@
-#ifndef __HS_VEC_3f_H__
-#define __HS_VEC_3f_H__
+#ifndef __HS_VEC_3F_H__
+#define __HS_VEC_3F_H__
 
 #include "Precompile.h"
 
@@ -7,7 +7,7 @@
 
 HS_NS_BEGIN
 
-using Vec3f = glm::vec4;
+using Vec3f = glm::vec3;
 
 HS_NS_END
 

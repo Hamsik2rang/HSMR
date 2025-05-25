@@ -44,8 +44,8 @@ public:
     Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
     void    DestroyShader(Shader* shader) override;
 
-    Buffer* CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
-    Buffer* CreateBuffer(void* data, size_t dataSize, const BufferInfo& info) override;
+    Buffer* CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
+    Buffer* CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info) override;
     void    DestroyBuffer(Buffer* buffer) override;
 
     Texture* CreateTexture(void* image, const TextureInfo& info) override;

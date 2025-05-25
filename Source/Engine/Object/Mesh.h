@@ -11,7 +11,7 @@
 
 #include "Engine/Object/Object.h"
 
-#include "glm/glm.hpp"
+#include "Engine/Math/Math.h"
 
 HS_NS_BEGIN
 
@@ -25,7 +25,7 @@ public:
 
     HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(subMesh); }
 
-    HS_FORCEINLINE void  SetPosition(std::vector<float>&& position) { _position = std::move(position); }
+    HS_FORCEINLINE void  SetPosition(std::vector<float>&& position) { _position = std::move(position); calculateBounds(); }
     HS_FORCEINLINE void  SetPosition(const std::vector<float>& position) { _position = position; }
     HS_FORCEINLINE const std::vector<float>& GetPosition() const { return _position; }
 
@@ -58,15 +58,29 @@ public:
     HS_FORCEINLINE const std::vector<uint32>& GetIndices() const { return _indices; }
 
 private:
+    
+    void calculateBounds();
+    void calculateNormal();
+    void calculateTangent();
+    
+    
     std::vector<float> _position;
     std::vector<float> _texcoord[8];
     std::vector<float> _normal;
     std::vector<float> _color;
     std::vector<float> _tangent;
     std::vector<float> _bitangent;
+    
+    std::vector<int> _bondIDs;
+    std::vector<float> _boneWeights;
 
     std::vector<Mesh*>  _subMeshes;
     std::vector<uint32> _indices;
+    
+    struct Bound{
+        Vec4f min;
+        Vec4f max;
+    } _bound;
 };
 
 HS_NS_END

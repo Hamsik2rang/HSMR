@@ -49,8 +49,8 @@ public:
     
     virtual void    DestroyShader(Shader* shader)                                                                                            = 0;
 
-    virtual Buffer* CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) = 0;
-    virtual Buffer* CreateBuffer(void* data, size_t dataSize, const BufferInfo& info)                               = 0;
+    virtual Buffer* CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) = 0;
+    virtual Buffer* CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info)                               = 0;
     virtual void    DestroyBuffer(Buffer* buffer)                                                                   = 0;
 
     virtual Texture* CreateTexture(void* image, const TextureInfo& info)                                                                  = 0;

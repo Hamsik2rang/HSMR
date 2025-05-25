@@ -47,15 +47,22 @@ public:
 
     Object(EType type)
         : _type(type)
+        , _isValid(true)
     {}
-    virtual ~Object() = default;
+    virtual ~Object()
+    {
+        _type = EType::UNKNOWN;
+        _isValid = false;
+    }
 
     Object::EType GetType() const { return _type; }
-
+    bool IsValid() const { return _isValid; }
+    
     const char* name;
 
 protected:
     EType _type;
+    bool _isValid;
 };
 
 HS_NS_END

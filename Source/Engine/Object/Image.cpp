@@ -13,34 +13,94 @@ HS_NS_BEGIN
 Image::Image(const char* path) noexcept
     : Object(EType::IMAGE)
 {
-    Scoped<Image> image  = ResourceManager::LoadImageFromFile(path);
-    Image*        pImage = image.get();
-    _rawData             = std::move(pImage->_rawData);
-    _width               = pImage->_width;
-    _height              = pImage->_height;
-    _channel             = pImage->_channel;
+    Scoped<Image> image = ResourceManager::LoadImageFromFile(path);
+    Image* pImage       = image.get();
+    _rawData            = std::move(pImage->_rawData);
+    _width              = pImage->_width;
+    _height             = pImage->_height;
+    _channel            = pImage->_channel;
 }
 
 Image::Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept
     : Object(EType::IMAGE)
-    , _rawData(static_cast<uint8*>(data))
+    , _rawData(nullptr)
     , _width(width)
     , _height(height)
     , _channel(channel)
+    , _rawDataSize(width * height * channel)
 {
+    _rawData = new uint8[_rawDataSize];
+    ::memcpy(_rawData, data, _rawDataSize);
 }
 
-Image::Image(const Image& image) noexcept
+Image::Image(const Image& o) noexcept
     : Object(EType::IMAGE)
+    , _rawData(nullptr)
+    , _rawDataSize(o._rawDataSize)
+    , _width(o._width)
+    , _height(o._height)
+    , _channel(o._channel)
+    , _type(o._type)
+
 {
+    _rawData = new uint8[o._rawDataSize];
+    ::memcpy(_rawData, o._rawData, o._rawDataSize);
 }
-Image::Image(Image&& image) noexcept
+
+Image::Image(Image&& o) noexcept
     : Object(EType::IMAGE)
+    , _rawData(std::move(o._rawData))
+    , _rawDataSize(o._rawDataSize)
+    , _width(o._width)
+    , _height(o._height)
+    , _channel(o._channel)
+    , _type(o._type)
 {
 }
 
 Image::~Image()
 {
+    if (_rawData)
+    {
+        delete[] _rawData;
+        _rawData = nullptr;
+    }
+}
+
+Image& Image::operator=(const Image& o)
+{
+    if (this != &o)
+    {
+        if (_rawData != nullptr)
+        {
+            delete[] _rawData;
+        }
+
+        _rawData = new uint8[o._rawDataSize];
+        ::memcpy(_rawData, o._rawData, o._rawDataSize);
+        _rawDataSize = o._rawDataSize;
+        _type        = o._type;
+        _width       = o._width;
+        _height      = o._height;
+        _channel     = o._channel;
+    }
+
+    return *this;
+}
+
+Image& Image::operator=(Image&& o)
+{
+    if (this != &o)
+    {
+        _rawData     = std::move(o._rawData);
+        _rawDataSize = o._rawDataSize;
+        _type        = o._type;
+        _width       = o._width;
+        _height      = o._height;
+        _channel     = o._channel;
+    }
+
+    return *this;
 }
 
 HS_NS_END

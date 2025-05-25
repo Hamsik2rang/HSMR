@@ -36,13 +36,14 @@ private:
     void createResourceHandles();
     void createPipelineHandles(RenderPass* renderPass);
 
-    RenderTarget*     _currentRenderTarget = nullptr;
-    Buffer*           _vertexBuffer       = nullptr;
-    Shader*           _vertexShader       = nullptr;
-    Shader*           _fragmentShader     = nullptr;
-    GraphicsPipeline* _gPipeline          = nullptr;
+    RenderTarget* _currentRenderTarget = nullptr;
+    Buffer* _vertexBuffer[2];
+    Buffer* _indexBuffer;
+    Shader* _vertexShader        = nullptr;
+    Shader* _fragmentShader      = nullptr;
+    GraphicsPipeline* _gPipeline = nullptr;
 
-    GraphicsPipeline* pipeline = nullptr;
+    size_t _indexCount = 0;
 };
 
 HS_NS_END
