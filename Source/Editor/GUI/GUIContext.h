@@ -1,4 +1,4 @@
-﻿//
+//
 //  GUIContext.h
 //  HSMR
 //
@@ -16,7 +16,8 @@
 namespace HS
 {
 class EngineContext;
-}
+class Window;
+} // namespace HS
 
 HS_NS_EDITOR_BEGIN
 
@@ -36,9 +37,9 @@ public:
     void SaveLayout(const std::string& layoutPath);
 
 private:
-    ImGuiContext* _context;  // 네임스페이스 없이 사용
+    ImGuiContext* _context; // 네임스페이스 없이 사용
     ImFont* _font;
-    std::string  _defaultLayoutPath;
+    std::string _defaultLayoutPath;
 };
 
 HS_EDITOR_API GUIContext* hs_editor_get_gui_context();

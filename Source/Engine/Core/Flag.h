@@ -2,7 +2,7 @@
 //  Flag.h
 //  Engine
 //
-//  Created by Yongsik Im on 3/22/25.
+//  Created by Yongsik Im on 2025.3.22
 //
 
 #ifndef __HS_FLAG_H__

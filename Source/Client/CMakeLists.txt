@@ -2,14 +2,11 @@ set(TARGET_NAME Client)
 
 set(EXECUTABLE_NAME "HSMR")
 
-set(COMMON_SOURCES
+set(TOTAL_FILES
     main.cpp
 )
-
-source_group("Entry" FILES ${COMMON_SOURCES})
-
 add_executable(${TARGET_NAME}
-    ${COMMON_SOURCES}
+    ${TOTAL_FILES}
 )
 
 list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
@@ -21,9 +18,10 @@ set_target_properties(${TARGET_NAME} PROPERTIES
 )
 
 target_link_libraries(${TARGET_NAME}
-    PUBLIC
+    PRIVATE
     Engine
     Editor
+    ${OSX_FRAMEWORK}
 )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
@@ -36,8 +34,11 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     HS_EXECUTABLE_NAME="${EXECUTABLE_NAME}"
 )
 
-set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
-set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE Metal)
+if(APPLE)
+    set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
+    set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE Metal)
+    set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_ATTRIBUTE_MTL_ENABLE_DEBUG_INFO "INCLUDE_SOURCE")
+endif()
 
 # set_property(TARGET ${TARGET_NAME} PROPERTY XCODE_GENERATE_DEBUGGING_SYMBOLS ON)
 message(STATUS "HS_DEPS_DLL_DIR : ${HS_DEPS_DLL_DIR}")
@@ -45,3 +46,4 @@ message(STATUS "HS_DEPS_DLL_DIR : ${HS_DEPS_DLL_DIR}")
 install(DIRECTORY ${HS_DEPS_DLL_DIR}/ DESTINATION "${INSTALL_FOLDER}")
 install(DIRECTORY ${HS_DEPS_LIB_DIR}/ DESTINATION "${INSTALL_FOLDER}")
 install(DIRECTORY ${HS_RES_DIR}/ DESTINATION "${INSTALL_FOLDER}/Resource")
+install(FILES ${METALLIB_FILE} DESTINATION "${INSTALL_FOLDER}/Resource/Shader")

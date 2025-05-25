@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIDefinition
 //  HSMR
 //
@@ -15,9 +15,10 @@
 #include <vector>
 #include <string>
 
-HS_NS_BEGIN
+namespace HS { struct NativeWindow; }
+namespace HS { class Swapchain;}
 
-class Swapchain;
+HS_NS_BEGIN
 
 class RHIHandle
 {
@@ -258,14 +259,11 @@ struct RenderTexture
 
 struct SwapchainInfo
 {
-	uint32 width;
-	uint32 height;
-
 	bool useDepth;
 	bool useStencil;
 	bool useMSAA;
 
-	void* nativeWindowHandle;
+    const NativeWindow* nativeWindow;
 };
 
 enum class EStoreAction

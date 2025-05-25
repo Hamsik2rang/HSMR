@@ -1,4 +1,4 @@
-﻿#include "Engine/Core/Exception.h"
+#include "Engine/Core/Exception.h"
 
 #include "Engine/Core/Log.h"
 
@@ -51,7 +51,7 @@ Exception::Exception(const char* file, unsigned int line, const char* fmt, ...)
 		const int r = vsnprintf(buf, fmtLen + 1, fmt, args);
 		if (r == -1)
 		{
-			delete buf;
+			delete[] buf;
 			return;
 		}
 		builder.append(buf);

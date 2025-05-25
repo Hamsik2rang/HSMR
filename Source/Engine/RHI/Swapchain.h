@@ -1,4 +1,4 @@
-﻿//
+//
 //  Swapchian.h
 //  Engine
 //
@@ -13,11 +13,12 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Renderer/RenderTarget.h"
 
-HS_NS_BEGIN
+#include "Engine/Platform/PlatformWindow.h"
 
-class CommandBuffer;
-class RenderTarget;
-class NativeWindowHandle;
+namespace HS { class CommandBuffer; }
+namespace HS { class RenderTarget; }
+
+HS_NS_BEGIN
 
 class Swapchain
 {
@@ -29,30 +30,26 @@ public:
     //    HS_FORCEINLINE const std::vector<CommandBuffer*>& GetSubmittedCmdBuffers() const {return _submittedCmdBuffers;}
     //    HS_FORCEINLINE void ClearSubmittedCmdBuffers() { _submittedCmdBuffers.clear();}
 
-    virtual uint8          GetMaxFrameIndex() const = 0;
-    virtual uint8          GetCurrentFrameIndex() const = 0;
-    virtual CommandBuffer* GetCommandBufferForCurrentFrame() const = 0;
+    virtual uint8          GetMaxFrameCount() const                   = 0;
+    virtual uint8          GetCurrentFrameIndex() const               = 0;
+    virtual CommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
     virtual CommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
-    virtual RenderTarget   GetRenderTargetForCurrentFrame() const = 0;
+    virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
 
-    HS_FORCEINLINE uint32 GetWidth() { return _info.width; }
-    HS_FORCEINLINE uint32 GetHeight() { return _info.height; }
-
-    HS_FORCEINLINE void SetWidth(uint32 width) { _info.width = width; }
-    HS_FORCEINLINE void SetHeight(uint32 height) { _info.height = height; }
+    HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->width; }
+    HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->width; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
     HS_FORCEINLINE RenderPass*   GetRenderPass() const { return _renderPass; }
 
 protected:
     virtual void setRenderTargets() = 0;
-    virtual void setRenderPass()   = 0;
+    virtual void setRenderPass()    = 0;
 
     SwapchainInfo _info;
 
     RenderPass*               _renderPass;
     std::vector<RenderTarget> _renderTargets;
-
 };
 
 HS_NS_END
