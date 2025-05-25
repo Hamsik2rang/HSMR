@@ -86,13 +86,18 @@ void EditorApplication::Run()
 
     // TODO: Elapse Timer
 
-    while (_window->IsOpened())
+    while (true)
     {
 #if defined(__APPLE__)
         AutoReleasePool pool;
 #endif
         _window->ProcessEvent();
-
+        
+        if(!_window->IsOpened())
+        {
+            break;
+        }
+        
         _window->NextFrame();
 
         _window->Update();

@@ -10,10 +10,6 @@ HS_NS_BEGIN
 
 std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_eventQueueTable;
 
-bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent);
-void hs_window_push_event(const NativeWindow* pWindow, EWindowEvent event);
-EWindowEvent hs_window_pop_event(const NativeWindow* pWindow);
-
 Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags)
     : _isClosed(false)
     , _shouldClose(false)
@@ -36,7 +32,7 @@ Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags
     _swapchain = _rhiContext->CreateSwapchain(swInfo);
 
     s_eventQueueTable.insert({&_nativeWindow, std::queue<EWindowEvent>()});
-    
+
     onInitialize();
 }
 
@@ -101,7 +97,7 @@ void Window::Shutdown()
 void Window::ProcessEvent()
 {
     EWindowEvent event;
-    while (hs_window_peek_event(&_nativeWindow, event))
+    while (hs_window_peek_event(&_nativeWindow, event, true))
     {
         switch (event)
         {
@@ -150,6 +146,12 @@ void Window::ProcessEvent()
         }
     }
 
+    if (_shouldClose)
+    {
+        Flush();
+        return;
+    }
+
     for (auto* child : _childs)
     {
         child->ProcessEvent();
@@ -192,7 +194,11 @@ void Window::Flush()
     }
 }
 
-bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent)
+HS_NS_END
+
+using namespace HS;
+
+bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 
@@ -207,6 +213,12 @@ bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent)
     }
 
     outEvent = eventQueue.front();
+
+    if (remove)
+    {
+        eventQueue.pop();
+    }
+
     return true;
 }
 
@@ -231,5 +243,3 @@ EWindowEvent hs_window_pop_event(const NativeWindow* pWindow)
 
     return event;
 }
-
-HS_NS_END

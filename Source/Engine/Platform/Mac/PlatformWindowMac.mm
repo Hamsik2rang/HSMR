@@ -14,6 +14,7 @@
 @implementation HSViewController
 {
     CGSize _curDrawableSize;
+    HS::NativeWindow* _pHsNativeWindow;
 }
 - (void)loadView
 {
@@ -32,9 +33,7 @@
 
     self.view.layer = layer;
 
-    CGSize backingDrawableSize = CGSizeMake(layer.drawableSize.width * layer.contentsScale, layer.drawableSize.height * layer.contentsScale);
-    _curDrawableSize           = backingDrawableSize;
-    [layer setDrawableSize:_curDrawableSize];
+    [self resizeDrawable];
 }
 
 - (void)viewDidLoad
@@ -63,7 +62,17 @@
 {
 }
 
-- (void)windowDidBecomeMain:(NSNotification*)notification
+- (void)windowDidResize:(NSNotification*)notification
+{
+    NSRect frame = [_window frame];
+    [self.view setFrameSize:frame.size];
+    [self resizeDrawable];
+
+    NSLog(@"frameSize : %f %f", frame.size.width, frame.size.height);
+}
+
+- (void)
+    windowDidBecomeMain:(NSNotification*)notification
 {
     // 윈도우가 메인 윈도우가 되었을 때
     NSLog(@"Window became main");
@@ -83,6 +92,8 @@
 
 - (void)windowWillClose:(NSNotification*)notification
 {
+    hs_window_push_event(_pHsNativeWindow, HS::EWindowEvent::CLOSE);
+
     [_window setDelegate:nil];
     [_window setContentViewController:nil];
 
@@ -92,12 +103,29 @@
 - (BOOL)windowShouldClose:(NSWindow*)sender
 {
     NSLog(@"Window should close");
+
     return YES; // 윈도우 닫기 허용
 }
 
 - (CGSize)getBackingViewSize
 {
     return _curDrawableSize;
+}
+
+- (void)resizeDrawable
+{
+    NSRect frameRect        = [_window frame];
+    NSRect backingFrameRect = [_window convertRectToBacking:frameRect];
+
+    CAMetalLayer* layer        = (CAMetalLayer*)self.view.layer;
+    CGSize backingDrawableSize = CGSizeMake(backingFrameRect.size.width, backingFrameRect.size.height);
+    _curDrawableSize           = backingDrawableSize;
+    [layer setDrawableSize:_curDrawableSize];
+}
+
+- (void)setHSWindow:(HS::NativeWindow*)pHsNativeWindow
+{
+    _pHsNativeWindow = pHsNativeWindow;
 }
 
 @end
@@ -127,12 +155,15 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
     outNativeWindow.height    = height;
     outNativeWindow.minWidth  = 1;
     outNativeWindow.minHeight = 1;
+
+    [vc setHSWindow:&outNativeWindow];
 }
 
 void hs_platform_window_destroy(NativeWindow& window)
 {
-    NSWindow* handle = (__bridge NSWindow*)window.handle;
-    [handle release];
+    // Autorelease되므로 직접 Release할 필요 없음.
+    //    NSWindow* handle = (__bridge NSWindow*)window.handle;
+    //    [handle release];
 }
 
 void hs_platform_window_show(const NativeWindow& nativeWindow)

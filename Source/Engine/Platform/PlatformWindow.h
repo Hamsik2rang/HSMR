@@ -100,8 +100,8 @@ struct NativeWindow
     void* handle;
 
     const char* title;
-    uint16      width;
-    uint16      height;
+    uint16 width;
+    uint16 height;
 
     uint16 minWidth;
     uint16 maxWidth;
@@ -115,7 +115,9 @@ struct NativeWindow
     bool resizable   : 1;
     bool useHDR      : 1;
 
+    bool shuoldUpdate : 1;
     bool shouldRender : 1;
+    bool shouldClose  : 1;
 };
 
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
