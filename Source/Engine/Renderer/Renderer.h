@@ -1,4 +1,4 @@
-﻿//
+//
 //  Renderer.h
 //  HSMR
 //
@@ -17,17 +17,14 @@
 #include <vector>
 #include <unordered_map>
 
-#include <SDL3/SDL.h>
+namespace HS { class EngineContext; }
+namespace HS { class RendererPass; }
+namespace HS { class Scene; }
+namespace HS { class Swapchain; }
+namespace HS { class Framebuffer; }
+namespace HS { struct NativeWindow; }
 
 HS_NS_BEGIN
-
-class EngineContext;
-class RendererPass;
-class Scene;
-class Swapchain;
-class Framebuffer;
-
-struct NativeWindowHandle;
 
 class Renderer
 {
@@ -71,7 +68,7 @@ public:
 
     HS_FORCEINLINE RHIContext* GetRHIContext() { return _rhiContext; }
 
-    HS_FORCEINLINE uint32 GetCurrentFrameIndex() { return _frameIndex; }
+    HS_FORCEINLINE uint32 GetCurrentFrameIndex() { return frameIndex; }
 
     virtual RenderTargetInfo GetBareboneRenderTargetInfo() = 0;
 
@@ -83,7 +80,7 @@ protected:
     CommandBuffer*  _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
 
     std::vector<RendererPass*> _rendererPasses;
-    uint32                     _frameIndex       = 0;
+    uint32                     frameIndex       = 0;
     bool                       _isInitialized    = false;
     bool                       _isPassListSorted = true;
 

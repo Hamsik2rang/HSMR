@@ -1,4 +1,4 @@
-#include "Engine/RHI/RenderHandle.h"
+﻿#include "Engine/RHI/RenderHandle.h"
 
 HS_NS_BEGIN
 
@@ -24,6 +24,14 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineInfo& info)
 {}
 
 GraphicsPipeline::~GraphicsPipeline()
+{}
+
+ComputePipeline::ComputePipeline(const ComputePipelineInfo& info)
+    : RHIHandle(EType::COMPUTE_PIPELINE)
+    , info(info)
+{}
+
+ComputePipeline::~ComputePipeline()
 {}
 
 HS_NS_END

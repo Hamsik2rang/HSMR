@@ -1,4 +1,4 @@
-﻿#include "Editor/Panel/MenuPanel.h"
+#include "Editor/Panel/MenuPanel.h"
 
 #include "Engine/Core/Window.h"
 
@@ -68,6 +68,7 @@ void MenuPanel::Draw()
             {
                 
             }
+            ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
     }

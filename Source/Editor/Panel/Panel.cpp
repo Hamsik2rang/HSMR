@@ -1,4 +1,4 @@
-﻿#include "Editor/Panel/Panel.h"
+#include "Editor/Panel/Panel.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -15,7 +15,7 @@ void Panel::RemovePanel(Panel* panel)
     {
         if (_childs[i] == panel)
         {
-            index = static_cast<size_t>(i);
+            index = static_cast<decltype(index)>(i);
             break;
         }
     }

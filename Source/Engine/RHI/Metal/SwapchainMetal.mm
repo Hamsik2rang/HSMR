@@ -3,6 +3,8 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Core/Window.h"
 
+#include "Engine/Platform/Mac/PlatformWindowMac.h"
+
 #include "Engine/Renderer/RenderDefinition.h"
 
 #include "Engine/RHI/Metal/RHIUtilityMetal.h"
@@ -10,35 +12,30 @@
 #include "Engine/RHI/Metal/CommandHandleMetal.h"
 #include "Engine/RHI/Metal/ResourceHandleMetal.h"
 
-#include <SDL3/SDL.h>
+#import <MetalKit/MetalKit.h>
 
 HS_NS_BEGIN
 
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
     , frameIndex(0)
-    , _maxFrameIndex(3)
+    , maxFrameCount(3)
+    , _drawable(nil)
 {
-    NativeWindowHandle* nh = reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle);
+    const NativeWindow* nh = info.nativeWindow;
+    nativeHandle = nh->handle;
 
-    nativeHandle       = nh;
-    view               = nh->view;
-    layer              = (__bridge CAMetalLayer*)SDL_Metal_GetLayer(view);
-    layer.device       = MTLCreateSystemDefaultDevice();
-    layer.drawableSize = CGSizeMake(info.width, info.height);
+    NSWindow*         window = (__bridge NSWindow*)(nh->handle);
+    HSViewController* vc     = (HSViewController*)[window delegate];
 
-    drawable = [layer nextDrawable];
-
-    _maxFrameIndex = layer.maximumDrawableCount;
-
-    _commandBuffers.resize(_maxFrameIndex);
-    _renderTargets.resize(_maxFrameIndex);
+    _commandBufferMTLs = new CommandBuffer*[maxFrameCount];
+    _renderTargets.resize(maxFrameCount);
 
     RHIContext* rhiContext = hs_engine_get_rhi_context();
 
-    for (uint8 i = 0; i < _maxFrameIndex; i++)
+    for (uint8 i = 0; i < maxFrameCount; i++)
     {
-        _commandBuffers[i] = rhiContext->CreateCommandBuffer();
+        _commandBufferMTLs[i] = rhiContext->CreateCommandBuffer();
     }
 
     setRenderTargets();
@@ -47,15 +44,16 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
 SwapchainMetal::~SwapchainMetal()
 {
-    for (auto& cmdBuffer : _commandBuffers)
+    for (uint8 i = 0; i < maxFrameCount; i++)
     {
+        auto* cmdBuffer = _commandBufferMTLs[i];
         if (nullptr == cmdBuffer)
         {
             delete cmdBuffer;
             cmdBuffer = nullptr;
         }
     }
-    _commandBuffers.clear();
+    delete[] _commandBufferMTLs;
 }
 
 void SwapchainMetal::setRenderTargets()
@@ -66,8 +64,8 @@ void SwapchainMetal::setRenderTargets()
     info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
     TextureInfo colorTextureInfo{};
-    colorTextureInfo.extent.width         = _info.width;
-    colorTextureInfo.extent.height        = _info.height;
+    colorTextureInfo.extent.width         = (_info.nativeWindow)->width * (_info.nativeWindow)->scale;
+    colorTextureInfo.extent.height        = (_info.nativeWindow)->height * (_info.nativeWindow)->scale;
     colorTextureInfo.extent.depth         = 1;
     colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
     colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;
@@ -97,6 +95,7 @@ void SwapchainMetal::setRenderPass()
     colorAttachment.loadAction     = ELoadAction::CLEAR;
     colorAttachment.storeAction    = EStoreAction::STORE;
     colorAttachment.isDepthStencil = false;
+    info.colorAttachments.push_back(colorAttachment);
 
     _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
 }

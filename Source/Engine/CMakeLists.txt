@@ -30,6 +30,64 @@ set(CORE_SOURCES
 source_group("Core\\Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
+set(PLATFORM_HEADERS
+    Platform/PlatformDefinition.h
+    Platform/PlatformApplication.h
+    Platform/PlatformWindow.h
+)
+
+source_group("Platform\\Public" FILES ${PLATFORM_HEADERS})
+list(APPEND TOTAL_FILES ${PLATFORM_HEADERS})
+
+if(APPLE)
+    set(PLATFORM_OSX
+        Platform/Mac/PlatformApplicationMac.h
+        Platform/Mac/PlatformApplicationMac.mm
+        Platform/Mac/PlatformWindowMac.h
+        Platform/Mac/PlatformWindowMac.mm
+        Platform/Mac/PlatformFileSystemMac.h
+        Platform/Mac/PlatformFileSystemMac.mm
+        Platform/Mac/AutoReleasePool.h
+        Platform/Mac/AutoReleasePool.mm
+    )
+
+    source_group("Platform\\Private\\OSX" FILES ${PLATFORM_OSX})
+    list(APPEND TOTAL_FILES ${PLATFORM_OSX})
+
+else()
+    set(PLATFORM_WINDOWS
+        Platform/Windows/PlatformApplicationWindows.h
+        Platform/Windows/PlatformApplicationWindows.cpp
+        Platform/Windows/PlatformWindowWindows.h
+        Platform/Windows/PlatformWindowWindows.cpp
+        Platform/Windows/PlatformFileSystemWindows.h
+        Platform/Windows/PlatformFileSystemWindows.cpp
+    )
+
+    source_group("Platform\\Private\\Windows" FILES ${PLATFORM_WINDOWS})
+    list(APPEND TOTAL_FILES ${PLATFORM_WINDOWS})
+endif()
+
+set(MATH_HEADERS
+    Math/Math.h
+    Math/Vec3f.h
+    Math/Vec4f.h
+    Math/Mat4f.h
+)
+
+source_group("Math\\Public" FILES ${MATH_HEADERS})
+list(APPEND TOTAL_FILES ${MATH_HEADERS})
+
+set(MATH_SOURCES
+    Math/Math.cpp
+    Math/Vec3f.cpp
+    Math/Vec4f.cpp
+    Math/Mat4f.cpp
+)
+
+source_group("Math\\Private" FILES ${MATH_SOURCES})
+list(APPEND TOTAL_FILES ${MATH_SOURCES})
+
 set(ECS_HEADERS
     ECS/Entity.h
     ECS/Scene.h
@@ -217,8 +275,6 @@ set(UTILITY_HEADERS
     Utility/Geometry.h
     Utility/Color.h
     Utility/Hash.h
-    Utility/Image.h
-    Utility/Mesh.h
 )
 
 source_group("Utility\\Public" FILES ${UTILITY_HEADERS})
@@ -229,8 +285,6 @@ set(UTILITY_SOURCES
     Utility/Geometry.cpp
     Utility/Color.cpp
     Utility/Hash.cpp
-    Utility/Image.cpp
-    Utility/Mesh.cpp
 )
 
 source_group("Utility\\Private" FILES ${UTILITY_SOURCES})
@@ -287,7 +341,7 @@ if(APPLE)
     add_dependencies(${TARGET_NAME} Shader) # TODO: HLSL 도입시 윈도우에도 추가할 것!
     target_link_libraries(${TARGET_NAME}
         PUBLIC
-        ${SDL3}
+        ${ASSIMP}
         PRIVATE
         "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
     )

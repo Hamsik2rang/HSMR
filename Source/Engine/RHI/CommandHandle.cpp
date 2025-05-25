@@ -1,44 +1,44 @@
-#include "Engine/RHI/CommandHandle.h"
+﻿#include "Engine/RHI/CommandHandle.h"
 
 HS_NS_BEGIN
 
 Semaphore::Semaphore()
-    : RHIHandle(EType::SEMAPHORE)
+	: RHIHandle(EType::SEMAPHORE)
 {}
 
 Semaphore::~Semaphore()
 {}
 
 Fence::Fence()
-    : RHIHandle(EType::FENCE)
+	: RHIHandle(EType::FENCE)
 {}
 
 Fence::~Fence()
 {}
 
 ResourceBarrier::ResourceBarrier()
-    : RHIHandle(EType::RESOURCE_BARRIER)
+	: RHIHandle(EType::RESOURCE_BARRIER)
 {}
 
 ResourceBarrier::~ResourceBarrier()
 {}
 
 CommandQueue::CommandQueue()
-    : RHIHandle(EType::COMMAND_QUEUE)
+	: RHIHandle(EType::COMMAND_QUEUE)
 {}
 
 CommandQueue::~CommandQueue()
 {}
 
 CommandPool::CommandPool()
-    : RHIHandle(EType::COMMAND_POOL)
+	: RHIHandle(EType::COMMAND_POOL)
 {}
 
 CommandPool::~CommandPool()
 {}
 
 CommandBuffer::CommandBuffer()
-    : RHIHandle(EType::COMMAND_BUFFER)
+	: RHIHandle(EType::COMMAND_BUFFER)
 {}
 
 CommandBuffer::~CommandBuffer()

@@ -1,50 +1,55 @@
-﻿#include "Editor/Core/EditorApplication.h"
+#include "Editor/Core/EditorApplication.h"
 
+#include "Engine/Platform/PlatformApplication.h"
+#include "Engine/Platform/PlatformWindow.h"
 #include "Engine/Core/Log.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
-#include "ImGui/imgui_impl_sdl3.h"
+#if defined(__APPLE__)
+#include "Engine/Platform/Mac/AutoReleasePool.h"
+#endif
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const std::string& appName)
+EditorApplication::EditorApplication(const char* appName) noexcept
     : Application(appName)
-{}
+{
+}
 
 EditorApplication::~EditorApplication()
 {
-    
+    Finalize();
 }
 
 bool EditorApplication::Initialize(EngineContext* engineContext)
 {
-    _engineContext = engineContext;
-    hs_engine_set_context(engineContext);
     if (_isInitialized)
     {
         HS_LOG(error, "Application is already initialized");
         return true;
     }
-
+    _engineContext = engineContext;
+    hs_engine_set_context(engineContext);
+    
     _guiContext = new GUIContext();
     _guiContext->Initialize();
 
-    Window::EFlags windowFlags = Window::EFlags::NONE;
-    windowFlags |= Window::EFlags::WINDOW_RESIZABLE;
-    windowFlags |= Window::EFlags::WINDOW_HIGH_PIXEL_DENSITY;
-    windowFlags |= Window::EFlags::WINDOW_METAL;
+    EWindowFlags windowFlags = EWindowFlags::NONE;
+    windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
+    windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
+    windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 3200, 2100, static_cast<uint64>(windowFlags));
-    if (HS_WINDOW_INVALID_ID == _window->Initialize())
+    _window = new EditorWindow("EditorApp BaseWindow", 640, 360, windowFlags);
+    if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");
         return false;
     }
 
-    //...
-
+    hs_platform_window_show(_window->GetNativeWindow());
+    
     _isInitialized = true;
 
     return _isInitialized;
@@ -52,6 +57,10 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
 
 void EditorApplication::Finalize()
 {
+    if(false == _isInitialized)
+    {
+        return;
+    }
     
     if (_window && _window->IsOpened())
     {
@@ -66,8 +75,9 @@ void EditorApplication::Finalize()
         delete _guiContext;
         _guiContext = nullptr;
     }
-
     //...
+
+    hs_platform_shutdown(this);
 }
 
 void EditorApplication::Run()
@@ -76,15 +86,18 @@ void EditorApplication::Run()
 
     // TODO: Elapse Timer
 
-    while (_window->IsOpened())
+    while (true)
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+#if defined(__APPLE__)
+        AutoReleasePool pool;
+#endif
+        _window->ProcessEvent();
+        
+        if(!_window->IsOpened())
         {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            _window->PeekEvent(event.type, event.window.windowID);
+            break;
         }
-
+        
         _window->NextFrame();
 
         _window->Update();
@@ -95,6 +108,8 @@ void EditorApplication::Run()
 
         _window->Flush();
     }
+
+    Finalize();
 }
 
 HS_NS_EDITOR_END

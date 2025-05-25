@@ -2,17 +2,14 @@
 //  FileSystem.h
 //  Engine
 //
-//  Created by Yongsik Im on 2/7/25.
+//  Created by Yongsik Im on 2025.2.7
 //
 
 #ifndef __HS_FILE_SYSTEM_H__
 #define __HS_FILE_SYSTEM_H__
 
 #include "Precompile.h"
-#include <stddef.h>
-#include <string>
 
-#include <sys/stat.h>
 
 HS_NS_BEGIN
 
@@ -38,7 +35,10 @@ size_t hs_file_get_size(FileHandle fileHandle);
 std::string hs_file_get_directory(const std::string& absolutePath);
 std::string hs_file_get_extension(const std::string& fileNmae);
 
-std::string hs_file_get_resource_path(const std::string& relativePath);
+std::string hs_file_get_executable_path();
+std::string hs_file_get_default_resource_directory();
+std::string hs_file_get_default_resource_path(const std::string& relativePath);
+
 
 bool hs_file_is_absolute_path(const std::string& path);
 std::string hs_file_get_relative_path(const std::string& absolutePath);

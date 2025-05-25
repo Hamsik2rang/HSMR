@@ -1,4 +1,4 @@
-﻿//
+//
 //  Renderer.mm
 //  HSMR
 //
@@ -104,7 +104,7 @@ GraphicsPipeline* Renderer::RHIHandleCache::GetGraphicsPipeline(const GraphicsPi
 Renderer::Renderer(RHIContext* context)
     : _rhiContext(context)
     , _currentRenderTarget(nullptr)
-    , _frameIndex(0)
+    , frameIndex(0)
     , _rhiHandleCache(nullptr)
 {
 }
@@ -124,7 +124,7 @@ bool Renderer::Initialize()
 
 void Renderer::NextFrame(Swapchain* swapchain)
 {
-    _frameIndex       = _rhiContext->AcquireNextImage(swapchain);
+    frameIndex       = _rhiContext->AcquireNextImage(swapchain);
     _curCommandBuffer = swapchain->GetCommandBufferForCurrentFrame();
 }
 
@@ -132,7 +132,7 @@ void Renderer::Render(const RenderParameter& param, RenderTarget* renderTarget)
 {
     for (auto* pass : _rendererPasses)
     {
-        pass->OnBeforeRendering(_frameIndex);
+        pass->OnBeforeRendering(frameIndex);
     }
 
     for (auto* pass : _rendererPasses)

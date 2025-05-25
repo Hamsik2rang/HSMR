@@ -6,18 +6,17 @@
 
 HS_NS_BEGIN
 
-RHIDeviceVulkan::RHIDeviceVulkan(VkInstance instance)
-	: physicalDevice{ VK_NULL_HANDLE }
-	, logicalDevice{ VK_NULL_HANDLE }
-	, _instance(instance)
-{
-	getPhysicalDevice();
-	createLogicalDevice();
-}
 
 RHIDeviceVulkan::~RHIDeviceVulkan()
 {
 	Destroy();
+}
+
+bool RHIDeviceVulkan::Create(VkInstance instance)
+{
+	getPhysicalDevice();
+	createLogicalDevice();
+	return true;
 }
 
 void RHIDeviceVulkan::Destroy()
@@ -37,19 +36,6 @@ void RHIDeviceVulkan::getPhysicalDevice()
 		uint32 score = getPhysicalDeviceScore(physicalDevices[i]);
 		if (maxScore == 0 || maxScore < score)
 		{
-			uint32 queueFamilyCount = 0;
-			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevices[i], &queueFamilyCount, nullptr);
-			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevices[i], &queueFamilyCount, queueFamilyProperties.data());
-
-			bool isQueueFamilyFound = false;
-			for (const auto& queueFamily : queueFamilyProperties)
-			{
-				if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-				{
-					queueFamilyIndices.graphics = i;
-					isQueueFamilyFound = true;
-				}
-			}
 
 			maxScore = score;
 			physicalDevice = physicalDevices[i];
@@ -75,6 +61,31 @@ void RHIDeviceVulkan::getPhysicalDevice()
 
 void RHIDeviceVulkan::createLogicalDevice()
 {
+	// Set queue family indices
+	uint32 queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+
+	bool isQueueFamilyFound = false;
+	for (size_t i = 0; i < queueFamilyProperties.size(); i++)
+	{
+		const auto& queueFamily = queueFamilyProperties[i];
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			queueFamilyIndices.graphics = i;
+			queueFamilyIndices.compute = i;
+		}
+		else if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
+		{
+			queueFamilyIndices.compute = i;
+		}
+
+		if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
+		{
+			queueFamilyIndices.transfer = i;
+		}
+	}
+
 	VkDeviceQueueCreateInfo queueInfo{};
 	queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queueInfo.queueFamilyIndex = queueFamilyIndices.graphics;
@@ -93,8 +104,9 @@ void RHIDeviceVulkan::createLogicalDevice()
 
 uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 {
-	VkPhysicalDeviceProperties properties;
-	VkPhysicalDeviceFeatures features;
+
+	VkPhysicalDeviceProperties properties{};
+	VkPhysicalDeviceFeatures features{};
 
 	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 	vkGetPhysicalDeviceFeatures(physicalDevice, &features);

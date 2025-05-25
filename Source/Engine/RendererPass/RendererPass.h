@@ -1,4 +1,4 @@
-﻿//
+//
 //  RendererPass.h
 //  HSMR
 //
@@ -68,7 +68,7 @@ public:
 protected:
     Renderer* _renderer;
     bool      _isExecutable = true;
-    size_t    _frameIndex;
+    size_t    frameIndex;
 
     RenderPassInfo _renderPassInfo;
 };

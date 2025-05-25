@@ -5,6 +5,9 @@
 #include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+#include "Engine/RHI/Vulkan/SwapchainVulkan.h"
+
+#include "Engine/Core/Window.h"
 
 #include <SDL3/SDL_vulkan.h>
 
@@ -24,36 +27,49 @@ static constexpr bool s_enableValidationLayers = true;
 static constexpr bool enableValidationLayers = false;
 #endif
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_report_debug_callback(
+static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageType,
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData)
 {
+	if (messageType & VK_DEBUG_REPORT_ERROR_BIT_EXT)
 	{
-		if (messageType & VK_DEBUG_REPORT_ERROR_BIT_EXT)
-		{
-			HS_LOG(crash, "ERROR: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
-		}
-		else if (messageType & VK_DEBUG_REPORT_WARNING_BIT_EXT)
-		{
-			HS_LOG(warning, "WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
-		}
-		else if (messageType & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
-		{
-			HS_LOG(warning, "PERFORMANCE WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
-		}
-		else if (messageType & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
-		{
-			HS_LOG(info, "INFO: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
-		}
-		else if (messageType & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
-		{
-			HS_LOG(debug, "DEBUG: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
-		}
+		HS_LOG(crash, "ERROR: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+	}
+	else if (messageType & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+	{
+		HS_LOG(warning, "WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+	}
+	else if (messageType & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+	{
+		HS_LOG(warning, "PERFORMANCE WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+	}
+	else if (messageType & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
+	{
+		HS_LOG(info, "INFO: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+	}
+	else if (messageType & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+	{
+		HS_LOG(debug, "DEBUG: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
 	}
 
 	return VK_FALSE;
+}
+
+void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
+{
+	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instance, "vkSetDebugUtilsObjectNameEXT");
+	HS_ASSERT(func, "function addr is nullptr");
+
+	VkDebugUtilsObjectNameInfoEXT nameInfo{};
+	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	nameInfo.objectType = type;
+	nameInfo.objectHandle = handle;
+	nameInfo.pObjectName = name;
+	nameInfo.pNext = nullptr;
+	
+	func(_device, &nameInfo);
 }
 
 VkResult RHIContextVulkan::createDebugUtilsMessengerEXT
@@ -96,7 +112,10 @@ bool RHIContextVulkan::Initialize()
 		return false;
 	}
 
-
+	if (false == _device.Create(_instance))
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -114,18 +133,23 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 
 Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 {
-	// Create a Vulkan swapchain
-	return nullptr;
+	VkSurfaceKHR surface = createSurface(*reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle));
+	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, this, _device, surface);
+
+	return static_cast<Swapchain*>(swapchainVK);
 }
 
 void RHIContextVulkan::DestroySwapchain(Swapchain* swapchain)
 {
-	// Destroy the Vulkan swapchain
+	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+
+	delete swapchainVK;
 }
 
 RenderPass* RHIContextVulkan::CreateRenderPass(const RenderPassInfo& info)
 {
 	// Create a Vulkan render pass
+	
 	return nullptr;
 }
 
@@ -235,9 +259,16 @@ void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
 	// Destroy the Vulkan resource set
 }
 
-CommandPool* RHIContextVulkan::CreateCommandPool()
+CommandPool* RHIContextVulkan::CreateCommandPool(uint32 queueFamilyIndex)
 {
 	// Create a Vulkan command pool
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.pNext = nullptr;
+	poolInfo.flags = 0;
+	poolInfo.queueFamilyIndex = queueFamilyIndex;
+
+	VkCommandPool commandPool;
 	return nullptr;
 }
 
@@ -249,35 +280,55 @@ void RHIContextVulkan::DestroyCommandPool(CommandPool* commandPool)
 CommandBuffer* RHIContextVulkan::CreateCommandBuffer()
 {
 	// Create a Vulkan command buffer
-	return nullptr;
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = _defaultCommandPool;
+	allocInfo.commandBufferCount = 1;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+	VkCommandBuffer vkCommandBuffer;
+	vkAllocateCommandBuffers(_device, nullptr, &vkCommandBuffer);
+
+	CommandBufferVulkan* commandBuffer = new CommandBufferVulkan();
+	commandBuffer->commandBufferVK = vkCommandBuffer;
+
+	return static_cast<CommandBuffer*>(commandBuffer);
 }
 
 void RHIContextVulkan::DestroyCommandBuffer(CommandBuffer* commandBuffer)
 {
 	// Destroy the Vulkan command buffer
+	CommandBufferVulkan* commandBufferVK = static_cast<CommandBufferVulkan*>(commandBuffer);
+	delete commandBuffer;
 }
 
 
 Fence* RHIContextVulkan::CreateFence()
 {
 	// Create a Vulkan fence
-	return nullptr;
+	FenceVulkan* fenceVK = new FenceVulkan(_device);
+	return static_cast<Fence*>(fenceVK);
 }
 
 void RHIContextVulkan::DestroyFence(Fence* fence)
 {
 	// Destroy the Vulkan fence
+	FenceVulkan* fenceVK = static_cast<FenceVulkan*>(fence);
+	delete fence;
 }
 
 Semaphore* RHIContextVulkan::CreateSemaphore()
 {
 	// Create a Vulkan semaphore
-	return nullptr;
+	SemaphoreVulkan* semaphoreVK = new SemaphoreVulkan(_device);
+
+	return static_cast<Semaphore*>(semaphoreVK);
 }
 
 void RHIContextVulkan::DestroySemaphore(Semaphore* semaphore)
 {
-	// Destroy the Vulkan semaphore
+	SemaphoreVulkan* semaphoreVK = static_cast<SemaphoreVulkan*>(semaphore);
+	delete semaphoreVK;
 }
 
 void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount)
@@ -293,6 +344,7 @@ void RHIContextVulkan::Present(Swapchain* swapchain)
 void RHIContextVulkan::WaitForIdle() const
 {
 	// Wait for the Vulkan device to be idle
+
 }
 
 bool RHIContextVulkan::createInstance()
@@ -308,13 +360,13 @@ bool RHIContextVulkan::createInstance()
 	uint32 sdlExtensionCount = 0;
 	const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
-	VkInstanceCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	createInfo.pNext = nullptr;
-	createInfo.flags = 0;
-	createInfo.pApplicationInfo = &appInfo;
-	createInfo.enabledExtensionCount = sdlExtensionCount;
-	createInfo.ppEnabledExtensionNames = sdlExtensions;
+	VkInstanceCreateInfo instanceCreateInfo{};
+	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	instanceCreateInfo.flags = 0;
+	instanceCreateInfo.pApplicationInfo = &appInfo;
+	instanceCreateInfo.enabledExtensionCount = sdlExtensionCount;
+	instanceCreateInfo.ppEnabledExtensionNames = sdlExtensions;
+	instanceCreateInfo.pNext = nullptr;
 
 	uint32 layerCount = 0;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -337,25 +389,49 @@ bool RHIContextVulkan::createInstance()
 	bool useValidationLayers = s_enableValidationLayers && isLayerFound;
 	if (useValidationLayers)
 	{
-		createInfo.enabledLayerCount = s_validationLayers.size();
-		createInfo.ppEnabledLayerNames = s_validationLayers.data();
+		instanceCreateInfo.enabledLayerCount = s_validationLayers.size();
+		instanceCreateInfo.ppEnabledLayerNames = s_validationLayers.data();
 	}
 
-	VK_CHECK_RESULT_AND_RETURN(vkCreateInstance(&createInfo, nullptr, &_instance));
 
 	if (useValidationLayers)
 	{
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		debugCreateInfo.pNext = nullptr;
 		debugCreateInfo.flags = 0;
 		debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-		debugCreateInfo.pfnUserCallback = hs_rhi_report_debug_callback;
+		debugCreateInfo.pfnUserCallback = hs_rhi_vk_report_debug_callback;
 		debugCreateInfo.pUserData = nullptr;
+		debugCreateInfo.pNext = instanceCreateInfo.pNext;
+
+		instanceCreateInfo.pNext = &debugCreateInfo;
 
 		VK_CHECK_RESULT_AND_RETURN(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
 	}
+
+	//uint32 extensionCount = 0;
+	//vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	//if (extensionCount > 0)
+	//{
+	//	std::vector<VkExtensionProperties> extensions;
+	//	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+	//	for (VkExtensionProperties& extension : extensions)
+	//	{
+	//		_supportedInstanceExtensions.push_back(extension.extensionName);
+	//	}
+	//}
+
+	VK_CHECK_RESULT_AND_RETURN(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
+}
+
+VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindowHandle& windowHandle)
+{
+	SDL_Window* window = static_cast<SDL_Window*>(windowHandle.window);
+	VkSurfaceKHR surface;
+	SDL_Vulkan_CreateSurface(window, _instance, nullptr, &surface);
+
+	return surface;
 }
 
 void RHIContextVulkan::cleanup()

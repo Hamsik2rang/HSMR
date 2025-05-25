@@ -18,39 +18,54 @@ class Framebuffer;
 class GraphicsPipeline;
 class ResourceSet;
 
-struct Semaphore : public RHIHandle
+class Semaphore : public RHIHandle
 {
-    Semaphore();
+public:
     ~Semaphore() override;
+
+protected:
+    Semaphore();
 };
 
-struct Fence : public RHIHandle
+class Fence : public RHIHandle
 {
-    Fence();
+public:
     ~Fence() override;
+
+protected:
+    Fence();
 };
 
-struct ResourceBarrier : public RHIHandle
+class ResourceBarrier : public RHIHandle
 {
-    ResourceBarrier();
+public:
     ~ResourceBarrier() override;
+
+protected:
+    ResourceBarrier();
 };
 
-struct CommandQueue : public RHIHandle
+class CommandQueue : public RHIHandle
 {
-    CommandQueue();
+public:
     ~CommandQueue() override;
+
+protected:
+    CommandQueue();
 };
 
-struct CommandPool : public RHIHandle
+class CommandPool : public RHIHandle
 {
-    CommandPool();
+public:
     ~CommandPool() override;
+
+protected:
+    CommandPool();
 };
 
-struct CommandBuffer : public RHIHandle
+class CommandBuffer : public RHIHandle
 {
-    CommandBuffer();
+public:
     ~CommandBuffer() override;
     
     virtual void Begin() = 0;
@@ -73,8 +88,15 @@ struct CommandBuffer : public RHIHandle
     
     virtual void PushDebugMark(const char* label, float color[4]) = 0;
     virtual void PopDebugMark() = 0;
-};
 
+protected:
+    CommandBuffer();
+    bool _isBegan = false;
+
+    bool _isGraphicsBegan = false;
+    bool _isComputeBegan = false;
+    bool _isBlitBegan = false;
+};
 HS_NS_END
 
 #endif /* __HS_COMMAND_HANDLE_H__ */

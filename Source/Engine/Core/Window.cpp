@@ -4,66 +4,41 @@
 #include "Engine/RHI/Swapchain.h"
 #include "Engine/RHI/RenderHandle.h"
 
-#include <SDL3/SDL.h>
+#include <queue>
 
 HS_NS_BEGIN
 
-Window::Window(const char* name, uint32 width, uint32 height, uint64 flags)
-    : _name(name)
-    , _width(width)
-    , _height(height)
-    , _flags(flags)
-    , _resizable(false)
-    , _isClosed(false)
+std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_eventQueueTable;
+
+Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags)
+    : _isClosed(false)
     , _shouldClose(false)
-    , _useHDR(false)
     , _renderer(nullptr)
     , _scene(nullptr)
-{}
+{
+    if (hs_platform_window_create(name, width, height, flags, _nativeWindow))
+    {
+        HS_LOG(crash, "Fail to create NativeWindow");
+    }
+
+    _rhiContext = hs_engine_get_rhi_context();
+
+    SwapchainInfo swInfo{};
+    swInfo.nativeWindow = &_nativeWindow;
+    swInfo.useDepth     = false;
+    swInfo.useMSAA      = false;
+    swInfo.useStencil   = false;
+
+    _swapchain = _rhiContext->CreateSwapchain(swInfo);
+
+    s_eventQueueTable.insert({&_nativeWindow, std::queue<EWindowEvent>()});
+
+    onInitialize();
+}
 
 Window::~Window()
 {
     Shutdown();
-}
-
-uint32 Window::Initialize()
-{
-    SDL_Window* window = SDL_CreateWindow(_name, _width, _height, _flags);
-    if (nullptr == window)
-    {
-        HS_LOG(error, "Window Initialize Failed");
-        return HS_WINDOW_INVALID_ID;
-    }
-    _scale = SDL_GetWindowDisplayScale(window);
-    SDL_SetWindowSize(window, _width / _scale, _height / _scale);
-
-    _resizable = (_flags & SDL_WINDOW_RESIZABLE);    
-    _useHDR    = (_flags & SDL_WINDOW_HIGH_PIXEL_DENSITY);
-
-    SDL_MetalView view = SDL_Metal_CreateView(window);
-
-    _nativeHandle.window = static_cast<void*>(window);
-    _nativeHandle.view   = static_cast<void*>(view);
-    _nativeHandle.layer  = SDL_Metal_GetLayer(view);
-    
-    _rhiContext = hs_engine_get_rhi_context();
-
-    SwapchainInfo swInfo{};
-    swInfo.width              = _width;
-    swInfo.height             = _height;
-    swInfo.nativeWindowHandle = static_cast<void*>(&_nativeHandle);
-    swInfo.useDepth           = false;
-    swInfo.useMSAA            = false;
-    swInfo.useStencil         = false;
-
-    _swapchain = _rhiContext->CreateSwapchain(swInfo);
-
-    onInitialize();
-
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    SDL_ShowWindow(window);
-
-    return 0;
 }
 
 void Window::NextFrame()
@@ -114,45 +89,73 @@ void Window::Shutdown()
 {
     onShutdown();
 
-    if (nullptr != _nativeHandle.view)
-    {
-        SDL_Metal_DestroyView(static_cast<SDL_MetalView>(_nativeHandle.view));
-        _nativeHandle.view = nullptr;
-    }
-    if (nullptr != _nativeHandle.window)
-    {
-        SDL_DestroyWindow(static_cast<SDL_Window*>(_nativeHandle.window));
-        _nativeHandle.window = nullptr;
-    }
+    hs_platform_window_destroy(_nativeWindow);
 
     _isClosed = true;
 }
 
-bool Window::PeekEvent(uint32 eventType, uint32 windowID)
+void Window::ProcessEvent()
 {
-    if (dispatchEvent(eventType, windowID))
+    EWindowEvent event;
+    while (hs_window_peek_event(&_nativeWindow, event, true))
     {
-        return true;
-    }
-
-    if (_id != windowID)
-    {
-        for (auto* child : _childs)
+        switch (event)
         {
-            bool result = child->PeekEvent(eventType, windowID);
-            if (result)
-            {
-                return true;
-            }
+            case EWindowEvent::OPEN:
+                _shouldClose = false;
+
+                break;
+            case EWindowEvent::CLOSE:
+                _shouldClose   = true;
+                _shouldUpdate  = false;
+                _shouldPresent = false;
+
+                break;
+            case EWindowEvent::MAXIMIZE:
+                _shouldUpdate  = true;
+                _shouldPresent = true;
+                onRestore();
+                break;
+            case EWindowEvent::MINIMIZE:
+                _shouldUpdate  = false;
+                _shouldPresent = false;
+                break;
+            case EWindowEvent::NONE:
+
+                break;
+            case EWindowEvent::RESIZE_ENTER:
+                _shouldUpdate  = false;
+                _shouldPresent = false;
+                break;
+            case EWindowEvent::RESIZE_EXIT:
+                _shouldUpdate  = true;
+                _shouldPresent = true;
+                break;
+            case EWindowEvent::MOVE:
+
+                break;
+            case EWindowEvent::FOCUS_IN:
+
+                break;
+            case EWindowEvent::FOCUS_OUT:
+
+                break;
+            case EWindowEvent::RESTORE:
+
+                break;
         }
     }
 
-    return false;
-}
+    if (_shouldClose)
+    {
+        Flush();
+        return;
+    }
 
-bool Window::dispatchEvent(uint64 eventType, uint32 windowID)
-{
-    return false;
+    for (auto* child : _childs)
+    {
+        child->ProcessEvent();
+    }
 }
 
 void Window::Flush()
@@ -192,3 +195,51 @@ void Window::Flush()
 }
 
 HS_NS_END
+
+using namespace HS;
+
+bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
+{
+    HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
+
+    hs_platform_window_poll_event();
+
+    outEvent = EWindowEvent::NONE;
+
+    auto& eventQueue = s_eventQueueTable[pWindow];
+    if (eventQueue.empty())
+    {
+        return false;
+    }
+
+    outEvent = eventQueue.front();
+
+    if (remove)
+    {
+        eventQueue.pop();
+    }
+
+    return true;
+}
+
+void hs_window_push_event(const NativeWindow* pWindow, EWindowEvent event)
+{
+    HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
+
+    auto& eventQueue = s_eventQueueTable[pWindow];
+
+    eventQueue.push(event);
+}
+
+EWindowEvent hs_window_pop_event(const NativeWindow* pWindow)
+{
+    HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
+
+    auto& eventQueue = s_eventQueueTable[pWindow];
+
+    EWindowEvent event = eventQueue.front();
+
+    eventQueue.pop();
+
+    return event;
+}
