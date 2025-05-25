@@ -1,4 +1,4 @@
-//
+﻿//
 //  Precompile.h
 //  HSMR
 //
@@ -7,29 +7,23 @@
 #ifndef __HS_PRECOMPILE_H__
 #define __HS_PRECOMPILE_H__
 
-#if defined __cplusplus
-    #include <cstdint>
-    #include <vector>
-    #include <string>
-
-
 #ifdef __cplusplus
-#include <cstdio>
-#include <cstring>
-#include <cstdint>
+    #include <cstdio>
+    #include <cstring>
+    #include <cstdint>
 
-#include <vector>
-#include <stack>
-#include <queue>
-#include <map>
-#include <string>
-#include <utility>
-#include <functional>
+    #include <vector>
+    #include <stack>
+    #include <queue>
+    #include <map>
+    #include <string>
+    #include <utility>
+    #include <functional>
 
 #else
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
+    #include <stdio.h>
+    #include <string.h>
+    #include <stdint.h>
 
 #endif
 
@@ -44,12 +38,11 @@ typedef int64_t int64;
 typedef uint64_t uint64;
 
 #ifndef HS_DEBUG_BREAK
-#if defined(__APPLE__)
-#define HS_DEBUG_BREAK() __builtin_trap()
-#else
-    #include <stdint.h>
-    #include <cstring>
-
+    #if defined(__APPLE__)
+        #define HS_DEBUG_BREAK() __builtin_trap()
+    #else
+        #define HS_DEBUG_BREAK() __debugbreak()
+    #endif
 #endif
 
 #ifdef _WIN32
