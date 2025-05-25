@@ -53,8 +53,6 @@ void BeginRender(Swapchain* swapchain)
     io.DisplaySize.x = backingSize.width;
     io.DisplaySize.y = backingSize.height;
     
-    HS_LOG(info, "io DisplaySize: %f, %f", io.DisplaySize.x, io.DisplaySize.y);
-    
     MTLRenderPassDescriptor* rpDesc = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
 
     ImGui_ImplMetal_NewFrame(rpDesc);
