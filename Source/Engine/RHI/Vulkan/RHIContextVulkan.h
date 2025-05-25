@@ -92,6 +92,10 @@ public:
 private:
 	bool createInstance();
 	VkSurfaceKHR createSurface(const NativeWindowHandle& windowHandle);
+	VkRenderPass createRenderPass(const RenderPassInfo& info);
+	VkFramebuffer createFramebuffer(const FramebufferInfo& info);
+	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info);
+	VkPipeline createComputePipeline(const ComputePipelineInfo& info);
 
 	void setDebugObjectName(VkObjectType type, uint64 handle, const char* name);
 

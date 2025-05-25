@@ -17,6 +17,7 @@ HS_NS_BEGIN
 class RenderPass : public RHIHandle
 {
 public:
+
     ~RenderPass() override;
 
     const RenderPassInfo info;

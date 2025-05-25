@@ -77,7 +77,7 @@ CommandBufferVulkan::~CommandBufferVulkan()
 void CommandBufferVulkan::Begin()
 {
 	HS_ASSERT(false == _isBegan, "CommandBuffer has already began.");
-	VkCommandBufferBeginInfo& beginInfo{};
+	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	beginInfo.pNext = nullptr;
@@ -104,8 +104,6 @@ void CommandBufferVulkan::Reset()
 void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer)
 {
 	static std::vector<VkClearValue> clearValues;
-	static std::vector<VkRect2D> areas;
-
 
 	HS_ASSERT(_isBegan, "CommandBuffer has not began");
 	HS_ASSERT(_isGraphicsBegan == false, "Graphics Pass is already began");
@@ -123,7 +121,6 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 	if (clearValues.size() < attachmentCount)
 	{
 		clearValues.resize(attachmentCount);
-		areas.resize(attachmentCount);
 	}
 
 	size_t attachmentIndex = 0;
@@ -139,14 +136,28 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 		attachmentIndex++;
 	}
 
+	VkRect2D area{};
+	area.offset.x = renderPassInfo.renderArea.x;
+	area.offset.y = renderPassInfo.renderArea.y;
+	area.extent.width = renderPassInfo.renderArea.width;
+	area.extent.height = renderPassInfo.renderArea.height;
+
 	VkRenderPassBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	beginInfo.clearValueCount = attachmentCount;
 	beginInfo.pClearValues = clearValues.data();
-	beginInfo.renderArea = 
+	beginInfo.renderArea = area;
+	beginInfo.renderPass = renderPassVK->handle;
 	beginInfo.framebuffer = framebufferVK->handle;
+	beginInfo.pNext = nullptr;
 
+	VkSubpassBeginInfo subpassBeginInfo{};
 
+	vkCmdBeginRenderPass(handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	_isGraphicsBegan = true;
+	_isComputeBegan = false;
+	_isBlitBegan = false;
 }
 
 void CommandBufferVulkan::BindPipeline(GraphicsPipeline* pipeline)

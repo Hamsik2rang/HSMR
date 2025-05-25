@@ -11,7 +11,27 @@
 #pragma warning(disable: 4819)
 #endif 
 
+
+#ifdef __cplusplus
+#include <cstdio>
+#include <cstring>
+#include <cstdint>
+
+#include <vector>
+#include <stack>
+#include <queue>
+#include <map>
+#include <string>
+#include <utility>
+#include <functional>
+
+#else
+#include <stdio.h>
+#include <string.h>
 #include <stdint.h>
+
+#endif
+
 
 typedef int8_t int8;
 typedef uint8_t uint8;
