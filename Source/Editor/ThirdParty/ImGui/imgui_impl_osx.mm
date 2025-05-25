@@ -449,7 +449,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
     bd->Observer = [ImGuiObserver new];
     bd->Window = view.window ?: NSApp.orderedWindows.firstObject;
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (__bridge_retained void*)bd->Window;
+    main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (__bridge void*)bd->Window;
     ImGui_ImplOSX_UpdateMonitors();
     ImGui_ImplOSX_InitMultiViewportSupport();
 
@@ -936,12 +936,12 @@ static void ImGui_ImplOSX_CreateWindow(ImGuiViewport* viewport)
     data->Window = window;
     data->WindowOwned = true;
     viewport->PlatformRequestResize = false;
-    viewport->PlatformHandle = viewport->PlatformHandleRaw = (__bridge_retained void*)window;
+    viewport->PlatformHandle = viewport->PlatformHandleRaw = (__bridge void*)window;
 }
 
 static void ImGui_ImplOSX_DestroyWindow(ImGuiViewport* viewport)
 {
-    NSWindow* window = (__bridge_transfer NSWindow*)viewport->PlatformHandleRaw;
+    NSWindow* window = (__bridge NSWindow*)viewport->PlatformHandleRaw;
     window = nil;
 
     if (ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)viewport->PlatformUserData)
@@ -1093,7 +1093,7 @@ static void ImGui_ImplOSX_UpdateMonitors()
         imgui_monitor.WorkPos = ImVec2(visibleFrame.origin.x, visibleFrame.origin.y);
         imgui_monitor.WorkSize = ImVec2(visibleFrame.size.width, visibleFrame.size.height);
         imgui_monitor.DpiScale = screen.backingScaleFactor;
-        imgui_monitor.PlatformHandle = (__bridge_retained void*)screen;
+        imgui_monitor.PlatformHandle = (__bridge void*)screen;
 
         platform_io.Monitors.push_back(imgui_monitor);
     }

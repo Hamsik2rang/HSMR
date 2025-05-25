@@ -49,9 +49,12 @@ void BeginRender(Swapchain* swapchain)
     const NativeWindow* nativeWindow = (swapchain->GetInfo().nativeWindow);
     
     CGSize backingSize = [vc getBackingViewSize];
+    float backingScaleFactor = [window backingScaleFactor];
+    
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize.x = backingSize.width;
     io.DisplaySize.y = backingSize.height;
+    io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
     
     MTLRenderPassDescriptor* rpDesc = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
 
