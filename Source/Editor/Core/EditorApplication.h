@@ -19,8 +19,8 @@ class GUIContext;
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
-    EditorApplication(const std::string& appName);
-    ~EditorApplication() override;
+    EditorApplication(const char* appName) noexcept;
+    ~EditorApplication() override ;
     
     bool Initialize(EngineContext* engineContext) override;
     void Run() override;
@@ -28,7 +28,8 @@ public:
     
 private:
     GUIContext* _guiContext;
-    
+
+    bool _isInitialized = false;
     float _deltaTime = 0.0f;
 };
 

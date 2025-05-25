@@ -23,7 +23,7 @@ ForwardOpaquePass::~ForwardOpaquePass()
 
 void ForwardOpaquePass::OnBeforeRendering(uint32_t frameIndex)
 {
-    _frameIndex = frameIndex;
+    frameIndex = frameIndex;
 }
 
 void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
@@ -135,7 +135,7 @@ void ForwardOpaquePass::createResourceHandles()
 
     _vertexBuffer = rhiContext->CreateBuffer(vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 
-    std::string libPath = hs_file_get_resource_path(std::string("Shader/MSL/Basic.metal"));
+    std::string libPath = hs_file_get_default_resource_path(std::string("Shader/MSL/Basic.metal"));
     _vertexShader       = rhiContext->CreateShader(EShaderStage::VERTEX, libPath.c_str(), HS_TO_STRING(VSENTRY_BASIC), strlen(HS_TO_STRING(VSENTRY_BASIC)));
     if (_vertexShader == nullptr)
     {

@@ -26,6 +26,9 @@ public:
 	bool Initialize() override;
 	void Finalize() override;
 
+	void Suspend(Swapchain* swapchain) override;
+	void Restore(Swapchain* swapchain) override;
+
 	uint32 AcquireNextImage(Swapchain* swapchain) override;
 
 	Swapchain* CreateSwapchain(SwapchainInfo info) override;
@@ -68,7 +71,7 @@ public:
 	// CommandQueue* CreateCommandQueue() override;
 	// void DestroyCommandQueue(CommandQueue* cmdQueue) override;
 
-	CommandPool* CreateCommandPool() override;
+	CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) override;
 	void         DestroyCommandPool(CommandPool* cmdPool) override;
 
 	CommandBuffer* CreateCommandBuffer() override;
@@ -88,17 +91,20 @@ public:
 
 private:
 	bool createInstance();
-	bool createDevice();
+	VkSurfaceKHR createSurface(const NativeWindowHandle& windowHandle);
+
+	void setDebugObjectName(VkObjectType type, uint64 handle, const char* name);
 
 	VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger, const VkAllocationCallbacks* npAllocator);
 	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* npAllocator);
 	void cleanup();
 
+	//std::vector<std::string> _supportedInstanceExtensions;
 	VkInstance _instance = VK_NULL_HANDLE;
 	RHIDeviceVulkan _device;
+	VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
 
 	VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
-
 };
 
 

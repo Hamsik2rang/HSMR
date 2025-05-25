@@ -13,41 +13,40 @@
 
 #include "Engine/RHI/Metal/RHIUtilityMetal.h"
 
+#import <MetalKit/MetalKit.h>
+
 HS_NS_BEGIN
 
 class CommandBuffer;
 
 class SwapchainMetal : public Swapchain
 {
+    friend class RHIContextMetal;
 public:
     SwapchainMetal(const SwapchainInfo& info);
     ~SwapchainMetal() override;
 
-    CAMetalLayer*       layer;
-    id<CAMetalDrawable> drawable;
-    void*               view;
-
     void* nativeHandle;
 
-    uint8          GetMaxFrameIndex() const override { return _maxFrameIndex; }
-    uint8          GetCurrentFrameIndex() const override { return frameIndex; }
-    CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[frameIndex]; }
-    CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
+    HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return maxFrameCount; }
+    HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return frameIndex; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBufferMTLs[frameIndex]; }
+    HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
-        HS_ASSERT(index < _commandBuffers.size(), "Count of commandbuffer is less than index");
-        return _commandBuffers[index];
+        HS_ASSERT(index < maxFrameCount, "Count of commandbuffer is less than index");
+        return _commandBufferMTLs[index];
     }
-    RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[frameIndex]; }
-
+    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[frameIndex]; }
+    
     uint8 frameIndex;
-
-private:
+    uint8 maxFrameCount = 3;
+    
+protected:
     void setRenderTargets() override;
     void setRenderPass() override;
-
-    uint8 _maxFrameIndex = 3;
-
-    std::vector<CommandBuffer*> _commandBuffers;
+    
+    id<CAMetalDrawable> _drawable;
+    CommandBuffer** _commandBufferMTLs;
 };
 
 HS_NS_END

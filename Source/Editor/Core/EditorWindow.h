@@ -19,6 +19,14 @@ class RenderTarget;
 class Renderer;
 } // namespace HS
 
+namespace HS
+{
+namespace Editor
+{
+class GUIContext;
+}
+} // namespace HS
+
 HS_NS_EDITOR_BEGIN
 
 class Panel;
@@ -26,13 +34,13 @@ class Panel;
 class HS_EDITOR_API EditorWindow : public Window
 {
 public:
-    EditorWindow(const char* name, uint32 width, uint32 height, uint64 flags);
+    EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~EditorWindow() override;
 
     void Render() override;
 
 private:
-    bool dispatchEvent(uint64 eventType, uint32 windowID) override;
+    bool dispatchEvent(EWindowEvent event, uint32 windowID);
     void setupPanels();
 
     bool onInitialize() override;
@@ -44,10 +52,10 @@ private:
     void onRenderGUI();
 
     std::vector<RenderTarget> _renderTargets;
-
-    Panel*    _basePanel;
-    Panel*    _menuPanel;
-    Panel*    _scenePanel;
+    
+    Panel* _basePanel;
+    Panel* _menuPanel;
+    Panel* _scenePanel;
 };
 
 HS_NS_EDITOR_END

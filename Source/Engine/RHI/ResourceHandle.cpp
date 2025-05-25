@@ -11,11 +11,7 @@ Texture::Texture(const TextureInfo& info)
 
 Texture::~Texture()
 {
-    if (nullptr != data)
-    {
-        delete data;
-        data = nullptr;
-    }
+
 }
 
 Sampler::Sampler(const SamplerInfo& info)
