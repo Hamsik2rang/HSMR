@@ -44,8 +44,6 @@ bool hs_file_is_absolute_path(const std::string& path);
 std::string hs_file_get_relative_path(const std::string& absolutePath);
 std::string hs_file_get_absolute_path(const std::string& relativePath);
 
-std::string hs_file_get_default_shader_library();
-
 HS_NS_END
 
 #endif /* FileSystem_h */
