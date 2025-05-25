@@ -37,21 +37,23 @@ void InitializeBackend(Swapchain* swapchain)
     id<MTLDevice> device = [layer device];
     ImGui_ImplMetal_Init(device);
     ImGui_ImplOSX_Init(view);
-    
 }
 
 void BeginRender(Swapchain* swapchain)
 {
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
     NSWindow* window        = (__bridge NSWindow*)swMetal->nativeHandle;
-    NSView* view            = [(HSViewController*)[window delegate] view];
+    HSViewController* vc = (HSViewController*)[window delegate];
+    NSView* view            = [vc view];
 
     const NativeWindow* nativeWindow = (swapchain->GetInfo().nativeWindow);
     
+    CGSize backingSize = [vc getBackingViewSize];
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize.x = view.bounds.size.width;
-    io.DisplaySize.y = view.bounds.size.height;
-    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+    io.DisplaySize.x = backingSize.width;
+    io.DisplaySize.y = backingSize.height;
+    
+    HS_LOG(info, "io DisplaySize: %f, %f", io.DisplaySize.x, io.DisplaySize.y);
     
     MTLRenderPassDescriptor* rpDesc = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
 

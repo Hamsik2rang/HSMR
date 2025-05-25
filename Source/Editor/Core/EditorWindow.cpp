@@ -199,15 +199,7 @@ bool EditorWindow::dispatchEvent(EWindowEvent event, uint32 windowId)
             break;
         case EWindowEvent::RESIZE_EXIT:
         {
-//            int w, h;
-//            SDL_GetWindowSize(window, &w, &h);
-//            float scale = SDL_GetWindowDisplayScale(window);
-//            _width      = static_cast<uint32>(w * scale);
-//            _height     = static_cast<uint32>(h * scale);
-//            _swapchain->SetWidth(_width);
-//            _swapchain->SetHeight(_height);
-//            ImGuiIO& io    = ImGui::GetIO();
-//            io.DisplaySize = ImVec2(static_cast<float>(_width), static_cast<float>(_height));
+            
         }
         break;
         //...

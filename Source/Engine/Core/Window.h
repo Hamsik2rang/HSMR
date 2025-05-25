@@ -78,4 +78,10 @@ protected:
 
 HS_NS_END
 
+
+bool hs_window_peek_event(const HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent, bool remove);
+void hs_window_push_event(const HS::NativeWindow* pWindow, HS::EWindowEvent event);
+HS::EWindowEvent hs_window_pop_event(const HS::NativeWindow* pWindow);
+
+
 #endif /* Window_h */
