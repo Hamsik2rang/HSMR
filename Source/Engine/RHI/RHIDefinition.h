@@ -1,4 +1,4 @@
-//
+﻿//
 //  RHIDefinition
 //  HSMR
 //
@@ -391,7 +391,7 @@ struct Viewport
 	float y = 0;
 	float width = 0;
 	float height = 0;
-	float zMear = 0.0f;
+	float zNear = 0.0f;
 	float zFar = 1.0f;
 };
 

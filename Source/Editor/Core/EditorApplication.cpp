@@ -1,4 +1,4 @@
-#include "Editor/Core/EditorApplication.h"
+﻿#include "Editor/Core/EditorApplication.h"
 
 #include "Engine/Platform/PlatformApplication.h"
 #include "Engine/Platform/PlatformWindow.h"
@@ -15,6 +15,9 @@ HS_NS_EDITOR_BEGIN
 
 EditorApplication::EditorApplication(const char* appName) noexcept
     : Application(appName)
+	, _isInitialized(false)
+    , _guiContext(nullptr)
+    , _deltaTime(0.0f)
 {
 }
 

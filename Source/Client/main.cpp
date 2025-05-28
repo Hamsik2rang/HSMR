@@ -1,4 +1,4 @@
-//
+﻿//
 //  main.cpp
 //  HSMR
 //
@@ -8,12 +8,18 @@
 #ifdef HS_EDITOR_MODE
 #include "Editor/EntryPoint/EditorMain.h"
 
-#include <new>       // For std::nothrow_t
+
 #include <cstdlib>   // For malloc/free
 #include <cstdio>    // For printf/logging
+
+#if defined (__APPLE__)
 #include <execinfo.h> // For backtrace (optional)
 #include <unistd.h>
 
+#else
+#include <windows.h> // For Windows-specific functionality
+
+#endif
 
 #define hs_main(argc, argv) hs_editor_main((argc), (argv))
 #else

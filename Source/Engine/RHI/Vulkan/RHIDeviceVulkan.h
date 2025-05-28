@@ -3,7 +3,8 @@
 
 #include "Precompile.h"
 
-#include <vulkan/vulkan.h>
+#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
+
 #include <string>
 #include <vector>
 

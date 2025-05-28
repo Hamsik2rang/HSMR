@@ -12,6 +12,8 @@
 #include "Engine/Core/Log.h"
 #include "Engine/RHI/RHIDefinition.h"
 
+#define VK_USE_PLATFORM_WIN32_KHR 
+
 #include <vulkan/vulkan.h>
 #include <string>
 
@@ -23,7 +25,7 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs_rhi_vkresult_to_string(result));    \
+            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
         }                                                                                   \
     } while (0)
 
@@ -32,7 +34,7 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs_rhi_vkresult_to_string(result));    \
+            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
             return result;                                                                  \
         }                                                                                   \
     } while (0)
@@ -42,66 +44,68 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs_rhi_vkresult_to_string(result));    \
-            throw Exception(__FILE__, __LINE__, result);                                                                  \
+            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
+            throw Exception(__FILE__, __LINE__, result)                                     \
         }                                                                                   \
     } while (0)
 
 
+class RHIUtilityVulkan
+{
+public:
+	static VkFormat ToPixelFormat(EPixelFormat format);
+	static EPixelFormat FromPixelFormat(VkFormat format);
 
-VkFormat hs_rhi_to_pixel_format(EPixelFormat format);
-EPixelFormat   hs_rhi_from_pixel_format(VkFormat format);
+	static VkAttachmentLoadOp ToLoadAction(ELoadAction action);
+	static ELoadAction FromLoadAction(VkAttachmentLoadOp action);
 
-VkAttachmentLoadOp hs_rhi_to_load_action(ELoadAction action);
-ELoadAction   hs_rhi_from_laod_action(VkAttachmentLoadOp action);
+	static VkAttachmentStoreOp ToStoreAction(EStoreAction action);
+	static EStoreAction FromStoreAction(VkAttachmentStoreOp action);
 
-VkAttachmentStoreOp hs_rhi_to_store_action(EStoreAction action);
-EStoreAction   hs_rhi_from_store_action(VkAttachmentStoreOp action);
+	static VkViewport ToViewport(Viewport vp);
+	static Viewport FromViewport(VkViewport vp);
 
-VkViewport hs_rhi_to_viewport(Viewport vp);
-Viewport    hs_rhi_from_viewport(VkViewport vp);
+	static VkImageUsageFlags ToTextureUsage(ETextureUsage usage);
+	static ETextureUsage FromTextureUsage(VkImageUsageFlags usage);
 
-VkImageUsageFlags hs_rhi_to_texture_usage(ETextureUsage usage);
-ETextureUsage   hs_rhi_from_texture_usage(VkImageUsageFlags usage);
+	static VkImageType ToTextureType(ETextureType type);
+	static ETextureType FromTextureType(VkImageType type);
 
-VkImageType hs_rhi_to_texture_type(ETextureType type);
-ETextureType   hs_rhi_from_texture_type(VkImageType type);
+	static VkBlendFactor ToBlendFactor(EBlendFactor factor);
+	static EBlendFactor FromBlendFactor(VkBlendFactor factor);
 
-VkBlendFactor hs_rhi_to_blend_factor(EBlendFactor factor);
-EBlendFactor hs_rhi_from_blend_factor(VkBlendFactor factor);
+	static VkBlendOp ToBlendOp(EBlendOp operation);
+	static EBlendOp FromBlendOp(VkBlendOp operation);
 
-VkBlendOp hs_rhi_to_blend_operation(EBlendOp operation);
-EBlendOp hs_rhi_from_blend_operation(VkBlendOp operation);
+	static VkCompareOp ToCompareOp(ECompareOp compare);
+	static ECompareOp FromCompareOp(VkCompareOp compare);
 
-VkCompareOp hs_rhi_to_compare_function(ECompareOp compare);
-ECompareOp hs_rhi_from_compare_function(VkCompareOp compare);
+	static VkFrontFace ToFrontFace(EFrontFace frontFace);
+	static EFrontFace FromFrontFace(VkFrontFace frontFace);
 
-VkFrontFace hs_rhi_to_front_face(EFrontFace frontFace);
-EFrontFace hs_rhi_from_front_face(VkFrontFace frontFace);
+	static VkCullModeFlags ToCullMode(ECullMode cullMode);
+	static ECullMode FromCullMode(VkCullModeFlags cullMode);
 
-VkCullModeFlags hs_rhi_to_cull_mode(ECullMode cullMode);
-ECullMode hs_rhi_from_cull_mode(VkCullModeFlags cullMode);
+	//static VkPrimitiveTopology ToPolygonMode(EPolygonMode polygonMode);
+	//static EPolygonMode FromPolygonMode(VkPrimitiveTopology polygonMode);
 
-VkPrimitiveTopology hs_rhi_to_polygon_mode(EPolygonMode polygonMode);
-EPolygonMode hs_rhi_from_polygon_mode(VkPrimitiveTopology                         polygonMode);
+	static VkPrimitiveTopology ToPrimitiveTopology(EPrimitiveTopology topology);
+	static EPrimitiveTopology FromPrimitiveTopology(VkPrimitiveTopology topology);
 
-VkPrimitiveTopology hs_rhi_to_primitive_topology(EPrimitiveTopology topology);
-EPrimitiveTopology hs_rhi_from_primitive_topology(VkPrimitiveTopology topology);
-
-size_t hs_rhi_get_bytes_per_pixel(EPixelFormat format);
-size_t hs_rhi_get_bytes_per_pixel(VkFormat format);
-
-MTLVertexFormat hs_rhi_get_vertex_format_from_size(size_t size);
-size_t hs_rhi_get_size_from_vertex_format(MTLVertexFormat format);
-
-MTLResourceOptions  hs_rhi_to_buffer_option(EBufferMemoryOption option);
-EBufferMemoryOption hs_rhi_from_buffer_option(MTLResourceOptions option);
-
-MTLClearColor hs_rhi_to_clear_color(const float* color);
-void          hs_rhi_from_clear_color(MTLClearColor color, float* outColor);
-
-
-std::string hs_rhi_vkresult_to_string(VkResult result);
+	static std::string ToString(VkResult result);
+};
+//
+//size_t hs_rhi_get_bytes_per_pixel(EPixelFormat format);
+//size_t hs_rhi_get_bytes_per_pixel(VkFormat format);
+//
+//VkFormat hs_rhi_get_vertex_format_from_size(size_t size);
+//size_t hs_rhi_get_size_from_vertex_format(VkFormat format);
+//
+//VkBufferUsageFlags hs_rhi_to_buffer_option(EBufferMemoryOption option);
+//EBufferMemoryOption hs_rhi_from_buffer_option(VkBufferUsageFlags option);
+//
+//VkClearColorValue hs_rhi_to_clear_color(const float* color);
+//void hs_rhi_from_clear_color(VkClearColorValue color, float* outColor);
 
 HS_NS_END
 

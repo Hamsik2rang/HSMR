@@ -1,4 +1,4 @@
-#include "Engine/Utility/ResourceManager.h"
+﻿#include "Engine/Utility/ResourceManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -19,6 +19,8 @@ bool hs_process_mesh(aiMesh* pAiMesh, const aiScene* pAiScene)
     {
         //..
     }
+
+    return true;
 }
 
 Scoped<Image> ResourceManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)

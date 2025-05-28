@@ -1,4 +1,4 @@
-#include "Engine/Core/EngineContext.h"
+﻿#include "Engine/Core/EngineContext.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/Core/FileSystem.h"
@@ -39,6 +39,7 @@ EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatfo
 #else
         case ERHIPlatform::VULKAN:
         {
+            s_engineContext->rhiContext = new RHIContextVulkan();
         }
         break;
 #endif

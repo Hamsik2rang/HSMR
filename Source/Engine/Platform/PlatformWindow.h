@@ -1,4 +1,4 @@
-//
+﻿//
 //  PlatformWindow.h
 //  Engine
 //
@@ -124,9 +124,6 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
 void hs_platform_window_destroy(NativeWindow& nativeWindow);
 void hs_platform_window_show(const NativeWindow& nativeWindow);
 void hs_platform_window_poll_event();
-
-void hs_platform_window_set_position(uint16 x, uint16 y);
-void hs_platform_window_get_position();
 
 HS_NS_END
 
