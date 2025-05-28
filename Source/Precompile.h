@@ -72,6 +72,22 @@ typedef uint64_t uint64;
     #endif
 #endif
 
+#if defined(HS_API_EXPORT)
+    #if defined(__APPLE__)
+        #define HS_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_API __declspec(dllexport)
+    #endif
+#elif defined(HS_API_IMPORT)
+    #if defined(__APPLE__)
+        #define HS_API
+    #else
+        #define HS_API __declspec(dllimport)
+    #endif
+#else
+    #define HS_API
+#endif
+
 #if defined(HS_EDITOR_API_EXPORT)
     #if defined(__APPLE__)
         #define HS_EDITOR_API __attribute__((__visibility__("default")))

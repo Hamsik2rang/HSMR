@@ -22,6 +22,9 @@ enum class EFileAccess
 
 typedef void* FileHandle;
 
+std::wstring Utf8ToUtf16(const std::string& utf8);
+std::string Utf16ToUtf8(const std::wstring& utf16);
+
 bool hs_file_copy(const std::string& src, const std::string& dst);
 bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
 bool hs_file_close(FileHandle fileHandle);

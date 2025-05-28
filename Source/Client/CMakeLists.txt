@@ -5,24 +5,36 @@ set(EXECUTABLE_NAME "HSMR")
 set(TOTAL_FILES
     main.cpp
 )
-add_executable(${TARGET_NAME}
-    ${TOTAL_FILES}
-)
 
-list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+if(APPLE)
+    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+    add_executable(${TARGET_NAME}
+        ${TOTAL_FILES}
+    )
+    set_target_properties(${TARGET_NAME} PROPERTIES
+        XCODE_ATTRIBUTE_INSTALL_PATH "/Client"
+        OUTPUT_NAME ${EXECUTABLE_NAME}
+        RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
+    )
 
-set_target_properties(${TARGET_NAME} PROPERTIES
-    XCODE_ATTRIBUTE_INSTALL_PATH "/Client"
-    OUTPUT_NAME ${EXECUTABLE_NAME}
-    RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
-)
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        Engine
+        Editor
+        ${OSX_FRAMEWORK}
+    )
+else()
+    add_executable(${TARGET_NAME} WIN32
+        ${TOTAL_FILES}
+    )
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        Engine
+        Editor
+    )
+endif()
 
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-    Engine
-    Editor
-    ${OSX_FRAMEWORK}
-)
+add_dependencies(${TARGET_NAME} Engine Editor)
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>

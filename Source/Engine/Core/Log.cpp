@@ -35,37 +35,37 @@ void Log::Print(const char* file, const uint32 line, const Log::EType type, cons
 
     switch (type)
     {
-        case EType::INFO:
+        case EType::LOG_INFO:
         {
             start = log_color_green;
             tag = log_tag_info;
         }
         break;
-        case EType::DEBUG:
+        case EType::LOG_DEBUG:
         {
             start = log_color_white;
             tag = log_tag_debug;
             break;
         }
-        case EType::WARNING:
+        case EType::LOG_WARNING:
         {
             start = log_color_yellow;
             tag = log_tag_warning;
             break;
         }
-        case EType::ERROR:
+        case EType::LOG_ERROR:
         {
             start = log_color_red;
             tag = log_tag_error;
             break;
         }
-        case EType::CRASH:
+        case EType::LOG_CRASH:
         {
             start = log_color_red;
             tag = log_tag_crash;
             break;
         }
-        case EType::ASSERT:
+        case EType::LOG_ASSERT:
         {
             start = log_color_magenta;
             tag = log_tag_assert;
@@ -87,7 +87,7 @@ void Log::Print(const char* file, const uint32 line, const Log::EType type, cons
 
 void Log::print(const char* file, const uint32 line, const char* start, const char* tag, const char* end, const char* fmt, va_list ptr)
 {
-    fprintf(stdout, "%s%s", start, tag);
+    fprintf(stdout, " %s%s ",start, tag);
     vfprintf(stdout, fmt, ptr);
     fprintf(stdout, " (%s:%u)%s\n", file, line, end);
 }

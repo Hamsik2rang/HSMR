@@ -1,14 +1,11 @@
 ﻿#include "Engine/Platform/Windows/PlatformWindowWindows.h"
 
+#include "Engine/Platform/Windows/PlatformApplicationWindows.h"
+
 #include "Engine/Core/Window.h"
 
-
-HMODULE g_hInstance = nullptr;
-
-HINSTANCE hs_platform_get_hinstance()
-{
-	return g_hInstance;
-}
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
 LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -41,8 +38,6 @@ HS_NS_BEGIN
 
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
-	g_hInstance = GetModuleHandle(nullptr);
-
 	WNDCLASS wc = {};
 	wc.lpfnWndProc = wnd_proc;
 	wc.lpszClassName = name;
@@ -53,21 +48,22 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
 	wchar_t* wName = new wchar_t[wNameLen];
 	MultiByteToWideChar(CP_UTF8, 0, name, -1, wName, wNameLen);
 
-
+	HINSTANCE hInstance = (HINSTANCE)hs_platform_get_hinstance();
 	HWND hWnd = CreateWindowW(
-		L"HS",
-		wName,
+		L"HSMR",
+		L"HSMR",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		width, height,
-		nullptr,
-		nullptr,
-		g_hInstance,
-		nullptr);
+		(int)width, (int)height,
+		NULL,
+		NULL,
+		hInstance,
+		NULL);
 
 	if (hWnd == nullptr)
 	{
-		return false;
+		auto err = GetLastError();
+		HS_LOG(crash, "Cannot create native window. Error code: %d", err);
 	}
 
 	outNativeWindow = {};
