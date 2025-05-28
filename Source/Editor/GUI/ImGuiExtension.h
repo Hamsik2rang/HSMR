@@ -14,10 +14,10 @@
 
 namespace HS
 {
-struct Texture;
+	struct Texture;
 
-struct CommandBuffer;
-class Swapchain;
+	struct CommandBuffer;
+	class Swapchain;
 }
 
 

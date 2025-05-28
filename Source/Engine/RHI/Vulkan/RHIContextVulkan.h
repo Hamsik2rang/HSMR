@@ -10,9 +10,8 @@
 #include "Precompile.h"
 
 #include "Engine/RHI/RHIContext.h"
+#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
-
-#include <vulkan/vulkan.h>
 
 HS_NS_BEGIN
 
@@ -79,8 +78,14 @@ public:
 
 	Fence* CreateFence() override;
 	void DestroyFence(Fence* fence) override;
-
+#ifdef CreateSemaphore
+#pragma push_macro("CreateSemaphore")
+#undef CreateSemaphore
+#endif
 	Semaphore* CreateSemaphore() override;
+#ifdef CreateSemaphore
+#pragma pop_macro("CreateSemaphore")
+#endif
 	void DestroySemaphore(Semaphore* semaphore) override;
 
 	void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
@@ -91,7 +96,8 @@ public:
 
 private:
 	bool createInstance();
-	VkSurfaceKHR createSurface(const NativeWindowHandle& windowHandle);
+	
+	VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
 	VkRenderPass createRenderPass(const RenderPassInfo& info);
 	VkFramebuffer createFramebuffer(const FramebufferInfo& info);
 	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info);

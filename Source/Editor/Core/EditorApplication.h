@@ -1,4 +1,4 @@
-//
+﻿//
 //  EditorApplication.h
 //  HSMR
 //

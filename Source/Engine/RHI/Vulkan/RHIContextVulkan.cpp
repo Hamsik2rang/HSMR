@@ -9,9 +9,6 @@
 
 #include "Engine/Core/Window.h"
 
-#include <SDL3/SDL_vulkan.h>
-
-
 HS_NS_BEGIN
 
 static const std::vector<const char*> s_validationLayers =
@@ -133,8 +130,8 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 
 Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 {
-	VkSurfaceKHR surface = createSurface(*reinterpret_cast<NativeWindowHandle*>(info.nativeWindowHandle));
-	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, this, _device, surface);
+	VkSurfaceKHR surface = createSurface(*info.nativeWindow);
+	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, this, _instance, _device, surface);
 
 	return static_cast<Swapchain*>(swapchainVK);
 }
@@ -259,6 +256,15 @@ void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
 	// Destroy the Vulkan resource set
 }
 
+ResourceSetPool* RHIContextVulkan::CreateResourceSetPool()
+{
+	return nullptr;
+}
+void RHIContextVulkan::DestroyResourceSetPool(ResourceSetPool* resourceSetPool)
+{
+
+}
+
 CommandPool* RHIContextVulkan::CreateCommandPool(uint32 queueFamilyIndex)
 {
 	// Create a Vulkan command pool
@@ -317,6 +323,11 @@ void RHIContextVulkan::DestroyFence(Fence* fence)
 	delete fence;
 }
 
+// TODO: 이거 별로 안예쁨.
+#ifdef CreateSemaphore
+#define CreateSemaphoreTemp CreateSemaphore
+#undef CreateSemaphore
+#endif
 Semaphore* RHIContextVulkan::CreateSemaphore()
 {
 	// Create a Vulkan semaphore
@@ -324,6 +335,10 @@ Semaphore* RHIContextVulkan::CreateSemaphore()
 
 	return static_cast<Semaphore*>(semaphoreVK);
 }
+#ifdef CreateSemaphoreTemp CreateSemaphore
+#define CreateSemaphore CreateSemaphoreTemp
+#undef CreateSemaphoreTemp
+#endif
 
 void RHIContextVulkan::DestroySemaphore(Semaphore* semaphore)
 {
@@ -369,15 +384,31 @@ bool RHIContextVulkan::createInstance()
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 3, 0);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
-	uint32 sdlExtensionCount = 0;
-	const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
+	uint32 extensionCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
+
+	std::vector<const char*> extensionNames;
+	for (const auto& extension : availableExtensions)
+	{
+		HS_LOG(info, "Available Extension: %s", extension.extensionName);
+		if (strcmp(extension.extensionName, VK_KHR_SURFACE_EXTENSION_NAME) == 0)
+		{
+			extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		}
+		else if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+		{
+			extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+	}
 
 	VkInstanceCreateInfo instanceCreateInfo{};
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instanceCreateInfo.flags = 0;
 	instanceCreateInfo.pApplicationInfo = &appInfo;
-	instanceCreateInfo.enabledExtensionCount = sdlExtensionCount;
-	instanceCreateInfo.ppEnabledExtensionNames = sdlExtensions;
+	instanceCreateInfo.enabledExtensionCount = extensionCount;
+	instanceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
 	instanceCreateInfo.pNext = nullptr;
 
 	uint32 layerCount = 0;
@@ -437,15 +468,6 @@ bool RHIContextVulkan::createInstance()
 	VK_CHECK_RESULT_AND_RETURN(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
 }
 
-VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindowHandle& windowHandle)
-{
-	SDL_Window* window = static_cast<SDL_Window*>(windowHandle.window);
-	VkSurfaceKHR surface;
-	SDL_Vulkan_CreateSurface(window, _instance, nullptr, &surface);
-
-	return surface;
-}
-
 VkRenderPass createRenderPass(const RenderPassInfo& info)
 {
 	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
@@ -455,8 +477,8 @@ VkRenderPass createRenderPass(const RenderPassInfo& info)
 	for (; index < info.colorAttachmentCount; index++)
 	{
 		attachments[index].flags = 0;
-		attachments[index].format = info.colorAttachments[index].format;
-
+		attachments[index].format = RHIUtilityVulkan::ToPixelFormat(info.colorAttachments[index].format);
+		//...
 	}
 
 	VkRenderPassCreateInfo createInfo{};
@@ -465,7 +487,7 @@ VkRenderPass createRenderPass(const RenderPassInfo& info)
 	createInfo.pNext = nullptr;
 	createInfo.subpassCount = 1;
 
-
+	return VK_NULL_HANDLE; // Placeholder, implement the rest of the function
 }
 
 #pragma endregion 

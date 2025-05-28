@@ -1,4 +1,4 @@
-//
+﻿//
 //  PlatformApplication.h
 //  Engine
 //
@@ -16,8 +16,6 @@ HS_NS_BEGIN
 
 void hs_platform_init(Application* hsApp);
 void hs_platform_shutdown(Application* hsApp);
-
-void hs_platform_application_run();
 
 HS_NS_END
 

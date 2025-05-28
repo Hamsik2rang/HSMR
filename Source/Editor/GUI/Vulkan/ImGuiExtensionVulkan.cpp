@@ -1,6 +1,9 @@
 ﻿#include "Editor/GUI/ImGuiExtension.h"
 
 #include "Engine/Core/Log.h"
+#include "Engine/RHI/ResourceHandle.h"
+
+using namespace HS;
 
 namespace ImGuiExt
 {
@@ -39,7 +42,5 @@ void FinalizeBackend()
 {
 
 }
-
-
 
 }
