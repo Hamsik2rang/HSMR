@@ -41,7 +41,7 @@ EPixelFormat hs_rhi_from_pixel_format(MTLPixelFormat format)
     HS_LOG(crash, "Unsupported EPixelFormat!");
     return EPixelFormat::INVALID;
 }
-
+ 
 MTLLoadAction hs_rhi_to_load_action(ELoadAction action)
 {
     switch (action)

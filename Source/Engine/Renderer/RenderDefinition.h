@@ -38,7 +38,6 @@ enum class ERenderGroup : uint16
     UI = 2000
 };
 
-
 struct RenderParameter
 {
 };

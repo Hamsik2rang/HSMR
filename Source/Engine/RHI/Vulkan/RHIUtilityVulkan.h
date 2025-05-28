@@ -92,7 +92,7 @@ public:
 	static VkPrimitiveTopology ToPrimitiveTopology(EPrimitiveTopology topology);
 	static EPrimitiveTopology FromPrimitiveTopology(VkPrimitiveTopology topology);
 
-	static std::string ToString(VkResult result);
+	static const char* ToString(VkResult result);
 };
 //
 //size_t hs_rhi_get_bytes_per_pixel(EPixelFormat format);

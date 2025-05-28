@@ -14,6 +14,8 @@ RHIDeviceVulkan::~RHIDeviceVulkan()
 
 bool RHIDeviceVulkan::Create(VkInstance instance)
 {
+	_instance = instance;
+
 	getPhysicalDevice();
 	createLogicalDevice();
 	return true;
@@ -28,7 +30,8 @@ void RHIDeviceVulkan::getPhysicalDevice()
 {
 	uint32 physicalDeviceCount = 0;
 	vkEnumeratePhysicalDevices(_instance, &physicalDeviceCount, nullptr);
-	VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[physicalDeviceCount];
+	std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount, nullptr);
+	vkEnumeratePhysicalDevices(_instance, &physicalDeviceCount, physicalDevices.data());
 
 	uint32 maxScore = 0;
 	for (uint32 i = 0; i < physicalDeviceCount; i++)
@@ -36,7 +39,6 @@ void RHIDeviceVulkan::getPhysicalDevice()
 		uint32 score = getPhysicalDeviceScore(physicalDevices[i]);
 		if (maxScore == 0 || maxScore < score)
 		{
-
 			maxScore = score;
 			physicalDevice = physicalDevices[i];
 		}
@@ -122,10 +124,10 @@ uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 		score += 200;
 	}
 
-	score += properties.limits.maxImageDimension2D;
 	score += properties.limits.maxColorAttachments;
 	score += properties.limits.framebufferColorSampleCounts;
-	score += properties.limits.maxUniformBufferRange;
+	//score += properties.limits.maxImageDimension2D;
+	//score += properties.limits.maxUniformBufferRange;
 	//...
 
 	return score;

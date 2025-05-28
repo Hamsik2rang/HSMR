@@ -9,7 +9,8 @@
 
 #include "Engine/Core/Window.h"
 
-HS_NS_BEGIN
+#include "Engine/Platform/Windows/PlatformApplicationWindows.h"
+
 
 static const std::vector<const char*> s_validationLayers =
 {
@@ -54,6 +55,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 	return VK_FALSE;
 }
 
+HS_NS_BEGIN
+
 void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
 {
 	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instance, "vkSetDebugUtilsObjectNameEXT");
@@ -65,7 +68,7 @@ void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, cons
 	nameInfo.objectHandle = handle;
 	nameInfo.pObjectName = name;
 	nameInfo.pNext = nullptr;
-	
+
 	func(_device, &nameInfo);
 }
 
@@ -122,6 +125,16 @@ void RHIContextVulkan::Finalize()
 	// Cleanup Vulkan resources
 }
 
+void RHIContextVulkan::Suspend(Swapchain* swapchain)
+{
+
+}
+
+void RHIContextVulkan::Restore(Swapchain* swapchain)
+{
+
+}
+
 uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 {
 	// Acquire the next image from the swapchain
@@ -146,7 +159,7 @@ void RHIContextVulkan::DestroySwapchain(Swapchain* swapchain)
 RenderPass* RHIContextVulkan::CreateRenderPass(const RenderPassInfo& info)
 {
 	// Create a Vulkan render pass
-	
+
 	return nullptr;
 }
 
@@ -204,6 +217,11 @@ Buffer* RHIContextVulkan::CreateBuffer(void* data, size_t dataSize, const Buffer
 {
 	// Create a Vulkan buffer with specific info
 	return nullptr;
+}
+
+void RHIContextVulkan::DestroyBuffer(Buffer* buffer)
+{
+
 }
 
 Texture* RHIContextVulkan::CreateTexture(void* image, const TextureInfo& info)
@@ -393,9 +411,9 @@ bool RHIContextVulkan::createInstance()
 	for (const auto& extension : availableExtensions)
 	{
 		HS_LOG(info, "Available Extension: %s", extension.extensionName);
-		if (strcmp(extension.extensionName, VK_KHR_SURFACE_EXTENSION_NAME) == 0)
+		if (strcmp(extension.extensionName, VK_KHR_WIN32_SURFACE_EXTENSION_NAME) == 0)
 		{
-			extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+			extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 		}
 		else if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
 		{
@@ -407,7 +425,7 @@ bool RHIContextVulkan::createInstance()
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instanceCreateInfo.flags = 0;
 	instanceCreateInfo.pApplicationInfo = &appInfo;
-	instanceCreateInfo.enabledExtensionCount = extensionCount;
+	instanceCreateInfo.enabledExtensionCount = extensionNames.size();
 	instanceCreateInfo.ppEnabledExtensionNames = extensionNames.data();
 	instanceCreateInfo.pNext = nullptr;
 
@@ -437,9 +455,9 @@ bool RHIContextVulkan::createInstance()
 	}
 
 
+	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (useValidationLayers)
 	{
-		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		debugCreateInfo.flags = 0;
 		debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -450,8 +468,11 @@ bool RHIContextVulkan::createInstance()
 
 		instanceCreateInfo.pNext = &debugCreateInfo;
 
-		VK_CHECK_RESULT_AND_RETURN(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
+
 	}
+	VK_CHECK_RESULT(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
+
+	VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
 
 	//uint32 extensionCount = 0;
 	//vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -465,13 +486,14 @@ bool RHIContextVulkan::createInstance()
 	//	}
 	//}
 
-	VK_CHECK_RESULT_AND_RETURN(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
+
+	return true;
 }
 
 VkRenderPass createRenderPass(const RenderPassInfo& info)
 {
 	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
-	
+
 	std::vector<VkAttachmentDescription> attachments(attachmentCount);
 	int index = 0;
 	for (; index < info.colorAttachmentCount; index++)
@@ -488,6 +510,21 @@ VkRenderPass createRenderPass(const RenderPassInfo& info)
 	createInfo.subpassCount = 1;
 
 	return VK_NULL_HANDLE; // Placeholder, implement the rest of the function
+}
+
+VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = (HINSTANCE)hs_platform_get_hinstance();
+	surfaceCreateInfo.hwnd = static_cast<HWND>(nativeWindow.handle);
+	surfaceCreateInfo.pNext = nullptr;
+	surfaceCreateInfo.flags = 0;
+
+	VkSurfaceKHR surface = VK_NULL_HANDLE;
+	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instance, &surfaceCreateInfo, nullptr, &surface));
+
+	return surface;
 }
 
 #pragma endregion 

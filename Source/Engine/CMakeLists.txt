@@ -359,4 +359,5 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_ENGINE
+    HS_API_EXPORT
 )

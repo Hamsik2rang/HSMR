@@ -552,7 +552,7 @@ EPrimitiveTopology RHIUtilityVulkan::FromPrimitiveTopology(VkPrimitiveTopology t
     }
 }
 
-std::string RHIUtilityVulkan::ToString(VkResult result)
+const char* RHIUtilityVulkan::ToString(VkResult result)
 {
     switch (result)
     {
