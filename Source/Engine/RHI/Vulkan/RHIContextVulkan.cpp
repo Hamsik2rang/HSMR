@@ -117,6 +117,8 @@ bool RHIContextVulkan::Initialize()
 		return false;
 	}
 
+	createDefaultCommandPool();
+
 	return true;
 }
 
@@ -311,7 +313,7 @@ CommandBuffer* RHIContextVulkan::CreateCommandBuffer()
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
 	VkCommandBuffer vkCommandBuffer;
-	vkAllocateCommandBuffers(_device, nullptr, &vkCommandBuffer);
+	vkAllocateCommandBuffers(_device, &allocInfo, &vkCommandBuffer);
 
 	CommandBufferVulkan* commandBuffer = new CommandBufferVulkan();
 	commandBuffer->handle = vkCommandBuffer;
@@ -414,6 +416,10 @@ bool RHIContextVulkan::createInstance()
 		if (strcmp(extension.extensionName, VK_KHR_WIN32_SURFACE_EXTENSION_NAME) == 0)
 		{
 			extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+		}
+		else if (strcmp(extension.extensionName, VK_KHR_SURFACE_EXTENSION_NAME) == 0)
+		{
+			extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		}
 		else if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
 		{
@@ -525,6 +531,16 @@ VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
 	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instance, &surfaceCreateInfo, nullptr, &surface));
 
 	return surface;
+}
+
+void RHIContextVulkan::createDefaultCommandPool()
+{
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.pNext = nullptr;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Command buffers can be reset individually
+	poolInfo.queueFamilyIndex = _device.queueFamilyIndices.graphics;
+	VK_CHECK_RESULT(vkCreateCommandPool(_device, &poolInfo, nullptr, &_defaultCommandPool));
 }
 
 #pragma endregion 

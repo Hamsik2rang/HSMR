@@ -102,11 +102,8 @@ struct NativeWindow
     const char* title;
     uint16 width;
     uint16 height;
-
-    uint16 minWidth;
-    uint16 maxWidth;
-    uint16 minHeight;
-    uint16 maxHeight;
+    uint32 surfaceWidth;
+    uint16 surfaceHeight;
 
     float scale = 1.0f;
 

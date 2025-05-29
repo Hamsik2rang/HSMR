@@ -20,7 +20,6 @@ class SwapchainVulkan final : public Swapchain
 	SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiContext, VkInstance instance, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface);
 	~SwapchainVulkan() override;
 
-
 	HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
 	HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
 	HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return static_cast<CommandBuffer*>(_commandBufferVKs[_frameIndex]); }
@@ -30,10 +29,14 @@ class SwapchainVulkan final : public Swapchain
 private:
 	void setRenderTargets() override;
 	void setRenderPass() override;
+	void getSwapchainImages();
+
+	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
 	VkSwapchainKHR _handle = VK_NULL_HANDLE;
 
 	VkSurfaceKHR _surface;
+	VkSurfaceFormatKHR _surfaceFormat;
 	VkSurfaceCapabilitiesKHR _surfaceCapabilities;
 	VkInstance _instance;
 

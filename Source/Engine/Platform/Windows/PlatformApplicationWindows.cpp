@@ -7,11 +7,6 @@
 
 HINSTANCE g_hInstance = NULL;
 
-void hs_platform_set_hinsatnce(void* hInstance)
-{
-	g_hInstance = (HINSTANCE)hInstance;
-}
-
 void* hs_platform_get_hinstance()
 {
 	if (!g_hInstance)

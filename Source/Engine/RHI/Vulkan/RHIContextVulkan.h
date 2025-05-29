@@ -96,6 +96,7 @@ public:
 
 private:
 	bool createInstance();
+	void createDefaultCommandPool();
 	
 	VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
 	VkRenderPass createRenderPass(const RenderPassInfo& info);

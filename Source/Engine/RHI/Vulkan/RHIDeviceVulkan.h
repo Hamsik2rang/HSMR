@@ -33,6 +33,7 @@ public:
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
 	VkPhysicalDeviceMemoryProperties memoryProperties;
+	VkSurfaceKHR surface;
 
 	std::vector<const char*> supportedExtensions;
 	std::vector<const char*> deviceExtensions;
@@ -45,6 +46,7 @@ public:
 private:
 	void getPhysicalDevice();
 	void createLogicalDevice();
+	void createSurface();
 	uint32 getPhysicalDeviceScore(VkPhysicalDevice device);
 
 	VkInstance _instance;
