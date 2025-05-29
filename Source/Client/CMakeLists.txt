@@ -1,4 +1,4 @@
-set(TARGET_NAME Client)
+﻿set(TARGET_NAME Client)
 
 set(EXECUTABLE_NAME "HSMR")
 
@@ -24,7 +24,7 @@ if(APPLE)
         ${OSX_FRAMEWORK}
     )
 else()
-    add_executable(${TARGET_NAME} WIN32
+    add_executable(${TARGET_NAME}
         ${TOTAL_FILES}
     )
     target_link_libraries(${TARGET_NAME}

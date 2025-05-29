@@ -17,11 +17,6 @@
 #include <execinfo.h> // For backtrace (optional)
 #include <unistd.h>
 
-int main(int argc, char* argv[])
-{
-    return hs_main(argc, argv);
-}
-
 #else
 
 #ifndef UNICODE
@@ -29,16 +24,6 @@ int main(int argc, char* argv[])
 #endif 
 
 #include "Engine/Platform/Windows/PlatformApplicationWindows.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-{
-	hs_platform_set_hinsatnce(hInstance);
-
-	return hs_main(__argc, __argv);
-}
 
 
 #endif
@@ -48,4 +33,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 // #define hs_main(argc, argv) hs_play_main((argc), (argv))
 #endif
+
+
+int main(int argc, char* argv[])
+{
+	return hs_main(argc, argv);
+}
 

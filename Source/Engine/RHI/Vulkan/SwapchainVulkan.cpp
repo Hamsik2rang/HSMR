@@ -24,13 +24,19 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	VkSwapchainCreateInfoKHR createInfo{};
 
 	VkExtent2D extent{};
-	if (_surfaceCapabilities.currentExtent.width != (HS_UINT32_MAX)-1)
+	extent.height = _info.nativeWindow->surfaceHeight;
+	extent.width = _info.nativeWindow->surfaceWidth;
+
+	uint32_t formatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(deviceVulkan.physicalDevice, surface, &formatCount, nullptr);
+	std::vector<VkSurfaceFormatKHR> availabieSurfaceFormat;
+	if (formatCount != 0)
 	{
-		//_info.nativeWindow->width = _surfaceCapabilities.currentExtent.width;
-		//_info.nativeWindow->height = _surfaceCapabilities.currentExtent.height;
+		availabieSurfaceFormat.resize(formatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(deviceVulkan.physicalDevice, surface, &formatCount, availabieSurfaceFormat.data());
+		chooseSurfaceFormat(availabieSurfaceFormat);
 	}
-	extent.height = _info.nativeWindow->height;
-	extent.width = _info.nativeWindow->width;
+
 
 	uint32 presentModeCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(deviceVulkan.physicalDevice, _surface, &presentModeCount, nullptr);
@@ -72,6 +78,8 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 		preTransform = _surfaceCapabilities.currentTransform;
 	}
 
+	//deviceVulkan.queueFamilyIndices
+
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	createInfo.flags = 0;
 	createInfo.surface = _surface;
@@ -79,8 +87,8 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	createInfo.imageExtent.width = extent.width;
 	createInfo.imageExtent.height = extent.height;
 	createInfo.imageArrayLayers = 1;
-	createInfo.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-	createInfo.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+	createInfo.imageColorSpace = _surfaceFormat.colorSpace;
+	createInfo.imageFormat = _surfaceFormat.format;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	createInfo.queueFamilyIndexCount = 0;
@@ -92,7 +100,10 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	createInfo.oldSwapchain = _handle;
 	createInfo.pNext = nullptr;
 	
-	vkCreateSwapchainKHR(deviceVulkan, &createInfo, nullptr, &_handle);
+	VK_CHECK_RESULT(vkCreateSwapchainKHR(deviceVulkan, &createInfo, nullptr, &_handle));
+
+
+	
 
 	_maxFrameCount = _surfaceCapabilities.minImageCount;
 	_commandBufferVKs = new CommandBufferVulkan*[_maxFrameCount];
@@ -196,6 +207,37 @@ void SwapchainVulkan::setRenderPass()
     //colorAttachment.isDepthStencil = false;
 
     //_renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+}
+
+void SwapchainVulkan::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+{
+	for (const auto& availableFormat : availableFormats)
+	{
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		{
+			_surfaceFormat = availableFormat;
+			return;
+		}
+	}
+
+	for (const auto& availableFormat : availableFormats)
+	{
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		{
+			_surfaceFormat = availableFormat;
+			return;
+		}
+	}
+}
+
+void SwapchainVulkan::getSwapchainImages()
+{
+	uint32 swapchainImageCount = 0;
+	vkGetSwapchainImagesKHR(_deviceVulkan, _handle, &swapchainImageCount, nullptr);
+	
+	_maxFrameCount = swapchainImageCount;
+	_vkImages.resize(swapchainImageCount);
+	vkGetSwapchainImagesKHR(_deviceVulkan, _handle, &swapchainImageCount, _vkImages.data());
 }
 
 

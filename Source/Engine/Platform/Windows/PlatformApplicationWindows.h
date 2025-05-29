@@ -5,7 +5,6 @@
 
 #include "Engine/Platform/PlatformApplication.h"
 
-HS_API void hs_platform_set_hinsatnce(void* hInstance);
 HS_API void* hs_platform_get_hinstance();
 
 

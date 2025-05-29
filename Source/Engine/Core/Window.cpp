@@ -1,4 +1,4 @@
-#include "Engine/Core/Window.h"
+﻿#include "Engine/Core/Window.h"
 
 #include "Engine/Core/Log.h"
 #include "Engine/RHI/Swapchain.h"
@@ -16,7 +16,7 @@ Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags
     , _renderer(nullptr)
     , _scene(nullptr)
 {
-    if (hs_platform_window_create(name, width, height, flags, _nativeWindow))
+    if (!hs_platform_window_create(name, width, height, flags, _nativeWindow))
     {
         HS_LOG(crash, "Fail to create NativeWindow");
     }

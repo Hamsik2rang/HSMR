@@ -3,9 +3,14 @@
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 
 #include "Engine/Core/Log.h"
+#include <algorithm>
+#include <utility>
 
 HS_NS_BEGIN
 
+std::vector<const char*> s_requiredDeviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 RHIDeviceVulkan::~RHIDeviceVulkan()
 {
@@ -37,7 +42,26 @@ void RHIDeviceVulkan::getPhysicalDevice()
 	for (uint32 i = 0; i < physicalDeviceCount; i++)
 	{
 		uint32 score = getPhysicalDeviceScore(physicalDevices[i]);
-		if (maxScore == 0 || maxScore < score)
+		bool isExtensionSupported = false;
+		uint32 availableExtensionCount = 0;
+		vkEnumerateDeviceExtensionProperties(physicalDevices[i], nullptr, &availableExtensionCount, nullptr);
+		std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
+		vkEnumerateDeviceExtensionProperties(physicalDevices[i], nullptr, &availableExtensionCount, availableExtensions.data());
+
+		int supportedExtensionCount = 0;
+		for (const auto& extension : availableExtensions)
+		{
+			for (int j = 0; j < s_requiredDeviceExtensions.size(); j++)
+			{
+				if (strcmp(extension.extensionName, s_requiredDeviceExtensions[j]) == 0)
+				{
+					supportedExtensionCount++;
+					break;
+				}
+			}
+		}
+		
+		if ((supportedExtensionCount == s_requiredDeviceExtensions.size()) && (maxScore == 0 || maxScore < score))
 		{
 			maxScore = score;
 			physicalDevice = physicalDevices[i];
@@ -97,10 +121,12 @@ void RHIDeviceVulkan::createLogicalDevice()
 
 	VkDeviceCreateInfo deviceInfo{};
 	deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceInfo.queueCreateInfoCount = 1;
 	deviceInfo.pQueueCreateInfos = &queueInfo;
 	deviceInfo.pEnabledFeatures = &features;
-	deviceInfo.enabledExtensionCount = 0;
-
+	deviceInfo.enabledExtensionCount = s_requiredDeviceExtensions.size();
+	deviceInfo.ppEnabledExtensionNames = s_requiredDeviceExtensions.data();
+	
 	VK_CHECK_RESULT(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice));
 }
 
@@ -133,6 +159,10 @@ uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 	return score;
 }
 
+void RHIDeviceVulkan::createSurface()
+{
+
+}
 
 
 HS_NS_END

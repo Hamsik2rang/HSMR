@@ -38,27 +38,48 @@ HS_NS_BEGIN
 
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
-	WNDCLASS wc = {};
-	wc.lpfnWndProc = wnd_proc;
-	wc.lpszClassName = name;
+	HINSTANCE hInstance = (HINSTANCE)hs_platform_get_hinstance();
 
-	RegisterClass(&wc);
+	WNDCLASSEX wcex = {};
+	wcex.cbSize = sizeof(WNDCLASSEXW);
+	wcex.style = CS_CLASSDC;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.lpfnWndProc = wnd_proc;
+	wcex.lpszClassName = "HSMR";
+	wcex.hInstance = hInstance;
+	wcex.lpfnWndProc = wnd_proc;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE("HSMR"));
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = "HSMR";
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE("HSMR ICON"));
+
+	auto result = RegisterClassEx(&wcex);
+	HS_LOG(debug, "RegisterClassEx result: %d", result);
+	if (!result)
+	{
+		HS_LOG(crash, "Cannt Regist Window class!");
+	}
 
 	int wNameLen = MultiByteToWideChar(CP_UTF8, 0, name, -1, nullptr, 0);
 	wchar_t* wName = new wchar_t[wNameLen];
 	MultiByteToWideChar(CP_UTF8, 0, name, -1, wName, wNameLen);
 
-	HINSTANCE hInstance = (HINSTANCE)hs_platform_get_hinstance();
-	HWND hWnd = CreateWindowW(
-		L"HSMR",
-		L"HSMR",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		(int)width, (int)height,
-		NULL,
-		NULL,
-		hInstance,
-		NULL);
+	HWND hWnd = CreateWindowEx(
+		0,                              // Optional window styles.
+		wcex.lpszClassName,				// Window class
+		name,							// Window text
+		WS_OVERLAPPEDWINDOW,            // Window style
+
+		// Size and position
+		CW_USEDEFAULT, CW_USEDEFAULT, (int)width, (int)height,
+
+		NULL,       
+		NULL,       
+		hInstance,  
+		NULL        // Additional application data
+	);
 
 	if (hWnd == nullptr)
 	{
@@ -66,13 +87,21 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
 		HS_LOG(crash, "Cannot create native window. Error code: %d", err);
 	}
 
+	RECT surfaceRect;
+	GetClientRect(hWnd, &surfaceRect);
+	RECT windowRect;
+	GetWindowRect(hWnd, &windowRect);
+
+	HS_ASSERT(windowRect.right - windowRect.left == width, "Window width is not same with surface width.");
+	HS_ASSERT(windowRect.bottom - windowRect.top == height, "Window height is not same with surface height.");
+
 	outNativeWindow = {};
 	outNativeWindow.width = width;
 	outNativeWindow.height = height;
+	outNativeWindow.surfaceWidth = surfaceRect.right - surfaceRect.left;
+	outNativeWindow.surfaceHeight = surfaceRect.bottom - surfaceRect.top;
 	outNativeWindow.flags = flag;
 	outNativeWindow.title = name;
-	outNativeWindow.minWidth = 1;
-	outNativeWindow.minHeight = 1;
 	outNativeWindow.handle = static_cast<void*>(hWnd);
 	outNativeWindow.isMaximized = false;
 	outNativeWindow.isMinimized = false;
