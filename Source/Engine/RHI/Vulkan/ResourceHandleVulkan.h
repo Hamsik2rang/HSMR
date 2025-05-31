@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Engine/RHI/ResourceHandle.h"
+#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 
 HS_NS_BEGIN
 
@@ -29,12 +30,19 @@ struct BufferVulkan : public Buffer
 {
 	BufferVulkan(const BufferInfo& info) noexcept : Buffer(info) {}
 	~BufferVulkan() override = default;
+
+	void Map();
+	void Unmap();
+	
+	VkBuffer handle;
 };
 
 struct ShaderVulkan : public Shader
 {
-	ShaderVulkan(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info) noexcept : Shader(byteCode, byteCodeSize, info) {}
+	ShaderVulkan(const ShaderInfo& info) noexcept : Shader(info) {}
 	~ShaderVulkan() override = default;
+
+	VkShaderModule handle;
 };
 
 struct ResourceLayoutVulkan : public ResourceLayout

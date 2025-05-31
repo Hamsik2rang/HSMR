@@ -1,4 +1,4 @@
-//
+﻿//
 //  Mesh.h
 //  HSMR
 //
@@ -45,17 +45,36 @@ public:
     HS_FORCEINLINE void  SetColor(const std::vector<float>& color) { _color = color; }
     HS_FORCEINLINE const std::vector<float>& GetColor() const { return _color; }
 
-    HS_FORCEINLINE void  SetTangent(std::vector<float>&& color) { _color = std::move(color); }
-    HS_FORCEINLINE void  SetTangent(const std::vector<float>& color) { _color = color; }
-    HS_FORCEINLINE const std::vector<float>& GetTangent() const { return _color; }
+    HS_FORCEINLINE void  SetTangent(std::vector<float>&& tangent) { _tangent = std::move(tangent); }
+    HS_FORCEINLINE void  SetTangent(const std::vector<float>& tangent) { _tangent = tangent; }
+    HS_FORCEINLINE const std::vector<float>& GetTangent() const { return _tangent; }
 
-    HS_FORCEINLINE void  SetBitangent(std::vector<float>&& color) { _color = std::move(color); }
-    HS_FORCEINLINE void  SetBitangent(const std::vector<float>& color) { _color = color; }
-    HS_FORCEINLINE const std::vector<float>& GetBitangent() const { return _color; }
+    HS_FORCEINLINE void  SetBitangent(std::vector<float>&& bitangent) { _bitangent = std::move(bitangent); }
+    HS_FORCEINLINE void  SetBitangent(const std::vector<float>& bitangent) { _bitangent = bitangent; }
+    HS_FORCEINLINE const std::vector<float>& GetBitangent() const { return _bitangent; }
 
     HS_FORCEINLINE void  SetIndices(std::vector<uint32>&& indices) { _indices = std::move(indices); }
     HS_FORCEINLINE void  SetIndices(const std::vector<uint32>& indices) { _indices = indices; }
     HS_FORCEINLINE const std::vector<uint32>& GetIndices() const { return _indices; }
+
+    // Utility methods
+    HS_FORCEINLINE uint32 GetVertexCount() const { return static_cast<uint32>(_position.size() / 3); }
+    HS_FORCEINLINE uint32 GetTriangleCount() const { return static_cast<uint32>(_indices.size() / 3); }
+    HS_FORCEINLINE const std::vector<Mesh*>& GetSubMeshes() const { return _subMeshes; }
+    
+    // Calculate bounding box
+    void CalculateBounds(glm::vec3& outMin, glm::vec3& outMax) const;
+    
+    // Check if mesh has specific attributes
+    HS_FORCEINLINE bool HasNormals() const { return !_normal.empty(); }
+    HS_FORCEINLINE bool HasTexCoords(int index = 0) const { return index >= 0 && index < 8 && !_texcoord[index].empty(); }
+    HS_FORCEINLINE bool HasColors() const { return !_color.empty(); }
+    HS_FORCEINLINE bool HasTangents() const { return !_tangent.empty(); }
+    HS_FORCEINLINE bool HasIndices() const { return !_indices.empty(); }
+    
+    // Material management
+    void SetMaterialIndex(int32 index) { _materialIndex = index; }
+    HS_FORCEINLINE int32 GetMaterialIndex() const { return _materialIndex; }
 
 private:
     std::vector<float> _position;
@@ -67,6 +86,8 @@ private:
 
     std::vector<Mesh*>  _subMeshes;
     std::vector<uint32> _indices;
+    
+    int32 _materialIndex = -1; // Index to material in the material array
 };
 
 HS_NS_END

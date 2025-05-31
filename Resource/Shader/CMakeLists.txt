@@ -28,9 +28,9 @@
 # else()
 # endif()
 
-if(APPLE)
-    set(TARGET_NAME Shader)
+set(TARGET_NAME Shader)
 
+if(APPLE)
     # Metal 셰이더 파일들
     file(GLOB_RECURSE METAL_SHADERS "MSL/*.metal")
 

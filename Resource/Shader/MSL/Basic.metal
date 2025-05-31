@@ -1,6 +1,6 @@
 #define HS_SHADER_FILE
 #define HS_BASIC_SHADER
-#include "BuiltInMaterialLayout.h"
+#include "../BuiltInMaterialLayout.h"
 
 #include <metal_stdlib>
 

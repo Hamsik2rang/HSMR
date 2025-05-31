@@ -102,9 +102,6 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 	
 	VK_CHECK_RESULT(vkCreateSwapchainKHR(deviceVulkan, &createInfo, nullptr, &_handle));
 
-
-	
-
 	_maxFrameCount = _surfaceCapabilities.minImageCount;
 	_commandBufferVKs = new CommandBufferVulkan*[_maxFrameCount];
 	for (uint8 i = 0; i < _maxFrameCount; i++)
@@ -112,20 +109,21 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiConte
 		_commandBufferVKs[i] = static_cast<CommandBufferVulkan*>(rhiContext->CreateCommandBuffer());
 	}
 
-	if (_handle)
-	{
-		for (int i = 0; i < _maxFrameCount ; i++)
-		{
-			_renderPass[i].Release();
-		}
-	}
-
-	setRenderTargets();
-	setRenderPass();
+	getSwapchainImages();
 }
 
 SwapchainVulkan::~SwapchainVulkan()
 {
+	for (size_t i = 0; i < _vkImageViews.size(); i++)
+	{
+		if (_vkImageViews[i] != VK_NULL_HANDLE)
+		{
+			vkDestroyImageView(_deviceVulkan, _vkImageViews[i], nullptr);
+			_vkImageViews[i] = VK_NULL_HANDLE;
+		}
+	}
+	_vkImageViews.clear();
+
 	if (_handle != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(_deviceVulkan, _handle, nullptr);
@@ -238,6 +236,35 @@ void SwapchainVulkan::getSwapchainImages()
 	_maxFrameCount = swapchainImageCount;
 	_vkImages.resize(swapchainImageCount);
 	vkGetSwapchainImagesKHR(_deviceVulkan, _handle, &swapchainImageCount, _vkImages.data());
+
+	_vkImageViews.resize(_vkImages.size());
+	for (size_t i = 0; i < _vkImages.size(); i++)
+	{
+		if (_vkImageViews[i] != VK_NULL_HANDLE)
+		{
+			vkDestroyImageView(_deviceVulkan, _vkImageViews[i], nullptr);
+			_vkImageViews[i] = VK_NULL_HANDLE;
+		}
+
+		VkImageViewCreateInfo viewCreateInfo{};
+		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewCreateInfo.image = _vkImages[i];
+		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewCreateInfo.format = _surfaceFormat.format;
+		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		viewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewCreateInfo.subresourceRange.baseMipLevel = 0;
+		viewCreateInfo.subresourceRange.levelCount = 1;
+		viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		viewCreateInfo.subresourceRange.layerCount = 1;
+
+		VK_CHECK_RESULT(vkCreateImageView(_deviceVulkan, &viewCreateInfo, nullptr, &_vkImageViews[i]));
+	}
+
+	return;
 }
 
 

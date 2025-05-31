@@ -44,8 +44,8 @@ public:
 	virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) = 0;
 	virtual void              DestroyGraphicsPipeline(GraphicsPipeline* pipeline) = 0;
 
-	virtual Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true) = 0;
-	virtual Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) = 0;
+	virtual Shader* CreateShader(const ShaderInfo& info, const char* path) = 0;
+	virtual Shader* CreateShader(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) = 0;
 
 	virtual void    DestroyShader(Shader* shader) = 0;
 

@@ -42,8 +42,8 @@ public:
 	GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) override;
 	void DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
 
-	Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true) override;
-	Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
+	Shader* CreateShader(const ShaderInfo& info, const char* path) override;
+	Shader* CreateShader(const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) override;
 	void DestroyShader(Shader* shader) override;
 
 	Buffer* CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
@@ -97,7 +97,6 @@ public:
 private:
 	bool createInstance();
 	void createDefaultCommandPool();
-	
 	VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
 	VkRenderPass createRenderPass(const RenderPassInfo& info);
 	VkFramebuffer createFramebuffer(const FramebufferInfo& info);

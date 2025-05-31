@@ -86,6 +86,9 @@ public:
 	static VkCullModeFlags ToCullMode(ECullMode cullMode);
 	static ECullMode FromCullMode(VkCullModeFlags cullMode);
 
+	static VkBufferUsageFlags ToBufferUsage(EBufferUsage usage);
+	static EBufferUsage FromBufferUsage(VkBufferUsageFlags usage);
+
 	//static VkPrimitiveTopology ToPolygonMode(EPolygonMode polygonMode);
 	//static EPolygonMode FromPolygonMode(VkPrimitiveTopology polygonMode);
 
@@ -94,18 +97,6 @@ public:
 
 	static const char* ToString(VkResult result);
 };
-//
-//size_t hs_rhi_get_bytes_per_pixel(EPixelFormat format);
-//size_t hs_rhi_get_bytes_per_pixel(VkFormat format);
-//
-//VkFormat hs_rhi_get_vertex_format_from_size(size_t size);
-//size_t hs_rhi_get_size_from_vertex_format(VkFormat format);
-//
-//VkBufferUsageFlags hs_rhi_to_buffer_option(EBufferMemoryOption option);
-//EBufferMemoryOption hs_rhi_from_buffer_option(VkBufferUsageFlags option);
-//
-//VkClearColorValue hs_rhi_to_clear_color(const float* color);
-//void hs_rhi_from_clear_color(VkClearColorValue color, float* outColor);
 
 HS_NS_END
 
