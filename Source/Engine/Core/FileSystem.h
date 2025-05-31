@@ -22,30 +22,42 @@ enum class EFileAccess
 
 typedef void* FileHandle;
 
-std::wstring Utf8ToUtf16(const std::string& utf8);
-std::string Utf16ToUtf8(const std::wstring& utf16);
+class FileSystem
+{
+public:
 
-bool hs_file_copy(const std::string& src, const std::string& dst);
-bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
-bool hs_file_close(FileHandle fileHandle);
-size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize);
-size_t hs_file_wrtie(FileHandle fileHandle, void* buffer, size_t byteSize);
-bool hs_file_set_pos(FileHandle fileHandle, const int64 pos);
-bool hs_file_flush(FileHandle fileHandle);
-bool hs_file_is_eof(FileHandle fileHandle);
-size_t hs_file_get_size(FileHandle fileHandle);
+    enum class EAccessFlag
+    {
+        READ_ONLY,
+        WRITE_ONLY,
+        READ_WRITE
+    };
 
-std::string hs_file_get_directory(const std::string& absolutePath);
-std::string hs_file_get_extension(const std::string& fileNmae);
+   static bool Copy(const std::string& src, const std::string& dst);
+   static bool Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
+   static bool Close(FileHandle fileHandle);
+   static size_t Read(FileHandle fileHandle, void* buffer, size_t byteSize);
+   static size_t Write(FileHandle fileHandle, void* buffer, size_t byteSize);
+   static bool SetPos(FileHandle fileHandle, const int64 pos);
+   static bool Flush(FileHandle fileHandle);
+   static bool IsEOF(FileHandle fileHandle);
+   static size_t GetSize(FileHandle fileHandle);
 
-std::string hs_file_get_executable_path();
-std::string hs_file_get_default_resource_directory();
-std::string hs_file_get_default_resource_path(const std::string& relativePath);
+    static std::string GetDirectory(const std::string& absolutePath);
+    static std::string GetExtension(const std::string& fileNmae);
 
+    static std::string GetExecutablePath();
+    static std::string GetDefaultResourceDirectory();
+    static std::string GetDefaultResourcePath(const std::string& relativePath);
+    
 
-bool hs_file_is_absolute_path(const std::string& path);
-std::string hs_file_get_relative_path(const std::string& absolutePath);
-std::string hs_file_get_absolute_path(const std::string& relativePath);
+    static bool IsAbsolutePath(const std::string& path);
+    static std::string GetRelativePath(const std::string& absolutePath);
+    static std::string GetAbsolutePath(const std::string& relativePath);
+
+    static std::wstring Utf8ToUtf16(const std::string& utf8);
+    static std::string Utf16ToUtf8(const std::wstring& utf16);
+};
 
 HS_NS_END
 

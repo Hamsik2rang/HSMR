@@ -2,6 +2,12 @@
 
 #include "Engine/Core/Log.h"
 #include "Engine/RHI/ResourceHandle.h"
+#include "Engine/RHI/Swapchain.h"
+
+#include "ImGui/imgui_impl_win32.h"
+#include "ImGui/imgui_impl_vulkan.h"
+
+#include "Engine/Platform/Windows/PlatformWindowWindows.h"
 
 using namespace HS;
 
@@ -20,7 +26,12 @@ void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const Im
 
 void InitializeBackend(HS::Swapchain* swapchain)
 {
+	const NativeWindow* nativeWindow = swapchain->GetInfo().nativeWindow;
+	HWND hWnd = (HWND)nativeWindow->handle;
 
+	ImGui_ImplWin32_Init(hWnd);
+	
+	ImGui_ImplVulkan_InitInfo initInfo{};
 }
 
 void ProcessEvent()

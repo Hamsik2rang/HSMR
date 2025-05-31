@@ -10,6 +10,7 @@
 #include "Engine/Core/Window.h"
 
 #include "Engine/Platform/Windows/PlatformApplicationWindows.h"
+#include "Engine/Core/FileSystem.h"
 
 
 static const std::vector<const char*> s_validationLayers =
@@ -184,7 +185,17 @@ void RHIContextVulkan::DestroyFramebuffer(Framebuffer* framebuffer)
 GraphicsPipeline* RHIContextVulkan::CreateGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
 	// Create a Vulkan graphics pipeline
-	return nullptr;
+	GraphicsPipelineVulkan* pipelineVK = new GraphicsPipelineVulkan(info);
+
+	VkPipeline pipelinevk;
+
+	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
+	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	
+	//vkCreateGraphicsPipelines()
+
+
+	return static_cast<GraphicsPipeline*>(pipelineVK);
 }
 
 void RHIContextVulkan::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
@@ -192,26 +203,88 @@ void RHIContextVulkan::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
 	// Destroy the Vulkan graphics pipeline
 }
 
-Shader* RHIContextVulkan::CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn)
+Shader* RHIContextVulkan::CreateShader(const ShaderInfo& info, const char* path)
 {
+	FileHandle fileHandle = nullptr;
+	if (!FileSystem::Open(path, EFileAccess::READ_ONLY, fileHandle))
+	{
+		HS_LOG(error, "Fail to open Shader: %s", path);
+		return nullptr;
+	}
+
+	auto size = FileSystem::GetSize(fileHandle);
+	if (size == 0)
+	{
+		HS_LOG(error, "Shader file is empty: %s", path);
+		FileSystem::Close(fileHandle);
+		return nullptr;
+	}
+
+	char* byteCode = new char[size];
+	size_t byteCodeSize = FileSystem::Read(fileHandle, byteCode, sizeof(byteCode));
+
+	FileSystem::Close(fileHandle);
+
 	// Create a Vulkan shader
-	return nullptr;
+	ShaderVulkan* shaderVK = static_cast<ShaderVulkan*>(CreateShader(info, byteCode, byteCodeSize));
+
+	delete[] byteCode;
+
+	return shaderVK;
 }
 
-Shader* RHIContextVulkan::CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuiltIn)
+Shader* RHIContextVulkan::CreateShader(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
 {
 	// Create a Vulkan shader from byte code
-	return nullptr;
+	VkShaderModuleCreateInfo shaderCreateInfo{};
+	shaderCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shaderCreateInfo.codeSize = byteCodeSize;
+	shaderCreateInfo.pCode = reinterpret_cast<const uint32_t*>(byteCode);
+	shaderCreateInfo.pNext = nullptr;
+
+	VkShaderModule shaderModule;
+	VK_CHECK_RESULT(vkCreateShaderModule(_device, &shaderCreateInfo, nullptr, &shaderModule));
+	if (shaderModule == VK_NULL_HANDLE)
+	{
+		HS_LOG(error, "Failed to create shader module.");
+		return nullptr;
+	}
+
+	ShaderVulkan* shaderVK = new ShaderVulkan(info);
+	shaderVK->handle = shaderModule;
+
+	return static_cast<Shader*>(shaderVK);
 }
 
 void RHIContextVulkan::DestroyShader(Shader* shader)
 {
-	// Destroy the Vulkan shader
+	ShaderVulkan* shaderVulkan = static_cast<ShaderVulkan*>(shader);
+	if (shaderVulkan->handle)
+	{
+		vkDestroyShaderModule(_device, shaderVulkan->handle, nullptr);
+		shaderVulkan->handle = VK_NULL_HANDLE;
+	}
 }
 
 Buffer* RHIContextVulkan::CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
 {
+	VkBuffer bufferVk;
 	// Create a Vulkan buffer
+	VkBufferCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	createInfo.size = dataSize;
+	createInfo.usage = RHIUtilityVulkan::ToBufferUsage(usage);
+	createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	createInfo.pQueueFamilyIndices = &_device.queueFamilyIndices.graphics;
+
+	VK_CHECK_RESULT(vkCreateBuffer(_device, &createInfo, nullptr, &bufferVk));
+
+	VkMemoryRequirements memReq{};
+	VkMemoryAllocateInfo memAllocInfo{};
+	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	vkGetBufferMemoryRequirements(_device, bufferVk, &memReq);
+	memAllocInfo.allocationSize = memReq.size;
+	
 	return nullptr;
 }
 
@@ -460,7 +533,6 @@ bool RHIContextVulkan::createInstance()
 		instanceCreateInfo.ppEnabledLayerNames = s_validationLayers.data();
 	}
 
-
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (useValidationLayers)
 	{
@@ -473,30 +545,41 @@ bool RHIContextVulkan::createInstance()
 		debugCreateInfo.pNext = instanceCreateInfo.pNext;
 
 		instanceCreateInfo.pNext = &debugCreateInfo;
-
-
 	}
+
 	VK_CHECK_RESULT(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
 
 	VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
 
-	//uint32 extensionCount = 0;
-	//vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-	//if (extensionCount > 0)
-	//{
-	//	std::vector<VkExtensionProperties> extensions;
-	//	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-	//	for (VkExtensionProperties& extension : extensions)
-	//	{
-	//		_supportedInstanceExtensions.push_back(extension.extensionName);
-	//	}
-	//}
-
-
 	return true;
 }
 
-VkRenderPass createRenderPass(const RenderPassInfo& info)
+void RHIContextVulkan::createDefaultCommandPool()
+{
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.pNext = nullptr;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Command buffers can be reset individually
+	poolInfo.queueFamilyIndex = _device.queueFamilyIndices.graphics;
+	VK_CHECK_RESULT(vkCreateCommandPool(_device, &poolInfo, nullptr, &_defaultCommandPool));
+}
+
+VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hinstance = (HINSTANCE)hs_platform_get_hinstance();
+	surfaceCreateInfo.hwnd = static_cast<HWND>(nativeWindow.handle);
+	surfaceCreateInfo.pNext = nullptr;
+	surfaceCreateInfo.flags = 0;
+
+	VkSurfaceKHR surface = VK_NULL_HANDLE;
+	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instance, &surfaceCreateInfo, nullptr, &surface));
+
+	return surface;
+}
+
+VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
 {
 	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
 
@@ -518,31 +601,20 @@ VkRenderPass createRenderPass(const RenderPassInfo& info)
 	return VK_NULL_HANDLE; // Placeholder, implement the rest of the function
 }
 
-VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
+VkFramebuffer RHIContextVulkan::createFramebuffer(const FramebufferInfo& info)
 {
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = (HINSTANCE)hs_platform_get_hinstance();
-	surfaceCreateInfo.hwnd = static_cast<HWND>(nativeWindow.handle);
-	surfaceCreateInfo.pNext = nullptr;
-	surfaceCreateInfo.flags = 0;
 
-	VkSurfaceKHR surface = VK_NULL_HANDLE;
-	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instance, &surfaceCreateInfo, nullptr, &surface));
-
-	return surface;
 }
 
-void RHIContextVulkan::createDefaultCommandPool()
+VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
-	VkCommandPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.pNext = nullptr;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Command buffers can be reset individually
-	poolInfo.queueFamilyIndex = _device.queueFamilyIndices.graphics;
-	VK_CHECK_RESULT(vkCreateCommandPool(_device, &poolInfo, nullptr, &_defaultCommandPool));
+
 }
 
+VkPipeline RHIContextVulkan::createComputePipeline(const ComputePipelineInfo& info)
+{
+
+}
 #pragma endregion 
 
 HS_NS_END

@@ -13,9 +13,11 @@
 using float4 = vector_float4;
 
 #else
-#include <glm/glm.hpp>
+#if !defined(HS_SHADER_FILE)
+    #include <glm/glm.hpp>
 
-using float4 = glm::vec4;
+    using float4 = glm::vec4;
+#endif
 #endif
 
 #if defined(HS_SHADER_FILE)
@@ -48,7 +50,7 @@ struct VSINPUT_BASIC
 
 struct FSINPUT_BASIC
 {
-    float4 pos ATTR_KEY(position);
+    float4 pos ATTR_KEY(position) : SV_POSITION;
     float4 color;
 };
 

@@ -223,10 +223,33 @@ enum class EBufferUsage
 	INVALID = 0,
 
 	UNIFORM = 0x00000010,
+	STORAGE_BUFFER = 0x00000020,
 	INDEX = 0x00000040,
 	VERTEX = 0x00000080,
 	TEXEL = 0x00000004,
 };
+
+HS_FORCEINLINE EBufferUsage operator|(EBufferUsage lhs, EBufferUsage rhs)
+{
+	return static_cast<EBufferUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE EBufferUsage operator|=(EBufferUsage& lhs, EBufferUsage rhs)
+{
+	lhs = static_cast<EBufferUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+	return lhs;
+}
+
+HS_FORCEINLINE EBufferUsage operator&(EBufferUsage lhs, EBufferUsage rhs)
+{
+	return static_cast<EBufferUsage>(static_cast<uint32>(lhs) & static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE EBufferUsage operator&=(EBufferUsage& lhs, uint32 rhs)
+{
+	lhs = static_cast<EBufferUsage>(static_cast<uint32>(lhs) & rhs);
+	return lhs;
+}
 
 enum class EBufferMemoryOption
 {

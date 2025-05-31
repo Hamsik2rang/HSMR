@@ -21,7 +21,7 @@
 HS_NS_BEGIN
 
 // UTF-8 to UTF-16 conversion helper
-std::wstring Utf8ToUtf16(const std::string& utf8)
+std::wstring FileSystem::Utf8ToUtf16(const std::string& utf8)
 {
     if (utf8.empty()) return std::wstring();
 
@@ -34,7 +34,7 @@ std::wstring Utf8ToUtf16(const std::string& utf8)
 }
 
 // UTF-16 to UTF-8 conversion helper
-std::string Utf16ToUtf8(const std::wstring& utf16)
+std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
 {
     if (utf16.empty()) return std::string();
 
@@ -47,7 +47,7 @@ std::string Utf16ToUtf8(const std::wstring& utf16)
 }
 
 // Convert EFileAccess to Windows access flags
-DWORD GetAccessFlags(EFileAccess access)
+DWORD get_access_flag(EFileAccess access)
 {
     switch (access)
     {
@@ -63,7 +63,7 @@ DWORD GetAccessFlags(EFileAccess access)
 }
 
 // Convert EFileAccess to Windows creation disposition
-DWORD GetCreationDisposition(EFileAccess access)
+DWORD get_createion_disposition(EFileAccess access)
 {
     switch (access)
     {
@@ -79,10 +79,10 @@ DWORD GetCreationDisposition(EFileAccess access)
 
 
 // 파일 복사 함수
-bool hs_file_copy(const std::string& src, const std::string& dst)
+bool FileSystem::Copy(const std::string& src, const std::string& dst)
 {
-    std::wstring srcW = Utf8ToUtf16(src);
-    std::wstring dstW = Utf8ToUtf16(dst);
+    std::wstring srcW = FileSystem::Utf8ToUtf16(src);
+    std::wstring dstW = FileSystem::Utf8ToUtf16(dst);
 
     if (srcW.empty() || dstW.empty())
     {
@@ -103,18 +103,18 @@ bool hs_file_copy(const std::string& src, const std::string& dst)
 }
 
 // 파일 열기 함수
-bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle)
+bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle)
 {
-    std::wstring pathW = Utf8ToUtf16(absolutePath);
+    std::wstring pathW = FileSystem::Utf8ToUtf16(absolutePath);
     if (pathW.empty())
     {
         HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
         return false;
     }
 
-    DWORD accessFlags = GetAccessFlags(access);
+    DWORD accessFlags = get_access_flag(access);
     DWORD shareMode = FILE_SHARE_READ; // Allow other processes to read
-    DWORD creationDisposition = GetCreationDisposition(access);
+    DWORD creationDisposition = get_createion_disposition(access);
     DWORD flagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
 
     HANDLE handle = CreateFileW(
@@ -139,7 +139,7 @@ bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandl
 }
 
 // 파일 닫기 함수
-bool hs_file_close(FileHandle fileHandle)
+bool FileSystem::Close(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -160,7 +160,7 @@ bool hs_file_close(FileHandle fileHandle)
 }
 
 // 파일 읽기 함수
-size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize)
+size_t FileSystem::Read(FileHandle fileHandle, void* buffer, size_t byteSize)
 {
     if (!fileHandle || !buffer || byteSize == 0)
     {
@@ -185,7 +185,7 @@ size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize)
 }
 
 // 파일 쓰기 함수
-size_t hs_file_write(FileHandle fileHandle, void* buffer, size_t byteSize)
+size_t FileSystem::Write(FileHandle fileHandle, void* buffer, size_t byteSize)
 {
     if (!fileHandle || !buffer || byteSize == 0)
     {
@@ -207,7 +207,7 @@ size_t hs_file_write(FileHandle fileHandle, void* buffer, size_t byteSize)
 }
 
 // 파일 위치 설정 함수
-bool hs_file_set_pos(FileHandle fileHandle, const int64 pos)
+bool FileSystem::SetPos(FileHandle fileHandle, const int64 pos)
 {
     if (!fileHandle)
     {
@@ -230,7 +230,7 @@ bool hs_file_set_pos(FileHandle fileHandle, const int64 pos)
 }
 
 // 파일 버퍼 비우기 함수
-bool hs_file_flush(FileHandle fileHandle)
+bool FileSystem::Flush(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -251,7 +251,7 @@ bool hs_file_flush(FileHandle fileHandle)
 }
 
 // 파일 끝 확인 함수
-bool hs_file_is_eof(FileHandle fileHandle)
+bool FileSystem::IsEOF(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -280,7 +280,7 @@ bool hs_file_is_eof(FileHandle fileHandle)
 }
 
 // 파일 크기 확인 함수
-size_t hs_file_get_size(FileHandle fileHandle)
+size_t FileSystem::GetSize(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -302,7 +302,7 @@ size_t hs_file_get_size(FileHandle fileHandle)
 }
 
 // 디렉토리 경로 얻기 함수
-std::string hs_file_get_directory(const std::string& absolutePath)
+std::string FileSystem::GetDirectory(const std::string& absolutePath)
 {
     if (absolutePath.empty())
     {
@@ -330,7 +330,7 @@ std::string hs_file_get_directory(const std::string& absolutePath)
 }
 
 // 파일 확장자 얻기 함수
-std::string hs_file_get_extension(const std::string& fileName)
+std::string FileSystem::GetExtension(const std::string& fileName)
 {
     if (fileName.empty())
     {
@@ -355,7 +355,7 @@ std::string hs_file_get_extension(const std::string& fileName)
 }
 
 // 실행 파일 경로 얻기 함수
-std::string hs_file_get_executable_path()
+std::string FileSystem::GetExecutablePath()
 {
     char path[MAX_PATH] = { 0 };
     DWORD length = GetModuleFileNameA(nullptr, path, MAX_PATH);
@@ -363,8 +363,8 @@ std::string hs_file_get_executable_path()
     if (length == 0 || length == MAX_PATH)
     {
         // Try with longer buffer for long paths
-        WCHAR longPath[32768] = { 0 };
-        DWORD longLength = GetModuleFileNameW(nullptr, longPath, 32768);
+        WCHAR longPath[HS_CHAR_INIT_LONG_LENGTH] = { 0 };
+        DWORD longLength = GetModuleFileNameW(nullptr, longPath, HS_CHAR_INIT_LONG_LENGTH);
 
         if (longLength > 0 && longLength < 32768)
         {
@@ -379,28 +379,28 @@ std::string hs_file_get_executable_path()
 }
 
 // 리소스 경로 얻기 함수
-std::string hs_file_get_default_resource_directory()
+std::string FileSystem::GetDefaultResourceDirectory()
 {
-    std::string executablePath = hs_file_get_executable_path();
+    std::string executablePath = FileSystem::GetExecutablePath();
     if (executablePath.empty())
     {
         return "";
     }
 
-    std::string executableDir = hs_file_get_directory(executablePath);
+    std::string executableDir = FileSystem::GetDirectory(executablePath);
     std::string resourceRootDir = executableDir + "Resource" + HS_DIR_SEPERATOR;
 
     return resourceRootDir;
 }
 
 // Resource 루트 디렉터리 기준으로의 상대경로 얻기 함수
-std::string hs_file_get_default_resource_path(const std::string& relativePath)
+std::string FileSystem::GetDefaultResourcePath(const std::string& relativePath)
 {
-    return (hs_file_get_default_resource_directory() + relativePath);
+    return (FileSystem::GetDefaultResourceDirectory() + relativePath);
 }
 
 // 절대 경로 확인 함수
-bool hs_file_is_absolute_path(const std::string& path)
+bool FileSystem::IsAbsolutePath(const std::string& path)
 {
     if (path.empty())
     {
@@ -426,15 +426,15 @@ bool hs_file_is_absolute_path(const std::string& path)
 }
 
 // 실행 파일 기준 상대 경로 얻기 함수
-std::string hs_file_get_relative_path(const std::string& absolutePath)
+std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 {
-    std::string exePath = hs_file_get_executable_path();
+    std::string exePath = FileSystem::GetExecutablePath();
     if (exePath.empty())
     {
         return absolutePath;
     }
 
-    std::string baseDir = hs_file_get_directory(exePath);
+    std::string baseDir = FileSystem::GetDirectory(exePath);
 
     // Convert to lowercase for case-insensitive comparison (Windows is case-insensitive)
     std::string lowerAbsolute = absolutePath;
@@ -445,7 +445,7 @@ std::string hs_file_get_relative_path(const std::string& absolutePath)
     if (lowerAbsolute.find(lowerBase) == 0)
     {
         std::string relative = absolutePath.substr(baseDir.length());
-        if (!relative.empty() && (relative[0] == '\\' || relative[0] == '/'))
+		if (!relative.empty() && (relative[0] == HS_DIR_SEPERATOR))
         {
             relative = relative.substr(1);
         }
@@ -456,20 +456,20 @@ std::string hs_file_get_relative_path(const std::string& absolutePath)
 }
 
 // 실행 파일 기준 절대 경로 얻기 함수
-std::string hs_file_get_absolute_path(const std::string& relativePath)
+std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
 {
-    if (hs_file_is_absolute_path(relativePath))
+    if (FileSystem::IsAbsolutePath(relativePath))
     {
         return relativePath;
     }
 
-    std::string exePath = hs_file_get_executable_path();
+    std::string exePath = FileSystem::GetExecutablePath();
     if (exePath.empty())
     {
         return relativePath;
     }
 
-    std::string baseDir = hs_file_get_directory(exePath);
+    std::string baseDir = FileSystem::GetDirectory(exePath);
     return baseDir + relativePath;
 }
 

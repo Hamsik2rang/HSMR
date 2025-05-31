@@ -138,7 +138,7 @@ void hs_platform_window_set_position(NativeWindow& nativeWindow, uint16 x, uint1
 
 void hs_platform_window_get_position(NativeWindow& nativeWindow)
 {
-
+	
 }
 
 HS_NS_END

@@ -446,6 +446,39 @@ ECullMode RHIUtilityVulkan::FromCullMode(VkCullModeFlags cullMode)
     }
 }
 
+
+VkBufferUsageFlags RHIUtilityVulkan::ToBufferUsage(EBufferUsage usage)
+{
+	VkBufferUsageFlags flags = 0;
+	if ((usage & EBufferUsage::VERTEX) != static_cast<EBufferUsage>(0))
+		flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	if ((usage & EBufferUsage::INDEX) != static_cast<EBufferUsage>(0))
+		flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	if ((usage & EBufferUsage::UNIFORM) != static_cast<EBufferUsage>(0))
+		flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	if ((usage & EBufferUsage::STORAGE_BUFFER) != static_cast<EBufferUsage>(0))
+		flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+    return flags;
+}
+
+EBufferUsage RHIUtilityVulkan::FromBufferUsage(VkBufferUsageFlags usage)
+{
+    EBufferUsage flags = EBufferUsage::INVALID;
+	if (usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+        flags = flags | EBufferUsage::VERTEX;
+	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+		flags = flags | EBufferUsage::INDEX;
+	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+		flags = flags | EBufferUsage::UNIFORM;
+	if (usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+		flags = flags | EBufferUsage::STORAGE_BUFFER;
+
+	return flags;
+}
+
+
+
 // Note: These functions seem to have incorrect names in the header
 // They should probably handle VkPolygonMode instead of VkPrimitiveTopology
 // But implementing according to the function signature provided
