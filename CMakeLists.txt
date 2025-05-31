@@ -67,7 +67,7 @@ message(STATUS "Processor Architecture is ${HS_ARCH}")
 if(APPLE)
     set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.5.4.3.dylib)
 else() # TODO
-    set(ASSIMP)
+    set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
 endif()
 
 if(WIN32)

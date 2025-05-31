@@ -103,10 +103,15 @@ private:
 	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info);
 	VkPipeline createComputePipeline(const ComputePipelineInfo& info);
 
-	void setDebugObjectName(VkObjectType type, uint64 handle, const char* name);
+	VkCommandBuffer beginSingleTimeCommands();
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+	void traisitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32 width, uint32 height);
 
+	void setDebugObjectName(VkObjectType type, uint64 handle, const char* name);
 	VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger, const VkAllocationCallbacks* npAllocator);
 	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* npAllocator);
+
 	void cleanup();
 
 	//std::vector<std::string> _supportedInstanceExtensions;

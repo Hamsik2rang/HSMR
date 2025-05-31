@@ -360,7 +360,7 @@ class RenderPass;
 struct FramebufferInfo
 {
 	RenderPass* renderPass;
-	Texture* const* colorBuffers;
+	std::vector<Texture*> colorBuffers;
 	Texture* depthStencilBuffer;
 	Texture* resolveBuffer;
 

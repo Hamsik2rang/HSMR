@@ -18,6 +18,9 @@ struct TextureVulkan : public Texture
 {
 	TextureVulkan(const TextureInfo& info) noexcept : Texture(info) {}
 	~TextureVulkan() override = default;
+
+	VkImage handle = VK_NULL_HANDLE;
+	VkImageView imageViewVk = VK_NULL_HANDLE;
 };
 
 struct SamplerVulkan : public Sampler
