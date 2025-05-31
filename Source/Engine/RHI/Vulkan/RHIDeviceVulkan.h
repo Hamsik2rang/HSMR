@@ -35,6 +35,10 @@ public:
 	VkPhysicalDeviceMemoryProperties memoryProperties;
 	VkSurfaceKHR surface;
 
+	VkQueue graphicsQueue = VK_NULL_HANDLE;
+	VkQueue computeQueue = VK_NULL_HANDLE;
+	VkQueue transferQueue = VK_NULL_HANDLE;
+
 	std::vector<const char*> supportedExtensions;
 	std::vector<const char*> deviceExtensions;
 

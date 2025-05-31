@@ -58,49 +58,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 
 HS_NS_BEGIN
 
-void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
-{
-	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instance, "vkSetDebugUtilsObjectNameEXT");
-	HS_ASSERT(func, "function addr is nullptr");
-
-	VkDebugUtilsObjectNameInfoEXT nameInfo{};
-	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-	nameInfo.objectType = type;
-	nameInfo.objectHandle = handle;
-	nameInfo.pObjectName = name;
-	nameInfo.pNext = nullptr;
-
-	func(_device, &nameInfo);
-}
-
-VkResult RHIContextVulkan::createDebugUtilsMessengerEXT
-(
-	VkInstance instance,
-	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-	VkDebugUtilsMessengerEXT* pDebugMessenger,
-	const VkAllocationCallbacks* npAllocator = nullptr
-)
-{
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		return func(instance, pCreateInfo, npAllocator, pDebugMessenger);
-	}
-	else
-	{
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
-
-void RHIContextVulkan::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT pDebugMessenger, const VkAllocationCallbacks* npAllocator = nullptr)
-{
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		func(instance, pDebugMessenger, npAllocator);
-	}
-}
-
 RHIContextVulkan::~RHIContextVulkan()
 {
 	Finalize();
@@ -191,7 +148,7 @@ GraphicsPipeline* RHIContextVulkan::CreateGraphicsPipeline(const GraphicsPipelin
 
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	
+
 	//vkCreateGraphicsPipelines()
 
 
@@ -284,7 +241,7 @@ Buffer* RHIContextVulkan::CreateBuffer(const void* data, size_t dataSize, EBuffe
 	memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	vkGetBufferMemoryRequirements(_device, bufferVk, &memReq);
 	memAllocInfo.allocationSize = memReq.size;
-	
+
 	return nullptr;
 }
 
@@ -603,6 +560,20 @@ VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
 
 VkFramebuffer RHIContextVulkan::createFramebuffer(const FramebufferInfo& info)
 {
+	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(info.renderPass);
+	
+	std::vector<VkImageView> attachments;
+	attachments.reserve(info.colorBuffers.size() + (info.depthStencilBuffer ? 1 : 0));
+	for (const auto& colorBuffer : info.colorBuffers)
+	{
+		TextureVulkan* textureVK = static_cast<TextureVulkan*>(colorBuffer);
+		attachments.push_back(textureVK->handle);
+	}
+	
+	VkFramebufferCreateInfo framebufferInfo{};
+	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+
+
 	return VK_NULL_HANDLE;
 }
 
@@ -619,5 +590,181 @@ VkPipeline RHIContextVulkan::createComputePipeline(const ComputePipelineInfo& in
 }
 
 #pragma endregion 
+
+#pragma region >>> Command Utility Functions
+
+VkCommandBuffer RHIContextVulkan::beginSingleTimeCommands()
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = _defaultCommandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBufferVk;
+	VK_CHECK_RESULT(vkAllocateCommandBuffers(_device, &allocInfo, &commandBufferVk));
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // One-time submit
+
+	vkBeginCommandBuffer(commandBufferVk, &beginInfo);
+
+	return commandBufferVk;
+}
+
+void RHIContextVulkan::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	VK_CHECK_RESULT(vkQueueSubmit(_device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE));
+	vkQueueWaitIdle(_device.graphicsQueue);
+
+	vkFreeCommandBuffers(_device, _defaultCommandPool, 1, &commandBuffer);
+}
+
+void RHIContextVulkan::traisitionImageLayout(
+	VkImage image,
+	VkFormat format,
+	VkImageLayout oldLayout,
+	VkImageLayout newLayout
+)
+{
+	VkCommandBuffer cmdBufferVk = beginSingleTimeCommands();
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.pNext = nullptr;
+
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // Assuming color image
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+	
+	VkPipelineStageFlags sourceStage = 0;
+	VkPipelineStageFlags destinationStage = 0;
+
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+		newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+	{
+		HS_LOG(error, "Unsupported layout transition!");
+		endSingleTimeCommands(cmdBufferVk);
+		return;
+	}
+
+	vkCmdPipelineBarrier(cmdBufferVk,
+		sourceStage, destinationStage,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &barrier);
+
+	endSingleTimeCommands(cmdBufferVk);
+}
+
+void RHIContextVulkan::copyBufferToImage(
+	VkBuffer buffer,
+	VkImage image,
+	uint32 width,
+	uint32 height
+)
+{
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // Assuming color image
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent.width = width;
+	region.imageExtent.height = height;
+	region.imageExtent.depth = 1;
+
+	vkCmdCopyBufferToImage(commandBuffer, buffer, image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+	endSingleTimeCommands(commandBuffer);
+}
+
+#pragma endregion
+
+
+#pragma region >>> Debugging Functions
+
+void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
+{
+	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instance, "vkSetDebugUtilsObjectNameEXT");
+	HS_ASSERT(func, "function addr is nullptr");
+
+	VkDebugUtilsObjectNameInfoEXT nameInfo{};
+	nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	nameInfo.objectType = type;
+	nameInfo.objectHandle = handle;
+	nameInfo.pObjectName = name;
+	nameInfo.pNext = nullptr;
+
+	func(_device, &nameInfo);
+}
+
+VkResult RHIContextVulkan::createDebugUtilsMessengerEXT
+(
+	VkInstance instance,
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	VkDebugUtilsMessengerEXT* pDebugMessenger,
+	const VkAllocationCallbacks* npAllocator = nullptr
+)
+{
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		return func(instance, pCreateInfo, npAllocator, pDebugMessenger);
+	}
+	else
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
+
+void RHIContextVulkan::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT pDebugMessenger, const VkAllocationCallbacks* npAllocator = nullptr)
+{
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		func(instance, pDebugMessenger, npAllocator);
+	}
+}
+
+#pragma endregion
 
 HS_NS_END

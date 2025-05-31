@@ -128,6 +128,25 @@ void RHIDeviceVulkan::createLogicalDevice()
 	deviceInfo.ppEnabledExtensionNames = s_requiredDeviceExtensions.data();
 	
 	VK_CHECK_RESULT(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice));
+
+	vkGetDeviceQueue(logicalDevice, queueFamilyIndices.graphics, 0, &graphicsQueue);
+	if (queueFamilyIndices.compute != queueFamilyIndices.graphics)
+	{
+		vkGetDeviceQueue(logicalDevice, queueFamilyIndices.compute, 0, &computeQueue);
+	}
+	else
+	{
+		computeQueue = graphicsQueue;
+	}
+
+	if (queueFamilyIndices.transfer != queueFamilyIndices.graphics)
+	{
+		vkGetDeviceQueue(logicalDevice, queueFamilyIndices.transfer, 0, &transferQueue);
+	}
+	else
+	{
+		transferQueue = graphicsQueue;
+	}
 }
 
 uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
