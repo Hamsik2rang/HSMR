@@ -1,4 +1,4 @@
-//
+﻿//
 //  Material.h
 //  HSMR
 //
@@ -12,7 +12,7 @@
 #include "Engine/Object/Object.h"
 #include "Engine/Renderer/RenderDefinition.h"
 
-#include "MSL/BuiltInMaterialLayout.h"
+#include "BuiltInMaterialLayout.h"
 
 #include <glm/glm.hpp>
 #include <unordered_map>

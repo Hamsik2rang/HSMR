@@ -266,7 +266,7 @@ void RHIContextVulkan::DestroyShader(Shader* shader)
 	}
 }
 
-Buffer* RHIContextVulkan::CreateBuffer(void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
+Buffer* RHIContextVulkan::CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
 {
 	VkBuffer bufferVk;
 	// Create a Vulkan buffer
@@ -288,7 +288,7 @@ Buffer* RHIContextVulkan::CreateBuffer(void* data, size_t dataSize, EBufferUsage
 	return nullptr;
 }
 
-Buffer* RHIContextVulkan::CreateBuffer(void* data, size_t dataSize, const BufferInfo& info)
+Buffer* RHIContextVulkan::CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info)
 {
 	// Create a Vulkan buffer with specific info
 	return nullptr;
@@ -603,18 +603,21 @@ VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
 
 VkFramebuffer RHIContextVulkan::createFramebuffer(const FramebufferInfo& info)
 {
-
+	return VK_NULL_HANDLE;
 }
 
 VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
+	return VK_NULL_HANDLE;
 
 }
 
 VkPipeline RHIContextVulkan::createComputePipeline(const ComputePipelineInfo& info)
 {
+	return VK_NULL_HANDLE;
 
 }
+
 #pragma endregion 
 
 HS_NS_END

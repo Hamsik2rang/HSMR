@@ -24,21 +24,15 @@ Sampler::~Sampler()
 {
 }
 
-Shader::Shader(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info) noexcept
+Shader::Shader(const ShaderInfo& info) noexcept
     : RHIHandle(EType::SHADER)
-    , byteCode(byteCode)
-    , byteCodeSize(byteCodeSize)
     , info(info)
 {
 }
 
 Shader::~Shader()
 {
-    if (nullptr != byteCode)
-    {
-        delete[] byteCode;
-        byteCode = nullptr;
-    }
+
 }
 
 Buffer::Buffer(const BufferInfo& info)

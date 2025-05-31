@@ -11,7 +11,7 @@
 
 #include "Engine/Object/Object.h"
 
-#include "glm/glm.hpp"
+#include "Engine/Math/Math.h"
 
 HS_NS_BEGIN
 
@@ -25,7 +25,7 @@ public:
 
     HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(subMesh); }
 
-    HS_FORCEINLINE void  SetPosition(std::vector<float>&& position) { _position = std::move(position); }
+    HS_FORCEINLINE void  SetPosition(std::vector<float>&& position) { _position = std::move(position); CalculateBounds(); }
     HS_FORCEINLINE void  SetPosition(const std::vector<float>& position) { _position = position; }
     HS_FORCEINLINE const std::vector<float>& GetPosition() const { return _position; }
 
@@ -62,8 +62,6 @@ public:
     HS_FORCEINLINE uint32 GetTriangleCount() const { return static_cast<uint32>(_indices.size() / 3); }
     HS_FORCEINLINE const std::vector<Mesh*>& GetSubMeshes() const { return _subMeshes; }
     
-    // Calculate bounding box
-    void CalculateBounds(glm::vec3& outMin, glm::vec3& outMax) const;
     
     // Check if mesh has specific attributes
     HS_FORCEINLINE bool HasNormals() const { return !_normal.empty(); }
@@ -76,17 +74,29 @@ public:
     void SetMaterialIndex(int32 index) { _materialIndex = index; }
     HS_FORCEINLINE int32 GetMaterialIndex() const { return _materialIndex; }
 
+    void CalculateBounds();
+    void CalculateNormal();
+    void CalculateTangent();
 private:
+    
+    
     std::vector<float> _position;
     std::vector<float> _texcoord[8];
     std::vector<float> _normal;
     std::vector<float> _color;
     std::vector<float> _tangent;
     std::vector<float> _bitangent;
+    
+    std::vector<int> _bondIDs;
+    std::vector<float> _boneWeights;
 
     std::vector<Mesh*>  _subMeshes;
     std::vector<uint32> _indices;
     
+    struct Bound{
+        Vec4f min;
+        Vec4f max;
+    } _bound;
     int32 _materialIndex = -1; // Index to material in the material array
 };
 

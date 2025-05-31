@@ -13,7 +13,7 @@ HS_EDITOR_API GUIContext* s_guiContext = nullptr;
 HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
 
 GUIContext::GUIContext()
-	: _defaultLayoutPath(hs_file_get_default_resource_path("imgui.ini"))
+	: _defaultLayoutPath(FileSystem::GetDefaultResourcePath("imgui.ini"))
 	, _font{ nullptr }
 	, _context(nullptr)
 {}
@@ -155,7 +155,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF(hs_file_get_default_resource_path(fontPath).c_str(), 18.0f);
+	_font = io.Fonts->AddFontFromFileTTF(FileSystem::GetDefaultResourcePath(fontPath).c_str(), 18.0f);
 
 	io.Fonts->Build();
 }

@@ -54,7 +54,7 @@ public:
 	const ShaderInfo	info;
 
 protected:
-	explicit Shader(const ShaderInfo& info) noexcept;
+	Shader(const ShaderInfo& info) noexcept;
 };
 
 class ResourceLayout : public RHIHandle

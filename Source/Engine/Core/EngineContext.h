@@ -1,4 +1,4 @@
-//
+﻿//
 //  EngineContext.h
 //  Engine
 //
@@ -32,14 +32,14 @@ struct EngineContext
 {
     const char* name = "";
     //...
-    ERHIPlatform rhiPlatform;
-    RHIContext*  rhiContext;
+    ERHIPlatform rhiPlatform = ERHIPlatform::NONE;
+    RHIContext* rhiContext = nullptr;;
 
-    std::string executablePath;
-    std::string executableDirectory;
-    std::string resourceDirectory;
+    std::string executablePath = "";
+    std::string executableDirectory = "";
+    std::string resourceDirectory = "";
 
-    Application* app;
+    Application* app = nullptr;
 };
 
 EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatform);
@@ -48,10 +48,7 @@ void           hs_engine_destroy_context();
 EngineContext* hs_engine_get_context();
 void           hs_engine_set_context(EngineContext* context);
 RHIContext*    hs_engine_get_rhi_context();
-void           hs_engine_set_rhi_context(void* rhiContext);
 
-void hs_engine_set_position(uint32 x, uint32 y);
-void hs_engine_get_position(uint32& outX, uint32& outY);
 
 HS_NS_END
 
