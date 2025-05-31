@@ -441,8 +441,6 @@ struct ShaderInfo
 {
 	EShaderStage stage;
 	const char* entryName;
-
-	bool isBuiltIn = true;
 };
 
 enum class EResourceType : uint8

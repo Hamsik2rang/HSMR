@@ -1,11 +1,12 @@
-//
+﻿//
 //  Material.cpp
 //  HSMR
 //
 //  Created by Yongsik Im on 2/5/25.
 //
 #include "Engine/Object/Material.h"
-#include "Engine/Object/Shader.h"
+//#include "Engine/Object/Shader.h"
+#include "Engine/RHI/ResourceHandle.h"
 #include "Engine/Object/Image.h"
 #include "Engine/Core/Log.h"
 

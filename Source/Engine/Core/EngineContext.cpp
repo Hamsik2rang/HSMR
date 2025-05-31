@@ -24,9 +24,9 @@ EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatfo
     s_engineContext                      = new EngineContext();
     s_engineContext->name                = name;
     s_engineContext->rhiPlatform         = rhiPlatform;
-    s_engineContext->executablePath      = hs_file_get_executable_path();
-    s_engineContext->executableDirectory = hs_file_get_directory(s_engineContext->executablePath);
-    s_engineContext->resourceDirectory   = hs_file_get_default_resource_directory();
+    s_engineContext->executablePath      = FileSystem::GetExecutablePath();
+    s_engineContext->executableDirectory = FileSystem::GetDirectory(s_engineContext->executablePath);
+    s_engineContext->resourceDirectory   = FileSystem::GetDefaultResourceDirectory();
 
     switch (rhiPlatform)
     {
@@ -44,6 +44,7 @@ EngineContext* hs_engine_create_context(const char* name, ERHIPlatform rhiPlatfo
         break;
 #endif
         default:
+			HS_LOG(crash, "Unsupported RHI Platform!");
             break;
     }
 

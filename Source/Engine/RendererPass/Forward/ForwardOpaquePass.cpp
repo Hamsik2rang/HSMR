@@ -1,4 +1,4 @@
-#include "ForwardOpaquePass.h"
+﻿#include "ForwardOpaquePass.h"
 
 #include "Engine/Core/EngineContext.h"
 #include "Engine/Core/FileSystem.h"
@@ -8,6 +8,8 @@
 #include "Engine/RHI/CommandHandle.h"
 
 #include "Engine/Object/Material.h"
+
+#include "Engine/Utility/ResourceManager.h"
 
 HS_NS_BEGIN
 
@@ -70,14 +72,16 @@ void ForwardOpaquePass::Execute(CommandBuffer* commandBuffer, RenderPass* render
 
     commandBuffer->BindPipeline(_gPipeline);
 
-    uint32 offsets[1]{0};
-    commandBuffer->BindVertexBuffers(&_vertexBuffer, offsets, 1);
+    uint32 offsets[2]{0, 0};
+    commandBuffer->BindVertexBuffers(_vertexBuffer, offsets, 2);
+    
+    commandBuffer->BindIndexBuffer(_indexBuffer);
 
     commandBuffer->SetViewport(Viewport{0.0f, 0.0f, static_cast<float>(framebuffer->info.width), static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
 
     commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
 
-    commandBuffer->DrawArrays(0, 6, 1);
+    commandBuffer->DrawIndexed(0, 36, 1, 0);
 
     commandBuffer->EndRenderPass();
 
@@ -118,30 +122,32 @@ void ForwardOpaquePass::createResourceHandles()
 {
     RHIContext* rhiContext = _renderer->GetRHIContext();
 
-    VSINPUT_BASIC vertices[]{
-        {
-            {0.5f, -0.5f, 0.0f, 1.0f},
-            {1.0f, 0.0f, 0.0f, 1.0f},
-        },
-        {
-            {0.5f, 0.5f, 0.0f, 1.0f},
-            {0.0, 1.0f, 0.0f, 1.0f},
-        },
-        {
-            {-0.5f, 0.5f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f, 1.0f},
-        },
-    };
-
-    _vertexBuffer = rhiContext->CreateBuffer(vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
-
-    std::string libPath = hs_file_get_default_resource_path(std::string("Shader/MSL/Basic.metal"));
-    _vertexShader       = rhiContext->CreateShader(EShaderStage::VERTEX, libPath.c_str(), HS_TO_STRING(VSENTRY_BASIC), strlen(HS_TO_STRING(VSENTRY_BASIC)));
+    const Mesh& fallbackMesh = ResourceManager::GetFallbackMeshCube();
+    const auto& pos = fallbackMesh.GetPosition();
+    const auto& color = fallbackMesh.GetColor();
+    
+    _vertexBuffer[0] = rhiContext->CreateBuffer(static_cast<const void*>(pos.data()), pos.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+    _vertexBuffer[1] = rhiContext->CreateBuffer(static_cast<const void*>(color.data()), color.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+    
+    const auto& indices = fallbackMesh.GetIndices();
+    _indexBuffer = rhiContext->CreateBuffer(static_cast<const void*>(indices.data()), indices.size() * sizeof(decltype(indices)), EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
+    _indexCount = indices.size();
+    
+    std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
+    ShaderInfo vsInfo{};
+	vsInfo.entryName = HS_TO_STRING(VSENTRY_BASIC);
+	vsInfo.stage = EShaderStage::VERTEX;
+    _vertexShader       = rhiContext->CreateShader(vsInfo, libPath.c_str());
     if (_vertexShader == nullptr)
     {
         HS_LOG(crash, "Shader is nullptr");
     }
-    _fragmentShader = rhiContext->CreateShader(EShaderStage::FRAGMENT, libPath.c_str(), HS_TO_STRING(FSENTRY_BASIC), strlen(HS_TO_STRING(FSENTRY_BASIC)));
+
+    ShaderInfo fsInfo{};
+	fsInfo.entryName = HS_TO_STRING(FSENTRY_BASIC);
+	fsInfo.stage = EShaderStage::FRAGMENT;
+
+    _fragmentShader = rhiContext->CreateShader(fsInfo, libPath.c_str());
     if (_fragmentShader == nullptr)
     {
         HS_LOG(crash, "Shader is nullptr");
@@ -159,10 +165,14 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
     VertexInputStateDescriptor  viDesc{};
     VertexInputLayoutDescriptor viLayout{};
     viLayout.binding       = 0;
-    viLayout.stride        = sizeof(VSINPUT_BASIC);
+    viLayout.stride        = sizeof(float) * 4;
     viLayout.stepRate      = 1;
     viLayout.useInstancing = false;
 
+    viDesc.layouts.push_back(viLayout);
+    
+    viLayout.binding = 1;
+    
     viDesc.layouts.push_back(viLayout);
 
     VertexInputAttributeDescriptor viAttr{};
@@ -174,9 +184,9 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
     viDesc.attributes.push_back(viAttr);
 
     viAttr.location   = 0;
-    viAttr.binding    = 0;
+    viAttr.binding    = 1;
     viAttr.formatSize = sizeof(float) * 4; // float4 Color
-    viAttr.offset     = sizeof(float) * 4;
+    viAttr.offset     = 0;
 
     viDesc.attributes.push_back(viAttr);
 
@@ -214,38 +224,6 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 
     _gPipeline = rhiContext->CreateGraphicsPipeline(gpInfo);
 
-    //    NSError* error = nil;
-    //
-    ////      rp = hs_rhi_to_render_pass(renderPass);
-    //
-    //    MTLVertexDescriptor* vertexDesc = [[MTLVertexDescriptor alloc] init];
-    //    vertexDesc.attributes[0].offset = 0;
-    //    vertexDesc.attributes[0].format = MTLVertexFormatFloat4;
-    //    vertexDesc.attributes[0].bufferIndex = 0;
-    //
-    //    vertexDesc.attributes[1].format = MTLVertexFormatFloat4;
-    //    vertexDesc.attributes[1].offset = sizeof(vector_float4);
-    //    vertexDesc.attributes[1].bufferIndex = 0;
-    //
-    //    vertexDesc.layouts[0].stride = sizeof(vector_float4) * 2;
-    //    vertexDesc.layouts[0].stepRate = 1;
-    //    vertexDesc.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
-    //
-    //    MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
-    //    pipelineDesc.label                        = @"ForwardOpaquePass Pipeline";
-    //    pipelineDesc.vertexFunction               = _rhiRes->vertexFunction;
-    //    pipelineDesc.fragmentFunction             = _rhiRes->fragmentFunction;
-    //    pipelineDesc.rasterizationEnabled = true;
-    //    pipelineDesc.rasterSampleCount = 1;
-    //    pipelineDesc.colorAttachments[0].pixelFormat = hs_rhi_to_pixel_format(renderPass->info.colorAttachments[0].format);
-    //    pipelineDesc.vertexDescriptor = vertexDesc;
-    //
-    //    _rhiRes->pipelineState = [_rhiRes->device newRenderPipelineStateWithDescriptor:pipelineDesc
-    //                                                                             error:&error];
-    //    if (nil == _rhiRes->pipelineState)
-    //    {
-    //        HS_LOG(crash, "PipelineState isn't created");
-    //    }
 }
 
 HS_NS_END
