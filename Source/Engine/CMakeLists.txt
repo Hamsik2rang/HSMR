@@ -350,7 +350,7 @@ if(APPLE)
 else()
     target_link_libraries(${TARGET_NAME}
         PUBLIC
-        ${SDL3} ${VULKAN} ${SPIRV}
+        ${ASSIMP} ${VULKAN} ${SPIRV}
     )
 endif()
 
@@ -363,3 +363,5 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     HS_ENGINE
     HS_API_EXPORT
 )
+
+install(TARGETS ${TARGET_NAME} ARCHIVE DESTINATION "${INSTALL_FOLDER}/dev/lib" LIBRARY DESTINATION "${INSTALL_FOLDER}" RUNTIME DESTINATION "${INSTALL_FOLDER}")
