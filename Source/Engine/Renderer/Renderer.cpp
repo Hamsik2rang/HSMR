@@ -1,4 +1,4 @@
-//
+﻿//
 //  Renderer.mm
 //  HSMR
 //
@@ -83,7 +83,7 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
         FramebufferInfo fbInfo{};
         fbInfo.width                  = renderTarget->GetWidth();
         fbInfo.height                 = renderTarget->GetHeight();
-        fbInfo.colorBuffers           = renderTarget->GetColorTextures().data(); // COPY?!
+        fbInfo.colorBuffers           = renderTarget->GetColorTextures(); // COPY?!
         fbInfo.depthStencilBuffer     = renderTarget->GetDepthStencilTexture();
         fbInfo.isSwapchainFramebuffer = renderPass->info.isSwapchainRenderPass;
         fbInfo.renderPass             = renderPass;

@@ -70,12 +70,12 @@ else() # TODO
     set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
 endif()
 
-if(WIN32)
-    set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
-    set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
-else()
+if(APPLE)
     set(VULKAN)
     set(SPIRV)
+else()
+    set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
+    set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
 endif()
 
 set(INSTALL_FOLDER "$<TARGET_FILE_DIR:Client>")
@@ -91,14 +91,14 @@ set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 set(HS_TOOL_DIR "Source/Tool")
-#set(HS_TOOL_SHADER_COMPILER_DIR "{HS_TOOL_DIR}/ShaderCompiler")
 
+# set(HS_TOOL_SHADER_COMPILER_DIR "{HS_TOOL_DIR}/ShaderCompiler")
 add_subdirectory(${HS_RES_SHADER_DIR})
 add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
-#add_subdirectory(${HS_TOOL_SHADER_COMPILER_DIR})
 
+# add_subdirectory(${HS_TOOL_SHADER_COMPILER_DIR})
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}
