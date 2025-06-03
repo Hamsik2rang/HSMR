@@ -16,36 +16,36 @@ HS_NS_BEGIN
 
 struct TextureMetal : public Texture
 {
-//    TextureMetal(void* image, const TextureInfo& texInfo);
+    //    TextureMetal(void* image, const TextureInfo& texInfo);
     TextureMetal(const TextureInfo& info);
     ~TextureMetal() override;
-    
+
     id<MTLTexture> handle;
 };
 
 struct SamplerMetal : public Sampler
 {
-//    SamplerMetal(const SamplerInfo& info);
+    //    SamplerMetal(const SamplerInfo& info);
     SamplerMetal(const SamplerInfo& info);
     ~SamplerMetal() override;
-    
+
     id<MTLSamplerState> handle;
 };
 
 struct BufferMetal : public Buffer
 {
-//    BufferMetal(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
+    //    BufferMetal(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
     BufferMetal(const BufferInfo& info);
     ~BufferMetal() override;
-    
+
     id<MTLBuffer> handle;
 };
 
 struct ShaderMetal : public Shader
 {
-    ShaderMetal(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info);
+    ShaderMetal(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize);
     ~ShaderMetal() override;
-    
+
     id<MTLLibrary> library;
     id<MTLFunction> handle;
 };

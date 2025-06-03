@@ -99,8 +99,8 @@ BufferMetal::~BufferMetal()
 //     loadShader();
 // }
 
-ShaderMetal::ShaderMetal(const char* byteCode, size_t byteCodeSize, const ShaderInfo& info)
-    : Shader(byteCode, byteCodeSize, info)
+ShaderMetal::ShaderMetal(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
+    : Shader(info)
 {
     
 }

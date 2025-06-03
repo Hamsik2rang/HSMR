@@ -64,8 +64,8 @@ void SwapchainMetal::setRenderTargets()
     info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
     TextureInfo colorTextureInfo{};
-    colorTextureInfo.extent.width         = (_info.nativeWindow)->width * (_info.nativeWindow)->scale;
-    colorTextureInfo.extent.height        = (_info.nativeWindow)->height * (_info.nativeWindow)->scale;
+    colorTextureInfo.extent.width         = (_info.nativeWindow)->surfaceWidth * (_info.nativeWindow)->scale;
+    colorTextureInfo.extent.height        = (_info.nativeWindow)->surfaceHeight * (_info.nativeWindow)->scale;
     colorTextureInfo.extent.depth         = 1;
     colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
     colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;

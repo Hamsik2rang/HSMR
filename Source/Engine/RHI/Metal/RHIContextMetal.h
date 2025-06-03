@@ -29,52 +29,52 @@ public:
     uint32 AcquireNextImage(Swapchain* swapchain) override;
 
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
-    void       DestroySwapchain(Swapchain* swapchain) override;
+    void DestroySwapchain(Swapchain* swapchain) override;
 
     RenderPass* CreateRenderPass(const RenderPassInfo& info) override;
-    void        DestroyRenderPass(RenderPass* renderPass) override;
+    void DestroyRenderPass(RenderPass* renderPass) override;
 
     Framebuffer* CreateFramebuffer(const FramebufferInfo& info) override;
-    void         DestroyFramebuffer(Framebuffer* framebuffer) override;
+    void DestroyFramebuffer(Framebuffer* framebuffer) override;
 
     GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) override;
-    void              DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
-
-    Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true) override;
-    Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
-    void    DestroyShader(Shader* shader) override;
+    void DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
+    
+    Shader* CreateShader(const ShaderInfo& info, const char* path) override;
+    Shader* CreateShader(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) override;
+    void DestroyShader(Shader* shader) override;
 
     Buffer* CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
     Buffer* CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info) override;
-    void    DestroyBuffer(Buffer* buffer) override;
+    void DestroyBuffer(Buffer* buffer) override;
 
     Texture* CreateTexture(void* image, const TextureInfo& info) override;
     Texture* CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
-    void     DestroyTexture(Texture* texture) override;
+    void DestroyTexture(Texture* texture) override;
 
     Sampler* CreateSampler(const SamplerInfo& info) override;
-    void     DestroySampler(Sampler* sampler) override;
+    void DestroySampler(Sampler* sampler) override;
 
     ResourceLayout* CreateResourceLayout() override;
-    void            DestroyResourceLayout(ResourceLayout* rLayout) override;
+    void DestroyResourceLayout(ResourceLayout* rLayout) override;
 
     ResourceSet* CreateResourceSet() override;
-    void         DestroyResourceSet(ResourceSet* resSet) override;
+    void DestroyResourceSet(ResourceSet* resSet) override;
 
     ResourceSetPool* CreateResourceSetPool() override;
-    void             DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
+    void DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
 
     CommandPool* CreateCommandPool(uint32 queuePamilyIndex) override;
-    void         DestroyCommandPool(CommandPool* cmdPool) override;
+    void DestroyCommandPool(CommandPool* cmdPool) override;
 
     CommandBuffer* CreateCommandBuffer() override;
-    void           DestroyCommandBuffer(CommandBuffer* cmdBuffer) override;
+    void DestroyCommandBuffer(CommandBuffer* cmdBuffer) override;
 
     Fence* CreateFence() override;
-    void   DestroyFence(Fence* fence) override;
+    void DestroyFence(Fence* fence) override;
 
     Semaphore* CreateSemaphore() override;
-    void       DestroySemaphore(Semaphore* semaphore) override;
+    void DestroySemaphore(Semaphore* semaphore) override;
 
     void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
 

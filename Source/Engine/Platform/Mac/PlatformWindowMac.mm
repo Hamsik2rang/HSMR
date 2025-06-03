@@ -30,9 +30,9 @@
     layer.framebufferOnly = YES;
     layer.drawableSize    = self.view.bounds.size;
     layer.contentsScale   = [[NSScreen mainScreen] backingScaleFactor];
-    
+
     auto curDrawableSize = layer.drawableSize;
-    
+
     self.view.layer = layer;
 
     [self resizeDrawable];
@@ -112,11 +112,11 @@
 
 - (void)resizeDrawable
 {
-    NSRect contentViewSize        = [_window contentView].frame;
+    NSRect contentViewSize  = [_window contentView].frame;
     NSRect backingFrameRect = [_window convertRectToBacking:contentViewSize];
 
-    CAMetalLayer* layer        = (CAMetalLayer*)self.view.layer;
-    
+    CAMetalLayer* layer = (CAMetalLayer*)self.view.layer;
+
     CGSize backingDrawableSize = CGSizeMake(backingFrameRect.size.width, backingFrameRect.size.height);
     _curDrawableSize           = backingDrawableSize;
     [layer setDrawableSize:_curDrawableSize];
@@ -146,16 +146,16 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
     NSScreen* mainScreen = [NSScreen mainScreen];
     NSRect screenRect    = mainScreen.frame;
 
-    outNativeWindow.maxWidth  = static_cast<uint32>(screenRect.size.width);
-    outNativeWindow.maxHeight = static_cast<uint32>(screenRect.size.height);
-    outNativeWindow.scale     = static_cast<float>(mainScreen.backingScaleFactor);
-    outNativeWindow.title     = name;
-    outNativeWindow.width     = width;
-    outNativeWindow.height    = height;
-    outNativeWindow.minWidth  = 1;
-    outNativeWindow.minHeight = 1;
+    outNativeWindow.width         = static_cast<uint32>(screenRect.size.width);
+    outNativeWindow.height        = static_cast<uint32>(screenRect.size.height);
+    outNativeWindow.scale         = static_cast<float>(mainScreen.backingScaleFactor);
+    outNativeWindow.title         = name;
+    outNativeWindow.surfaceWidth  = width;
+    outNativeWindow.surfaceHeight = height;
 
     [vc setHSWindow:&outNativeWindow];
+    
+    return true;
 }
 
 void hs_platform_window_destroy(NativeWindow& window)

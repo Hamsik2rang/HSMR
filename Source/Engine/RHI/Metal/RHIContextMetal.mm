@@ -210,20 +210,20 @@ void RHIContextMetal::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
     delete pipelineMetal;
 }
 
-Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn)
+Shader* RHIContextMetal::CreateShader(const ShaderInfo& info, const char* path)
 {
     FileHandle handle = 0;
 
-    bool result = hs_file_open(std::string(path), EFileAccess::READ_ONLY, handle);
+    bool result = FileSystem::Open(std::string(path), EFileAccess::READ_ONLY, handle);
     if (!result)
     {
         HS_LOG(crash, "Can't open path");
         return nullptr;
     }
-    size_t byteCodeSize = hs_file_get_size(handle);
+    size_t byteCodeSize = FileSystem::GetSize(handle);
 
     char* buffer    = new char[byteCodeSize];
-    size_t readSize = hs_file_read(handle, buffer, byteCodeSize);
+    size_t readSize = FileSystem::Read(handle, buffer, byteCodeSize);
     if (readSize != byteCodeSize)
     {
         HS_LOG(crash, "Can't read all contents");
@@ -231,24 +231,21 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, cons
 
         return nullptr;
     }
+    
+    
 
-    Shader* shader = CreateShader(stage, buffer, byteCodeSize, entryName, isBuiltIn);
+    Shader* shader = CreateShader(info, buffer, byteCodeSize);
 
     delete[] buffer;
 
     return shader;
 }
 
-Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn)
+Shader* RHIContextMetal::CreateShader(const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
 {
     const static std::string metalLibPath = hs_engine_get_context()->resourceDirectory + std::string("Shader") + HS_DIR_SEPERATOR + "default.metallib";
 
-    ShaderInfo info{};
-    info.stage     = stage;
-    info.entryName = entryName;
-    info.isBuiltIn = isBuitIn;
-
-    ShaderMetal* shaderMetal = new ShaderMetal(byteCode, byteCodeSize, info);
+    ShaderMetal* shaderMetal = new ShaderMetal(info, byteCode, byteCodeSize);
 
     NSError* error = nil;
     NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
@@ -264,10 +261,10 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, 
         return nullptr;
     }
 
-    NSString* entry = [NSString stringWithCString:entryName encoding:NSUTF8StringEncoding];
+    NSString* entry = [NSString stringWithCString:info.entryName encoding:NSUTF8StringEncoding];
 
     id<MTLFunction> func = nil;
-    switch (stage)
+    switch (info.stage)
     {
         case EShaderStage::VERTEX:
         {

@@ -98,7 +98,7 @@ EStoreAction hs_rhi_from_store_action(MTLStoreAction action)
 
 MTLViewport hs_rhi_to_viewport(Viewport vp)
 {
-    return (MTLViewport){vp.x, vp.y, vp.width, vp.height, vp.zMear, vp.zFar};
+    return (MTLViewport){vp.x, vp.y, vp.width, vp.height, vp.zNear, vp.zFar};
 }
 
 Viewport hs_rhi_from_viewport(MTLViewport vp)
