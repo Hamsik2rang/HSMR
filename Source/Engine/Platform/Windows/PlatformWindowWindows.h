@@ -14,6 +14,12 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <functional>
 
+HS_NS_BEGIN
+
+void hs_platform_window_set_pre_event_handler(std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> fnHandler);
+
+HS_NS_END
 
 #endif

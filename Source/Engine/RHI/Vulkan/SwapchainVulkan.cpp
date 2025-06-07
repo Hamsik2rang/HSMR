@@ -16,6 +16,7 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, VkSurfaceKHR surface
 	, _deviceVulkan(nullptr)
 	, surface(surface)
 	, handle(VK_NULL_HANDLE)
+	, _framebuffers(nullptr)
 	, _frameIndex(static_cast<uint8>(-1))
 	, _maxFrameCount(3)
 	, _isSuspended(true)
@@ -31,66 +32,34 @@ SwapchainVulkan::~SwapchainVulkan()
 
 void SwapchainVulkan::setRenderTargets()
 {
-	uint32 swapchainImageCount = 0;
-	vkGetSwapchainImagesKHR(_deviceVulkan->logicalDevice, handle, &swapchainImageCount, nullptr);
-	HS_ASSERT(static_cast<uint32>(_maxFrameCount) == swapchainImageCount, "Swapchain image count is not same with max frame count.");
+	// Vulkan에서는 필요 없음.
 
-	if (vkImages.size() != swapchainImageCount)
-	{
-		vkImages.resize(swapchainImageCount);
-	}
-	vkGetSwapchainImagesKHR(_deviceVulkan->logicalDevice, handle, &swapchainImageCount, vkImages.data());
+ //   RenderTargetInfo info{};
+ //   info.isSwapchainTarget      = true;
+	//info.swapchain				= this;
+ //   info.colorTextureCount      = 1;
+ //   info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
 
-	vkImageViews.resize(vkImages.size());
-	_renderTargets.resize(vkImages.size());
-	for (int i = 0; i < vkImages.size(); i++)
-	{
-		VkImageViewCreateInfo colorAttachmentView = {};
-		colorAttachmentView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		colorAttachmentView.pNext = NULL;
-		colorAttachmentView.format = VK_FORMAT_B8G8R8A8_UNORM;
-		colorAttachmentView.components = {
-			VK_COMPONENT_SWIZZLE_R,
-			VK_COMPONENT_SWIZZLE_G,
-			VK_COMPONENT_SWIZZLE_B,
-			VK_COMPONENT_SWIZZLE_A
-		};
-		colorAttachmentView.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		colorAttachmentView.subresourceRange.baseMipLevel = 0;
-		colorAttachmentView.subresourceRange.levelCount = 1;
-		colorAttachmentView.subresourceRange.baseArrayLayer = 0;
-		colorAttachmentView.subresourceRange.layerCount = 1;
-		colorAttachmentView.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		colorAttachmentView.flags = 0;
-		colorAttachmentView.image = vkImages[i];
-		VK_CHECK_RESULT(vkCreateImageView(_deviceVulkan->logicalDevice, &colorAttachmentView, nullptr, &vkImageViews[i]));
-	}
+ //   TextureInfo colorTextureInfo{};
+ //   colorTextureInfo.extent.width         = _info.nativeWindow->width;
+ //   colorTextureInfo.extent.height        = _info.nativeWindow->height;
+ //   colorTextureInfo.extent.depth         = 1;
+ //   colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
+ //   colorTextureInfo.usage                = ETextureUsage::COLOR_RENDER_TARGET;
+ //   colorTextureInfo.arrayLength          = 1;
+ //   colorTextureInfo.mipLevel             = 1;
+ //   colorTextureInfo.isCompressed         = false;
+ //   colorTextureInfo.useGenerateMipmap    = false;
+ //   colorTextureInfo.isDepthStencilBuffer = false;
+ //   colorTextureInfo.type                 = ETextureType::TEX_2D;
+	//colorTextureInfo.isSwapchainTexture = true;
 
-    RenderTargetInfo info{};
-    info.isSwapchainTarget      = true;
-	info.swapchain				= this;
-    info.colorTextureCount      = 1;
-    info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
+ //   info.colorTextureInfos.emplace_back(colorTextureInfo);
 
-    TextureInfo colorTextureInfo{};
-    colorTextureInfo.extent.width         = _info.nativeWindow->width;
-    colorTextureInfo.extent.height        = _info.nativeWindow->height;
-    colorTextureInfo.extent.depth         = 1;
-    colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
-    colorTextureInfo.usage                = ETextureUsage::COLOR_RENDER_TARGET;
-    colorTextureInfo.arrayLength          = 1;
-    colorTextureInfo.mipLevel             = 1;
-    colorTextureInfo.isCompressed         = false;
-    colorTextureInfo.useGenerateMipmap    = false;
-    colorTextureInfo.isDepthStencilBuffer = false;
-    colorTextureInfo.type                 = ETextureType::TEX_2D;
-
-    info.colorTextureInfos.emplace_back(colorTextureInfo);
-
-    for (auto& renderTarget : _renderTargets)
-    {
-        renderTarget.Create(info);
-    }
+ //   for (auto& renderTarget : _renderTargets)
+ //   {
+ //       renderTarget.Create(info);
+ //   }
 }
 
 void SwapchainVulkan::setRenderPass()
@@ -108,26 +77,69 @@ void SwapchainVulkan::setRenderPass()
 	renderArea.width = _info.nativeWindow->surfaceWidth;
 	renderArea.height = _info.nativeWindow->surfaceHeight;
 
-    RenderPassInfo info{};
-    info.isSwapchainRenderPass = true;
+	RenderPassInfo info{};
+	info.isSwapchainRenderPass = true;
 	info.colorAttachments = { colorAttachment };
-    info.colorAttachmentCount  = 1;
+	info.colorAttachmentCount = 1;
 	info.renderArea = renderArea;
 	info.useDepthStencilAttachment = false;
 
-    _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+	_renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+}
+
+void SwapchainVulkan::setFramebuffers()
+{
+	HS_ASSERT(_framebuffers == nullptr, "Framebuffer is already exists. you should destroy it before creating new one.");
+
+	_framebuffers = new Framebuffer * [imageVks.size()] { nullptr };
+
+	RHIContext* rhiContext = hs_engine_get_rhi_context();
+
+	// Framebuffer는 스왑체인 이미지와 1대1 대응이므로 VkImage개수와 동일하게 생성합니다.
+	for (uint8 i = 0; i < imageVks.size(); i++)
+	{
+		TextureInfo tInfo{};
+		tInfo.arrayLength = 0;
+		tInfo.extent.width = _info.nativeWindow->surfaceWidth;
+		tInfo.extent.height = _info.nativeWindow->surfaceHeight;
+		tInfo.extent.depth = 1;
+		tInfo.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
+		tInfo.usage = ETextureUsage::COLOR_RENDER_TARGET;
+		tInfo.isCompressed = false;
+		tInfo.useGenerateMipmap = false;
+		tInfo.mipLevel = 1;
+		tInfo.isSwapchainTexture = true;
+		tInfo.type = ETextureType::TEX_2D;
+		tInfo.swapchain = this;
+		tInfo.byteSize = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
+		tInfo.isDepthStencilBuffer = false;
+
+		Texture* texture = rhiContext->CreateTexture(nullptr, tInfo);
+		
+		FramebufferInfo fbInfo{};
+		fbInfo.depthStencilBuffer = nullptr;
+		fbInfo.resolveBuffer = nullptr;
+		fbInfo.isSwapchainFramebuffer = true;
+		fbInfo.width = tInfo.extent.width;
+		fbInfo.height = tInfo.extent.height;
+		fbInfo.renderPass = _renderPass;
+		fbInfo.colorBuffers.push_back(texture);
+
+		Framebuffer* framebuffer = rhiContext->CreateFramebuffer(fbInfo);
+		_framebuffers[i] = framebuffer;
+	}
 }
 
 void SwapchainVulkan::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	for (const auto& availableFormat : availableFormats)
-	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-		{
-			surfaceFormat = availableFormat;
-			return;
-		}
-	}
+	//for (const auto& availableFormat : availableFormats)
+	//{
+	//	if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+	//	{
+	//		surfaceFormat = availableFormat;
+	//		return;
+	//	}
+	//}
 
 	for (const auto& availableFormat : availableFormats)
 	{
@@ -143,23 +155,22 @@ void SwapchainVulkan::getSwapchainImages()
 {
 	uint32 swapchainImageCount = 0;
 	vkGetSwapchainImagesKHR(_deviceVulkan->logicalDevice, handle, &swapchainImageCount, nullptr);
-	
-	_maxFrameCount = swapchainImageCount;
-	vkImages.resize(swapchainImageCount);
-	vkGetSwapchainImagesKHR(_deviceVulkan->logicalDevice, handle, &swapchainImageCount, vkImages.data());
 
-	vkImageViews.resize(vkImages.size());
-	for (size_t i = 0; i < vkImages.size(); i++)
+	imageVks.resize(swapchainImageCount);
+	vkGetSwapchainImagesKHR(_deviceVulkan->logicalDevice, handle, &swapchainImageCount, imageVks.data());
+
+	imageViewVks.resize(imageVks.size());
+	for (size_t i = 0; i < imageVks.size(); i++)
 	{
-		if (vkImageViews[i] != VK_NULL_HANDLE)
+		if (imageViewVks[i] != VK_NULL_HANDLE)
 		{
-			vkDestroyImageView(_deviceVulkan->logicalDevice, vkImageViews[i], nullptr);
-			vkImageViews[i] = VK_NULL_HANDLE;
+			vkDestroyImageView(_deviceVulkan->logicalDevice, imageViewVks[i], nullptr);
+			imageViewVks[i] = VK_NULL_HANDLE;
 		}
 
 		VkImageViewCreateInfo viewCreateInfo{};
 		viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewCreateInfo.image = vkImages[i];
+		viewCreateInfo.image = imageVks[i];
 		viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewCreateInfo.format = surfaceFormat.format;
 		viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -172,7 +183,7 @@ void SwapchainVulkan::getSwapchainImages()
 		viewCreateInfo.subresourceRange.baseArrayLayer = 0;
 		viewCreateInfo.subresourceRange.layerCount = 1;
 
-		VK_CHECK_RESULT(vkCreateImageView(_deviceVulkan->logicalDevice, &viewCreateInfo, nullptr, &vkImageViews[i]));
+		VK_CHECK_RESULT(vkCreateImageView(_deviceVulkan->logicalDevice, &viewCreateInfo, nullptr, &imageViewVks[i]));
 	}
 
 	return;
@@ -260,11 +271,13 @@ bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance i
 
 	VK_CHECK_RESULT(vkCreateSwapchainKHR(_deviceVulkan->logicalDevice, &createInfo, nullptr, &handle));
 
+	getSwapchainImages(); 
 	_maxFrameCount = surfaceCapabilities.minImageCount;
+
 	_commandBufferVKs = new CommandBufferVulkan * [_maxFrameCount];
-	syncObjects.imageAvailableSemaphores = new VkSemaphore[_maxFrameCount];
-	syncObjects.renderFinishedSemaphores = new VkSemaphore[_maxFrameCount];
-	syncObjects.inFlightFences = new VkFence[_maxFrameCount];
+	syncObjects.imageAvailableSemaphores = new VkSemaphore[_maxFrameCount]{ VK_NULL_HANDLE };
+	syncObjects.renderFinishedSemaphores = new VkSemaphore[_maxFrameCount]{ VK_NULL_HANDLE };
+	syncObjects.inFlightFences = new VkFence[_maxFrameCount]{ VK_NULL_HANDLE };
 
 	for (uint8 i = 0; i < _maxFrameCount; i++)
 	{
@@ -281,13 +294,12 @@ bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance i
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; // Start in signaled state
 		fenceInfo.pNext = nullptr;
-		VK_CHECK_RESULT(vkCreateFence(_deviceVulkan->logicalDevice, &fenceInfo, nullptr, &syncObjects.inFlightFences[i]));
+		VK_CHECK_RESULT(vkCreateFence(_deviceVulkan->logicalDevice, &fenceInfo, nullptr, &(syncObjects.inFlightFences[i])));
 	}
-
-	getSwapchainImages();
 
 	setRenderTargets();
 	setRenderPass();
+	setFramebuffers();
 
 	_isInitialized = true;
 	return true;
@@ -299,21 +311,43 @@ void SwapchainVulkan::destroySwapchainVK()
 	{
 		return;
 	}
+	RHIContext* rhiContext = hs_engine_get_rhi_context();
+	rhiContext->WaitForIdle();
 
-	for (size_t i = 0; i < vkImageViews.size(); i++)
+	for (size_t i = 0; i < imageViewVks.size(); i++)
 	{
-		if (vkImageViews[i] != VK_NULL_HANDLE)
+		if (imageViewVks[i] != VK_NULL_HANDLE)
 		{
-			vkDestroyImageView(_deviceVulkan->logicalDevice, vkImageViews[i], nullptr);
-			vkImageViews[i] = VK_NULL_HANDLE;
+			vkDestroyImageView(_deviceVulkan->logicalDevice, imageViewVks[i], nullptr);
+			imageViewVks[i] = VK_NULL_HANDLE;
 		}
 	}
-	vkImageViews.clear();
+	imageViewVks.clear();
 
 	if (handle != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(_deviceVulkan->logicalDevice, handle, nullptr);
 		handle = VK_NULL_HANDLE;
+	}
+
+
+	if (_renderPass)
+	{
+		rhiContext->DestroyRenderPass(_renderPass);
+		_renderPass = nullptr;
+	}
+	if (_framebuffers)
+	{
+		for (size_t i = 0; i < _maxFrameCount; i++)
+		{
+			if (_framebuffers[i])
+			{
+				delete _framebuffers[i];
+				_framebuffers[i] = nullptr;
+			}
+		}
+		delete[] _framebuffers;
+		_framebuffers = nullptr;
 	}
 
 	_isInitialized = false;

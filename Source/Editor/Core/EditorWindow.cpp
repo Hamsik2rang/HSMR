@@ -30,6 +30,89 @@ void EditorWindow::Render()
     onRender();
 }
 
+void EditorWindow::ProcessEvent()
+{
+    EWindowEvent event;
+    while (hs_window_peek_event(&_nativeWindow, event, true))
+    {
+        switch (event)
+        {
+        case EWindowEvent::OPEN:
+        {
+            _shouldClose = false;
+
+            break;
+        }
+        case EWindowEvent::CLOSE:
+        {
+            _shouldClose = true;
+            _shouldUpdate = false;
+            _shouldPresent = false;
+
+            break;
+        }
+        case EWindowEvent::MAXIMIZE:
+        {
+            _shouldUpdate = true;
+            _shouldPresent = true;
+            onRestore();
+            break;
+        }
+        case EWindowEvent::MINIMIZE:
+        {
+            _shouldUpdate = false;
+            _shouldPresent = false;
+            break;
+        }
+        case EWindowEvent::RESIZE_ENTER:
+        {
+            _shouldUpdate = false;
+            _shouldPresent = false;
+            _rhiContext->Suspend(_swapchain);
+
+            break;
+        }
+        case EWindowEvent::RESIZE_EXIT:
+        case EWindowEvent::RESTORE:
+        {
+            _shouldUpdate = true;
+            _shouldPresent = true;
+
+            _rhiContext->Restore(_swapchain);
+            break;
+        }
+        case EWindowEvent::MOVE:
+        {
+
+            break;
+        }
+        case EWindowEvent::FOCUS_IN:
+        {
+
+            break;
+        }
+        case EWindowEvent::FOCUS_OUT:
+        {
+
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    if (_shouldClose)
+    {
+        Flush();
+        return;
+    }
+
+    for (auto* child : _childs)
+    {
+        child->ProcessEvent();
+    }
+}
+
 bool EditorWindow::onInitialize()
 {
     _renderer = new ForwardRenderer(_rhiContext);
@@ -75,7 +158,7 @@ bool EditorWindow::onInitialize()
 
 void EditorWindow::onNextFrame()
 {
-    if (_nativeWindow.isMinimized)
+    if (false == _nativeWindow.shouldRender)
     {
         return;
     }
@@ -94,11 +177,12 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate()
 {
+
 }
 
 void EditorWindow::onRender()
 {
-    if (_nativeWindow.isMinimized)
+    if (false == _nativeWindow.shouldRender)
     {
         return;
     }
@@ -117,11 +201,13 @@ void EditorWindow::onRender()
     onRenderGUI();
 
     cmdBuffer->End();
+
+    _rhiContext->Submit(_swapchain, &cmdBuffer, 1);
 }
 
 void EditorWindow::onPresent()
 {
-    if (_nativeWindow.isMinimized)
+    if (!_nativeWindow.shouldRender)
     {
         return;
     }
@@ -164,50 +250,5 @@ void EditorWindow::setupPanels()
     _basePanel->InsertPanel(_scenePanel);
 }
 
-bool EditorWindow::dispatchEvent(EWindowEvent event, uint32 windowId)
-{
-    if (event == EWindowEvent::CLOSE)
-    {
-        _shouldClose = true;
-        return false;
-    }
-
-    switch (event)
-    {
-        case EWindowEvent::MINIMIZE:
-        {
-            // handle._isMinimize;
-        }
-        break;
-        case EWindowEvent::FOCUS_IN:
-        {
-        }
-        break;
-        case EWindowEvent::FOCUS_OUT:
-        {
-        }
-        break;
-        case EWindowEvent::RESTORE:
-        {
-            //...
-        }
-        break;
-        case EWindowEvent::RESIZE_ENTER:
-        {
-            
-        }
-            break;
-        case EWindowEvent::RESIZE_EXIT:
-        {
-            
-        }
-        break;
-        //...
-        default:
-            break;
-    }
-
-    return true;
-}
 
 HS_NS_EDITOR_END

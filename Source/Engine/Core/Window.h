@@ -1,4 +1,4 @@
-//
+﻿//
 //  Window.h
 //  HSMR
 //
@@ -32,7 +32,7 @@ public:
     Window(const char* name, uint16 width, uint16 height, EWindowFlags flags);
     virtual ~Window();
 
-    void         ProcessEvent();
+    virtual void ProcessEvent();
     virtual void NextFrame();
     virtual void Update();
     virtual void Render();
@@ -79,7 +79,7 @@ protected:
 HS_NS_END
 
 
-bool hs_window_peek_event(const HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent, bool remove);
+bool hs_window_peek_event(HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent, bool remove);
 void hs_window_push_event(const HS::NativeWindow* pWindow, HS::EWindowEvent event);
 HS::EWindowEvent hs_window_pop_event(const HS::NativeWindow* pWindow);
 

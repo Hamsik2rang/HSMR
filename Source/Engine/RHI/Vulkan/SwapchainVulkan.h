@@ -8,6 +8,7 @@
 #include "Engine/RHI/Swapchain.h"
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
 #include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
+#include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
 
 HS_NS_BEGIN
 
@@ -25,13 +26,16 @@ public:
 	HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
 	HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return static_cast<CommandBuffer*>(_commandBufferVKs[_frameIndex]); }
 	HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<CommandBuffer*>(_commandBufferVKs[index]); }
-	HS_FORCEINLINE RenderTarget   GetRenderTargetForCurrentFrame() const override { return _renderTargets[_frameIndex]; }
+	HS_FORCEINLINE Framebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
+	HS_FORCEINLINE RenderTarget   GetRenderTargetForCurrentFrame() const override { return _renderTargets[_curImageIndex]; }
+	HS_FORCEINLINE uint32		  GetCurrentImageIndex() const { return _curImageIndex; }
 
 	bool initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance instance, RHIDeviceVulkan* deviceVulkan);
 	void destroySwapchainVK();
 
 	void setRenderTargets() override;
 	void setRenderPass() override;
+	void setFramebuffers();
 	void getSwapchainImages();
 
 	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -42,8 +46,8 @@ public:
 	VkSurfaceFormatKHR surfaceFormat;
 	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 
-	std::vector<VkImage> vkImages;
-	std::vector<VkImageView> vkImageViews;
+	std::vector<VkImage> imageVks;
+	std::vector<VkImageView> imageViewVks;
 	struct
 	{
 		VkSemaphore* imageAvailableSemaphores;
@@ -57,6 +61,7 @@ private:
 	uint32 _curImageIndex = static_cast<uint32>(-1);
 	RHIDeviceVulkan* _deviceVulkan;
 	CommandBufferVulkan** _commandBufferVKs;
+	Framebuffer** _framebuffers;
 	bool _isSuspended;
 	bool _isInitialized = false;
 };

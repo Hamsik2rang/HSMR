@@ -96,66 +96,7 @@ void Window::Shutdown()
 
 void Window::ProcessEvent()
 {
-    EWindowEvent event;
-    while (hs_window_peek_event(&_nativeWindow, event, true))
-    {
-        switch (event)
-        {
-            case EWindowEvent::OPEN:
-                _shouldClose = false;
-
-                break;
-            case EWindowEvent::CLOSE:
-                _shouldClose   = true;
-                _shouldUpdate  = false;
-                _shouldPresent = false;
-
-                break;
-            case EWindowEvent::MAXIMIZE:
-                _shouldUpdate  = true;
-                _shouldPresent = true;
-                onRestore();
-                break;
-            case EWindowEvent::MINIMIZE:
-                _shouldUpdate  = false;
-                _shouldPresent = false;
-                break;
-            case EWindowEvent::NONE:
-
-                break;
-            case EWindowEvent::RESIZE_ENTER:
-                _shouldUpdate  = false;
-                _shouldPresent = false;
-                break;
-            case EWindowEvent::RESIZE_EXIT:
-                _shouldUpdate  = true;
-                _shouldPresent = true;
-                break;
-            case EWindowEvent::MOVE:
-
-                break;
-            case EWindowEvent::FOCUS_IN:
-
-                break;
-            case EWindowEvent::FOCUS_OUT:
-
-                break;
-            case EWindowEvent::RESTORE:
-
-                break;
-        }
-    }
-
-    if (_shouldClose)
-    {
-        Flush();
-        return;
-    }
-
-    for (auto* child : _childs)
-    {
-        child->ProcessEvent();
-    }
+    // empty.
 }
 
 void Window::Flush()
@@ -198,7 +139,7 @@ HS_NS_END
 
 using namespace HS;
 
-bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
+bool hs_window_peek_event(NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 

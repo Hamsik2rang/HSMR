@@ -5,6 +5,8 @@
 #include "Engine/RHI/Vulkan/SwapchainVulkan.h"
 #include "Engine/RHI/Vulkan/RHIContextVulkan.h"
 #include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
+#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
+#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
 
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_vulkan.h"
@@ -12,6 +14,8 @@
 #include "Engine/Platform/Windows/PlatformWindowWindows.h"
 
 using namespace HS;
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace ImGuiExt
 {
@@ -73,7 +77,6 @@ void InitializeBackend(HS::Swapchain* swapchain)
 	const RHIDeviceVulkan* rhiDeviceVK = rhiContextVK->GetDevice();
 	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(swapchainVK->GetRenderPass());
 
-
 	ImGui_ImplVulkan_InitInfo initInfo{};
 	initInfo.Instance = rhiContextVK->GetInstance();
 	initInfo.Device = rhiDeviceVK->logicalDevice;
@@ -89,11 +92,9 @@ void InitializeBackend(HS::Swapchain* swapchain)
 	initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; // No MSAA for now
 
 	ImGui_ImplVulkan_Init(&initInfo);
-}
 
-void ProcessEvent()
-{
-
+	// Is it work?
+	HS::hs_platform_window_set_pre_event_handler(ImGui_ImplWin32_WndProcHandler);
 }
 
 void BeginRender(HS::Swapchain* swapchain)
@@ -101,13 +102,29 @@ void BeginRender(HS::Swapchain* swapchain)
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
+	
+	// Begin render pass for swapchain
+	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+	CommandBuffer* cmdBuffer = swapchain->GetCommandBufferForCurrentFrame();
+	RenderPass* renderPass = swapchainVK->GetRenderPass();
+	Framebuffer* framebuffer = swapchainVK->GetFramebufferForCurrentFrame();
+	
+	cmdBuffer->BeginRenderPass(renderPass, framebuffer);
 }
 
 void EndRender(HS::Swapchain* swapchain)
 {
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
+	
+	// Actually render the ImGui draw data to the command buffer
+	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(swapchain->GetCommandBufferForCurrentFrame());
+
+	ImGui_ImplVulkan_RenderDrawData(draw_data, cmdBufferVK->handle);
+
+	// End the render pass
+	cmdBufferVK->EndRenderPass();
 }
 
 void FinalizeBackend()

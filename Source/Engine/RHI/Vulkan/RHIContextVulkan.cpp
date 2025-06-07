@@ -39,11 +39,11 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 	}
 	else if (messageType & VK_DEBUG_REPORT_WARNING_BIT_EXT)
 	{
-		HS_LOG(warning, "WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+		HS_LOG(crash, "WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
 	}
 	else if (messageType & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
 	{
-		HS_LOG(warning, "PERFORMANCE WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+		HS_LOG(crash, "PERFORMANCE WARNING: [%s] Code %i : %s", pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
 	}
 	else if (messageType & VK_DEBUG_REPORT_INFORMATION_BIT_EXT)
 	{
@@ -128,8 +128,15 @@ void RHIContextVulkan::Restore(Swapchain* swapchain)
 		return;
 	}
 
-	swapchainVK->destroySwapchainVK();
-	swapchainVK->initSwapchainVK(this, _instance, &_device);
+	const Framebuffer* swFramebuffer = swapchainVK->_framebuffers[0];
+
+	// Resize 혹은 Maximize된 상황
+	if (swFramebuffer->info.width != swapchainVK->_info.nativeWindow->surfaceWidth ||
+		swFramebuffer->info.height != swapchainVK->_info.nativeWindow->surfaceHeight)
+	{
+		swapchainVK->destroySwapchainVK();
+		swapchainVK->initSwapchainVK(this, _instance, &_device);
+	}
 
 	swapchainVK->_isSuspended = false;
 }
@@ -140,13 +147,12 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 
 	// Acquire the next image from the swapchain
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
-	swapchainVK->_frameIndex = (swapchainVK->_frameIndex + 1) % swapchainVK->_maxFrameCount;
+	swapchainVK->_frameIndex = static_cast<uint8>(swapchainVK->_frameIndex + 1) % swapchainVK->_maxFrameCount;
 
 	const uint8 curframeIndex = swapchainVK->_frameIndex;
 
 	vkWaitForFences(_device, 1, &swapchainVK->syncObjects.inFlightFences[curframeIndex], VK_TRUE, UINT64_MAX);
 	vkResetFences(_device, 1, &swapchainVK->syncObjects.inFlightFences[curframeIndex]);
-
 
 	uint32 imageIndex = 0;
 	VkResult result = vkAcquireNextImageKHR(_device, swapchainVK->handle,
@@ -154,11 +160,13 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 		swapchainVK->syncObjects.imageAvailableSemaphores[curframeIndex],
 		VK_NULL_HANDLE, // Fence
 		&(swapchainVK->_curImageIndex));
+
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		// Swapchain is out of date, need to recreate it
-		HS_LOG(warning, "Swapchain is out of date, need to recreate it.");
-		return UINT32_MAX; // Indicate that the swapchain needs to be recreated
+		HS_LOG(warning, "Swapchain is out of date at frame %d, acquired image index would be %d", curframeIndex, swapchainVK->_curImageIndex);
+		recreateSwapchain(swapchain);
+		return 0; // Indicate that the swapchain needs to be recreated
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 	{
@@ -166,7 +174,10 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 		return UINT32_MAX; // Indicate an error
 	}
 
-	return static_cast<uint32>(curframeIndex);
+	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(swapchainVK->GetCommandBufferForCurrentFrame());
+	vkResetCommandBuffer(cmdBufferVK->handle, 0);
+
+	return swapchainVK->_curImageIndex;
 }
 
 Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
@@ -241,6 +252,10 @@ Framebuffer* RHIContextVulkan::CreateFramebuffer(const FramebufferInfo& info)
 	createInfo.width = info.width;
 	createInfo.height = info.height;
 	createInfo.layers = 1;
+
+	VkFramebuffer framebufferVk;
+	vkCreateFramebuffer(_device, &createInfo, nullptr, &framebufferVk);
+	framebufferVK->handle = framebufferVk;
 
 	return static_cast<Framebuffer*>(framebufferVK);
 }
@@ -444,7 +459,29 @@ Texture* RHIContextVulkan::CreateTexture(void* image, uint32 width, uint32 heigh
 Texture* RHIContextVulkan::CreateTexture(void* image, const TextureInfo& info)
 {
 	bool isColorRenderTarget = ((info.usage & ETextureUsage::COLOR_RENDER_TARGET) != 0);
+	bool isSwapchainTexture = info.isSwapchainTexture;
 	HS_ASSERT((isColorRenderTarget ^ info.isDepthStencilBuffer), "Texture cannot be both color render target and depth stencil buffer.");
+	HS_ASSERT(!(info.isSwapchainTexture ^ (info.swapchain != nullptr)), "Texture swapchain mismatch. Texture isSwapchainTexture must match with swapchain.");
+	
+	// Swapchain이면 vkGetSwapchainImagesKHR를 통해서 가져온 VkImage와 해당 핸들로 만든 VkImageView를 사용해야 합니다.
+	if (isSwapchainTexture)
+	{
+		SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(info.swapchain);
+		for (uint8 i = 0; i < swapchainVK->imageVks.size(); i++)
+		{
+			if (swapchainVK->_framebuffers[i] == nullptr)
+			{
+				TextureVulkan* textureVK = new TextureVulkan(info);
+				textureVK->handle = swapchainVK->imageVks[i];
+				textureVK->imageViewVk = swapchainVK->imageViewVks[i];
+				textureVK->memoryVk = VK_NULL_HANDLE; // Swapchain textures do not have dedicated memory
+				textureVK->layoutVk = VK_IMAGE_LAYOUT_UNDEFINED; // Swapchain images start in undefined layout
+
+				return static_cast<Texture*>(textureVK);
+			}
+		}
+		HS_ASSERT(false, "No available swapchain Image for texture creation. Are Framebuffers full?");
+	}
 
 	std::vector<VkBufferImageCopy> bufferCopyRegions;
 	uint32_t offset = 0;
@@ -600,6 +637,10 @@ Texture* RHIContextVulkan::CreateTexture(void* image, const TextureInfo& info)
 
 		initialLayout = imageMemoryBarrier.newLayout;
 	}
+	//else if(info.isSwapchainTexture)
+	//{
+	//	VkCommandBuffer copyCmd = beginSingleTimeCommands();
+	//}
 
 	VkImageAspectFlagBits aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	if (info.isDepthStencilBuffer)
@@ -825,13 +866,13 @@ void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, siz
 	HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in RHIContextVulkan::Submit");
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+	
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = &swapchainVK->syncObjects.imageAvailableSemaphores[swapchainVK->_frameIndex];
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_frameIndex];
-	submitInfo.commandBufferCount = static_cast<uint32_t>(bufferCount);
 
 	if (commandBufferVks.size() < bufferCount)
 	{
@@ -844,10 +885,13 @@ void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, siz
 		commandBufferVks[i] = commandBufferVK->handle;
 	}
 	submitInfo.pCommandBuffers = commandBufferVks.data();
+	submitInfo.commandBufferCount = static_cast<uint32_t>(bufferCount);
+
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.pWaitDstStageMask = waitStages;
 
 	VK_CHECK_RESULT(vkQueueSubmit(_device.graphicsQueue, 1, &submitInfo, swapchainVK->syncObjects.inFlightFences[swapchainVK->_frameIndex]));
+	//vkQueueWaitIdle(_device.graphicsQueue); // TEST: Wait for the queue to finish processing the submitted commands
 }
 
 void RHIContextVulkan::Present(Swapchain* swapchain)
@@ -858,19 +902,29 @@ void RHIContextVulkan::Present(Swapchain* swapchain)
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &swapchainVK->handle;
-	presentInfo.pImageIndices = &swapchainVK->_curImageIndex;
-	presentInfo.pWaitSemaphores = &swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_frameIndex];
+	presentInfo.pSwapchains = &(swapchainVK->handle);
+	presentInfo.pImageIndices = &(swapchainVK->_curImageIndex);
+	presentInfo.pWaitSemaphores = &(swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_frameIndex]);
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pResults = nullptr; // 스왑체인 하나만 쓸 땐 필요없다.
 
-	vkQueuePresentKHR(_device.graphicsQueue, &presentInfo);	// Present the Vulkan swapchain
+	VkResult result = vkQueuePresentKHR(_device.graphicsQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		HS_LOG(warning, "Swapchain is out of date or suboptimal during present.");
+		recreateSwapchain(swapchainVK);
+		// 스왑체인 재생성이 필요함
+	}
+	else if (result != VK_SUCCESS)
+	{
+		HS_LOG(error, "Failed to present swapchain image: %d", result);
+	}
 }
 
 void RHIContextVulkan::WaitForIdle() const
 {
 	// Wait for the Vulkan device to be idle
-
+	vkDeviceWaitIdle(_device.logicalDevice);
 }
 
 void RHIContextVulkan::cleanup()
@@ -1129,7 +1183,7 @@ VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& 
 
 	VkPipelineLayout layout;
 	vkCreatePipelineLayout(_device, &pipelineLayoutInfo, nullptr, &layout);
-	
+
 	pipelineCreateInfo.layout = layout;
 
 	//ShaderStage
@@ -1273,10 +1327,10 @@ VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& 
 
 
 	VkViewport viewport{};
-	
+
 	viewport.x = 0;
 	viewport.y = 0;
-	
+
 	VkPipelineViewportStateCreateInfo viewportInfo{};
 	viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewportInfo.viewportCount = 1;
@@ -1508,6 +1562,14 @@ void RHIContextVulkan::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebu
 	{
 		func(instance, pDebugMessenger, npAllocator);
 	}
+}
+
+void RHIContextVulkan::recreateSwapchain(Swapchain* swapchain)
+{
+	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+	swapchainVK->destroySwapchainVK();
+	swapchainVK->initSwapchainVK(this, _instance, &_device);
+
 }
 
 #pragma endregion

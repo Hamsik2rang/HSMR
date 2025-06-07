@@ -1,4 +1,4 @@
-//
+﻿//
 //  Swapchian.h
 //  Engine
 //
@@ -17,6 +17,7 @@
 
 namespace HS { class CommandBuffer; }
 namespace HS { class RenderTarget; }
+namespace HS { class Framebuffer; }
 
 HS_NS_BEGIN
 
@@ -35,6 +36,7 @@ public:
     virtual CommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
     virtual CommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
     virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
+    virtual Framebuffer* GetFramebufferForCurrentFrame() const = 0;
 
     HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->width; }
     HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->width; }
@@ -48,8 +50,8 @@ protected:
 
     SwapchainInfo _info;
 
-    RenderPass*               _renderPass;
-    std::vector<RenderTarget> _renderTargets;
+    RenderPass*                 _renderPass;
+    std::vector<RenderTarget>   _renderTargets;
 };
 
 HS_NS_END
