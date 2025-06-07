@@ -165,8 +165,7 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 	{
 		// Swapchain is out of date, need to recreate it
 		HS_LOG(warning, "Swapchain is out of date at frame %d, acquired image index would be %d", curframeIndex, swapchainVK->_curImageIndex);
-		recreateSwapchain(swapchain);
-		return 0; // Indicate that the swapchain needs to be recreated
+		return UINT32_MAX; // Indicate that the swapchain needs to be recreated
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 	{
@@ -912,8 +911,6 @@ void RHIContextVulkan::Present(Swapchain* swapchain)
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		HS_LOG(warning, "Swapchain is out of date or suboptimal during present.");
-		recreateSwapchain(swapchainVK);
-		// 스왑체인 재생성이 필요함
 	}
 	else if (result != VK_SUCCESS)
 	{
@@ -1266,9 +1263,15 @@ VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& 
 
 
 	// Multisampling
-	{
-		// TODO
-	}
+	VkPipelineMultisampleStateCreateInfo multisampleState{};
+	multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampleState.pNext = nullptr;
+	multisampleState.flags = 0;
+	multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT; // TODO: MSAA
+	multisampleState.sampleShadingEnable = VK_FALSE; // No sample shading
+	multisampleState.minSampleShading = 1.0f; // No sample shading
+
+	pipelineCreateInfo.pMultisampleState = &multisampleState;
 
 	// DepthStencil
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};
