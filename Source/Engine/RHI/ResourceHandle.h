@@ -65,7 +65,7 @@ public:
 	std::vector<ResourceBinding> bindings;
 
 protected:
-	ResourceLayout();
+	ResourceLayout(const std::vector<ResourceBinding>& bindings);
 };
 
 class ResourceSet : public RHIHandle

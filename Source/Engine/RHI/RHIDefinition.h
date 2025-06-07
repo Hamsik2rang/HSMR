@@ -16,7 +16,7 @@
 #include <string>
 
 namespace HS { struct NativeWindow; }
-namespace HS { class Swapchain;}
+namespace HS { class Swapchain; }
 
 HS_NS_BEGIN
 
@@ -138,7 +138,8 @@ enum class ETextureUsage : uint16
 	UNKNOWN = 0x0000,
 	SHADER_READ = 0x0001,
 	SHADER_WRITE = 0x0002,
-	RENDER_TARGET = 0x0004,
+	COLOR_RENDER_TARGET = 0x0004,
+	DEPTH_RENDER_TARGET = 0x0008,
 	PIXELFORMAT_VIEW = 0x0010,
 };
 
@@ -159,7 +160,7 @@ HS_FORCEINLINE ETextureUsage operator&(ETextureUsage lhs, ETextureUsage rhs)
 
 HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)
 {
-	return (static_cast<uint16>(lhs) & rhs) != 0;
+	return (false == (static_cast<uint16>(lhs) == rhs));
 }
 
 
@@ -201,6 +202,8 @@ enum class EAddressMode
 	REPEAT,
 	MIRRORED_REPEAT,
 	CLAMP_TO_EDGE,
+	CLAMP_TO_BORDER,
+	MIRROR_CLAMP_TO_EDGE
 };
 
 struct SamplerInfo
@@ -208,7 +211,7 @@ struct SamplerInfo
 	ETextureType type;
 	EFilterMode  minFilter;
 	EFilterMode  magFilter;
-	EFilterMode  mipFilter;
+	EFilterMode mipmapMode;
 	EAddressMode addressU;
 	EAddressMode addressV;
 	EAddressMode addressW;
@@ -269,6 +272,7 @@ struct BufferInfo
 
 struct Texture;
 struct RenderPass;
+struct ResourceLayout;
 
 struct RenderTexture
 {
@@ -286,7 +290,7 @@ struct SwapchainInfo
 	bool useStencil;
 	bool useMSAA;
 
-    const NativeWindow* nativeWindow;
+	const NativeWindow* nativeWindow;
 };
 
 enum class EStoreAction
@@ -337,16 +341,18 @@ struct Area
 
 struct Attachment
 {
-	EPixelFormat format;
-	ELoadAction  loadAction;
-	EStoreAction storeAction;
-	ClearValue   clearValue;
-	bool         isDepthStencil = false;
+	EPixelFormat	format;
+	ELoadAction		loadAction;
+	EStoreAction	storeAction;
+	ClearValue		clearValue;
+	uint8			sampleCount;
+	bool			isDepthStencil = false;
 };
 
 struct RenderPassInfo
 {
 	std::vector<Attachment> colorAttachments;
+	//std::vector<Attachment> resolveColorAttachments; // TODO: Resolve Color Attachments
 	Attachment              depthStencilAttachment;
 	uint8					colorAttachmentCount;
 
@@ -424,18 +430,46 @@ struct Viewport
 #endif
 enum class EShaderStage
 {
-	VERTEX,
-	GEOMETRY,
-	DOMAIN,
-	HULL,
-	FRAGMENT,
+	NONE = 0x00000000,
+	VERTEX = 0x00000001,
+	DOMAIN = 0x00000002,
+	HULL = 0x00000004,
+	GEOMETRY = 0x00000008,
+	FRAGMENT = 0x00000010,
 
-	COMPUTE
+	COMPUTE = 0x00000020
 };
 
 #ifdef DOMAIN
 #pragma pop_macro("DOMAIN")
 #endif
+
+HS_FORCEINLINE EShaderStage operator|(EShaderStage lhs, EShaderStage rhs)
+{
+	return static_cast<EShaderStage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE EShaderStage operator|=(EShaderStage& lhs, EShaderStage rhs)
+{
+	lhs = static_cast<EShaderStage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+	return lhs;
+}
+
+HS_FORCEINLINE EShaderStage operator&(EShaderStage lhs, EShaderStage rhs)
+{
+	return static_cast<EShaderStage>(static_cast<uint32>(lhs) & static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE EShaderStage operator&=(EShaderStage& lhs, uint32 rhs)
+{
+	lhs = static_cast<EShaderStage>(static_cast<uint32>(lhs) & rhs);
+	return lhs;
+}
+
+HS_FORCEINLINE bool operator==(EShaderStage lhs, EShaderStage rhs)
+{
+	return (static_cast<uint32>(lhs) == static_cast<uint32>(rhs));
+}
 
 struct ShaderInfo
 {
@@ -483,15 +517,10 @@ struct ResourceBinding
 
 class Shader;
 
+
 struct ShaderProgramDescriptor
 {
-	Shader* vertexShader = nullptr;
-	Shader* geometryShader = nullptr;
-	Shader* domainShader = nullptr;
-	Shader* hullShader = nullptr;
-	Shader* fragmentShader = nullptr;
-
-	Shader* computeShader = nullptr;
+	std::vector<Shader*> stages;
 };
 
 struct VertexInputLayoutDescriptor
@@ -506,7 +535,7 @@ struct VertexInputAttributeDescriptor
 {
 	uint32 location;
 	uint32 binding; // Metal에서는 무시됩니다.
-	uint32 formatSize;
+	EVertexFormat format;
 	uint32 offset;
 };
 
@@ -534,7 +563,7 @@ enum class EPrimitiveTopology
 struct InputAssemblyStateDescriptor
 {
 	EPrimitiveTopology primitiveTopology;
-	// bool isRestartEnable = false;
+	bool isRestartEnable = false;
 };
 
 enum class ELogicOp
@@ -611,7 +640,7 @@ struct ColorBlendStateDescriptor
 	ELogicOp                                    blendLogic;
 	uint32                                      attachmentCount;
 	std::vector<ColorBlendAttachmentDescriptor> attachments;
-	float                                       blendConestant[4];
+	float                                       blendConstants[4];
 };
 
 enum class EPolygonMode
@@ -639,16 +668,17 @@ enum class EFrontFace
 
 struct RasterizerStateDescriptor
 {
-	bool         depthClampEnable;
-	bool         rasterizerDiscardEnable;
-	EPolygonMode polygonMode;
-	ECullMode    cullMode;
-	EFrontFace   frontFace;
-	bool         depthBiasEnable;
-	float        depthBias;
-	float        depthBiasClamp;
-	float        depthBiasSlope;
-	float        lineWidth;
+	bool			depthClampEnable;
+	bool			rasterizerDiscardEnable;
+	EPolygonMode	polygonMode;
+	ECullMode		cullMode;
+	EFrontFace		frontFace;
+	bool			depthBiasEnable;
+	float			depthBias;
+	float			depthBiasClamp;
+	float			depthBiasSlope;
+	float			depthBiasConstant; // Metal에서는 무시됩니다.
+	float			lineWidth;
 };
 
 struct MultiSampleStateDescriptor
@@ -713,15 +743,16 @@ struct TesellationStateDescriptor
 struct GraphicsPipelineInfo
 {
 	//...
-	ShaderProgramDescriptor      shaderDesc;
-	InputAssemblyStateDescriptor inputAssemblyDesc;
-	TesellationStateDescriptor   tesellationDesc;
-	VertexInputStateDescriptor   vertexInputDesc;
-	RasterizerStateDescriptor    rasterizerDesc;
-	MultiSampleStateDescriptor   multisampleDesc;
-	DepthStencilStateDescriptor  depthStencilDesc;
-	ColorBlendStateDescriptor    colorBlendDesc;
+	ShaderProgramDescriptor			shaderDesc;
+	InputAssemblyStateDescriptor	inputAssemblyDesc;
+	TesellationStateDescriptor		tesellationDesc;
+	VertexInputStateDescriptor		vertexInputDesc;
+	RasterizerStateDescriptor		rasterizerDesc;
+	MultiSampleStateDescriptor		multisampleDesc;
+	DepthStencilStateDescriptor		depthStencilDesc;
+	ColorBlendStateDescriptor		colorBlendDesc;
 
+	ResourceLayout* resourceLayout;
 	RenderPass* renderPass;
 };
 
@@ -786,7 +817,7 @@ struct Hasher<SamplerInfo>
 	{
 		uint32 hash = 0;
 		hash = HashCombine(static_cast<uint32>(key.type), static_cast<uint32>(key.minFilter), static_cast<uint32>(key.magFilter));
-		hash = HashCombine(hash, static_cast<uint32>(key.mipFilter), static_cast<uint32>(key.addressU));
+		hash = HashCombine(hash, static_cast<uint32>(key.mipmapMode), static_cast<uint32>(key.addressU));
 		hash = HashCombine(hash, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
 		hash = HashCombine(hash, key.isPixelCoordinate);
 

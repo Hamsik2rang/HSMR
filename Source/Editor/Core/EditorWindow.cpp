@@ -1,4 +1,4 @@
-#include "Editor/Core/EditorWindow.h"
+﻿#include "Editor/Core/EditorWindow.h"
 
 #include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
 #include "Engine/RHI/Swapchain.h"
@@ -51,7 +51,7 @@ bool EditorWindow::onInitialize()
             info.colorTextureInfos[j].extent.width  = width;
             info.colorTextureInfos[j].extent.height = height;
             info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
-            info.colorTextureInfos[j].usage         = ETextureUsage::RENDER_TARGET | ETextureUsage::SHADER_READ;
+            info.colorTextureInfos[j].usage         = ETextureUsage::COLOR_RENDER_TARGET | ETextureUsage::SHADER_READ;
             info.colorTextureInfos[j].isCompressed  = false;
             info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
         }
@@ -61,7 +61,7 @@ bool EditorWindow::onInitialize()
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;
         info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
-        info.depthStencilInfo.usage                = ETextureUsage::RENDER_TARGET | ETextureUsage::SHADER_READ;
+        info.depthStencilInfo.usage                = ETextureUsage::DEPTH_RENDER_TARGET | ETextureUsage::SHADER_READ;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
 
@@ -105,13 +105,13 @@ void EditorWindow::onRender()
     CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
     cmdBuffer->Begin();
 
-    uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
-    RenderTarget* curRT      = &_renderTargets[frameIndex];
+    //uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
+    //RenderTarget* curRT      = &_renderTargets[frameIndex];
 
-    //     1. Render Scene to Scene Panel
-    _renderer->Render({}, curRT);
+    ////     1. Render Scene to Scene Panel
+    //_renderer->Render({}, curRT);
 
-    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+    //static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
     // 2. Render GUI
     onRenderGUI();

@@ -1,16 +1,14 @@
-//
-//  BasicClearPass.h
+﻿//
+//  ForwardOpaquePass.h
 //  HSMR
 //
 //  Created by Yongsik Im on 1/30/25.
 //
-#ifndef __BASIC_CLEAR_PASS_H__
-#define __BASIC_CLEAR_PASS_H__
+#ifndef __HS_FORWARD_OPAQUE_PASS_H__
+#define __HS_FORWARD_OPAQUE_PASS_H__
 
 #include "Precompile.h"
 #include "ForwardPass.h"
-
-#include "Engine/RHI/ResourceHandle.h"
 
 HS_NS_BEGIN
 

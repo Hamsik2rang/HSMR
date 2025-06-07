@@ -202,8 +202,8 @@ bool hs_window_peek_event(const NativeWindow* pWindow, EWindowEvent& outEvent, b
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 
-    hs_platform_window_poll_event();
-
+    hs_platform_window_poll_event(*pWindow);
+    
     outEvent = EWindowEvent::NONE;
 
     auto& eventQueue = s_eventQueueTable[pWindow];

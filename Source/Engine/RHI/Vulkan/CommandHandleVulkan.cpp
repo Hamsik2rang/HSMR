@@ -54,7 +54,7 @@ CommandQueueVulkan::~CommandQueueVulkan()
 
 }
 
-CommandPoolVulkan::CommandPoolVulkan(RHIDeviceVulkan device)
+CommandPoolVulkan::CommandPoolVulkan()
 {
 
 }
@@ -105,6 +105,7 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 {
 	static std::vector<VkClearValue> clearValues;
 
+	HS_ASSERT(renderPass && framebuffer, "both renderPass and framebuffer should't be nullptr");
 	HS_ASSERT(_isBegan, "CommandBuffer has not began");
 	HS_ASSERT(_isGraphicsBegan == false, "Graphics Pass is already began");
 	HS_ASSERT(_isComputeBegan == false, "Compute Pass is aready began");

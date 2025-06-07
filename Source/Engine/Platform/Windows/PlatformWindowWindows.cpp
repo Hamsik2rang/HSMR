@@ -126,9 +126,14 @@ void hs_platform_window_show(const NativeWindow& nativeWindow)
 	ShowWindow(static_cast<HWND>(nativeWindow.handle), SW_SHOW);
 }
 
-void hs_platform_window_poll_event()
+void hs_platform_window_poll_event(const NativeWindow& nativeWindow)
 {
-
+	MSG msg;
+	if (::PeekMessage(&msg, (HWND)nativeWindow.handle, 0u, 0u, PM_REMOVE))
+	{
+		::TranslateMessage(&msg);
+		::DispatchMessage(&msg);
+	}
 }
 
 void hs_platform_window_set_position(NativeWindow& nativeWindow, uint16 x, uint16 y)
