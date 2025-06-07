@@ -59,16 +59,21 @@ struct ResourceLayoutVulkan : public ResourceLayout
 {
 	ResourceLayoutVulkan(const std::vector<ResourceBinding>& bindings) noexcept : ResourceLayout(bindings) {}
 	~ResourceLayoutVulkan() = default;
+
+	VkDescriptorSetLayout handle = VK_NULL_HANDLE;
 };
 
 struct ResourceSetVulkan : public ResourceSet
 {
 
+	VkDescriptorSet handle = VK_NULL_HANDLE;
 };
 
 struct ResourceSetPoolVulkan : public ResourceSetPool
 {
 
+
+	VkDescriptorPool handle = VK_NULL_HANDLE;
 };
 
 

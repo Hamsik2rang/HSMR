@@ -1,4 +1,4 @@
-//
+﻿//
 //  GUIContext.h
 //  HSMR
 //

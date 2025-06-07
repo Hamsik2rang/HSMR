@@ -24,7 +24,7 @@ ForwardOpaquePass::~ForwardOpaquePass()
 
 void ForwardOpaquePass::OnBeforeRendering(uint32_t frameIndex)
 {
-	frameIndex = frameIndex;
+	this->frameIndex = frameIndex;
 }
 
 void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
@@ -70,17 +70,19 @@ void ForwardOpaquePass::Execute(CommandBuffer* commandBuffer, RenderPass* render
 	commandBuffer->BeginRenderPass(renderPass, framebuffer);
 
 	commandBuffer->BindPipeline(_gPipeline);
-
-	uint32 offsets[2]{ 0, 0 };
-	commandBuffer->BindVertexBuffers(_vertexBuffer, offsets, 2);
-
-	commandBuffer->BindIndexBuffer(_indexBuffer);
-
+	
 	commandBuffer->SetViewport(Viewport{ 0.0f, 0.0f, static_cast<float>(framebuffer->info.width), static_cast<float>(framebuffer->info.height), 0.0f, 1.0f });
-
+	
 	commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
 
-	commandBuffer->DrawIndexed(0, 36, 1, 0);
+	uint32 offsets[2]{ 0, 0 };
+	commandBuffer->BindVertexBuffers(&_vertexBuffer[0], offsets, 1);
+
+	commandBuffer->DrawArrays(0, 6, 1);
+
+	//commandBuffer->BindIndexBuffer(_indexBuffer);
+
+	//commandBuffer->DrawIndexed(0, 36, 1, 0);
 
 	commandBuffer->EndRenderPass();
 
@@ -122,16 +124,34 @@ void ForwardOpaquePass::createResourceHandles()
 {
 	RHIContext* rhiContext = _renderer->GetRHIContext();
 
+	VSINPUT_BASIC vertices[]{
+	{
+		{0.5f, -0.5f, 0.0f, 1.0f},
+		{1.0f, 0.0f, 0.0f, 1.0f},
+	},
+	{
+		{0.5f, 0.5f, 0.0f, 1.0f},
+		{0.0, 1.0f, 0.0f, 1.0f},
+	},
+	{
+		{-0.5f, 0.5f, 0.0f, 1.0f},
+		{0.0f, 0.0f, 1.0f, 1.0f},
+	},
+	};
+
+
+
 	const Mesh& fallbackMesh = ResourceManager::GetFallbackMeshCube();
 	const auto& pos = fallbackMesh.GetPosition();
 	const auto& color = fallbackMesh.GetColor();
 
-	_vertexBuffer[0] = rhiContext->CreateBuffer(static_cast<const void*>(pos.data()), pos.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
-	_vertexBuffer[1] = rhiContext->CreateBuffer(static_cast<const void*>(color.data()), color.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+	//_vertexBuffer[0] = rhiContext->CreateBuffer(static_cast<const void*>(pos.data()), pos.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+	//_vertexBuffer[1] = rhiContext->CreateBuffer(static_cast<const void*>(color.data()), color.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 
-	const auto& indices = fallbackMesh.GetIndices();
-	_indexBuffer = rhiContext->CreateBuffer(static_cast<const void*>(indices.data()), indices.size() * sizeof(decltype(indices)), EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
-	_indexCount = indices.size();
+	//const auto& indices = fallbackMesh.GetIndices();
+	//_indexBuffer = rhiContext->CreateBuffer(static_cast<const void*>(indices.data()), indices.size() * sizeof(decltype(indices)), EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
+	//_indexCount = indices.size();
+	_vertexBuffer[0] = rhiContext->CreateBuffer(vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 #ifdef __APPLE__
 	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
 #elif __WIN32__

@@ -2,6 +2,7 @@
 
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 #include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
+#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
 
 HS_NS_BEGIN
 
@@ -163,47 +164,82 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 
 void CommandBufferVulkan::BindPipeline(GraphicsPipeline* pipeline)
 {
-
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	HS_ASSERT(pipeline, "Pipeline is nullptr");
+	GraphicsPipelineVulkan* pipelineVK = static_cast<GraphicsPipelineVulkan*>(pipeline);
+	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineVK->handle);
 }
 
 void CommandBufferVulkan::BindResourceSet(ResourceSet* rSet)
 {
-
+	// TODO: Implementation it.
 }
 
 void CommandBufferVulkan::SetViewport(const Viewport& viewport)
 {
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	VkViewport viewportVk{};
+	viewportVk.x = viewport.x;
+	viewportVk.y = viewport.y;
+	viewportVk.width = viewport.width;
+	viewportVk.height = viewport.height;
+	viewportVk.minDepth = viewport.zNear;
+	viewportVk.maxDepth = viewport.zFar;
 
+	vkCmdSetViewport(handle, 0, 1, &viewportVk);
 }
 
 void CommandBufferVulkan::SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height)
 {
-
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	VkRect2D rectVk{};
+	rectVk.extent.width = width;
+	rectVk.extent.height = height;
+	rectVk.offset.x = x;
+	rectVk.offset.y = y;
+	vkCmdSetScissor(handle, 0, 1, &rectVk);
 }
 
 void CommandBufferVulkan::BindIndexBuffer(Buffer* indexBuffer)
 {
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	HS_ASSERT(indexBuffer, "Index Buffer is nullptr");
+
+	BufferVulkan* indexBufferVK = static_cast<BufferVulkan*>(indexBuffer);
+
 
 }
 
 void CommandBufferVulkan::BindVertexBuffers(const Buffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
 {
+	std::vector<VkBuffer> vertexBufferHandles(bufferCount);
+	std::vector<VkDeviceSize> vertexOffsets(bufferCount);
+	for (uint8 i = 0; i < bufferCount; i++)
+	{
+		HS_ASSERT(vertexBuffers[i], "Vertex Buffer is nullptr at index %d", i);
+		const BufferVulkan* vertexBufferVK = static_cast<const BufferVulkan*>(vertexBuffers[i]);
+		vertexBufferHandles[i] = vertexBufferVK->handle;
+		vertexOffsets[i] = static_cast<VkDeviceSize>(offsets[i]);
+	}
 
+	vkCmdBindVertexBuffers(handle, 0, bufferCount, vertexBufferHandles.data(), vertexOffsets.data());
 }
 
 void CommandBufferVulkan::DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount)
 {
-
+	vkCmdDraw(handle, vertexCount, instanceCount, firstVertex, 0);
 }
 
 void CommandBufferVulkan::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
-
+	// TODO:
 }
 
 void CommandBufferVulkan::EndRenderPass()
 {
-
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	vkCmdEndRenderPass(handle);
+	_isGraphicsBegan = false;
 }
 
 void CommandBufferVulkan::CopyTexture(Texture* srcTexture, Texture* dstTexture)

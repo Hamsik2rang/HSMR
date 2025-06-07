@@ -1,4 +1,4 @@
-//
+﻿//
 //  EditorWindow.h
 //  Editor
 //
@@ -38,9 +38,9 @@ public:
     ~EditorWindow() override;
 
     void Render() override;
+    void ProcessEvent() override;
 
 private:
-    bool dispatchEvent(EWindowEvent event, uint32 windowID);
     void setupPanels();
 
     bool onInitialize() override;

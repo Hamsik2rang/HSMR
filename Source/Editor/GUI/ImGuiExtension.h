@@ -27,12 +27,10 @@ HS_EDITOR_API void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_
 
 HS_EDITOR_API void InitializeBackend(HS::Swapchain* swapchain);
 //void SetDisplaySize(uint32 width, uint32 height);
-HS_EDITOR_API void ProcessEvent();
 HS_EDITOR_API void BeginRender(HS::Swapchain* swapchain);
 HS_EDITOR_API void EndRender(HS::Swapchain* swapchain);
 
 HS_EDITOR_API void FinalizeBackend();
-
 
 };
 
