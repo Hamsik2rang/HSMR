@@ -58,7 +58,7 @@ struct CommandBufferVulkan : public CommandBuffer
 	void End() override;
 	void Reset() override;
 
-	void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer) override;
+	void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea) override;
 
 	void BindPipeline(GraphicsPipeline* pipeline) override;
 	void BindResourceSet(ResourceSet* rSet) override;

@@ -72,7 +72,7 @@ public:
     virtual void End() = 0;
     virtual void Reset() = 0;
     
-    virtual void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer) = 0;
+    virtual void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea) = 0;
     virtual void BindPipeline(GraphicsPipeline* pipeline) = 0;
     virtual void BindResourceSet(ResourceSet* rSet) = 0;
     virtual void SetViewport(const Viewport& viewport) = 0;

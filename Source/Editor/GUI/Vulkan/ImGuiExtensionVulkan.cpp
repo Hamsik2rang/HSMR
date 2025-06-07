@@ -108,8 +108,10 @@ void BeginRender(HS::Swapchain* swapchain)
 	CommandBuffer* cmdBuffer = swapchain->GetCommandBufferForCurrentFrame();
 	RenderPass* renderPass = swapchainVK->GetRenderPass();
 	Framebuffer* framebuffer = swapchainVK->GetFramebufferForCurrentFrame();
+
+	Area area{ 0, 0, swapchain->GetWidth(), swapchain->GetHeight() };
 	
-	cmdBuffer->BeginRenderPass(renderPass, framebuffer);
+	cmdBuffer->BeginRenderPass(renderPass, framebuffer, area);
 }
 
 void EndRender(HS::Swapchain* swapchain)

@@ -49,6 +49,7 @@ private:
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
+    void onResize() override;
     void onRenderGUI();
 
     std::vector<RenderTarget> _renderTargets;

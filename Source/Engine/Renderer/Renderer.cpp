@@ -127,9 +127,7 @@ void Renderer::NextFrame(Swapchain* swapchain)
     frameIndex = _rhiContext->AcquireNextImage(swapchain);
     if (frameIndex == UINT32_MAX)
     {
-        // Swapchain needs to be recreated
-        HS_LOG(warning, "Failed to acquire next image, swapchain may need recreation");
-        // TODO: Handle swapchain recreation
+        _rhiContext->Restore(swapchain);
         return;
     }
     _curCommandBuffer = swapchain->GetCommandBufferForCurrentFrame();

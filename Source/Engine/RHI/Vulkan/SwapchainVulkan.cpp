@@ -81,7 +81,6 @@ void SwapchainVulkan::setRenderPass()
 	info.isSwapchainRenderPass = true;
 	info.colorAttachments = { colorAttachment };
 	info.colorAttachmentCount = 1;
-	info.renderArea = renderArea;
 	info.useDepthStencilAttachment = false;
 
 	_renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
