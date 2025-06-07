@@ -1,11 +1,11 @@
-//
+﻿//
 //  Renderer.h
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-#ifndef __RENDERER_H__
-#define __RENDERER_H__
+#ifndef __HS_RENDERER_H__
+#define __HS_RENDERER_H__
 
 #include "Precompile.h"
 

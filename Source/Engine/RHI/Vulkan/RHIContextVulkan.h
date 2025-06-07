@@ -63,7 +63,6 @@ public:
 	ResourceSet* CreateResourceSet() override;
 	void DestroyResourceSet(ResourceSet* resourceSet) override;
 
-
 	ResourceSetPool* CreateResourceSetPool() override;
 	void DestroyResourceSetPool(ResourceSetPool* resourceSetPool) override;
 
@@ -94,6 +93,10 @@ public:
 
 	void WaitForIdle() const override;
 
+	// TODO: ImGui 백엔드 변경되면 없애야합니다.
+	const VkInstance GetInstance() const { return _instance; }
+	const RHIDeviceVulkan* GetDevice() const  { return &(_device); }
+
 private:
 	bool createInstance();
 	void createDefaultCommandPool();
@@ -102,6 +105,8 @@ private:
 	VkFramebuffer createFramebuffer(const FramebufferInfo& info);
 	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info);
 	VkPipeline createComputePipeline(const ComputePipelineInfo& info);
+
+	uint32 getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties);
 
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -120,6 +125,7 @@ private:
 	VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
 
 	VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
+	bool _isInitialized = false;
 };
 
 

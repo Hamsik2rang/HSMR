@@ -1,17 +1,17 @@
-//
+﻿//
 //  RendererPass.h
 //  HSMR
 //
 //  Created by Yongsik Im on 1/30/25.
 //
-#ifndef __RENDERER_PASS_H__
-#define __RENDERER_PASS_H__
+#ifndef __HS_RENDERER_PASS_H__
+#define __HS_RENDERER_PASS_H__
 
 #include "Precompile.h"
 
 #include <typeinfo>
 
-#include "Engine/Renderer//RenderDefinition.h"
+#include "Engine/Renderer/RenderDefinition.h"
 #include "Engine/RHI/RenderHandle.h"
 #include "Engine/Renderer/RenderTarget.h"
 

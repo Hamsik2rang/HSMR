@@ -33,7 +33,7 @@ void ScenePanel::Draw()
     ImVec2 viewportSize = ImVec2(static_cast<float>(width), static_cast<float>(height));
     Texture* texture = _currentRenderTarget->GetColorTexture(0);
     
-    ImGuiExt::ImageOffscreen(texture, viewportSize);
+    //ImGuiExt::ImageOffscreen(texture, viewportSize);
 
     ImVec2 curPanelSize = ImGui::GetWindowSize();
     _resolution.width = static_cast<uint32>(curPanelSize.x);

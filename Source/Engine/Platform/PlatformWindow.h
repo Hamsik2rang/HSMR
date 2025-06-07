@@ -120,7 +120,7 @@ struct NativeWindow
 bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
 void hs_platform_window_destroy(NativeWindow& nativeWindow);
 void hs_platform_window_show(const NativeWindow& nativeWindow);
-void hs_platform_window_poll_event();
+void hs_platform_window_poll_event(const NativeWindow& nativeWindow);
 
 HS_NS_END
 

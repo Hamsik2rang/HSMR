@@ -1,7 +1,8 @@
-#define HS_SHADER_FILE
+﻿#define HS_SHADER_FILE
 #define HS_BASIC_SHADER
 #include "../BuiltInMaterialLayout.h"
 
+[shader("vertex")]
 FSINPUT_BASIC VSENTRY_BASIC(
     VSINPUT_BASIC input)
 {
@@ -12,7 +13,8 @@ FSINPUT_BASIC VSENTRY_BASIC(
     return output;
 }
 
-float4 FSENTRY_BASIC(FSINPUT_BASIC input) : SV_COLOR 
+[shader("fragment")]
+float4 FSENTRY_BASIC(FSINPUT_BASIC input) SM_OUT_TARGET
 {
     return input.color;
 }

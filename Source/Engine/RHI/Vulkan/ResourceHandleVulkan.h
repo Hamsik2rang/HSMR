@@ -12,6 +12,7 @@
 #include "Engine/RHI/ResourceHandle.h"
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 
+
 HS_NS_BEGIN
 
 struct TextureVulkan : public Texture
@@ -21,12 +22,16 @@ struct TextureVulkan : public Texture
 
 	VkImage handle = VK_NULL_HANDLE;
 	VkImageView imageViewVk = VK_NULL_HANDLE;
+	VkDeviceMemory memoryVk = VK_NULL_HANDLE;
+	VkImageLayout layoutVk = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
 struct SamplerVulkan : public Sampler
 {
 	SamplerVulkan(const SamplerInfo& info) noexcept : Sampler(info) {}
 	~SamplerVulkan() override = default;
+
+	VkSampler handle = VK_NULL_HANDLE;
 };
 
 struct BufferVulkan : public Buffer
@@ -37,7 +42,8 @@ struct BufferVulkan : public Buffer
 	void Map();
 	void Unmap();
 	
-	VkBuffer handle;
+	VkBuffer handle = VK_NULL_HANDLE;
+	VkDeviceMemory memory = VK_NULL_HANDLE;
 };
 
 struct ShaderVulkan : public Shader
@@ -46,11 +52,12 @@ struct ShaderVulkan : public Shader
 	~ShaderVulkan() override = default;
 
 	VkShaderModule handle;
+	VkPipelineShaderStageCreateInfo stageInfo = {};
 };
 
 struct ResourceLayoutVulkan : public ResourceLayout
 {
-	ResourceLayoutVulkan() noexcept {}
+	ResourceLayoutVulkan(const std::vector<ResourceBinding>& bindings) noexcept : ResourceLayout(bindings) {}
 	~ResourceLayoutVulkan() = default;
 };
 

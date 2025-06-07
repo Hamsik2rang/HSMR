@@ -43,12 +43,16 @@ Buffer::Buffer(const BufferInfo& info)
 Buffer::~Buffer()
 {}
 
-ResourceLayout::ResourceLayout()
+ResourceLayout::ResourceLayout(const std::vector<ResourceBinding>& bindings)
     : RHIHandle(EType::RESOURCE_LAYOUT)
-{}
+{
+    this->bindings.assign(bindings.begin(), bindings.end());
+}
 
 ResourceLayout::~ResourceLayout()
-{}
+{
+    this->bindings.clear();
+}
 
 ResourceSet::ResourceSet()
     : RHIHandle(EType::RESOURCE_SET)

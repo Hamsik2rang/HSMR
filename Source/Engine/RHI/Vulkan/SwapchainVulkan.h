@@ -16,8 +16,9 @@ class RHIContext;
 
 class SwapchainVulkan final : public Swapchain
 {
+public:
 	friend class RHIContextVulkan;
-	SwapchainVulkan(const SwapchainInfo& info, RHIContext* rhiContext, VkInstance instance, RHIDeviceVulkan& deviceVulkan, VkSurfaceKHR surface);
+	SwapchainVulkan(const SwapchainInfo& info, VkSurfaceKHR surface);
 	~SwapchainVulkan() override;
 
 	HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
@@ -26,29 +27,38 @@ class SwapchainVulkan final : public Swapchain
 	HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<CommandBuffer*>(_commandBufferVKs[index]); }
 	HS_FORCEINLINE RenderTarget   GetRenderTargetForCurrentFrame() const override { return _renderTargets[_frameIndex]; }
 
-private:
+	bool initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance instance, RHIDeviceVulkan* deviceVulkan);
+	void destroySwapchainVK();
+
 	void setRenderTargets() override;
 	void setRenderPass() override;
 	void getSwapchainImages();
 
 	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
-	VkSwapchainKHR _handle = VK_NULL_HANDLE;
+	VkSwapchainKHR handle = VK_NULL_HANDLE;
 
-	VkSurfaceKHR _surface;
-	VkSurfaceFormatKHR _surfaceFormat;
-	VkSurfaceCapabilitiesKHR _surfaceCapabilities;
-	VkInstance _instance;
+	VkSurfaceKHR surface;
+	VkSurfaceFormatKHR surfaceFormat;
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 
-	RHIContext* _rhiContext;
-	RHIDeviceVulkan& _deviceVulkan;
-	uint8 _frameIndex = 0;
+	std::vector<VkImage> vkImages;
+	std::vector<VkImageView> vkImageViews;
+	struct
+	{
+		VkSemaphore* imageAvailableSemaphores;
+		VkSemaphore* renderFinishedSemaphores;
+		VkFence* inFlightFences;
+	}syncObjects;
+
+private:
+	uint8 _frameIndex = static_cast<uint8>(-1);
 	uint8 _maxFrameCount = 3;
-
-	std::vector<VkImage> _vkImages;
-	std::vector<VkImageView> _vkImageViews;
-
+	uint32 _curImageIndex = static_cast<uint32>(-1);
+	RHIDeviceVulkan* _deviceVulkan;
 	CommandBufferVulkan** _commandBufferVKs;
+	bool _isSuspended;
+	bool _isInitialized = false;
 };
 
 HS_NS_END

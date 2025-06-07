@@ -44,7 +44,7 @@ struct CommandQueueVulkan : public CommandQueue
 
 struct CommandPoolVulkan : public CommandPool
 {
-	CommandPoolVulkan(RHIDeviceVulkan device);
+	CommandPoolVulkan();
 	~CommandPoolVulkan() override;
 
 	VkCommandPool handle;
