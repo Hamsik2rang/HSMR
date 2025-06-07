@@ -117,8 +117,6 @@ private:
 	VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger, const VkAllocationCallbacks* npAllocator);
 	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* npAllocator);
 
-	void recreateSwapchain(Swapchain* swapchain);
-
 	void cleanup();
 
 	//std::vector<std::string> _supportedInstanceExtensions;

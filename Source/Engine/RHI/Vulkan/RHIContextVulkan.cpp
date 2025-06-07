@@ -1564,14 +1564,6 @@ void RHIContextVulkan::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebu
 	}
 }
 
-void RHIContextVulkan::recreateSwapchain(Swapchain* swapchain)
-{
-	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
-	swapchainVK->destroySwapchainVK();
-	swapchainVK->initSwapchainVK(this, _instance, &_device);
-
-}
-
 #pragma endregion
 
 HS_NS_END
