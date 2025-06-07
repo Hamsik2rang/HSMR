@@ -216,8 +216,9 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 	viDesc.attributes.push_back(viAttr);
 
 	ColorBlendStateDescriptor cbDesc{};
-	cbDesc.attachments.resize(renderPass->info.colorAttachmentCount);
-	for (size_t i = 0; i < renderPass->info.colorAttachmentCount; i++)
+	cbDesc.attachmentCount = renderPass->info.colorAttachmentCount;
+	cbDesc.attachments.resize(cbDesc.attachmentCount);
+	for (size_t i = 0; i < cbDesc.attachmentCount; i++)
 	{
 		cbDesc.attachments[i].blendEnable = false;
 	}
