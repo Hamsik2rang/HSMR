@@ -59,10 +59,9 @@ HS_EDITOR_API uint64 s_test = 0;
 
 void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
-	static uint64 i = 0;
-	HS_LOG(debug, "IMAGE OFFSCREEN!!");
+	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
 
-	s_test = i++;
+	ImGui::Image(reinterpret_cast<ImTextureID>(textureVK->handle), image_size, uv0, uv1, tint_col, border_col);
 }
 
 void InitializeBackend(HS::Swapchain* swapchain)
@@ -90,6 +89,7 @@ void InitializeBackend(HS::Swapchain* swapchain)
 	initInfo.ImageCount = static_cast<uint32>(swapchainVK->GetMaxFrameCount());
 	initInfo.MinImageCount = 2;
 	initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; // No MSAA for now
+	// TODO: DescriptorSet 만들어서 파라미터에 넣어줘야함.
 
 	ImGui_ImplVulkan_Init(&initInfo);
 
