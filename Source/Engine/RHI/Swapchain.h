@@ -38,8 +38,8 @@ public:
     virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
     virtual Framebuffer* GetFramebufferForCurrentFrame() const = 0;
 
-    HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->width; }
-    HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->width; }
+    HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->surfaceWidth; }
+    HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->surfaceHeight; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
     HS_FORCEINLINE RenderPass*   GetRenderPass() const { return _renderPass; }

@@ -180,6 +180,11 @@ void EditorWindow::onUpdate()
 
 }
 
+void EditorWindow::onResize()
+{
+
+}
+
 void EditorWindow::onRender()
 {
     if (false == _nativeWindow.shouldRender)
@@ -189,13 +194,13 @@ void EditorWindow::onRender()
     CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
     cmdBuffer->Begin();
 
-    //uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
-    //RenderTarget* curRT      = &_renderTargets[frameIndex];
+    uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
+    RenderTarget* curRT      = &_renderTargets[frameIndex];
 
-    ////     1. Render Scene to Scene Panel
-    //_renderer->Render({}, curRT);
+    //     1. Render Scene to Scene Panel
+    _renderer->Render({}, curRT);
 
-    //static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
     // 2. Render GUI
     onRenderGUI();

@@ -241,6 +241,12 @@ Framebuffer* RHIContextVulkan::CreateFramebuffer(const FramebufferInfo& info)
 			attachments[i] = VK_NULL_HANDLE;
 		}
 	}
+	if (info.renderPass->info.useDepthStencilAttachment && info.depthStencilBuffer != nullptr)
+	{
+		attachmentSize++;
+		TextureVulkan* textureVK = static_cast<TextureVulkan*>(info.depthStencilBuffer);
+		attachments.push_back(textureVK->imageViewVk);
+	}
 
 	VkFramebufferCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -1053,7 +1059,7 @@ VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
 	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
 
 	VkImageLayout colorFinalLayout = info.isSwapchainRenderPass ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	VkImageLayout depthStencilFinalLayout = info.isSwapchainRenderPass ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	VkImageLayout depthStencilFinalLayout = info.isSwapchainRenderPass ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
 	std::vector<VkAttachmentDescription> attachments(attachmentCount);
 	int index = 0;

@@ -333,6 +333,11 @@ struct ClearValue
 
 struct Area
 {
+	Area() : x(0), y(0), width(1), height(1) {}
+	Area(uint32 x, uint32 y, uint32 width, uint32 height)
+		: x(x), y(y), width(width), height(height)
+	{}
+
 	uint32 x;
 	uint32 y;
 	uint32 width;
@@ -356,7 +361,6 @@ struct RenderPassInfo
 	Attachment              depthStencilAttachment;
 	uint8					colorAttachmentCount;
 
-	Area renderArea;
 	bool useDepthStencilAttachment = false;
 	bool isSwapchainRenderPass = false;
 };
@@ -787,7 +791,6 @@ struct Hasher<RenderPassInfo>
 		uint32 b = (key.colorAttachmentCount % 2 != 0) ? Hasher<Attachment>::Get(key.colorAttachments.back()) : 0;
 		uint32 c = (key.useDepthStencilAttachment) ? Hasher<Attachment>::Get(key.depthStencilAttachment) : 0;
 		hash = HashCombine(hash, b, c);
-
 		return hash;
 	}
 };

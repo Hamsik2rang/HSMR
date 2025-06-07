@@ -102,7 +102,7 @@ void CommandBufferVulkan::Reset()
 	_isBegan = false;
 }
 
-void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer)
+void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea)
 {
 	static std::vector<VkClearValue> clearValues;
 
@@ -139,10 +139,10 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 	}
 
 	VkRect2D area{};
-	area.offset.x = renderPassInfo.renderArea.x;
-	area.offset.y = renderPassInfo.renderArea.y;
-	area.extent.width = renderPassInfo.renderArea.width;
-	area.extent.height = renderPassInfo.renderArea.height;
+	area.offset.x = renderArea.x;
+	area.offset.y = renderArea.y;
+	area.extent.width = renderArea.width;
+	area.extent.height = renderArea.height;
 
 	VkRenderPassBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

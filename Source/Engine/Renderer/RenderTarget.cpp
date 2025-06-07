@@ -1,4 +1,4 @@
-#include "Engine/Renderer/RenderTarget.h"
+﻿#include "Engine/Renderer/RenderTarget.h"
 
 #include "Engine/RHI/RHIDefinition.h"
 #include "Engine/Core/EngineContext.h"
@@ -87,6 +87,7 @@ void RenderTarget::Update(uint32 width, uint32 height)
 void RenderTarget::Clear()
 {
     RHIContext* rc = hs_engine_get_context()->rhiContext;
+    rc->WaitForIdle();
     for (size_t i = 0; i < _info.colorTextureCount; i++)
     {
         if (nullptr == _colorTextures[i])

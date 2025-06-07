@@ -51,7 +51,10 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
 		dsa.loadAction = ELoadAction::CLEAR;
 		dsa.storeAction = EStoreAction::STORE;
 		_renderPassInfo.depthStencilAttachment = dsa;
+		_renderPassInfo.useDepthStencilAttachment = true;
 	}
+
+	_renderPassInfo.isSwapchainRenderPass = false;
 }
 
 void ForwardOpaquePass::Execute(CommandBuffer* commandBuffer, RenderPass* renderPass)
@@ -66,8 +69,8 @@ void ForwardOpaquePass::Execute(CommandBuffer* commandBuffer, RenderPass* render
 	float debugColor[4]{ 0.2f, 0.5f, 0.8f, 1.0f };
 
 	commandBuffer->PushDebugMark("Opaque Pass", debugColor);
-
-	commandBuffer->BeginRenderPass(renderPass, framebuffer);
+	Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+	commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
 
 	commandBuffer->BindPipeline(_gPipeline);
 	
@@ -158,7 +161,7 @@ void ForwardOpaquePass::createResourceHandles()
 	std::string libPath = FileSystem::GetDefaultResourceDirectory() + std::string("Shader\\HLSL\\Basic.vert.spv");
 #endif
 	ShaderInfo vsInfo{};
-	vsInfo.entryName = HS_TO_STRING(VSENTRY_BASIC);
+	vsInfo.entryName = "main";
 	vsInfo.stage = EShaderStage::VERTEX;
 	_vertexShader = rhiContext->CreateShader(vsInfo, libPath.c_str());
 	if (_vertexShader == nullptr)
@@ -169,7 +172,7 @@ void ForwardOpaquePass::createResourceHandles()
 	libPath = FileSystem::GetDefaultResourceDirectory() + std::string("Shader\\HLSL\\Basic.frag.spv");
 #endif
 	ShaderInfo fsInfo{};
-	fsInfo.entryName = HS_TO_STRING(FSENTRY_BASIC);
+	fsInfo.entryName = "main";
 	fsInfo.stage = EShaderStage::FRAGMENT;
 
 	_fragmentShader = rhiContext->CreateShader(fsInfo, libPath.c_str());
@@ -196,10 +199,6 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 
 	viDesc.layouts.push_back(viLayout);
 
-	viLayout.binding = 1;
-
-	viDesc.layouts.push_back(viLayout);
-
 	VertexInputAttributeDescriptor viAttr{};
 	viAttr.location = 0;
 	viAttr.binding = 0;
@@ -209,7 +208,7 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 	viDesc.attributes.push_back(viAttr);
 
 	viAttr.location = 1;
-	viAttr.binding = 1;
+	viAttr.binding = 0;
 	viAttr.format = EVertexFormat::FLOAT4; // float4 Color
 	viAttr.offset = 0;
 
