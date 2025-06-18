@@ -60,14 +60,11 @@ public:
 	virtual Sampler* CreateSampler(const SamplerInfo& info) = 0;
 	virtual void     DestroySampler(Sampler* sampler) = 0;
 
-	virtual ResourceLayout* CreateResourceLayout() = 0;
+	virtual ResourceLayout* CreateResourceLayout(ResourceBinding* bindings, uint32 bindingCount) = 0;
 	virtual void            DestroyResourceLayout(ResourceLayout* resourceLayout) = 0;
 
-	virtual ResourceSet* CreateResourceSet() = 0;
+	virtual ResourceSet* CreateResourceSet(ResourceLayout* resourceLayouts) = 0;
 	virtual void         DestroyResourceSet(ResourceSet* dSet) = 0;
-
-	virtual ResourceSetPool* CreateResourceSetPool() = 0;
-	virtual void             DestroyResourceSetPool(ResourceSetPool* dPool) = 0;
 
 	virtual CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) = 0;
 	virtual void         DestroyCommandPool(CommandPool* cmdPool) = 0;

@@ -55,13 +55,23 @@ static void check_vk_result(VkResult result)
 	}
 }
 
-HS_EDITOR_API uint64 s_test = 0;
-
 void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
+	// TODO: textureVK->handle이 아니라 DescriptorSet으로 전달해야 함.
+	ResourceBinding binding{};
+	binding.binding = 0;
+	binding.name = "texture";
+	binding.type = EResourceType::SAMPLED_IMAGE;
+	binding.stage = EShaderStage::FRAGMENT;
+	binding.resource.textures.push_back(textureVK);
 
-	ImGui::Image(reinterpret_cast<ImTextureID>(textureVK->handle), image_size, uv0, uv1, tint_col, border_col);
+	ResourceLayout* resourceLayout = hs_engine_get_rhi_context()->CreateResourceLayout(&binding, 1);
+	ResourceSet* resourceSet = hs_engine_get_rhi_context()->CreateResourceSet(resourceLayout);
+
+	auto* rc = hs_engine_get_rhi_context();
+	//rc->CreateResourceLayout()
+	ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<ResourceSetVulkan*>(resourceSet)->handle), image_size, uv0, uv1, tint_col, border_col);
 }
 
 void InitializeBackend(HS::Swapchain* swapchain)

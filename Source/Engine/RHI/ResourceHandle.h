@@ -62,10 +62,8 @@ class ResourceLayout : public RHIHandle
 public:
 	~ResourceLayout() override;
 
-	std::vector<ResourceBinding> bindings;
-
 protected:
-	ResourceLayout(const std::vector<ResourceBinding>& bindings);
+	ResourceLayout();
 };
 
 class ResourceSet : public RHIHandle
@@ -77,15 +75,6 @@ public:
 
 protected:
 	ResourceSet();
-};
-
-class ResourceSetPool : public RHIHandle
-{
-public:
-	~ResourceSetPool() override;
-
-protected:
-	ResourceSetPool();
 };
 
 template <>

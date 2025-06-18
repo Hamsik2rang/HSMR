@@ -71,12 +71,22 @@ bool RHIContextVulkan::Initialize()
 		return false;
 	}
 
-	if (false == _device.Create(_instance))
+	if (false == _device.Create(_instanceVk))
 	{
 		return false;
 	}
 
 	createDefaultCommandPool();
+
+	std::vector<DescriptorPoolAllocatorVulkan::PoolSizeRatio> ratios =
+	{
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 },
+	};
+
+	_descriptorPoolAllocator.Initialize(_instanceVk, &_device, 1000, ratios);
 
 	_isInitialized = true;
 
@@ -96,10 +106,10 @@ void RHIContextVulkan::Finalize()
 		vkDestroyCommandPool(_device, _defaultCommandPool, nullptr);
 		_defaultCommandPool = VK_NULL_HANDLE;
 	}
-	if (_instance != VK_NULL_HANDLE)
+	if (_instanceVk != VK_NULL_HANDLE)
 	{
-		vkDestroyInstance(_instance, nullptr);
-		_instance = VK_NULL_HANDLE;
+		vkDestroyInstance(_instanceVk, nullptr);
+		_instanceVk = VK_NULL_HANDLE;
 	}
 
 	_isInitialized = false;
@@ -135,7 +145,7 @@ void RHIContextVulkan::Restore(Swapchain* swapchain)
 		swFramebuffer->info.height != swapchainVK->_info.nativeWindow->surfaceHeight)
 	{
 		swapchainVK->destroySwapchainVK();
-		swapchainVK->initSwapchainVK(this, _instance, &_device);
+		swapchainVK->initSwapchainVK(this, _instanceVk, &_device);
 	}
 
 	swapchainVK->_isSuspended = false;
@@ -183,7 +193,7 @@ Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 {
 	VkSurfaceKHR surface = createSurface(*info.nativeWindow);
 	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, surface);
-	swapchainVK->initSwapchainVK(this, _instance, &_device);
+	swapchainVK->initSwapchainVK(this, _instanceVk, &_device);
 
 	return static_cast<Swapchain*>(swapchainVK);
 }
@@ -467,7 +477,7 @@ Texture* RHIContextVulkan::CreateTexture(void* image, const TextureInfo& info)
 	bool isSwapchainTexture = info.isSwapchainTexture;
 	HS_ASSERT((isColorRenderTarget ^ info.isDepthStencilBuffer), "Texture cannot be both color render target and depth stencil buffer.");
 	HS_ASSERT(!(info.isSwapchainTexture ^ (info.swapchain != nullptr)), "Texture swapchain mismatch. Texture isSwapchainTexture must match with swapchain.");
-	
+
 	// Swapchain이면 vkGetSwapchainImagesKHR를 통해서 가져온 VkImage와 해당 핸들로 만든 VkImageView를 사용해야 합니다.
 	if (isSwapchainTexture)
 	{
@@ -735,35 +745,103 @@ void RHIContextVulkan::DestroySampler(Sampler* sampler)
 	delete samplerVK;
 }
 
-ResourceLayout* RHIContextVulkan::CreateResourceLayout()
+ResourceLayout* RHIContextVulkan::CreateResourceLayout(ResourceBinding* bindings, uint32 bindingCount)
 {
-	// Create a Vulkan resource layout
-	return nullptr;
+	ResourceLayoutVulkan* resourceLayoutVK = new ResourceLayoutVulkan();
+	std::vector<VkDescriptorSetLayoutBinding>& bindingVks = resourceLayoutVK->bindingVks;
+	bindingVks.resize(bindingCount);
+
+	for (uint32 i = 0; i < bindingCount; i++)
+	{
+		VkDescriptorSetLayoutBinding& binding = bindingVks[i];
+		VkDescriptorType descType;
+		switch (bindings[i].type)
+		{
+		case EResourceType::SAMPLER:
+			descType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			break;
+		case EResourceType::COMBINED_IMAGE_SAMPLER:
+			descType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			break;
+		case EResourceType::SAMPLED_IMAGE:
+			descType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			break;
+		case EResourceType::STORAGE_IMAGE:
+			descType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			break;
+		case EResourceType::UNIFORM_BUFFER:
+			descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			break;
+		case EResourceType::STORAGE_BUFFER:
+			descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			break;
+		case EResourceType::STORAGE_BUFFER_DYNAMIC:
+			descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+			break;
+		case EResourceType::UNIFORM_BUFFER_DYNAMIC:
+			descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+			break;
+		case EResourceType::INPUT_ATTACHMENT:
+			descType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+			break;
+		default:
+			HS_LOG(crash, "Unsupported resource type: %d", static_cast<int>(bindings[i].type));
+			return nullptr; // Unsupported resource type
+		}
+
+		binding.binding = bindings[i].binding;
+		binding.descriptorCount = bindings[i].arrayCount;
+		binding.descriptorType = descType;
+		binding.pImmutableSamplers = nullptr;
+		binding.stageFlags = RHIUtilityVulkan::ToShaderStageFlags(bindings[i].stage);
+	}
+
+	VkDescriptorSetLayout layout;
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = bindingCount;
+	layoutInfo.pBindings = bindingVks.data();
+	VK_CHECK_RESULT(vkCreateDescriptorSetLayout(_device, &layoutInfo, nullptr, &layout));
+
+	resourceLayoutVK->handle = layout;
+
+	return static_cast<ResourceLayout*>(resourceLayoutVK);
 }
 
 void RHIContextVulkan::DestroyResourceLayout(ResourceLayout* resourceLayout)
 {
 	// Destroy the Vulkan resource layout
+
+	ResourceLayoutVulkan* resourceLayoutVK = static_cast<ResourceLayoutVulkan*>(resourceLayout);
+	if (resourceLayoutVK->handle != VK_NULL_HANDLE)
+	{
+		vkDestroyDescriptorSetLayout(_device, resourceLayoutVK->handle, nullptr);
+		resourceLayoutVK->handle = VK_NULL_HANDLE;
+	}
 }
 
-ResourceSet* RHIContextVulkan::CreateResourceSet()
+ResourceSet* RHIContextVulkan::CreateResourceSet(ResourceLayout* resourceLayouts)
 {
 	// Create a Vulkan resource set
-	return nullptr;
+	VkDescriptorSet rSetVk = _descriptorPoolAllocator.AllocateDescriptorSet(static_cast<ResourceLayoutVulkan*>(resourceLayouts)->handle, nullptr);
+
+	if (rSetVk == VK_NULL_HANDLE)
+	{
+		return nullptr;
+	}
+	ResourceSetVulkan* resourceSetVK = new ResourceSetVulkan();
+	resourceSetVK->handle = rSetVk;
+	resourceSetVK->layoutVK = static_cast<ResourceLayoutVulkan*>(resourceLayouts);
+
+
+
+	return static_cast<ResourceSet*>(resourceSetVK);
+
 }
 
 void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
 {
 	// Destroy the Vulkan resource set
-}
-
-ResourceSetPool* RHIContextVulkan::CreateResourceSetPool()
-{
-	return nullptr;
-}
-void RHIContextVulkan::DestroyResourceSetPool(ResourceSetPool* resourceSetPool)
-{
-
 }
 
 CommandPool* RHIContextVulkan::CreateCommandPool(uint32 queueFamilyIndex)
@@ -871,7 +949,7 @@ void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, siz
 	HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in RHIContextVulkan::Submit");
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
-	
+
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 1;
@@ -934,11 +1012,11 @@ void RHIContextVulkan::cleanup()
 {
 	if (s_enableValidationLayers)
 	{
-		destroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
+		destroyDebugUtilsMessengerEXT(_instanceVk, _debugMessenger, nullptr);
 	}
 	delete _device;
 
-	vkDestroyInstance(_instance, nullptr);
+	vkDestroyInstance(_instanceVk, nullptr);
 }
 #pragma region >>> Implementation create functions
 
@@ -1022,9 +1100,9 @@ bool RHIContextVulkan::createInstance()
 		instanceCreateInfo.pNext = &debugCreateInfo;
 	}
 
-	VK_CHECK_RESULT(vkCreateInstance(&instanceCreateInfo, nullptr, &_instance));
+	VK_CHECK_RESULT(vkCreateInstance(&instanceCreateInfo, nullptr, &_instanceVk));
 
-	VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instance, &debugCreateInfo, &_debugMessenger, nullptr));
+	VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instanceVk, &debugCreateInfo, &_debugMessenger, nullptr));
 
 	return true;
 }
@@ -1049,7 +1127,7 @@ VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
 	surfaceCreateInfo.flags = 0;
 
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
-	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instance, &surfaceCreateInfo, nullptr, &surface));
+	VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instanceVk, &surfaceCreateInfo, nullptr, &surface));
 
 	return surface;
 }
@@ -1532,7 +1610,7 @@ void RHIContextVulkan::copyBufferToImage(
 
 void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
 {
-	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instance, "vkSetDebugUtilsObjectNameEXT");
+	static auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instanceVk, "vkSetDebugUtilsObjectNameEXT");
 	HS_ASSERT(func, "function addr is nullptr");
 
 	VkDebugUtilsObjectNameInfoEXT nameInfo{};

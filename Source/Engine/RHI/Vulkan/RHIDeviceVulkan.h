@@ -53,7 +53,7 @@ private:
 	void createSurface();
 	uint32 getPhysicalDeviceScore(VkPhysicalDevice device);
 
-	VkInstance _instance;
+	VkInstance _instanceVk;
 };
 
 HS_NS_END
