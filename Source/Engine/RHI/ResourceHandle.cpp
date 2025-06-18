@@ -43,15 +43,15 @@ Buffer::Buffer(const BufferInfo& info)
 Buffer::~Buffer()
 {}
 
-ResourceLayout::ResourceLayout(const std::vector<ResourceBinding>& bindings)
+ResourceLayout::ResourceLayout()
     : RHIHandle(EType::RESOURCE_LAYOUT)
-{
-    this->bindings.assign(bindings.begin(), bindings.end());
-}
 
+{
+
+}
 ResourceLayout::~ResourceLayout()
 {
-    this->bindings.clear();
+
 }
 
 ResourceSet::ResourceSet()
@@ -59,13 +59,6 @@ ResourceSet::ResourceSet()
 {}
 
 ResourceSet::~ResourceSet()
-{}
-
-ResourceSetPool::ResourceSetPool()
-    : RHIHandle(EType::RESOURCE_SET_POOL)
-{}
-
-ResourceSetPool::~ResourceSetPool()
 {}
 
 HS_NS_END

@@ -212,6 +212,7 @@ else()
         RHI/Vulkan/ResourceHandleVulkan.h
         RHI/Vulkan/RHIDeviceVulkan.h
         RHI/Vulkan/StagingBufferVulkan.h
+        RHI/Vulkan/DescriptorPoolAllocatorVulkan.h
     )
 
     source_group("RHI\\Vulkan\\Public" FILES ${RHI_VULKAN_HEADERS})
@@ -227,6 +228,7 @@ else()
         RHI/Vulkan/ResourceHandleVulkan.cpp
         RHI/Vulkan/RHIDeviceVulkan.cpp
         RHI/Vulkan/StagingBufferVulkan.cpp
+        RHI/Vulkan/DescriptorPoolAllocatorVulkan.cpp
     )
 
     source_group("RHI\\Vulkan\\Private" FILES ${RHI_VULKAN_SOURCES})

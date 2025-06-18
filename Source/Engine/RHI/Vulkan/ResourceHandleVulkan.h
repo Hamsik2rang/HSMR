@@ -57,23 +57,19 @@ struct ShaderVulkan : public Shader
 
 struct ResourceLayoutVulkan : public ResourceLayout
 {
-	ResourceLayoutVulkan(const std::vector<ResourceBinding>& bindings) noexcept : ResourceLayout(bindings) {}
-	~ResourceLayoutVulkan() = default;
+	ResourceLayoutVulkan() noexcept : ResourceLayout() {}
+	~ResourceLayoutVulkan() override = default;
 
 	VkDescriptorSetLayout handle = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSetLayoutBinding> bindingVks;
 };
 
 struct ResourceSetVulkan : public ResourceSet
 {
+	~ResourceSetVulkan() override = default;
 
 	VkDescriptorSet handle = VK_NULL_HANDLE;
-};
-
-struct ResourceSetPoolVulkan : public ResourceSetPool
-{
-
-
-	VkDescriptorPool handle = VK_NULL_HANDLE;
+	ResourceLayoutVulkan* layoutVK = nullptr;
 };
 
 

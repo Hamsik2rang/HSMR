@@ -12,9 +12,10 @@
 #include "Engine/RHI/RHIContext.h"
 #include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
 #include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+#include "Engine/RHI/Vulkan/DescriptorPoolAllocatorVulkan.h"
+
 
 HS_NS_BEGIN
-
 
 class RHIContextVulkan final : public RHIContext
 {
@@ -57,14 +58,11 @@ public:
 	Sampler* CreateSampler(const SamplerInfo& info) override;
 	void DestroySampler(Sampler* sampler) override;
 
-	ResourceLayout* CreateResourceLayout() override;
+	ResourceLayout* CreateResourceLayout(ResourceBinding* bindings, uint32 bindingCount) override;
 	void DestroyResourceLayout(ResourceLayout* resourceLayout) override;
 
-	ResourceSet* CreateResourceSet() override;
+	ResourceSet* CreateResourceSet(ResourceLayout* resourceLayouts) override;
 	void DestroyResourceSet(ResourceSet* resourceSet) override;
-
-	ResourceSetPool* CreateResourceSetPool() override;
-	void DestroyResourceSetPool(ResourceSetPool* resourceSetPool) override;
 
 	// CommandQueue* CreateCommandQueue() override;
 	// void DestroyCommandQueue(CommandQueue* cmdQueue) override;
@@ -94,7 +92,7 @@ public:
 	void WaitForIdle() const override;
 
 	// TODO: ImGui 백엔드 변경되면 없애야합니다.
-	const VkInstance GetInstance() const { return _instance; }
+	const VkInstance GetInstance() const { return _instanceVk; }
 	const RHIDeviceVulkan* GetDevice() const  { return &(_device); }
 
 private:
@@ -120,9 +118,10 @@ private:
 	void cleanup();
 
 	//std::vector<std::string> _supportedInstanceExtensions;
-	VkInstance _instance = VK_NULL_HANDLE;
+	VkInstance _instanceVk = VK_NULL_HANDLE;
 	RHIDeviceVulkan _device;
 	VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
+	DescriptorPoolAllocatorVulkan _descriptorPoolAllocator;
 
 	VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
 	bool _isInitialized = false;

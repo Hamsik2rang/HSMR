@@ -19,7 +19,7 @@ RHIDeviceVulkan::~RHIDeviceVulkan()
 
 bool RHIDeviceVulkan::Create(VkInstance instance)
 {
-	_instance = instance;
+	_instanceVk = instance;
 
 	getPhysicalDevice();
 	createLogicalDevice();
@@ -34,9 +34,9 @@ void RHIDeviceVulkan::Destroy()
 void RHIDeviceVulkan::getPhysicalDevice()
 {
 	uint32 physicalDeviceCount = 0;
-	vkEnumeratePhysicalDevices(_instance, &physicalDeviceCount, nullptr);
+	vkEnumeratePhysicalDevices(_instanceVk, &physicalDeviceCount, nullptr);
 	std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount, nullptr);
-	vkEnumeratePhysicalDevices(_instance, &physicalDeviceCount, physicalDevices.data());
+	vkEnumeratePhysicalDevices(_instanceVk, &physicalDeviceCount, physicalDevices.data());
 
 	uint32 maxScore = 0;
 	for (uint32 i = 0; i < physicalDeviceCount; i++)
