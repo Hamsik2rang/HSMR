@@ -16,163 +16,162 @@
 HS_NS_EDITOR_BEGIN
 
 EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags)
-    : Window(name, width, height, flags)
+	: Window(name, width, height, flags)
 {
-    onInitialize();
+	onInitialize();
 }
 
 EditorWindow::~EditorWindow()
-{
-}
+{}
 
 void EditorWindow::Render()
 {
-    onRender();
+	onRender();
 }
 
 void EditorWindow::ProcessEvent()
 {
-    EWindowEvent event;
-    while (hs_window_peek_event(&_nativeWindow, event, true))
-    {
-        switch (event)
-        {
-        case EWindowEvent::OPEN:
-        {
-            _shouldClose = false;
+	EWindowEvent event;
+	while (hs_window_peek_event(&_nativeWindow, event, true))
+	{
+		switch (event)
+		{
+		case EWindowEvent::OPEN:
+		{
+			_shouldClose = false;
 
-            break;
-        }
-        case EWindowEvent::CLOSE:
-        {
-            _shouldClose = true;
-            _shouldUpdate = false;
-            _shouldPresent = false;
+			break;
+		}
+		case EWindowEvent::CLOSE:
+		{
+			_shouldClose = true;
+			_shouldUpdate = false;
+			_shouldPresent = false;
 
-            break;
-        }
-        case EWindowEvent::MAXIMIZE:
-        {
-            _shouldUpdate = true;
-            _shouldPresent = true;
-            onRestore();
-            break;
-        }
-        case EWindowEvent::MINIMIZE:
-        {
-            _shouldUpdate = false;
-            _shouldPresent = false;
-            break;
-        }
-        case EWindowEvent::RESIZE_ENTER:
-        {
-            _shouldUpdate = false;
-            _shouldPresent = false;
-            _rhiContext->Suspend(_swapchain);
+			break;
+		}
+		case EWindowEvent::MAXIMIZE:
+		{
+			_shouldUpdate = true;
+			_shouldPresent = true;
+			onRestore();
+			break;
+		}
+		case EWindowEvent::MINIMIZE:
+		{
+			_shouldUpdate = false;
+			_shouldPresent = false;
+			break;
+		}
+		case EWindowEvent::RESIZE_ENTER:
+		{
+			_shouldUpdate = false;
+			_shouldPresent = false;
+			_rhiContext->Suspend(_swapchain);
 
-            break;
-        }
-        case EWindowEvent::RESIZE_EXIT:
-        case EWindowEvent::RESTORE:
-        {
-            _shouldUpdate = true;
-            _shouldPresent = true;
+			break;
+		}
+		case EWindowEvent::RESIZE_EXIT:
+		case EWindowEvent::RESTORE:
+		{
+			_shouldUpdate = true;
+			_shouldPresent = true;
 
-            _rhiContext->Restore(_swapchain);
-            break;
-        }
-        case EWindowEvent::MOVE:
-        {
+			_rhiContext->Restore(_swapchain);
+			break;
+		}
+		case EWindowEvent::MOVE:
+		{
 
-            break;
-        }
-        case EWindowEvent::FOCUS_IN:
-        {
+			break;
+		}
+		case EWindowEvent::FOCUS_IN:
+		{
 
-            break;
-        }
-        case EWindowEvent::FOCUS_OUT:
-        {
+			break;
+		}
+		case EWindowEvent::FOCUS_OUT:
+		{
 
-            break;
-        }
-        default:
-            break;
-        }
-    }
+			break;
+		}
+		default:
+			break;
+		}
+	}
 
-    if (_shouldClose)
-    {
-        Flush();
-        return;
-    }
+	if (_shouldClose)
+	{
+		Flush();
+		return;
+	}
 
-    for (auto* child : _childs)
-    {
-        child->ProcessEvent();
-    }
+	for (auto* child : _childs)
+	{
+		child->ProcessEvent();
+	}
 }
 
 bool EditorWindow::onInitialize()
 {
-    _renderer = new ForwardRenderer(_rhiContext);
-    _renderer->Initialize();
+	_renderer = new ForwardRenderer(_rhiContext);
+	_renderer->Initialize();
 
-    ImGuiExt::InitializeBackend(_swapchain);
+	ImGuiExtension::InitializeBackend(_swapchain);
 
-    _renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
+	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
 
-    _renderTargets.resize(_swapchain->GetMaxFrameCount());
+	_renderTargets.resize(_swapchain->GetMaxFrameCount());
 
-    uint32 width  = _swapchain->GetWidth();
-    uint32 height = _swapchain->GetHeight();
-    for (size_t i = 0; i < _renderTargets.size(); i++)
-    {
-        RenderTargetInfo info = _renderer->GetBareboneRenderTargetInfo();
-        for (size_t j = 0; j < info.colorTextureCount; j++)
-        {
-            info.colorTextureInfos[j].extent.width  = width;
-            info.colorTextureInfos[j].extent.height = height;
-            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
-            info.colorTextureInfos[j].usage         = ETextureUsage::COLOR_RENDER_TARGET | ETextureUsage::SHADER_READ;
-            info.colorTextureInfos[j].isCompressed  = false;
-            info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
-        }
+	uint32 width = _swapchain->GetWidth();
+	uint32 height = _swapchain->GetHeight();
+	for (size_t i = 0; i < _renderTargets.size(); i++)
+	{
+		RenderTargetInfo info = _renderer->GetBareboneRenderTargetInfo();
+		for (size_t j = 0; j < info.colorTextureCount; j++)
+		{
+			info.colorTextureInfos[j].extent.width = width;
+			info.colorTextureInfos[j].extent.height = height;
+			info.colorTextureInfos[j].format = EPixelFormat::R8G8B8A8_SRGB;
+			info.colorTextureInfos[j].usage = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::STAGING | ETextureUsage::SAMPLED;
+			info.colorTextureInfos[j].isCompressed = false;
+			info.colorTextureInfos[j].byteSize = 4 * width * height * 1 /*depth*/;
+		}
 
-        info.useDepthStencilTexture                = true;
-        info.depthStencilInfo.extent.width         = width;
-        info.depthStencilInfo.extent.height        = height;
-        info.depthStencilInfo.extent.depth         = 1;
-        info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
-        info.depthStencilInfo.usage                = ETextureUsage::DEPTH_RENDER_TARGET | ETextureUsage::SHADER_READ;
-        info.depthStencilInfo.isDepthStencilBuffer = true;
-        info.depthStencilInfo.isCompressed         = false;
+		info.useDepthStencilTexture = true;
+		info.depthStencilInfo.extent.width = width;
+		info.depthStencilInfo.extent.height = height;
+		info.depthStencilInfo.extent.depth = 1;
+		info.depthStencilInfo.format = EPixelFormat::DEPTH32;
+		info.depthStencilInfo.usage = ETextureUsage::DEPTH_STENCIL_ATTACHMENT | ETextureUsage::STAGING;
+		info.depthStencilInfo.isDepthStencilBuffer = true;
+		info.depthStencilInfo.isCompressed = false;
 
-        _renderTargets[i].Create(info);
-    }
-    
-    setupPanels();
+		_renderTargets[i].Create(info);
+	}
 
-    return true;
+	setupPanels();
+
+	return true;
 }
 
 void EditorWindow::onNextFrame()
 {
-    if (false == _nativeWindow.shouldRender)
-    {
-        return;
-    }
+	if (false == _nativeWindow.shouldRender)
+	{
+		return;
+	}
 
-    _renderer->NextFrame(_swapchain);
+	_renderer->NextFrame(_swapchain);
 
-    Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
-    uint32     width      = static_cast<uint32>(resolution.width / _nativeWindow.scale);
-    uint32     height     = static_cast<uint32>(resolution.height / _nativeWindow.scale);
+	Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
+	uint32     width = static_cast<uint32>(resolution.width / _nativeWindow.scale);
+	uint32     height = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 
-    for (auto& renderTarget : _renderTargets)
-    {
-        renderTarget.Update(resolution.width, resolution.height);
-    }
+	for (auto& renderTarget : _renderTargets)
+	{
+		renderTarget.Update(resolution.width, resolution.height);
+	}
 }
 
 void EditorWindow::onUpdate()
@@ -187,72 +186,72 @@ void EditorWindow::onResize()
 
 void EditorWindow::onRender()
 {
-    if (false == _nativeWindow.shouldRender)
-    {
-        return;
-    }
-    CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
-    cmdBuffer->Begin();
+	if (false == _nativeWindow.shouldRender)
+	{
+		return;
+	}
+	CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
+	cmdBuffer->Begin();
 
-    uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
-    RenderTarget* curRT      = &_renderTargets[frameIndex];
+	uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
+	RenderTarget* curRT = &_renderTargets[frameIndex];
 
-    //     1. Render Scene to Scene Panel
-    _renderer->Render({}, curRT);
+	//     1. Render Scene to Scene Panel
+	_renderer->Render({}, curRT);
 
-    static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+	static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
-    // 2. Render GUI
-    onRenderGUI();
+	// 2. Render GUI
+	onRenderGUI();
 
-    cmdBuffer->End();
+	cmdBuffer->End();
 
-    _rhiContext->Submit(_swapchain, &cmdBuffer, 1);
+	_rhiContext->Submit(_swapchain, &cmdBuffer, 1);
 }
 
 void EditorWindow::onPresent()
 {
-    if (!_nativeWindow.shouldRender)
-    {
-        return;
-    }
-    hs_engine_get_rhi_context()->Present(_swapchain);
+	if (!_nativeWindow.shouldRender)
+	{
+		return;
+	}
+	hs_engine_get_rhi_context()->Present(_swapchain);
 }
 
 void EditorWindow::onShutdown()
 {
-    ImGuiExt::FinalizeBackend();
+	ImGuiExtension::FinalizeBackend();
 
-    if (nullptr != _renderer)
-    {
-        _renderer->Shutdown();
-        delete _renderer;
-        _renderer = nullptr;
-    }
+	if (nullptr != _renderer)
+	{
+		_renderer->Shutdown();
+		delete _renderer;
+		_renderer = nullptr;
+	}
 }
 
 void EditorWindow::onRenderGUI()
 {
-    // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
-    ImGuiExt::BeginRender(_swapchain);
+	// TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
+	ImGuiExtension::BeginRender(_swapchain);
 
-    _basePanel->Draw(); // Draw panel tree.
+	_basePanel->Draw(); // Draw panel tree.
 
-    ImGuiExt::EndRender(_swapchain);
+	ImGuiExtension::EndRender(_swapchain);
 }
 
 void EditorWindow::setupPanels()
 {
-    _basePanel = new DockspacePanel(this);
-    _basePanel->Setup();
+	_basePanel = new DockspacePanel(this);
+	_basePanel->Setup();
 
-    _menuPanel = new MenuPanel(this);
-    _menuPanel->Setup();
-    _basePanel->InsertPanel(_menuPanel);
+	_menuPanel = new MenuPanel(this);
+	_menuPanel->Setup();
+	_basePanel->InsertPanel(_menuPanel);
 
-    _scenePanel = new ScenePanel(this);
-    _scenePanel->Setup();
-    _basePanel->InsertPanel(_scenePanel);
+	_scenePanel = new ScenePanel(this);
+	_scenePanel->Setup();
+	_basePanel->InsertPanel(_scenePanel);
 }
 
 

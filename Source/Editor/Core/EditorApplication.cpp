@@ -85,6 +85,8 @@ void EditorApplication::Finalize()
     }
     //...
 
+    ResourceManager::Finalize();
+
     hs_platform_shutdown(this);
 }
 
