@@ -14,24 +14,25 @@
 
 namespace HS
 {
-	struct Texture;
+struct Texture;
 
-	struct CommandBuffer;
-	class Swapchain;
+struct CommandBuffer;
+class Swapchain;
 }
+HS_NS_EDITOR_BEGIN
 
-
-namespace ImGuiExt
+class HS_EDITOR_API ImGuiExtension
 {
-HS_EDITOR_API void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4& border_col = ImVec4(0, 0, 0, 0));
+public:
+	static void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0 = ImVec2(0, 0), const ImVec2& uv1 = ImVec2(1, 1), const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4& border_col = ImVec4(0, 0, 0, 0));
 
-HS_EDITOR_API void InitializeBackend(HS::Swapchain* swapchain);
-//void SetDisplaySize(uint32 width, uint32 height);
-HS_EDITOR_API void BeginRender(HS::Swapchain* swapchain);
-HS_EDITOR_API void EndRender(HS::Swapchain* swapchain);
+	static void InitializeBackend(HS::Swapchain* swapchain);
+	//void SetDisplaySize(uint32 width, uint32 height);
+	static void BeginRender(HS::Swapchain* swapchain);
+	static void EndRender(HS::Swapchain* swapchain);
 
-HS_EDITOR_API void FinalizeBackend();
-
+	static void FinalizeBackend();
 };
 
+HS_NS_EDITOR_END
 #endif /* __HS_IMGUI_EXTENSION_H__ */
