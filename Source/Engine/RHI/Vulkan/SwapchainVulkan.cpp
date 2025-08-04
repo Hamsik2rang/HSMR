@@ -271,7 +271,7 @@ bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance i
 	VK_CHECK_RESULT(vkCreateSwapchainKHR(_deviceVulkan->logicalDevice, &createInfo, nullptr, &handle));
 
 	getSwapchainImages(); 
-	_maxFrameCount = surfaceCapabilities.minImageCount;
+	_maxFrameCount = desiredNumOfSwapchainImages;
 
 	_commandBufferVKs = new CommandBufferVulkan * [_maxFrameCount];
 	syncObjects.imageAvailableSemaphores = new VkSemaphore[_maxFrameCount]{ VK_NULL_HANDLE };

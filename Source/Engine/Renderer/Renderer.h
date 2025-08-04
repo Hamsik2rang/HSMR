@@ -58,7 +58,7 @@ public:
 
     virtual void Render(const RenderParameter& param, RenderTarget* renderTexture);
 
-    void AddPass(RendererPass* pass)
+    virtual void AddPass(RendererPass* pass)
     {
         _rendererPasses.push_back(pass);
         _isPassListSorted = false;
