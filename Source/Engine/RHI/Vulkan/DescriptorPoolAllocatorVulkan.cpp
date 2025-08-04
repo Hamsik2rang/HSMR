@@ -141,6 +141,4 @@ VkDescriptorPool DescriptorPoolAllocatorVulkan::acquirePool()
 	return pool;
 }
 
-
-
 HS_NS_END

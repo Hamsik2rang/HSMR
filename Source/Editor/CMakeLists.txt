@@ -48,6 +48,8 @@ list(APPEND TOTAL_FILES ${ENTRY_POINT_SOURCES})
 set(GUI_HEADERS
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
+    GUI/GUIRenderer.h
+    GUI/GUIRendererPass.h
 )
 
 source_group("GUI\\Public" FILES ${GUI_HEADERS})
@@ -56,6 +58,8 @@ list(APPEND TOTAL_FILES ${GUI_HEADERS})
 
 set(GUI_SOURCES
     GUI/GUIContext.cpp
+    GUI/GUIRenderer.cpp
+    GUI/GUIRendererPass.cpp
 )
 
 list(APPEND TOTAL_FILES ${GUI_SOURCES})
