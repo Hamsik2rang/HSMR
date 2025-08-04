@@ -25,8 +25,10 @@ HS_NS_EDITOR_BEGIN
 static VkPipelineCache s_pipelineCacheVk = VK_NULL_HANDLE;
 static VkDescriptorPool s_descriptorPool = VK_NULL_HANDLE;
 static SamplerVulkan* s_samplerVK;
-static SwapchainVulkan* s_currentSwapchainVK;
-static Swapchain* s_currentSwapchain = nullptr;
+
+Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
+uint8 ImGuiExtension::s_currentFrameIndex = 0;
+std::vector<std::vector<void*>> ImGuiExtension::s_AddedTexturesPerFrame;
 
 static void check_vk_result(VkResult result)
 {
@@ -65,14 +67,17 @@ void ImGuiExtension::ImageOffscreen(HS::Texture* use_texture, const ImVec2& imag
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
 	VkDescriptorSet dSet = ImGui_ImplVulkan_AddTexture(s_samplerVK->handle, textureVK->imageViewVk, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	s_AddedTexturesPerFrame[s_currentFrameIndex].push_back(reinterpret_cast<void*>(dSet));
 
 	ImGui::Image(reinterpret_cast<ImTextureID>(dSet), image_size, uv0, uv1, tint_col, border_col);
-
-
 }
 
 void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 {
+	s_currentSwapchain = swapchain;
+	s_currentFrameIndex = 0;
+	s_AddedTexturesPerFrame.resize(s_currentSwapchain->GetMaxFrameCount());
+
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	const NativeWindow* nativeWindow = swapchainVK->GetInfo().nativeWindow;
 	HWND hWnd = (HWND)nativeWindow->handle;
@@ -108,8 +113,7 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	{
 		VkDescriptorPoolSize pool_sizes[] =
 		{
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024},
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1024},
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE * 6)},
 		};
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -123,9 +127,7 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 		check_vk_result(err);
 
 		initInfo.DescriptorPool = s_descriptorPool;
-		initInfo.DescriptorPoolSize = 0; // Use the created descriptor pool
 	}
-
 
 	ImGui_ImplVulkan_Init(&initInfo);
 
@@ -136,43 +138,60 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)
 {
 	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
-	VkDevice logicalDevice = rhiContextVK->GetDevice()->logicalDevice;
-	vkDeviceWaitIdle(logicalDevice);
-	vkResetDescriptorPool(logicalDevice, s_descriptorPool, 0);
+
+	if (swapchain != s_currentSwapchain)
+	{
+		// If the swapchain has changed, we need to clear the previous ImGui data
+		clearDeletedSwapchainData();
+		s_currentSwapchain = swapchain;
+	}
+	s_currentFrameIndex = swapchain->GetCurrentFrameIndex();
+	HS_ASSERT(s_currentFrameIndex < s_AddedTexturesPerFrame.size(), "ImGuiExtension::BeginRender: Current frame index out of bounds");
+
+	size_t rSetCount = s_AddedTexturesPerFrame[s_currentFrameIndex].size();
+	if (rSetCount > 0)
+	{
+		for (size_t i = 0; i < rSetCount; i++)
+		{
+			void* rSet = s_AddedTexturesPerFrame[s_currentFrameIndex][i];
+			if (rSet)
+			{
+				ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(rSet));
+				s_AddedTexturesPerFrame[s_currentFrameIndex][i] = nullptr; // Clear the pointer after destruction
+			}
+		}
+		s_AddedTexturesPerFrame[s_currentFrameIndex].clear();
+	}
 
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
-	// Begin render pass for swapchain
-	s_currentSwapchainVK = static_cast<SwapchainVulkan*>(swapchain);
-	CommandBuffer* cmdBuffer = swapchain->GetCommandBufferForCurrentFrame();
-	RenderPass* renderPass = s_currentSwapchainVK->GetRenderPass();
-	Framebuffer* framebuffer = s_currentSwapchainVK->GetFramebufferForCurrentFrame();
-
-	Area area{ 0, 0, swapchain->GetWidth(), swapchain->GetHeight() };
-
-	cmdBuffer->BeginRenderPass(renderPass, framebuffer, area);
 }
 
-void ImGuiExtension::EndRender(HS::Swapchain* swapchain)
+void ImGuiExtension::EndRender()
 {
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
-	// Actually render the ImGui draw data to the command buffer
-	//SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
-	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(s_currentSwapchainVK->GetCommandBufferForCurrentFrame());
+	// Begin render pass for swapchain
+	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(s_currentSwapchain);
+	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
+	RenderPass* renderPass = swapchainVK->GetRenderPass();
+	Framebuffer* framebuffer = swapchainVK->GetFramebufferForCurrentFrame();
+
+	Area area{ 0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight() };
+
+	cmdBufferVK->BeginRenderPass(renderPass, framebuffer, area);
 
 	ImGui_ImplVulkan_RenderDrawData(draw_data, cmdBufferVK->handle);
 
-	// End the render pass
 	cmdBufferVK->EndRenderPass();
 }
 
 void ImGuiExtension::FinalizeBackend()
 {
-	hs_engine_get_rhi_context()->WaitForIdle();
+	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
+	rhiContextVK->WaitForIdle();
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 
@@ -182,6 +201,32 @@ void ImGuiExtension::FinalizeBackend()
 		RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
 		vkDestroyPipelineCache(rhiContextVK->GetDevice()->logicalDevice, s_pipelineCacheVk, nullptr);
 		s_pipelineCacheVk = VK_NULL_HANDLE;
+	}
+
+	if (s_descriptorPool)
+	{
+		vkDestroyDescriptorPool(rhiContextVK->GetDevice()->logicalDevice, s_descriptorPool, nullptr);
+		s_descriptorPool = VK_NULL_HANDLE;
+	}
+}
+
+void ImGuiExtension::clearDeletedSwapchainData()
+{
+	for (auto& rSetList : s_AddedTexturesPerFrame)
+	{
+		for (void* rSet : rSetList)
+		{
+			if (rSet)
+			{
+				ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(rSet));
+			}
+		}
+		rSetList.clear();
+	}
+
+	if (s_AddedTexturesPerFrame.size() < s_currentSwapchain->GetMaxFrameCount())
+	{
+		s_AddedTexturesPerFrame.resize(s_currentSwapchain->GetMaxFrameCount());
 	}
 }
 
