@@ -66,7 +66,7 @@ RenderPass* Renderer::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
 
     if (_renderPassCache.find(hash) == _renderPassCache.end())
     {
-        RenderPass* renderPass = _renderer->GetRHIContext()->CreateRenderPass(info);
+        RenderPass* renderPass = _renderer->GetRHIContext()->CreateRenderPass("RenderPass", info);
 
         _renderPassCache.insert(std::make_pair(hash, renderPass));
     }
@@ -88,7 +88,7 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
         fbInfo.isSwapchainFramebuffer = renderPass->info.isSwapchainRenderPass;
         fbInfo.renderPass             = renderPass;
 
-        Framebuffer* fb = _renderer->GetRHIContext()->CreateFramebuffer(fbInfo);
+        Framebuffer* fb = _renderer->GetRHIContext()->CreateFramebuffer("Framebuffer", fbInfo);
 
         _framebufferCache.insert(std::make_pair(hash, fb));
     }

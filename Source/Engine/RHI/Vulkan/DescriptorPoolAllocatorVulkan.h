@@ -27,6 +27,7 @@ public:
 	void Finalize();
 
 	VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next);
+	void FreeDescriptorSet(VkDescriptorSet set);
 
 private:
 	VkDescriptorPool acquirePool();

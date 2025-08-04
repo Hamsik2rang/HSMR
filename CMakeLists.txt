@@ -90,11 +90,12 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
-set(HS_TOOL_DIR "Source/Tool")
+set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 
 # set(HS_TOOL_SHADER_COMPILER_DIR "{HS_TOOL_DIR}/ShaderCompiler")
 add_subdirectory(${HS_RES_SHADER_DIR})
 add_subdirectory(${HS_ENGINE_DIR})
+add_subdirectory(${HS_SHADERSYSTEM_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
 

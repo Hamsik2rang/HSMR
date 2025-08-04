@@ -6,8 +6,10 @@
 
 HS_NS_BEGIN
 
-SemaphoreVulkan::SemaphoreVulkan(RHIDeviceVulkan device)
-	: deviceVulkan(device)
+SemaphoreVulkan::SemaphoreVulkan(RHIDeviceVulkan device, const char* name)
+	: Semaphore(name),
+	deviceVulkan(device)
+	
 {
 	VkSemaphoreCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -26,8 +28,9 @@ SemaphoreVulkan::~SemaphoreVulkan()
 	}
 }
 
-FenceVulkan::FenceVulkan(RHIDeviceVulkan device)
-	: deviceVulkan(device)
+FenceVulkan::FenceVulkan(RHIDeviceVulkan device, const char* name)
+	: Fence(name)
+	, deviceVulkan(device)
 {
 	VkFenceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -45,7 +48,8 @@ FenceVulkan::~FenceVulkan()
 	}
 }
 
-CommandQueueVulkan::CommandQueueVulkan()
+CommandQueueVulkan::CommandQueueVulkan(const char* name)
+	: CommandQueue(name)
 {
 
 }
@@ -55,7 +59,8 @@ CommandQueueVulkan::~CommandQueueVulkan()
 
 }
 
-CommandPoolVulkan::CommandPoolVulkan()
+CommandPoolVulkan::CommandPoolVulkan(const char* name)
+	: CommandPool(name)
 {
 
 }
@@ -65,7 +70,8 @@ CommandPoolVulkan::~CommandPoolVulkan()
 
 }
 
-CommandBufferVulkan::CommandBufferVulkan()
+CommandBufferVulkan::CommandBufferVulkan(const char* name)
+	:CommandBuffer(name)
 {
 
 }

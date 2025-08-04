@@ -86,6 +86,25 @@ VkDescriptorSet DescriptorPoolAllocatorVulkan::AllocateDescriptorSet(const VkDes
 	return descriptorSet;
 }
 
+void DescriptorPoolAllocatorVulkan::FreeDescriptorSet(VkDescriptorSet set)
+{
+	if (set == VK_NULL_HANDLE)
+	{
+		return;
+	}
+	// Reset the descriptor set
+	vkFreeDescriptorSets(_device->logicalDevice, _readyPools.back(), 1, &set);
+	// Add the pool back to the ready pools
+	if (!_readyPools.empty())
+	{
+		vkResetDescriptorPool(_device->logicalDevice, _readyPools.back(), 0);
+	}
+	else
+	{
+		vkResetDescriptorPool(_device->logicalDevice, _fullPools.back(), 0);
+	}
+}
+
 VkDescriptorPool DescriptorPoolAllocatorVulkan::acquirePool()
 {
 	VkDescriptorPool pool;

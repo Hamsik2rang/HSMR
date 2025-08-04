@@ -23,7 +23,7 @@ public:
     const RenderPassInfo info;
 
 protected:
-    RenderPass(const RenderPassInfo& info);
+    RenderPass(const char* name, const RenderPassInfo& info);
 };
 
 class Framebuffer : public RHIHandle
@@ -34,7 +34,7 @@ public:
     const FramebufferInfo info;
     
 protected:
-    Framebuffer(const FramebufferInfo& info);
+    Framebuffer(const char* name, const FramebufferInfo& info);
 };
 
 class GraphicsPipeline : public RHIHandle
@@ -44,7 +44,7 @@ public:
 
     const GraphicsPipelineInfo info;
 protected:
-    GraphicsPipeline(const GraphicsPipelineInfo& info);
+    GraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
 };
 
 class ComputePipeline : public RHIHandle
@@ -54,7 +54,7 @@ public:
 
 	const ComputePipelineInfo info;
 protected:
-    ComputePipeline(const ComputePipelineInfo& info);
+    ComputePipeline(const char* name, const ComputePipelineInfo& info);
 };
 
 template<>

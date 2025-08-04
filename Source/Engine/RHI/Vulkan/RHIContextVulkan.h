@@ -21,75 +21,66 @@ class RHIContextVulkan final : public RHIContext
 {
 public:
 	RHIContextVulkan() = default;
-	~RHIContextVulkan() override;
+	~RHIContextVulkan() final;
 
-	bool Initialize() override;
-	void Finalize() override;
+	bool Initialize() final;
+	void Finalize() final;
 
-	void Suspend(Swapchain* swapchain) override;
-	void Restore(Swapchain* swapchain) override;
+	void Suspend(Swapchain* swapchain) final;
+	void Restore(Swapchain* swapchain) final;
 
-	uint32 AcquireNextImage(Swapchain* swapchain) override;
+	uint32 AcquireNextImage(Swapchain* swapchain) final;
 
-	Swapchain* CreateSwapchain(SwapchainInfo info) override;
-	void DestroySwapchain(Swapchain* swapchain) override;
+	Swapchain* CreateSwapchain(SwapchainInfo info) final;
+	void DestroySwapchain(Swapchain* swapchain) final;
 
-	RenderPass* CreateRenderPass(const RenderPassInfo& info) override;
-	void DestroyRenderPass(RenderPass* renderPass) override;
+	RenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) final;
+	void DestroyRenderPass(RenderPass* renderPass) final;
 
-	Framebuffer* CreateFramebuffer(const FramebufferInfo& info) override;
-	void DestroyFramebuffer(Framebuffer* framebuffer) override;
+	Framebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) final;
+	void DestroyFramebuffer(Framebuffer* framebuffer) final;
 
-	GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) override;
-	void DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
+	GraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) final;
+	void DestroyGraphicsPipeline(GraphicsPipeline* pipeline) final;
 
-	Shader* CreateShader(const ShaderInfo& info, const char* path) override;
-	Shader* CreateShader(const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) override;
-	void DestroyShader(Shader* shader) override;
+	Shader* CreateShader(const char* name, const ShaderInfo& info, const char* path) final;
+	Shader* CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) final;
+	void DestroyShader(Shader* shader) final;
 
-	Buffer* CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
-	Buffer* CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info) override;
-	void DestroyBuffer(Buffer* buffer) override;
+	Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) final;
+	Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) final;
+	void DestroyBuffer(Buffer* buffer) final;
 
-	Texture* CreateTexture(void* image, const TextureInfo& info) override;
-	Texture* CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
-	void DestroyTexture(Texture* texture) override;
+	Texture* CreateTexture(const char* name, void* image, const TextureInfo& info) final;
+	Texture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) final;
+	void DestroyTexture(Texture* texture) final;
 
-	Sampler* CreateSampler(const SamplerInfo& info) override;
-	void DestroySampler(Sampler* sampler) override;
+	Sampler* CreateSampler(const char* name, const SamplerInfo& info) final;
+	void DestroySampler(Sampler* sampler) final;
 
-	ResourceLayout* CreateResourceLayout(ResourceBinding* bindings, uint32 bindingCount) override;
-	void DestroyResourceLayout(ResourceLayout* resourceLayout) override;
+	ResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) final;
+	void DestroyResourceLayout(ResourceLayout* resourceLayout) final;
 
-	ResourceSet* CreateResourceSet(ResourceLayout* resourceLayouts) override;
-	void DestroyResourceSet(ResourceSet* resourceSet) override;
+	ResourceSet* CreateResourceSet(const char* name, ResourceLayout* resourceLayouts) final;
+	void DestroyResourceSet(ResourceSet* resourceSet) final;
 
-	// CommandQueue* CreateCommandQueue() override;
-	// void DestroyCommandQueue(CommandQueue* cmdQueue) override;
+	ResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) final;
+	void DestroyResourceSetPool(ResourceSetPool* resourceSetPool) final;
 
-	CommandPool* CreateCommandPool(uint32 queueFamilyIndex = 0) override;
-	void         DestroyCommandPool(CommandPool* cmdPool) override;
+	// CommandQueue* CreateCommandQueue() final;
+	// void DestroyCommandQueue(CommandQueue* cmdQueue) final;
 
-	CommandBuffer* CreateCommandBuffer() override;
-	void DestroyCommandBuffer(CommandBuffer* commandBuffer) override;
+	CommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) final;
+	void         DestroyCommandPool(CommandPool* cmdPool) final;
 
-	Fence* CreateFence() override;
-	void DestroyFence(Fence* fence) override;
-#ifdef CreateSemaphore
-#pragma push_macro("CreateSemaphore")
-#undef CreateSemaphore
-#endif
-	Semaphore* CreateSemaphore() override;
-#ifdef CreateSemaphore
-#pragma pop_macro("CreateSemaphore")
-#endif
-	void DestroySemaphore(Semaphore* semaphore) override;
+	CommandBuffer* CreateCommandBuffer(const char* name) final;
+	void DestroyCommandBuffer(CommandBuffer* commandBuffer) final;
 
-	void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
+	void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) final;
 
-	void Present(Swapchain* swapchain) override;
+	void Present(Swapchain* swapchain) final;
 
-	void WaitForIdle() const override;
+	void WaitForIdle() const final;
 
 	// TODO: ImGui 백엔드 변경되면 없애야합니다.
 	const VkInstance GetInstance() const { return _instanceVk; }

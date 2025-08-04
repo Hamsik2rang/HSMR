@@ -1,4 +1,4 @@
-//
+﻿//
 //  Image.cpp
 //  HSMR
 //
@@ -56,6 +56,11 @@ Image::Image(Image&& o) noexcept
     , _channel(o._channel)
     , _type(o._type)
 {
+    o._rawData = nullptr;
+    o._rawDataSize = 0;
+    o._width = 0;
+    o._height = 0;
+    o._channel = 0;
 }
 
 Image::~Image()

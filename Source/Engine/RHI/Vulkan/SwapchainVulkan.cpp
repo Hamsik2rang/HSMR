@@ -83,7 +83,7 @@ void SwapchainVulkan::setRenderPass()
 	info.colorAttachmentCount = 1;
 	info.useDepthStencilAttachment = false;
 
-	_renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+	_renderPass = hs_engine_get_rhi_context()->CreateRenderPass("Swapchain RenderPass", info);
 }
 
 void SwapchainVulkan::setFramebuffers()
@@ -103,7 +103,7 @@ void SwapchainVulkan::setFramebuffers()
 		tInfo.extent.height = _info.nativeWindow->surfaceHeight;
 		tInfo.extent.depth = 1;
 		tInfo.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
-		tInfo.usage = ETextureUsage::COLOR_RENDER_TARGET;
+		tInfo.usage = ETextureUsage::COLOR_ATTACHMENT;
 		tInfo.isCompressed = false;
 		tInfo.useGenerateMipmap = false;
 		tInfo.mipLevel = 1;
@@ -113,7 +113,7 @@ void SwapchainVulkan::setFramebuffers()
 		tInfo.byteSize = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
 		tInfo.isDepthStencilBuffer = false;
 
-		Texture* texture = rhiContext->CreateTexture(nullptr, tInfo);
+		Texture* texture = rhiContext->CreateTexture("Swapchain Framebffer Texture", nullptr, tInfo);
 		
 		FramebufferInfo fbInfo{};
 		fbInfo.depthStencilBuffer = nullptr;
@@ -124,7 +124,7 @@ void SwapchainVulkan::setFramebuffers()
 		fbInfo.renderPass = _renderPass;
 		fbInfo.colorBuffers.push_back(texture);
 
-		Framebuffer* framebuffer = rhiContext->CreateFramebuffer(fbInfo);
+		Framebuffer* framebuffer = rhiContext->CreateFramebuffer("Swapchain Framebuffer", fbInfo);
 		_framebuffers[i] = framebuffer;
 	}
 }
@@ -280,7 +280,7 @@ bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance i
 
 	for (uint8 i = 0; i < _maxFrameCount; i++)
 	{
-		_commandBufferVKs[i] = static_cast<CommandBufferVulkan*>(rhiContext->CreateCommandBuffer());
+		_commandBufferVKs[i] = static_cast<CommandBufferVulkan*>(rhiContext->CreateCommandBuffer("CommandBuffer in Swapchain"));
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;

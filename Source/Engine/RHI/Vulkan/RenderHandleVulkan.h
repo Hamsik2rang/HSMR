@@ -16,7 +16,7 @@ HS_NS_BEGIN
 
 struct RenderPassVulkan : public RenderPass
 {
-	RenderPassVulkan(const RenderPassInfo& info) : RenderPass(info) {}
+	RenderPassVulkan(const char* name, const RenderPassInfo& info) : RenderPass(name, info) {}
 	~RenderPassVulkan() override = default;
 
 	VkRenderPass handle = VK_NULL_HANDLE;
@@ -24,7 +24,7 @@ struct RenderPassVulkan : public RenderPass
 
 struct FramebufferVulkan : public Framebuffer
 {
-	FramebufferVulkan(const FramebufferInfo& info) : Framebuffer(info) {}
+	FramebufferVulkan(const char* name, const FramebufferInfo& info) : Framebuffer(name, info) {}
 	~FramebufferVulkan() override = default;
 
 	VkFramebuffer handle = VK_NULL_HANDLE;
@@ -37,13 +37,13 @@ struct PipelineVulkanBase
 
 struct GraphicsPipelineVulkan : public GraphicsPipeline, public PipelineVulkanBase
 {
-	GraphicsPipelineVulkan(const GraphicsPipelineInfo& info) : GraphicsPipeline(info) {}
+	GraphicsPipelineVulkan(const char* name, const GraphicsPipelineInfo& info) : GraphicsPipeline(name, info) {}
 	~GraphicsPipelineVulkan() override = default;
 };
 
 struct ComputePipelineVulkan : public ComputePipeline, public PipelineVulkanBase
 {
-	ComputePipelineVulkan(const ComputePipelineInfo& info) : ComputePipeline(info) {}
+	ComputePipelineVulkan(const char* name, const ComputePipelineInfo& info) : ComputePipeline(name, info) {}
 	~ComputePipelineVulkan() override = default;
 };
 

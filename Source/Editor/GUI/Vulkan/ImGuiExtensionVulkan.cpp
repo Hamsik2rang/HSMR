@@ -13,6 +13,8 @@
 
 #include "Engine/Platform/Windows/PlatformWindowWindows.h"
 
+#include <unordered_map>
+
 using namespace HS;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -20,9 +22,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 HS_NS_EDITOR_BEGIN
 
-static VkPipelineCache s_pipelineCacheVk;
+static VkPipelineCache s_pipelineCacheVk = VK_NULL_HANDLE;
+static VkDescriptorPool s_descriptorPool = VK_NULL_HANDLE;
 static SamplerVulkan* s_samplerVK;
 static SwapchainVulkan* s_currentSwapchainVK;
+static Swapchain* s_currentSwapchain = nullptr;
 
 static void check_vk_result(VkResult result)
 {
@@ -60,38 +64,11 @@ static void check_vk_result(VkResult result)
 void ImGuiExtension::ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
-	//CommandBufferVulkan* cmdBuffer = (CommandBufferVulkan*)s_currentSwapchainVK->GetCommandBufferForCurrentFrame();
-	//
-	//VkImageSubresourceRange subresourceRange{};
-	//subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	//subresourceRange.baseMipLevel = 0;
-	//subresourceRange.levelCount = 1; // Assuming single mip level for now
-	//subresourceRange.baseArrayLayer = 0;
-	//subresourceRange.layerCount = 1; // Assuming single layer for now
-
-	//VkImageMemoryBarrier imageMemoryBarrier{};
-	//imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	//imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	//imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	//imageMemoryBarrier.image = textureVK->handle;
-	//imageMemoryBarrier.subresourceRange = subresourceRange;
-	//imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	//imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	//imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	//imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-	//vkCmdPipelineBarrier(
-	//	cmdBuffer->handle,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-	//	0,
-	//	0, nullptr,
-	//	0, nullptr,
-	//	1, &imageMemoryBarrier);
-
 	VkDescriptorSet dSet = ImGui_ImplVulkan_AddTexture(s_samplerVK->handle, textureVK->imageViewVk, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	ImGui::Image(reinterpret_cast<ImTextureID>(dSet), image_size, uv0, uv1, tint_col, border_col);
+
+
 }
 
 void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
@@ -122,16 +99,32 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	initInfo.PhysicalDevice = rhiDeviceVK->physicalDevice;
 	initInfo.Queue = rhiDeviceVK->graphicsQueue;
 	initInfo.QueueFamily = rhiDeviceVK->queueFamilyIndices.graphics;
-	initInfo.DescriptorPoolSize = 1024;
 	initInfo.RenderPass = renderPassVK->handle;
 	initInfo.PipelineCache = s_pipelineCacheVk;
 	initInfo.CheckVkResultFn = check_vk_result;
 	initInfo.ImageCount = static_cast<uint32>(swapchainVK->GetMaxFrameCount());
 	initInfo.MinImageCount = 2;
 	initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; // No MSAA for now
-	// TODO: DescriptorSet 만들어서 파라미터에 넣어줘야함.
-	//initInfo.DescriptorPool = rSetPool->handle;
-	
+	{
+		VkDescriptorPoolSize pool_sizes[] =
+		{
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024},
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1024},
+		};
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		pool_info.maxSets = 0;
+		for (VkDescriptorPoolSize& pool_size : pool_sizes)
+			pool_info.maxSets += pool_size.descriptorCount;
+		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+		pool_info.pPoolSizes = pool_sizes;
+		VkResult err = vkCreateDescriptorPool(rhiDeviceVK->logicalDevice, &pool_info, nullptr, &s_descriptorPool);
+		check_vk_result(err);
+
+		initInfo.DescriptorPool = s_descriptorPool;
+		initInfo.DescriptorPoolSize = 0; // Use the created descriptor pool
+	}
 
 
 	ImGui_ImplVulkan_Init(&initInfo);
@@ -142,10 +135,15 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 
 void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)
 {
+	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
+	VkDevice logicalDevice = rhiContextVK->GetDevice()->logicalDevice;
+	vkDeviceWaitIdle(logicalDevice);
+	vkResetDescriptorPool(logicalDevice, s_descriptorPool, 0);
+
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	
+
 	// Begin render pass for swapchain
 	s_currentSwapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	CommandBuffer* cmdBuffer = swapchain->GetCommandBufferForCurrentFrame();
@@ -153,7 +151,7 @@ void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)
 	Framebuffer* framebuffer = s_currentSwapchainVK->GetFramebufferForCurrentFrame();
 
 	Area area{ 0, 0, swapchain->GetWidth(), swapchain->GetHeight() };
-	
+
 	cmdBuffer->BeginRenderPass(renderPass, framebuffer, area);
 }
 
@@ -161,7 +159,7 @@ void ImGuiExtension::EndRender(HS::Swapchain* swapchain)
 {
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
-	
+
 	// Actually render the ImGui draw data to the command buffer
 	//SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(s_currentSwapchainVK->GetCommandBufferForCurrentFrame());
@@ -184,7 +182,7 @@ void ImGuiExtension::FinalizeBackend()
 		RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
 		vkDestroyPipelineCache(rhiContextVK->GetDevice()->logicalDevice, s_pipelineCacheVk, nullptr);
 		s_pipelineCacheVk = VK_NULL_HANDLE;
-	}	
+	}
 }
 
 HS_NS_EDITOR_END

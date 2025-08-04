@@ -23,7 +23,7 @@ RenderTargetInfo ForwardRenderer::GetBareboneRenderTargetInfo()
 	colorTextureInfo.isDepthStencilBuffer = false;
 	colorTextureInfo.mipLevel = 1;
 	colorTextureInfo.type = ETextureType::TEX_2D;
-	colorTextureInfo.usage = ETextureUsage::COLOR_RENDER_TARGET | ETextureUsage::SHADER_READ;
+	colorTextureInfo.usage = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::INPUT_ATTACHMENT;
 	colorTextureInfo.byteSize = 4 * colorTextureInfo.extent.width * colorTextureInfo.extent.height * colorTextureInfo.extent.depth;
 	//...
 

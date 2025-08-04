@@ -26,23 +26,23 @@ void RenderTarget::Create(const RenderTargetInfo& info)
     {
         HS_CHECK(info.colorTextureCount == 1, "Swapchain RenderTarget must have only 1 ColorTexture");
 
-        _colorTextures.push_back(rhiContext->CreateTexture(nullptr, info.colorTextureInfos[0]));
+        _colorTextures.push_back(rhiContext->CreateTexture("Swapchain RenderTarget Color Texture", nullptr, info.colorTextureInfos[0]));
     }
     else
     {
-//        _colorTextures.resize(info.colorTextureCount);
+        //_colorTextures.resize(info.colorTextureCount);
 
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
             
-            Texture* texture = rhiContext->CreateTexture(nullptr, info.colorTextureInfos[i]);
+            Texture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
             _colorTextures.push_back(texture);
         }
     }
 
     if (info.useDepthStencilTexture)
     {
-        _depthStencilTexture = rhiContext->CreateTexture(nullptr, info.depthStencilInfo);
+        _depthStencilTexture = rhiContext->CreateTexture("RenderTarget DepthStencil Teture", nullptr, info.depthStencilInfo);
     }
 
     //... Resolve Target

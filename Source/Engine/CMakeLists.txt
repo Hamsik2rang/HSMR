@@ -10,6 +10,7 @@ set(CORE_HEADERS
     Core/Window.h
     Core/Event.h
     Core/Flag.h
+    Core/String.h
     Core/Exception.h
 )
 
@@ -24,6 +25,7 @@ set(CORE_SOURCES
     Core/Window.cpp
     Core/Event.cpp
     Core/Flag.cpp
+    Core/String.cpp
     Core/Exception.cpp
 )
 

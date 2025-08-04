@@ -22,11 +22,11 @@ HS_NS_BEGIN
 bool ResourceManager::s_isInitialize = false;
 std::string ResourceManager::s_resourcePath = "";
 
-Image ResourceManager::s_fallbackImage2DWhite;
-Image ResourceManager::s_fallbackImage2DBlack;
-Image ResourceManager::s_fallbackImage2DRed;
-Image ResourceManager::s_fallbackImage2DGreen;
-Image ResourceManager::s_fallbackImage2DBlue;
+Image* ResourceManager::s_fallbackImage2DWhite;
+Image* ResourceManager::s_fallbackImage2DBlack;
+Image* ResourceManager::s_fallbackImage2DRed;
+Image* ResourceManager::s_fallbackImage2DGreen;
+Image* ResourceManager::s_fallbackImage2DBlue;
 
 Mesh ResourceManager::s_fallbackMeshPlane;
 Mesh ResourceManager::s_fallbackMeshCube;
@@ -50,36 +50,36 @@ bool ResourceManager::Initialize()
 	// 1x1 White Image 2D
 	{
 		uint8 whitePixel[4] = { 255, 255, 255, 255 }; // RGBA
-		s_fallbackImage2DWhite = Image(whitePixel, 1, 1, 4);
-		s_fallbackImage2DWhite.SetType(Image::ImageType::BUFFER);
+		s_fallbackImage2DWhite = new Image(whitePixel, 1, 1, 4);
+		s_fallbackImage2DWhite->SetType(Image::ImageType::BUFFER);
 	}
 
 	// 1x1 Black Image 2D
 	{
 		uint8 blackPixel[4] = { 0, 0, 0, 255 }; // RGBA
-		s_fallbackImage2DBlack = Image(blackPixel, 1, 1, 4);
-		s_fallbackImage2DBlack.SetType(Image::ImageType::BUFFER);
+		s_fallbackImage2DBlack =new Image(blackPixel, 1, 1, 4);
+		s_fallbackImage2DBlack->SetType(Image::ImageType::BUFFER);
 	}
 
 	// 1x1 Red Image 2D
 	{
 		uint8 redPixel[4] = { 1, 0, 0, 255 }; // RGBA
-		s_fallbackImage2DRed = Image(redPixel, 1, 1, 4);
-		s_fallbackImage2DRed.SetType(Image::ImageType::BUFFER);
+		s_fallbackImage2DRed = new Image(redPixel, 1, 1, 4);
+		s_fallbackImage2DRed->SetType(Image::ImageType::BUFFER);
 	}
 
 	// 1x1 Green Image 2D
 	{
 		uint8 greenPixel[4] = { 0, 1, 0, 255 }; // RGBA
-		s_fallbackImage2DGreen = Image(greenPixel, 1, 1, 4);
-		s_fallbackImage2DGreen.SetType(Image::ImageType::BUFFER);
+		s_fallbackImage2DGreen =new  Image(greenPixel, 1, 1, 4);
+		s_fallbackImage2DGreen->SetType(Image::ImageType::BUFFER);
 	}
 
 	// 1x1 Blue Image 2D
 	{
 		uint8 bluePixel[4] = { 0, 0, 1, 255 }; // RGBA
-		s_fallbackImage2DBlue = Image(bluePixel, 1, 1, 4);
-		s_fallbackImage2DBlue.SetType(Image::ImageType::BUFFER);
+		s_fallbackImage2DBlue = new Image(bluePixel, 1, 1, 4);
+		s_fallbackImage2DBlue->SetType(Image::ImageType::BUFFER);
 	}
 
 	calculatePlane();
@@ -89,6 +89,40 @@ bool ResourceManager::Initialize()
 	s_isInitialize = true;
 
 	return s_isInitialize;
+}
+
+void ResourceManager::Finalize()
+{
+	if (!s_isInitialize)
+	{
+		return;
+	}
+	if (s_fallbackImage2DBlack)
+	{
+		delete s_fallbackImage2DBlack;
+		s_fallbackImage2DBlack = nullptr;
+	}
+	if (s_fallbackImage2DWhite)
+	{
+		delete s_fallbackImage2DWhite;
+		s_fallbackImage2DWhite = nullptr;
+	}
+	if (s_fallbackImage2DRed)
+	{
+		delete s_fallbackImage2DRed;
+		s_fallbackImage2DRed = nullptr;
+	}
+	if (s_fallbackImage2DGreen)
+	{
+		delete s_fallbackImage2DGreen;
+		s_fallbackImage2DGreen = nullptr;
+	}
+	if (s_fallbackImage2DBlue)
+	{
+		delete s_fallbackImage2DBlue;
+		s_fallbackImage2DBlue = nullptr;
+	}
+	s_isInitialize = false;
 }
 
 // Forward declarations
@@ -793,7 +827,7 @@ void ResourceManager::calculateSphere()
 	s_fallbackMeshSphere.SetIndices(std::move(indices));
 }
 
-const Image& ResourceManager::GetFallbackImage2DWhite()
+const Image* ResourceManager::GetFallbackImage2DWhite()
 {
 	if (!s_isInitialize)
 	{
@@ -803,7 +837,7 @@ const Image& ResourceManager::GetFallbackImage2DWhite()
 	// Return the fallback white image
 	return s_fallbackImage2DWhite;
 }
-const Image& ResourceManager::GetFallbackImage2DBlack()
+const Image* ResourceManager::GetFallbackImage2DBlack()
 {
 	if (!s_isInitialize)
 	{
@@ -812,7 +846,7 @@ const Image& ResourceManager::GetFallbackImage2DBlack()
 	// Return the fallback black image
 	return s_fallbackImage2DBlack;
 }
-const Image& ResourceManager::GetFallbackImage2DRed()
+const Image* ResourceManager::GetFallbackImage2DRed()
 {
 	if (!s_isInitialize)
 	{
@@ -821,7 +855,7 @@ const Image& ResourceManager::GetFallbackImage2DRed()
 
 	return s_fallbackImage2DRed; // Return empty image or handle error appropriately
 }
-const Image& ResourceManager::GetFallbackImage2DGreen()
+const Image* ResourceManager::GetFallbackImage2DGreen()
 {
 	if (!s_isInitialize)
 	{
@@ -829,7 +863,7 @@ const Image& ResourceManager::GetFallbackImage2DGreen()
 	}
 	return s_fallbackImage2DGreen; // Return empty image or handle error appropriately
 }
-const Image& ResourceManager::GetFallbackImage2DBlue()
+const Image* ResourceManager::GetFallbackImage2DBlue()
 {
 	if (!s_isInitialize)
 	{

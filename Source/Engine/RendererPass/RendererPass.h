@@ -19,7 +19,6 @@ HS_NS_BEGIN
 
 class Renderer;
 class CommandBuffer;
-class RenderCommandEncoder;
 class Framebuffer;
 
 enum class ERenderingOrder
