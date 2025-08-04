@@ -113,7 +113,11 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	{
 		VkDescriptorPoolSize pool_sizes[] =
 		{
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE * 6)},
+			// TODO: 지금은 대충 큰 사이즈의 풀을 할당한 후 이용하는데, 이러면 ImGui::AddTexture() 호출이 예측 불가능한 경우 크래시 발생 가능
+			// 이상적으로는 RHI 백엔드의 ResourceSet을 Custom Allocator로 동적 할당해 제공해주고 Release(Lazy-Destroy)하는 방식으로 구현해야 함.
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024},
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1024},
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1024},
 		};
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -210,6 +214,10 @@ void ImGuiExtension::FinalizeBackend()
 	}
 }
 
+// TODO: 지금은 매 프레임 이 안에서 N프레임을 시작하기 전에 (N - MaxFrameCount) 프레임의 ImGui::AddTexture() 호출로 추가된 ResourceSet들을 제거함.
+// N-1프레임을 제거하지 않는 이유는 Host-GPU 커맨드 정합성이 보장되지 않기 때문.
+// InitializeBackend() 의 주석과 마찬가지로, 이상적으로는 RHI 백엔드의 ResourceSet을 Custom Allocator로 동적 할당해 제공해주고 
+// Release(Lazy-Destroy)하는 방식으로 구현해야 함.
 void ImGuiExtension::clearDeletedSwapchainData()
 {
 	for (auto& rSetList : s_AddedTexturesPerFrame)
