@@ -1,4 +1,12 @@
 # HSMR
-HS Mini Renderer - Lightweight renderer what supports cross-platform.
+HS Mini Renderer - Lightweight cross-platform renderer
 
-**WARNING!** currently, hsmr is not tested on Windows. I will make it work on Windows as fast as possible.
+**WARNING!** This project is currently in development. I cannot guarantee that it will run on your local environment.
+
+## Prerequisites
+* CMake (version 3.22.0 or newer)
+### Windows
+* Visual Studio 2022 (or 2019, though this has not been tested)
+
+### MacOS(Apple Silicon)
+* XCode(the latest version)
