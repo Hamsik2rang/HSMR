@@ -237,7 +237,7 @@ void EditorWindow::onRenderGUI()
 
 	_basePanel->Draw(); // Draw panel tree.
 
-	ImGuiExtension::EndRender(_swapchain);
+	ImGuiExtension::EndRender();
 }
 
 void EditorWindow::setupPanels()

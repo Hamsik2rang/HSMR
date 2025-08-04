@@ -12,13 +12,10 @@
 
 #include "ImGui/imgui.h"
 
-namespace HS
-{
-struct Texture;
+/* #include "Engine/Core/Swapchain.h" */ namespace HS { struct Swapchain; }
+/* #include "Engine/RHI/ResourceHandle.h" */ namespace HS { struct Texture; }
+/* #include "Engine/RHI/CommandHandle.h" */ namespace HS { struct CommandBuffer; }
 
-struct CommandBuffer;
-class Swapchain;
-}
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API ImGuiExtension
@@ -29,9 +26,16 @@ public:
 	static void InitializeBackend(HS::Swapchain* swapchain);
 	//void SetDisplaySize(uint32 width, uint32 height);
 	static void BeginRender(HS::Swapchain* swapchain);
-	static void EndRender(HS::Swapchain* swapchain);
+	static void EndRender();
 
 	static void FinalizeBackend();
+
+private:
+	static void clearDeletedSwapchainData();
+
+	static std::vector<std::vector<void*>> s_AddedTexturesPerFrame;
+	static uint8 s_currentFrameIndex;
+	static Swapchain* s_currentSwapchain;
 };
 
 HS_NS_EDITOR_END
