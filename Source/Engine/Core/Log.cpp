@@ -14,8 +14,8 @@ static const char* log_color_red = "\x1b[31m";
 static const char* log_color_green = "\x1b[32m";
 static const char* log_color_yellow = "\x1b[33m";
 static const char* log_color_cyan = "\x1b[34m";
-static const char* log_color_white = "\x1b[35m";
-static const char* log_color_magenta = "\x1b[36m";
+static const char* log_color_white = "\x1b[37m";
+static const char* log_color_magenta = "\x1b[35m";
 static const char* log_color_reset = "\x1b[0m";
 
 #endif

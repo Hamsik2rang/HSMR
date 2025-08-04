@@ -24,7 +24,7 @@ public:
     ~Semaphore() override;
 
 protected:
-    Semaphore();
+    Semaphore(const char* name);
 };
 
 class Fence : public RHIHandle
@@ -33,7 +33,7 @@ public:
     ~Fence() override;
 
 protected:
-    Fence();
+    Fence(const char* name);
 };
 
 class ResourceBarrier : public RHIHandle
@@ -42,7 +42,7 @@ public:
     ~ResourceBarrier() override;
 
 protected:
-    ResourceBarrier();
+    ResourceBarrier(const char* name);
 };
 
 class CommandQueue : public RHIHandle
@@ -51,7 +51,7 @@ public:
     ~CommandQueue() override;
 
 protected:
-    CommandQueue();
+    CommandQueue(const char* name);
 };
 
 class CommandPool : public RHIHandle
@@ -60,7 +60,7 @@ public:
     ~CommandPool() override;
 
 protected:
-    CommandPool();
+    CommandPool(const char* name);
 };
 
 class CommandBuffer : public RHIHandle
@@ -90,7 +90,7 @@ public:
     virtual void PopDebugMark() = 0;
 
 protected:
-    CommandBuffer();
+    CommandBuffer(const char* name);
     bool _isBegan = false;
     //TODO: 커맨드 종류별로 버퍼 분할하기
     bool _isGraphicsBegan = false;

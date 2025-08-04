@@ -18,7 +18,7 @@ HS_NS_BEGIN
 
 struct SemaphoreVulkan : public Semaphore
 {
-	SemaphoreVulkan(RHIDeviceVulkan device);
+	SemaphoreVulkan(RHIDeviceVulkan device, const char* name);
 	~SemaphoreVulkan() override;
 
 	VkSemaphore handle;
@@ -27,7 +27,7 @@ struct SemaphoreVulkan : public Semaphore
 
 struct FenceVulkan : public Fence
 {
-	FenceVulkan(RHIDeviceVulkan device);
+	FenceVulkan(RHIDeviceVulkan device, const char* name);
 	~FenceVulkan() override;
 
 	VkFence handle;
@@ -36,7 +36,7 @@ struct FenceVulkan : public Fence
 
 struct CommandQueueVulkan : public CommandQueue
 {
-	CommandQueueVulkan();
+	CommandQueueVulkan(const char* name);
 	~CommandQueueVulkan() override;
 
 	uint32 queueIndex;
@@ -44,7 +44,7 @@ struct CommandQueueVulkan : public CommandQueue
 
 struct CommandPoolVulkan : public CommandPool
 {
-	CommandPoolVulkan();
+	CommandPoolVulkan(const char* name);
 	~CommandPoolVulkan() override;
 
 	VkCommandPool handle;
@@ -52,7 +52,7 @@ struct CommandPoolVulkan : public CommandPool
 
 struct CommandBufferVulkan : public CommandBuffer
 {
-	CommandBufferVulkan();
+	CommandBufferVulkan(const char* name);
 	~CommandBufferVulkan() override;
 	void Begin() override;
 	void End() override;

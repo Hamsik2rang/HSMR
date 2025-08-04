@@ -177,24 +177,29 @@ Viewport RHIUtilityVulkan::FromViewport(VkViewport vp)
 VkImageUsageFlags RHIUtilityVulkan::ToTextureUsage(ETextureUsage usage)
 {
 	VkImageUsageFlags flags = 0;
+	if ((usage & ETextureUsage::STATIC) != 0)
+		flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-	if ((usage & ETextureUsage::SHADER_READ) != static_cast<ETextureUsage>(0))
+	if ((usage & ETextureUsage::STAGING) != 0)
+		flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+	if ((usage & ETextureUsage::SAMPLED) != 0)
 		flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
-	if ((usage & ETextureUsage::SHADER_WRITE) != static_cast<ETextureUsage>(0))
+	if ((usage & ETextureUsage::STORAGE) != 0)
 		flags |= VK_IMAGE_USAGE_STORAGE_BIT;
 
-	if ((usage & ETextureUsage::COLOR_RENDER_TARGET) != static_cast<ETextureUsage>(0))
+	if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0)
 		flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	if((usage & ETextureUsage::DEPTH_RENDER_TARGET) != static_cast<ETextureUsage>(0))
+	if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0)
 		flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-	if ((usage & ETextureUsage::PIXELFORMAT_VIEW) != static_cast<ETextureUsage>(0))
-		flags |= VK_IMAGE_USAGE_SAMPLED_BIT;  // Additional view capability
+	if ((usage & ETextureUsage::TRANSIENT_ATTACHMENT) != 0)
+		flags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 
-	// Default transfer usage for most textures
-	//flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	if ((usage & ETextureUsage::INPUT_ATTACHMENT) != 0)
+		flags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
 	return flags;
 }
@@ -202,18 +207,29 @@ VkImageUsageFlags RHIUtilityVulkan::ToTextureUsage(ETextureUsage usage)
 ETextureUsage RHIUtilityVulkan::FromTextureUsage(VkImageUsageFlags usage)
 {
 	ETextureUsage flags = ETextureUsage::UNKNOWN;
+	if ((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0)
+		flags |= ETextureUsage::STATIC;
 
-	if (usage & VK_IMAGE_USAGE_SAMPLED_BIT)
-		flags = flags | ETextureUsage::SHADER_READ;
+	if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) != 0)
+		flags |= ETextureUsage::STAGING;
 
-	if (usage & VK_IMAGE_USAGE_STORAGE_BIT)
-		flags = flags | ETextureUsage::SHADER_WRITE;
+	if ((usage & VK_IMAGE_USAGE_SAMPLED_BIT) != 0)
+		flags |= ETextureUsage::SAMPLED;
 
-	if (usage & (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT))
-		flags = flags | ETextureUsage::COLOR_RENDER_TARGET;
-	
-	if (usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-		flags = flags | ETextureUsage::DEPTH_RENDER_TARGET;
+	if ((usage & VK_IMAGE_USAGE_STORAGE_BIT) != 0)
+		flags |= ETextureUsage::STORAGE;
+
+	if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0)
+		flags |= ETextureUsage::COLOR_ATTACHMENT;
+
+	if ((usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0)
+		flags |= ETextureUsage::DEPTH_STENCIL_ATTACHMENT;
+
+	if ((usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) != 0)
+		flags |= ETextureUsage::TRANSIENT_ATTACHMENT;
+
+	if ((usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) != 0)
+		flags |= ETextureUsage::INPUT_ATTACHMENT;
 
 	return flags;
 }

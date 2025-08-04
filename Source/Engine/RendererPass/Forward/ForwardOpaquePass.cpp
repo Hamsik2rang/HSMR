@@ -142,8 +142,6 @@ void ForwardOpaquePass::createResourceHandles()
 	},
 	};
 
-
-
 	const Mesh& fallbackMesh = ResourceManager::GetFallbackMeshCube();
 	const auto& pos = fallbackMesh.GetPosition();
 	const auto& color = fallbackMesh.GetColor();
@@ -154,7 +152,7 @@ void ForwardOpaquePass::createResourceHandles()
 	//const auto& indices = fallbackMesh.GetIndices();
 	//_indexBuffer = rhiContext->CreateBuffer(static_cast<const void*>(indices.data()), indices.size() * sizeof(decltype(indices)), EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
 	//_indexCount = indices.size();
-	_vertexBuffer[0] = rhiContext->CreateBuffer(vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+	_vertexBuffer[0] = rhiContext->CreateBuffer("Opaque Test VertexBuffer", vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 #ifdef __APPLE__
 	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
 #elif __WIN32__
@@ -163,7 +161,7 @@ void ForwardOpaquePass::createResourceHandles()
 	ShaderInfo vsInfo{};
 	vsInfo.entryName = "main";
 	vsInfo.stage = EShaderStage::VERTEX;
-	_vertexShader = rhiContext->CreateShader(vsInfo, libPath.c_str());
+	_vertexShader = rhiContext->CreateShader("Opaque Test Shader", vsInfo, libPath.c_str());
 	if (_vertexShader == nullptr)
 	{
 		HS_LOG(crash, "Shader is nullptr");
@@ -175,7 +173,7 @@ void ForwardOpaquePass::createResourceHandles()
 	fsInfo.entryName = "main";
 	fsInfo.stage = EShaderStage::FRAGMENT;
 
-	_fragmentShader = rhiContext->CreateShader(fsInfo, libPath.c_str());
+	_fragmentShader = rhiContext->CreateShader("Opaque Test Shader", fsInfo, libPath.c_str());
 	if (_fragmentShader == nullptr)
 	{
 		HS_LOG(crash, "Shader is nullptr");
@@ -248,7 +246,7 @@ void ForwardOpaquePass::createPipelineHandles(RenderPass* renderPass)
 
 	gpInfo.renderPass = renderPass;
 
-	_gPipeline = rhiContext->CreateGraphicsPipeline(gpInfo);
+	_gPipeline = rhiContext->CreateGraphicsPipeline("Opaque Test Pipeline", gpInfo);
 
 }
 

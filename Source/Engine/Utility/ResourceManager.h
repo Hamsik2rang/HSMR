@@ -28,12 +28,13 @@ public:
     static Scoped<Mesh> LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeMesh(Mesh* mesh);
     
-    static const Image& GetFallbackImage2DWhite();
-    static const Image& GetFallbackImage2DBlack();
-    static const Image& GetFallbackImage2DRed();
-    static const Image& GetFallbackImage2DGreen();
-    static const Image& GetFallbackImage2DBlue();
+    static const Image* GetFallbackImage2DWhite();
+    static const Image* GetFallbackImage2DBlack();
+    static const Image* GetFallbackImage2DRed();
+    static const Image* GetFallbackImage2DGreen();
+    static const Image* GetFallbackImage2DBlue();
     
+    // TODO: PTR로변경
     static const Mesh& GetFallbackMeshPlane();
     static const Mesh& GetFallbackMeshCube();
     static const Mesh& GetFallbackMeshSphere();
@@ -46,11 +47,11 @@ private:
     static void calculateCube();
     static void calculateSphere();
     
-    static Image s_fallbackImage2DWhite;
-    static Image s_fallbackImage2DBlack;
-    static Image s_fallbackImage2DRed;
-    static Image s_fallbackImage2DGreen;
-    static Image s_fallbackImage2DBlue;
+    static Image* s_fallbackImage2DWhite;
+    static Image* s_fallbackImage2DBlack;
+    static Image* s_fallbackImage2DRed;
+    static Image* s_fallbackImage2DGreen;
+    static Image* s_fallbackImage2DBlue;
     
     static Mesh s_fallbackMeshPlane;
     static Mesh s_fallbackMeshCube;

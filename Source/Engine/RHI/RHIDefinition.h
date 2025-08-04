@@ -31,6 +31,7 @@ public:
 		SHADER,
 		RESOURCE_LAYOUT,
 		RESOURCE_SET,
+		RESOURCE_SET_POOL,
 		RENDER_PASS,
 		FRAMEBUFFER,
 		GRAPHICS_PIPELINE,
@@ -44,19 +45,21 @@ public:
 	};
 
 	RHIHandle() = delete;
-	RHIHandle(RHIHandle::EType type)
+	RHIHandle(RHIHandle::EType type, const char* name)
 		: _type(type)
+		, name(name)
 	{}
 	virtual ~RHIHandle() {}
 
-	RHIHandle::EType GetType() const { return _type; }
-	uint32           GetHash() const { return _hash; }
-	int              Retain()
+	HS_FORCEINLINE RHIHandle::EType GetType() const { return _type; }
+	HS_FORCEINLINE uint32           GetHash() const { return _hash; }
+	HS_FORCEINLINE void GetName(const char* name) { this->name = name; }
+	HS_FORCEINLINE int              Retain()
 	{
 		return ++_refs;
 	}
 
-	int Release()
+	HS_FORCEINLINE int Release()
 	{
 		if (_refs <= 0)
 		{
@@ -71,7 +74,7 @@ public:
 		return _refs;
 	}
 
-	std::string name;
+	const char* name;
 
 protected:
 	const EType _type;
@@ -135,11 +138,14 @@ enum class ETextureType
 enum class ETextureUsage : uint16
 {
 	UNKNOWN = 0x0000,
-	SHADER_READ = 0x0001,
-	SHADER_WRITE = 0x0002,
-	COLOR_RENDER_TARGET = 0x0004,
-	DEPTH_RENDER_TARGET = 0x0008,
-	PIXELFORMAT_VIEW = 0x0010,
+	STATIC = 0x0001,
+	STAGING = 0x0002,
+	SAMPLED = 0x0004,
+	STORAGE = 0x0008,
+	COLOR_ATTACHMENT = 0x0010,
+	DEPTH_STENCIL_ATTACHMENT = 0x0020,
+	TRANSIENT_ATTACHMENT = 0x0040,
+	INPUT_ATTACHMENT = 0x0080,
 };
 
 HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
@@ -147,14 +153,21 @@ HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
 	return static_cast<ETextureUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
 }
 
-HS_FORCEINLINE ETextureUsage operator|=(ETextureUsage lhs, ETextureUsage rhs)
+HS_FORCEINLINE ETextureUsage operator|=(ETextureUsage& lhs, ETextureUsage rhs)
 {
-	return static_cast<ETextureUsage>(static_cast<uint32>(lhs) | static_cast<uint32>(rhs));
+	lhs = lhs | rhs;
+	return lhs;
 }
 
 HS_FORCEINLINE ETextureUsage operator&(ETextureUsage lhs, ETextureUsage rhs)
 {
 	return static_cast<ETextureUsage>(static_cast<uint32>(lhs) & static_cast<uint32>(rhs));
+}
+
+HS_FORCEINLINE ETextureUsage operator&=(ETextureUsage& lhs, ETextureUsage rhs)
+{
+	lhs =  lhs & rhs;
+	return lhs;
 }
 
 HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)

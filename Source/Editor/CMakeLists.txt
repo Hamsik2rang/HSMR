@@ -74,7 +74,6 @@ else()
     set(GUI_SOURCES_VULKAN
         GUI/Vulkan/ImGuiExtensionVulkan.cpp
     )
-    message(STATUS "GUI_SOURCES_VULKAN: ${GUI_SOURCES_VULKAN}")
 
     list(APPEND TOTAL_FILES ${GUI_SOURCES_VULKAN})
     source_group("GUI\\Private\\Vulkan" FILES ${GUI_SOURCES_VULKAN})
@@ -159,6 +158,10 @@ target_link_libraries(${TARGET_NAME}
     PRIVATE
     Engine
 )
+
+if(USE_SHADERSYSTEM)
+    target_link_libraries(${TARGET_NAME} PRIVATE ${SLANG})
+endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}

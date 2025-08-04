@@ -20,7 +20,7 @@ public:
 
 	const TextureInfo info;
 protected:
-	Texture(const TextureInfo& info);
+	Texture(const char* name, const TextureInfo& info);
 };
 
 class Sampler : public RHIHandle
@@ -30,7 +30,7 @@ public:
 
 	const SamplerInfo info;
 protected:
-	Sampler(const SamplerInfo& info);
+	Sampler(const char* name, const SamplerInfo& info);
 };
 
 class Buffer : public RHIHandle
@@ -43,7 +43,7 @@ public:
 	void* byte;
 	size_t byteSize;
 protected:
-	Buffer(const BufferInfo& info);
+	Buffer(const char* name, const BufferInfo& info);
 };
 
 class Shader : public RHIHandle
@@ -54,7 +54,7 @@ public:
 	const ShaderInfo	info;
 
 protected:
-	Shader(const ShaderInfo& info) noexcept;
+	Shader(const char* name, const ShaderInfo& info) noexcept;
 };
 
 class ResourceLayout : public RHIHandle
@@ -63,7 +63,7 @@ public:
 	~ResourceLayout() override;
 
 protected:
-	ResourceLayout();
+	ResourceLayout(const char* name);
 };
 
 class ResourceSet : public RHIHandle
@@ -74,7 +74,16 @@ public:
 	std::vector<ResourceLayout*> layouts;
 
 protected:
-	ResourceSet();
+	ResourceSet(const char* name);
+};
+
+class ResourceSetPool : public RHIHandle
+{
+public:
+	~ResourceSetPool() override;
+
+protected:
+	ResourceSetPool(const char* name);
 };
 
 template <>
