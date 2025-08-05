@@ -55,29 +55,37 @@ void EditorWindow::ProcessEvent()
 			_shouldUpdate = true;
 			_shouldPresent = true;
 			onRestore();
+			
 			break;
 		}
 		case EWindowEvent::MINIMIZE:
 		{
 			_shouldUpdate = false;
 			_shouldPresent = false;
+			
 			break;
 		}
-		case EWindowEvent::RESIZE_ENTER:
+		case EWindowEvent::RESIZE:
+		{
+			onSuspend();
+			onRestore();
+			break;
+		}
+		case EWindowEvent::MOVE_ENTER:
 		{
 			_shouldUpdate = false;
 			_shouldPresent = false;
-			_rhiContext->Suspend(_swapchain);
+			onSuspend();
 
 			break;
 		}
-		case EWindowEvent::RESIZE_EXIT:
+		case EWindowEvent::MOVE_EXIT:
 		case EWindowEvent::RESTORE:
 		{
 			_shouldUpdate = true;
 			_shouldPresent = true;
-
-			_rhiContext->Restore(_swapchain);
+			onRestore();
+			
 			break;
 		}
 		case EWindowEvent::MOVE:
@@ -238,6 +246,16 @@ void EditorWindow::onRenderGUI()
 	_basePanel->Draw(); // Draw panel tree.
 
 	ImGuiExtension::EndRender();
+}
+
+void EditorWindow::onSuspend()
+{
+	_rhiContext->Suspend(_swapchain);
+}
+
+void EditorWindow::onRestore()
+{
+	_rhiContext->Restore(_swapchain);
 }
 
 void EditorWindow::setupPanels()

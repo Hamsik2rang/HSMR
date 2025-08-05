@@ -78,7 +78,7 @@ LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (width != s_boundHsWindow->surfaceWidth || height != s_boundHsWindow->surfaceHeight)
 			{
-				hs_window_push_event(s_boundHsWindow, HS::EWindowEvent::RESTORE);
+				hs_window_push_event(s_boundHsWindow, HS::EWindowEvent::RESIZE);
 			}
 		}
 
@@ -95,12 +95,13 @@ LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_ENTERSIZEMOVE:
 	{
-		hs_window_push_event(s_boundHsWindow, HS::EWindowEvent::RESIZE_ENTER);
+		hs_window_push_event(s_boundHsWindow, HS::EWindowEvent::MOVE_ENTER);
 
 		break;
 	}
 	case WM_EXITSIZEMOVE:
 	{
+		hs_window_push_event(s_boundHsWindow, HS::EWindowEvent::MOVE_EXIT);
 		break;
 	}
 	case WM_MOVE:
