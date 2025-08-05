@@ -21,17 +21,18 @@ HS_NS_BEGIN
 
 enum class EWindowEvent : uint8
 {
-    NONE         = 0,
-    OPEN         = 1,
-    CLOSE        = 2,
-    RESIZE_ENTER = 3,
-    RESIZE_EXIT  = 4,
-    MOVE         = 5,
-    MINIMIZE     = 6,
-    MAXIMIZE     = 7,
-    FOCUS_IN     = 8,
-    FOCUS_OUT    = 9,
-    RESTORE      = 10,
+	NONE        = 0,
+	OPEN        = 1,
+	CLOSE       = 2,
+	RESIZE      = 3,
+	MOVE_ENTER  = 4,
+	MOVE_EXIT   = 5,
+	MOVE        = 6,
+	MINIMIZE    = 7,
+	MAXIMIZE    = 8,
+	FOCUS_IN    = 9,
+	FOCUS_OUT   = 10,
+	RESTORE     = 11,
 };
 
 // Same with SDL_WindowFlags.
