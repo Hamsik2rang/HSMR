@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIDefinition
 //  HSMR
 //
@@ -39,9 +39,6 @@ public:
 		COMMAND_QUEUE,
 		COMMAND_POOL,
 		COMMAND_BUFFER,
-		FENCE,
-		SEMAPHORE,
-		RESOURCE_BARRIER
 	};
 
 	RHIHandle() = delete;
@@ -86,6 +83,8 @@ protected:
 
 enum class EVertexFormat
 {
+    INVALID, 
+    
 	FLOAT,
 	FLOAT2,
 	FLOAT3,

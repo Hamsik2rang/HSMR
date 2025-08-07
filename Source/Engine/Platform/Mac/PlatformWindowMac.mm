@@ -146,14 +146,10 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
     NSScreen* mainScreen = [NSScreen mainScreen];
     NSRect screenRect    = mainScreen.frame;
 
-    outNativeWindow.maxWidth  = static_cast<uint32>(screenRect.size.width);
-    outNativeWindow.maxHeight = static_cast<uint32>(screenRect.size.height);
     outNativeWindow.scale     = static_cast<float>(mainScreen.backingScaleFactor);
     outNativeWindow.title     = name;
     outNativeWindow.width     = width;
     outNativeWindow.height    = height;
-    outNativeWindow.minWidth  = 1;
-    outNativeWindow.minHeight = 1;
 
     [vc setHSWindow:&outNativeWindow];
 }

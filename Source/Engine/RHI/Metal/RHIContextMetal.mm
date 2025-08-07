@@ -44,8 +44,8 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
 {
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
 
-    const uint32 maxFrameCount = swMetal->maxFrameCount;
-    swMetal->frameIndex        = (swMetal->frameIndex + 1) % maxFrameCount;
+    const uint32 maxFrameCount = swMetal->_maxFrameCount;
+    swMetal->_frameIndex       = (swMetal->_frameIndex + 1) % maxFrameCount;
 
     auto nativeWindow    = swapchain->GetInfo().nativeWindow;
     HSViewController* vc = (HSViewController*)[(__bridge NSWindow*)(nativeWindow->handle) delegate];
@@ -53,7 +53,7 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
     CAMetalLayer* layer  = (CAMetalLayer*)[[vc view] layer];
 
     id<CAMetalDrawable> drawable = [layer nextDrawable];
-    swMetal->_drawable = drawable;
+    swMetal->_drawable           = drawable;
 
     MTLRenderPassDescriptor* rpDesc        = [MTLRenderPassDescriptor renderPassDescriptor];
     rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
@@ -80,9 +80,9 @@ void RHIContextMetal::DestroySwapchain(Swapchain* swapchain)
     delete swMetal;
 }
 
-RenderPass* RHIContextMetal::CreateRenderPass(const RenderPassInfo& info)
+RenderPass* RHIContextMetal::CreateRenderPass(const char* name, const RenderPassInfo& info)
 {
-    RenderPassMetal* rpMetal = new RenderPassMetal(info);
+    RenderPassMetal* rpMetal = new RenderPassMetal(name, info);
 
     return static_cast<RenderPass*>(rpMetal);
 }
@@ -94,9 +94,9 @@ void RHIContextMetal::DestroyRenderPass(RenderPass* renderPass)
     delete rpMetal;
 }
 
-Framebuffer* RHIContextMetal::CreateFramebuffer(const FramebufferInfo& info)
+Framebuffer* RHIContextMetal::CreateFramebuffer(const char* name, const FramebufferInfo& info)
 {
-    FramebufferMetal* fbMetal = new FramebufferMetal(info);
+    FramebufferMetal* fbMetal = new FramebufferMetal(name, info);
 
     if (info.isSwapchainFramebuffer)
     {
@@ -113,15 +113,26 @@ void RHIContextMetal::DestroyFramebuffer(Framebuffer* framebuffer)
     delete fbMetal;
 }
 
-GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipelineInfo& info)
+GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
 {
-    GraphicsPipelineMetal* pipelineMetal = new GraphicsPipelineMetal(info);
+    GraphicsPipelineMetal* pipelineMetal = new GraphicsPipelineMetal(name, info);
 
     MTLRenderPipelineDescriptor* pipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
     pipelineDesc.label                        = @"Graphics Pipeline";
-    pipelineDesc.vertexFunction               = static_cast<ShaderMetal*>(info.shaderDesc.vertexShader)->handle;
-    pipelineDesc.fragmentFunction             = static_cast<ShaderMetal*>(info.shaderDesc.fragmentShader)->handle;
     pipelineDesc.rasterizationEnabled         = true;
+
+    for (const auto& shader : info.shaderDesc.stages)
+    {
+        switch (shader->info.stage)
+        {
+            case EShaderStage::VERTEX:
+                pipelineDesc.vertexFunction = static_cast<ShaderMetal*>(shader)->handle;
+            case EShaderStage::FRAGMENT:
+                pipelineDesc.fragmentFunction = static_cast<ShaderMetal*>(shader)->handle;
+            default:
+                HS_LOG(crash, "Not supported yet");
+        }
+    }
 
     MTLVertexDescriptor* vertexDesc = [[MTLVertexDescriptor alloc] init];
 
@@ -131,7 +142,7 @@ GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const GraphicsPipeline
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
         vertexDesc.attributes[i].bufferIndex = curAttribute.binding;
-        vertexDesc.attributes[i].format      = hs_rhi_get_vertex_format_from_size(curAttribute.formatSize);
+        vertexDesc.attributes[i].format      = hs_rhi_to_vertex_format(curAttribute.format);
     }
 
     for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
@@ -210,7 +221,7 @@ void RHIContextMetal::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
     delete pipelineMetal;
 }
 
-Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn)
+Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
     FileHandle handle = 0;
 
@@ -239,16 +250,11 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* path, cons
     return shader;
 }
 
-Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn)
+Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize)
 {
     const static std::string metalLibPath = hs_engine_get_context()->resourceDirectory + std::string("Shader") + HS_DIR_SEPERATOR + "default.metallib";
 
-    ShaderInfo info{};
-    info.stage     = stage;
-    info.entryName = entryName;
-    info.isBuiltIn = isBuitIn;
-
-    ShaderMetal* shaderMetal = new ShaderMetal(byteCode, byteCodeSize, info);
+    ShaderMetal* shaderMetal = new ShaderMetal(name, info);
 
     NSError* error = nil;
     NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
@@ -264,10 +270,10 @@ Shader* RHIContextMetal::CreateShader(EShaderStage stage, const char* byteCode, 
         return nullptr;
     }
 
-    NSString* entry = [NSString stringWithCString:entryName encoding:NSUTF8StringEncoding];
+    NSString* entry = [NSString stringWithCString:info.entryName encoding:NSUTF8StringEncoding];
 
     id<MTLFunction> func = nil;
-    switch (stage)
+    switch (info.stage)
     {
         case EShaderStage::VERTEX:
         {

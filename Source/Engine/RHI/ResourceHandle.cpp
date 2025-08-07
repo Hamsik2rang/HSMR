@@ -1,4 +1,4 @@
-﻿#include "Engine/RHI/ResourceHandle.h"
+#include "Engine/RHI/ResourceHandle.h"
 
 HS_NS_BEGIN
 
@@ -11,7 +11,6 @@ Texture::Texture(const char* name, const TextureInfo& info)
 
 Texture::~Texture()
 {
-
 }
 
 Sampler::Sampler(const char* name, const SamplerInfo& info)
@@ -32,7 +31,6 @@ Shader::Shader(const char* name, const ShaderInfo& info) noexcept
 
 Shader::~Shader()
 {
-
 }
 
 Buffer::Buffer(const char* name, const BufferInfo& info)
@@ -43,15 +41,18 @@ Buffer::Buffer(const char* name, const BufferInfo& info)
 Buffer::~Buffer()
 {}
 
-ResourceLayout::ResourceLayout(const char* name)
+ResourceLayout::ResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount)
     : RHIHandle(EType::RESOURCE_LAYOUT, name)
-
+    , bindings(bindingCount)
 {
-
+    HS_ASSERT(bindingCount >= 0, "BindingCount out of range");
+    for (size_t i = 0; i < bindingCount; i++)
+    {
+        this->bindings.push_back(bindings[i]);
+    }
 }
 ResourceLayout::~ResourceLayout()
 {
-
 }
 
 ResourceSet::ResourceSet(const char* name)
@@ -61,9 +62,8 @@ ResourceSet::ResourceSet(const char* name)
 ResourceSet::~ResourceSet()
 {}
 
-
 ResourceSetPool::ResourceSetPool(const char* name)
-	: RHIHandle(EType::RESOURCE_SET_POOL, name)
+    : RHIHandle(EType::RESOURCE_SET_POOL, name)
 {}
 
 ResourceSetPool::~ResourceSetPool()

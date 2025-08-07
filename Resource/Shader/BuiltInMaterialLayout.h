@@ -1,4 +1,4 @@
-﻿//
+//
 //  BuiltInMaterialLayout.h
 //  Engine
 //
@@ -71,8 +71,8 @@ using float4 = vector_float4;
 
 struct VSINPUT_BASIC
 {
-    ATTR_PRE_KEY(0) float4 pos   SM_IN_POSITION(0);
-    ATTR_PRE_KEY(1) float4 color SM_IN_COLOR(0);
+    ATTR_PRE_KEY(0) float4 pos   ATTR_NUM(0) SM_IN_POSITION(0);
+    ATTR_PRE_KEY(1) float4 color ATTR_NUM(1) SM_IN_COLOR(0);
 };
 
 struct FSINPUT_BASIC

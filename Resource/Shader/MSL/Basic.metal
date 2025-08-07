@@ -1,5 +1,6 @@
 #define HS_SHADER_FILE
 #define HS_BASIC_SHADER
+
 #include "../BuiltInMaterialLayout.h"
 
 #include <metal_stdlib>
@@ -7,8 +8,7 @@
 using namespace metal;
 
 
-vertex FSINPUT_BASIC VSENTRY_BASIC(
-                                        VSINPUT_BASIC input ATTR_KEY(stage_in))
+vertex FSINPUT_BASIC VSENTRY_BASIC(VSINPUT_BASIC input [[stage_in]])
 {
     FSINPUT_BASIC output;
     
@@ -18,7 +18,7 @@ vertex FSINPUT_BASIC VSENTRY_BASIC(
     return output;
 }
 
-fragment float4 FSENTRY_BASIC(FSINPUT_BASIC input ATTR_KEY(stage_in))
+fragment float4 FSENTRY_BASIC(FSINPUT_BASIC input ATTR_POST_KEY(stage_in))
 {
     return input.color;
 }

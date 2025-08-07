@@ -31,50 +31,44 @@ public:
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
     void       DestroySwapchain(Swapchain* swapchain) override;
 
-    RenderPass* CreateRenderPass(const RenderPassInfo& info) override;
+    RenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) override;
     void        DestroyRenderPass(RenderPass* renderPass) override;
 
-    Framebuffer* CreateFramebuffer(const FramebufferInfo& info) override;
+    Framebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) override;
     void         DestroyFramebuffer(Framebuffer* framebuffer) override;
 
-    GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineInfo& info) override;
+    GraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) override;
     void              DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
 
-    Shader* CreateShader(EShaderStage stage, const char* path, const char* entryName, bool isBuiltIn = true) override;
-    Shader* CreateShader(EShaderStage stage, const char* byteCode, size_t byteCodeSize, const char* entryName, bool isBuitIn = true) override;
+    Shader* CreateShader(const char* name, const ShaderInfo& info, const char* path) override;
+    Shader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) override;
     void    DestroyShader(Shader* shader) override;
 
-    Buffer* CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
-    Buffer* CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info) override;
+    Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
+    Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) override;
     void    DestroyBuffer(Buffer* buffer) override;
 
-    Texture* CreateTexture(void* image, const TextureInfo& info) override;
-    Texture* CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
+    Texture* CreateTexture(const char* name, void* image, const TextureInfo& info) override;
+    Texture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
     void     DestroyTexture(Texture* texture) override;
 
-    Sampler* CreateSampler(const SamplerInfo& info) override;
+    Sampler* CreateSampler(const char* name, const SamplerInfo& info) override;
     void     DestroySampler(Sampler* sampler) override;
 
-    ResourceLayout* CreateResourceLayout() override;
+    ResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) override;
     void            DestroyResourceLayout(ResourceLayout* rLayout) override;
 
-    ResourceSet* CreateResourceSet() override;
+    ResourceSet* CreateResourceSet(const char* name, ResourceLayout* resourceLayouts) override;
     void         DestroyResourceSet(ResourceSet* resSet) override;
 
-    ResourceSetPool* CreateResourceSetPool() override;
+    ResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) override;
     void             DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
 
-    CommandPool* CreateCommandPool(uint32 queuePamilyIndex) override;
+    CommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) override;
     void         DestroyCommandPool(CommandPool* cmdPool) override;
 
-    CommandBuffer* CreateCommandBuffer() override;
+    CommandBuffer* CreateCommandBuffer(const char* name) override;
     void           DestroyCommandBuffer(CommandBuffer* cmdBuffer) override;
-
-    Fence* CreateFence() override;
-    void   DestroyFence(Fence* fence) override;
-
-    Semaphore* CreateSemaphore() override;
-    void       DestroySemaphore(Semaphore* semaphore) override;
 
     void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
 

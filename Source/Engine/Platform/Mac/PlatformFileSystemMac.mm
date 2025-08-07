@@ -15,7 +15,7 @@
 
 HS_NS_BEGIN
 // 파일 복사 함수
-bool hs_file_copy(const std::string& src, const std::string& dst)
+bool FileSystem::Copy(const std::string& src, const std::string& dst)
 {
     @autoreleasepool
     {
@@ -42,7 +42,7 @@ bool hs_file_copy(const std::string& src, const std::string& dst)
 }
 
 // 파일 열기 함수
-bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle)
+bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle)
 {
     NSString* path = [NSString stringWithUTF8String:absolutePath.c_str()];
 
@@ -85,7 +85,7 @@ bool hs_file_open(const std::string& absolutePath, EFileAccess access, FileHandl
 }
 
 // 파일 닫기 함수
-bool hs_file_close(FileHandle fileHandle)
+bool FileSystem::Close(FileHandle fileHandle)
 {
     @autoreleasepool
     {
@@ -109,7 +109,7 @@ bool hs_file_close(FileHandle fileHandle)
 }
 
 // 파일 읽기 함수
-size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize)
+size_t FileSystem::Read(FileHandle fileHandle, void* buffer, size_t byteSize)
 {
     if (!fileHandle || !buffer)
     {
@@ -135,9 +135,8 @@ size_t hs_file_read(FileHandle fileHandle, void* buffer, size_t byteSize)
         return 0;
     }
 }
-
-// 파일 쓰기 함수 (오타 수정: wrtie -> write)
-size_t hs_file_write(FileHandle fileHandle, void* buffer, size_t byteSize)
+// 파일 쓰기 함수
+size_t FileSystem::Write(FileHandle fileHandle, void* buffer, size_t byteSize)
 {
     if (!fileHandle || !buffer)
     {
@@ -159,7 +158,7 @@ size_t hs_file_write(FileHandle fileHandle, void* buffer, size_t byteSize)
 }
 
 // 파일 위치 설정 함수
-bool hs_file_set_pos(FileHandle fileHandle, const int64 pos)
+bool FileSystem::SetPos(FileHandle fileHandle, const int64 pos)
 {
     if (!fileHandle)
     {
@@ -180,7 +179,7 @@ bool hs_file_set_pos(FileHandle fileHandle, const int64 pos)
 }
 
 // 파일 버퍼 비우기 함수
-bool hs_file_flush(FileHandle fileHandle)
+bool FileSystem::Flush(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -201,7 +200,7 @@ bool hs_file_flush(FileHandle fileHandle)
 }
 
 // 파일 끝 확인 함수
-bool hs_file_is_eof(FileHandle fileHandle)
+bool FileSystem::IsEOF(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -232,7 +231,7 @@ bool hs_file_is_eof(FileHandle fileHandle)
 }
 
 // 파일 크기 확인 함수
-size_t hs_file_get_size(FileHandle fileHandle)
+size_t FileSystem::GetSize(FileHandle fileHandle)
 {
     if (!fileHandle)
     {
@@ -262,7 +261,7 @@ size_t hs_file_get_size(FileHandle fileHandle)
 }
 
 // 디렉토리 경로 얻기 함수
-std::string hs_file_get_directory(const std::string& absolutePath)
+std::string FileSystem::GetDirectory(const std::string& absolutePath)
 {
     @autoreleasepool
     {
@@ -279,7 +278,7 @@ std::string hs_file_get_directory(const std::string& absolutePath)
 }
 
 // 파일 확장자 얻기 함수
-std::string hs_file_get_extension(const std::string& fileName)
+std::string FileSystem::GetExtension(const std::string& fileName)
 {
     @autoreleasepool
     {
@@ -289,7 +288,7 @@ std::string hs_file_get_extension(const std::string& fileName)
     }
 }
 
-std::string hs_file_get_executable_path()
+std::string FileSystem::GetExecutablePath()
 {
     @autoreleasepool
     {
@@ -306,10 +305,10 @@ std::string hs_file_get_executable_path()
 }
 
 // 리소스 경로 얻기 함수
-std::string hs_file_get_default_resource_directory()
+std::string FileSystem::GetDefaultResourceDirectory()
 {
-    std::string executablePath = hs_file_get_executable_path();
-    std::string executableDir  = hs_file_get_directory(executablePath);
+    std::string executablePath = GetExecutablePath();
+    std::string executableDir  = GetDirectory(executablePath);
 
     std::string resourceRootDir = executableDir + "Resource" + HS_DIR_SEPERATOR;
 
@@ -317,13 +316,13 @@ std::string hs_file_get_default_resource_directory()
 }
 
 // Resource 루트 디렉터리 기준으로의 상대경로 얻기 함수
-std::string hs_file_get_default_resource_path(const std::string& relativePath)
+std::string FileSystem::GetDefaultResourcePath(const std::string& relativePath)
 {
-    return (hs_file_get_default_resource_directory() + relativePath);
+    return (GetDefaultResourceDirectory() + relativePath);
 }
 
 // 절대 경로 확인 함수
-bool hs_file_is_absolute_path(const std::string& path)
+bool FileSystem::IsAbsolutePath(const std::string& path)
 {
     @autoreleasepool
     {
@@ -333,9 +332,9 @@ bool hs_file_is_absolute_path(const std::string& path)
 }
 
 // 실행 파일 기준 상대 경로 얻기 함수
-std::string hs_file_get_relative_path(const std::string& absolutePath)
+std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 {
-    std::string exePath = hs_file_get_executable_path();
+    std::string exePath = GetExecutablePath();
     if (exePath.empty()) return absolutePath;
 
     std::string baseDir = exePath.substr(0, exePath.find_last_of(HS_DIR_SEPERATOR));
@@ -352,15 +351,28 @@ std::string hs_file_get_relative_path(const std::string& absolutePath)
 }
 
 // 실행 파일 기준 절대 경로 얻기 함수
-std::string hs_file_get_absolute_path(const std::string& relativePath)
+std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
 {
-    if (hs_file_is_absolute_path(relativePath))
+    if (IsAbsolutePath(relativePath))
         return relativePath;
 
-    std::string exePath = hs_file_get_executable_path();
+    std::string exePath = GetExecutablePath();
     if (exePath.empty()) return relativePath;
 
     std::string baseDir = exePath.substr(0, exePath.find_last_of(HS_DIR_SEPERATOR));
     return baseDir + HS_DIR_SEPERATOR + relativePath;
 }
+
+std::wstring FileSystem::Utf8ToUtf16(const std::string& utf8)
+{
+    
+}
+
+std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
+{
+    
+}
+
+
+
 HS_NS_END

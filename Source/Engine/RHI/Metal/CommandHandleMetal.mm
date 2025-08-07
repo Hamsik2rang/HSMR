@@ -19,8 +19,9 @@ HS_NS_BEGIN
 // GraphicsPipelineMetal*      curBindPipeline;
 // BufferMetal*                curBindIndexBuffer;
 
-CommandBufferMetal::CommandBufferMetal(id<MTLDevice> device, id<MTLCommandQueue> commandQueue)
-    : device(device)
+CommandBufferMetal::CommandBufferMetal(const char* name, id<MTLDevice> device, id<MTLCommandQueue> commandQueue)
+    : CommandBuffer(name)
+    , device(device)
     , cmdQueue(commandQueue)
     , handle(nil)
     , curRenderEncoder(nil)
@@ -71,7 +72,7 @@ void CommandBufferMetal::Reset()
     _isBegan = false;
 }
 
-void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer)
+void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
     HS_CHECK(renderPass, "RenderPass is null");
