@@ -18,8 +18,8 @@ HS_NS_BEGIN
 
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
-    , frameIndex(0)
-    , maxFrameCount(3)
+, _frameIndex(0)
+, _maxFrameCount(3)
     , _drawable(nil)
 {
     const NativeWindow* nh = info.nativeWindow;
@@ -28,14 +28,14 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     NSWindow*         window = (__bridge NSWindow*)(nh->handle);
     HSViewController* vc     = (HSViewController*)[window delegate];
 
-    _commandBufferMTLs = new CommandBuffer*[maxFrameCount];
-    _renderTargets.resize(maxFrameCount);
+    _commandBufferMTLs = new CommandBuffer*[_maxFrameCount];
+    _renderTargets.resize(_maxFrameCount);
 
     RHIContext* rhiContext = hs_engine_get_rhi_context();
 
-    for (uint8 i = 0; i < maxFrameCount; i++)
+    for (uint8 i = 0; i < _maxFrameCount; i++)
     {
-        _commandBufferMTLs[i] = rhiContext->CreateCommandBuffer();
+        _commandBufferMTLs[i] = rhiContext->CreateCommandBuffer("CommandBuffer in Swapchain");
     }
 
     setRenderTargets();
@@ -44,7 +44,7 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
 
 SwapchainMetal::~SwapchainMetal()
 {
-    for (uint8 i = 0; i < maxFrameCount; i++)
+    for (uint8 i = 0; i < _maxFrameCount; i++)
     {
         auto* cmdBuffer = _commandBufferMTLs[i];
         if (nullptr == cmdBuffer)
@@ -68,7 +68,7 @@ void SwapchainMetal::setRenderTargets()
     colorTextureInfo.extent.height        = (_info.nativeWindow)->height * (_info.nativeWindow)->scale;
     colorTextureInfo.extent.depth         = 1;
     colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
-    colorTextureInfo.usage                = ETextureUsage::RENDER_TARGET;
+    colorTextureInfo.usage                = ETextureUsage::COLOR_ATTACHMENT;
     colorTextureInfo.arrayLength          = 1;
     colorTextureInfo.mipLevel             = 1;
     colorTextureInfo.isCompressed         = false;
@@ -97,7 +97,7 @@ void SwapchainMetal::setRenderPass()
     colorAttachment.isDepthStencil = false;
     info.colorAttachments.push_back(colorAttachment);
 
-    _renderPass = hs_engine_get_rhi_context()->CreateRenderPass(info);
+    _renderPass = hs_engine_get_rhi_context()->CreateRenderPass("RenderPass in Swapchain", info);
 }
 
 HS_NS_END

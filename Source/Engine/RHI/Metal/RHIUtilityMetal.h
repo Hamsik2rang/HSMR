@@ -21,6 +21,9 @@ HS_NS_BEGIN
 MTLPixelFormat hs_rhi_to_pixel_format(EPixelFormat format);
 EPixelFormat   hs_rhi_from_pixel_format(MTLPixelFormat format);
 
+MTLVertexFormat hs_rhi_to_vertex_format(EVertexFormat format);
+EVertexFormat hs_rhi_from_vertex_format(MTLVertexFormat format);
+
 MTLLoadAction hs_rhi_to_load_action(ELoadAction action);
 ELoadAction   hs_rhi_from_laod_action(MTLLoadAction action);
 

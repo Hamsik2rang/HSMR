@@ -1,4 +1,4 @@
-﻿//
+//
 //  CommandHandle.h
 //  Engine
 //
@@ -17,33 +17,6 @@ class RenderPass;
 class Framebuffer;
 class GraphicsPipeline;
 class ResourceSet;
-
-class Semaphore : public RHIHandle
-{
-public:
-    ~Semaphore() override;
-
-protected:
-    Semaphore(const char* name);
-};
-
-class Fence : public RHIHandle
-{
-public:
-    ~Fence() override;
-
-protected:
-    Fence(const char* name);
-};
-
-class ResourceBarrier : public RHIHandle
-{
-public:
-    ~ResourceBarrier() override;
-
-protected:
-    ResourceBarrier(const char* name);
-};
 
 class CommandQueue : public RHIHandle
 {

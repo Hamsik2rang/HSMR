@@ -22,7 +22,7 @@ MTLPixelFormat hs_rhi_to_pixel_format(EPixelFormat format)
         default:                             break;
     }
 
-    HS_LOG(crash, "Unsupported MTLPixelFormat!");
+    HS_LOG(crash, "Unsupported EPixelFormat!");
     return MTLPixelFormatInvalid;
 }
 
@@ -38,8 +38,50 @@ EPixelFormat hs_rhi_from_pixel_format(MTLPixelFormat format)
         default:                            break;
     }
 
-    HS_LOG(crash, "Unsupported EPixelFormat!");
+    HS_LOG(crash, "Unsupported MTLPixelFormat!");
     return EPixelFormat::INVALID;
+}
+
+MTLVertexFormat hs_rhi_from_pixel_format(EVertexFormat format)
+{
+    switch (format)
+    {
+
+        case EVertexFormat::FLOAT:  return MTLVertexFormatFloat;
+        case EVertexFormat::FLOAT2: return MTLVertexFormatFloat2;
+        case EVertexFormat::FLOAT3: return MTLVertexFormatFloat3;
+        case EVertexFormat::FLOAT4: return MTLVertexFormatFloat4;
+        case EVertexFormat::HALF:   return MTLVertexFormatHalf;
+        case EVertexFormat::HALF2:  return MTLVertexFormatHalf2;
+        case EVertexFormat::HALF3:  return MTLVertexFormatHalf3;
+        case EVertexFormat::HALF4:  return MTLVertexFormatHalf4;
+     
+        default:                    break;
+    }
+    
+    HS_LOG(crash, "Unsupported EVertexFormat!");
+    return MTLVertexFormatInvalid;
+}
+
+EVertexFormat hs_rhi_from_vertex_format(MTLVertexFormat format)
+{
+    switch (format)
+    {
+
+        case MTLVertexFormatFloat:  return EVertexFormat::FLOAT;
+        case MTLVertexFormatFloat2: return EVertexFormat::FLOAT2;
+        case MTLVertexFormatFloat3: return EVertexFormat::FLOAT3;
+        case MTLVertexFormatFloat4: return EVertexFormat::FLOAT4;
+        case MTLVertexFormatHalf:   return EVertexFormat::HALF;
+        case MTLVertexFormatHalf2:  return EVertexFormat::HALF2;
+        case MTLVertexFormatHalf3:  return EVertexFormat::HALF3;
+        case MTLVertexFormatHalf4:  return EVertexFormat::HALF4;
+
+        default:                    break;
+    }
+    
+    HS_LOG(crash, "Unsupported EVertexFormat!");
+    return EVertexFormat::INVALID;
 }
  
 MTLLoadAction hs_rhi_to_load_action(ELoadAction action)
@@ -52,7 +94,7 @@ MTLLoadAction hs_rhi_to_load_action(ELoadAction action)
 
         default:                     break;
     }
-    HS_LOG(crash, "Unsupported MTLLoadAction");
+    HS_LOG(crash, "Unsupported ELoadAction");
     return MTLLoadActionDontCare;
 }
 
@@ -66,7 +108,7 @@ ELoadAction hs_rhi_from_load_action(MTLLoadAction action)
 
         default:                    break;
     }
-    HS_LOG(crash, "Unsupported ELoadAction");
+    HS_LOG(crash, "Unsupported MTLLoadAction");
     return ELoadAction::INVALID;
 }
 
@@ -79,7 +121,7 @@ MTLStoreAction hs_rhi_to_store_action(EStoreAction action)
 
         default:                      break;
     }
-    HS_LOG(crash, "Unsupported MTLStoreAction");
+    HS_LOG(crash, "Unsupported EStoreAction");
     return MTLStoreActionUnknown;
 }
 
@@ -92,13 +134,13 @@ EStoreAction hs_rhi_from_store_action(MTLStoreAction action)
 
         default:                     break;
     }
-    HS_LOG(crash, "Unsupported EStoreAction");
+    HS_LOG(crash, "Unsupported MTLStoreAction");
     return EStoreAction::INVALID;
 }
 
 MTLViewport hs_rhi_to_viewport(Viewport vp)
 {
-    return (MTLViewport){vp.x, vp.y, vp.width, vp.height, vp.zMear, vp.zFar};
+    return (MTLViewport){vp.x, vp.y, vp.width, vp.height, vp.zNear, vp.zFar};
 }
 
 Viewport hs_rhi_from_viewport(MTLViewport vp)
@@ -116,10 +158,10 @@ Viewport hs_rhi_from_viewport(MTLViewport vp)
 MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
 {
     MTLTextureUsage result = 0;
-    if ((usage & ETextureUsage::SHADER_READ) != 0) result |= MTLTextureUsageShaderRead;
-    if ((usage & ETextureUsage::SHADER_WRITE) != 0) result |= MTLTextureUsageShaderWrite;
-    if ((usage & ETextureUsage::PIXELFORMAT_VIEW) != 0) result |= MTLTextureUsagePixelFormatView;
-    if ((usage & ETextureUsage::SHADER_READ) != 0) result |= MTLTextureUsageRenderTarget;
+    if ((usage & ETextureUsage::SAMPLED) != 0) result |= MTLTextureUsageShaderRead;
+    if ((usage & ETextureUsage::STAGING) != 0) result |= MTLTextureUsageShaderWrite;
+    if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
+    if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
 
     return result;
 }
@@ -127,11 +169,10 @@ MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
 ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage)
 {
     ETextureUsage result = ETextureUsage::UNKNOWN;
-    if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SHADER_READ;
-    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::SHADER_WRITE;
-    if ((usage & MTLTextureUsagePixelFormatView) != 0) result |= ETextureUsage::PIXELFORMAT_VIEW;
-    if ((usage & MTLTextureUsageRenderTarget) != 0) result |= ETextureUsage::RENDER_TARGET;
-
+    if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SAMPLED;
+    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STAGING;
+    if ((usage & MTLTextureUsageRenderTarget) != 0) result |= (ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::DEPTH_STENCIL_ATTACHMENT);
+    
     return result;
 }
 
@@ -147,7 +188,7 @@ MTLTextureType hs_rhi_to_texture_type(ETextureType type)
 
         default:                         break;
     }
-    HS_LOG(crash, "Unsupported MTLTextureType");
+    HS_LOG(crash, "Unsupported ETextureType");
     return MTLTextureType2D;
 }
 
@@ -163,7 +204,7 @@ ETextureType hs_rhi_from_texture_type(MTLTextureType type)
 
         default:                    break;
     }
-    HS_LOG(crash, "Unsupported ETextureType");
+    HS_LOG(crash, "Unsupported MTLTextureType");
     return ETextureType::INVALID;
 }
 

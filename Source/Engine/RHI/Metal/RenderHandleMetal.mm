@@ -2,8 +2,8 @@
 
 HS_NS_BEGIN
 
-RenderPassMetal::RenderPassMetal(const RenderPassInfo& info)
-    : RenderPass(info)
+RenderPassMetal::RenderPassMetal(const char* name, const RenderPassInfo& info)
+    : RenderPass(name, info)
 {
 }
 
@@ -11,8 +11,8 @@ RenderPassMetal::~RenderPassMetal()
 {
 }
 
-FramebufferMetal::FramebufferMetal(const FramebufferInfo& info)
-    : Framebuffer(info)
+FramebufferMetal::FramebufferMetal(const char* name, const FramebufferInfo& info)
+    : Framebuffer(name, info)
 {
     
 }
@@ -22,8 +22,8 @@ FramebufferMetal::~FramebufferMetal()
     
 }
 
-GraphicsPipelineMetal::GraphicsPipelineMetal(const GraphicsPipelineInfo& info)
-    : GraphicsPipeline(info)
+GraphicsPipelineMetal::GraphicsPipelineMetal(const char* name, const GraphicsPipelineInfo& info)
+    : GraphicsPipeline(name, info)
 {
 }
 

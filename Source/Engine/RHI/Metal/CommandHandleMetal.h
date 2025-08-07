@@ -26,20 +26,6 @@ class BufferMetal;
 class TextureMetal;
 class SamplerMetal;
 
-struct SemaphoreMetal : public Semaphore
-{
-    dispatch_semaphore_t handle;
-};
-
-struct FenceMetal : public Fence
-{
-    id<MTLFence> handle;
-};
-
-struct ResourceBarierMetal : public ResourceBarrier
-{
-    //...
-};
 
 struct CommandQueueMetal : public CommandQueue
 {
@@ -54,14 +40,14 @@ struct CommandPoolMetal : public CommandPool
 class CommandBufferMetal : public CommandBuffer
 {
 public:
-    CommandBufferMetal(id<MTLDevice> device, id<MTLCommandQueue> commandQueue);
+    CommandBufferMetal(const char* name, id<MTLDevice> device, id<MTLCommandQueue> commandQueue);
     ~CommandBufferMetal();
 
     void Begin() override;
     void End() override;
     void Reset() override;
 
-    void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer) override;
+    void BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea) override;
     void BindPipeline(GraphicsPipeline* pipeline) override;
     void BindResourceSet(ResourceSet* rSet) override;
     void SetViewport(const Viewport& viewport) override;

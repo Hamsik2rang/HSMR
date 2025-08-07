@@ -19,7 +19,7 @@ HS_NS_BEGIN
 
 struct RenderPassMetal : public RenderPass
 {
-    RenderPassMetal(const RenderPassInfo& info);
+    RenderPassMetal(const char* name, const RenderPassInfo& info);
     ~RenderPassMetal() override;
     
     MTLRenderPassDescriptor* handle;
@@ -27,13 +27,13 @@ struct RenderPassMetal : public RenderPass
 
 struct FramebufferMetal : public Framebuffer
 {
-    FramebufferMetal(const FramebufferInfo& info);
+    FramebufferMetal(const char* name, const FramebufferInfo& info);
     ~FramebufferMetal() override;
 };
 
 struct GraphicsPipelineMetal : public GraphicsPipeline
 {
-    GraphicsPipelineMetal(const GraphicsPipelineInfo& info);
+    GraphicsPipelineMetal(const char* name, const GraphicsPipelineInfo& info);
     ~GraphicsPipelineMetal() override;
     
     id<MTLRenderPipelineState> pipelineState;

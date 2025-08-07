@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIContext.h
 //  Engine
 //
