@@ -29,17 +29,18 @@ message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
 message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+    set(HS_ARCH "arm64")
+    set(HS_ARCH_ARM64)
+else()
+    set(HS_ARCH "x64")
+    set(HS_ARCH_X64)
+endif()
+
+message(STATUS "Processor Architecture is ${HS_ARCH}")
+
 if(APPLE)
     add_compile_definitions(__APPLE__)
-
-    # if(NOT APPLE)
-    # message(FATAL_ERROR "Currently, HSMR is only support MacOS.")
-    # endif()
-    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
-        set(HS_ARCH "arm64")
-    else()
-        set(HS_ARCH "x86_64")
-    endif()
 
     if(CMAKE_GENERATOR STREQUAL "Xcode")
         set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC NO)
@@ -62,20 +63,10 @@ else()
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 endif()
 
-message(STATUS "Processor Architecture is ${HS_ARCH}")
-
-if(APPLE)
-    set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.5.4.3.dylib)
-else() # TODO
-    set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
-endif()
-
-if(APPLE)
-    set(VULKAN)
-    set(SPIRV)
+if(HS_ARCH_ARM64)
+    add_compile_definitions(__ARM64__)
 else()
-    set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
-    set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
+    add_compile_definitions(__X64__)
 endif()
 
 set(INSTALL_FOLDER "$<TARGET_FILE_DIR:Client>")
@@ -87,19 +78,39 @@ include_directories(SYSTEM ${HS_DEPS_INCLUDE_DIR})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(HS_ENGINE_DIR "Source/Engine")
+set(HS_HAL_DIR "Source/HAL")
+set(HS_CORE_DIR "Source/Core")
+set(HS_RESOURCE_DIR "Source/Resource")
+set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
+set(HS_RHI_DIR "Source/RHI")
+set(HS_PHYSICS_DIR "Source/Physics")
+set(HS_RENDERER_DIR "Source/Renderer")
+set(HS_ANIMATION_DIR "Source/Animation")
+set(HS_GEOMETRY_DIR "Source/Geometry")
+set(HS_ECS_DIR "Source/ECS")
+set(HS_GAMEPLAY_DIR "Source/Gameplay")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 
-# set(HS_TOOL_SHADER_COMPILER_DIR "{HS_TOOL_DIR}/ShaderCompiler")
-add_subdirectory(${HS_RES_SHADER_DIR})
-add_subdirectory(${HS_ENGINE_DIR})
+add_subdirectory(${HS_HAL_DIR})
+add_subdirectory(${HS_CORE_DIR})
+add_subdirectory(${HS_RESOURCE_DIR})
 add_subdirectory(${HS_SHADERSYSTEM_DIR})
+add_subdirectory(${HS_RHI_DIR})
+
+# add_subdirectory(${HS_PHYSICS_DIR})
+add_subdirectory(${HS_RENDERER_DIR})
+
+# add_subdirectory(${HS_ANIMATION_DIR})
+
+# add_subdirectory(${HS_GEOMETRY_DIR})
+add_subdirectory(${HS_ECS_DIR})
+
+# add_subdirectory(${HS_GAMEPLAY_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
 
-# add_subdirectory(${HS_TOOL_SHADER_COMPILER_DIR})
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}
