@@ -19,7 +19,7 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Engine
+        HAL Core RHI Resource ECS
         Editor
         ${OSX_FRAMEWORK}
     )
@@ -33,12 +33,12 @@ else()
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Engine
+        HAL Core RHI Resource ECS
         Editor
     )
 endif()
 
-add_dependencies(${TARGET_NAME} Engine Editor)
+add_dependencies(${TARGET_NAME} Editor)
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
@@ -46,7 +46,13 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CLIENT
+    HS_API_IMPORT
     HS_EDITOR_API_IMPORT
+    HS_RESOURCE_API_IMPORT
+    HS_SHADERSYSTEM_API_IMPORT
+    HS_RENDERER_API_IMPORT
+    HS_PHYSICS_API_IMPORT
+    HS_ECS_API_IMPORT
     HS_EXECUTABLE_NAME="${EXECUTABLE_NAME}"
 )
 

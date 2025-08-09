@@ -1,6 +1,6 @@
 set(TARGET_NAME ShaderSystem)
 
-set(USE_SHADERSYSTEM YES)
+option(USE_SHADERSYSTEM ON)
 
 if(USE_SHADERSYSTEM)
     if(APPLE)
@@ -45,8 +45,8 @@ if(USE_SHADERSYSTEM)
     list(APPEND TOTAL_FILES ${SHADERSYSTEM_HEADERS})
 
     set(SHADERSYSTEM_SOURCES
-        ShaderCrossCompiler.cpp
-        ShaderCacheManager.cpp
+        Private/ShaderCrossCompiler.cpp
+        Private/ShaderCacheManager.cpp
     )
 
     source_group("Private" FILES ${SHADERSYSTEM_SOURCES})
@@ -61,8 +61,8 @@ if(USE_SHADERSYSTEM)
     list(APPEND TOTAL_FILES ${SHADERSYSTEM_SLANG_HEADERS})
 
     set(SHADERSYSTEM_SLANG_SOURCES
-        Slang/SlangCompiler.cpp
-        Slang/SlangReflection.cpp
+        Slang/Private/SlangCompiler.cpp
+        Slang/Private/SlangReflection.cpp
     )
 
     source_group("Slang\\Private" FILES ${SHADERSYSTEM_SLANG_SOURCES})
@@ -77,8 +77,8 @@ if(USE_SHADERSYSTEM)
     list(APPEND TOTAL_FILES ${SHADERSYSTEM_SPIRV_HEADERS})
 
     set(SHADERSYSTEM_SPIRV_SOURCES
-        Spirv/SpirvCompiler.cpp
-        Spirv/SpirvCrossHelper.cpp
+        Spirv/Private/SpirvCompiler.cpp
+        Spirv/Private/SpirvCrossHelper.cpp
     )
 
     source_group("Spirv\\Private" FILES ${SHADERSYSTEM_SPIRV_SOURCES})
@@ -86,5 +86,60 @@ if(USE_SHADERSYSTEM)
 
     add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-    target_Link_libraries(${TARGET_NAME} PRIVATE Engine ${SLANG_LIB} ${SPIRV_CROSS})
+    add_dependencies(${TARGET_NAME} Core)
+
+    target_Link_libraries(${TARGET_NAME} PRIVATE Core ${SLANG_LIB} ${SPIRV_CROSS})
+
+    if(APPLE)
+        # On macOS, copy the .dylib file
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "Copying ${TARGET_NAME} library to install folder: ${INSTALL_FOLDER}"
+        )
+    else()
+        # On Windows, copy both .dll and .lib files
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "Copying ${TARGET_NAME}.dll to install folder: ${INSTALL_FOLDER}"
+        )
+
+        # Also copy the import library (.lib) if it exists
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_LINKER_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/dev/lib/$<TARGET_LINKER_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "Copying ${TARGET_NAME}.lib to install folder: ${INSTALL_FOLDER}/dev/lib"
+        )
+
+        # Create dev/lib directory for .lib file
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}/dev/lib"
+            COMMENT "Creating dev/lib directory: ${INSTALL_FOLDER}/dev/lib"
+        )
+    endif()
+
+    # Optional: Copy PDB files for debugging on Windows
+    if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_PDB_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/$<TARGET_PDB_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "Copying ${TARGET_NAME}.pdb to install folder: ${INSTALL_FOLDER}"
+        )
+    endif()
+
+    target_compile_definitions(${TARGET_NAME}
+        PRIVATE
+        $<$<CONFIG:Debug>:_DEBUG>
+        $<$<CONFIG:MinSizeRel>:_RELEASE>
+        $<$<CONFIG:Release>:_RELEASE>
+        $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
+        HS_SHADERSYSTEM
+        HS_SHADERSYSTEM_API_EXPORT
+        HS_API_EXPORT
+    )
 endif()
