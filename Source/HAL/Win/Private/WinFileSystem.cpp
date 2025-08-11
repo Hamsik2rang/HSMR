@@ -1,7 +1,6 @@
-﻿#include "Engine/Platform/Windows/PlatformFileSystemWindows.h"
+﻿#include "HAL/Win/WinFileSystem.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Log.h"
+#include "HAL/SystemContext.h"
 
 #include <cstddef>
 #include <string>
@@ -86,7 +85,7 @@ bool FileSystem::Copy(const std::string& src, const std::string& dst)
 
     if (srcW.empty() || dstW.empty())
     {
-        HS_LOG(error, "Failed to convert file paths to UTF-16");
+        //HS_LOG(error, "Failed to convert file paths to UTF-16");
         return false;
     }
 
@@ -95,7 +94,7 @@ bool FileSystem::Copy(const std::string& src, const std::string& dst)
     if (!success)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to copy file from %s to %s. Error: %lu", src.c_str(), dst.c_str(), error);
+        //HS_LOG(error, "Failed to copy file from %s to %s. Error: %lu", src.c_str(), dst.c_str(), error);
         return false;
     }
 
@@ -108,7 +107,7 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
     std::wstring pathW = FileSystem::Utf8ToUtf16(absolutePath);
     if (pathW.empty())
     {
-        HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
+        //HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
         return false;
     }
 
@@ -130,7 +129,7 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
     if (handle == INVALID_HANDLE_VALUE)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to open file: %s. Error: %lu", absolutePath.c_str(), error);
+        //HS_LOG(error, "Failed to open file: %s. Error: %lu", absolutePath.c_str(), error);
         return false;
     }
 
@@ -152,7 +151,7 @@ bool FileSystem::Close(FileHandle fileHandle)
     if (!success)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to close file handle. Error: %lu", error);
+        //HS_LOG(error, "Failed to close file handle. Error: %lu", error);
         return false;
     }
 
@@ -176,7 +175,7 @@ size_t FileSystem::Read(FileHandle fileHandle, void* buffer, size_t byteSize)
         DWORD error = GetLastError();
         if (error != ERROR_HANDLE_EOF) // EOF is not an error
         {
-            HS_LOG(error, "Failed to read from file. Error: %lu", error);
+            //HS_LOG(error, "Failed to read from file. Error: %lu", error);
         }
         return 0;
     }
@@ -199,7 +198,7 @@ size_t FileSystem::Write(FileHandle fileHandle, void* buffer, size_t byteSize)
     if (!success)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to write to file. Error: %lu", error);
+        //HS_LOG(error, "Failed to write to file. Error: %lu", error);
         return 0;
     }
 
@@ -222,7 +221,7 @@ bool FileSystem::SetPos(FileHandle fileHandle, const int64 pos)
     if (!success)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to set file position. Error: %lu", error);
+        //HS_LOG(error, "Failed to set file position. Error: %lu", error);
         return false;
     }
 
@@ -243,7 +242,7 @@ bool FileSystem::Flush(FileHandle fileHandle)
     if (!success)
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to flush file buffers. Error: %lu", error);
+        //HS_LOG(error, "Failed to flush file buffers. Error: %lu", error);
         return false;
     }
 
@@ -293,7 +292,7 @@ size_t FileSystem::GetSize(FileHandle fileHandle)
     if (!GetFileSizeEx(handle, &fileSize))
     {
         DWORD error = GetLastError();
-        HS_LOG(error, "Failed to get file size. Error: %lu", error);
+        //HS_LOG(error, "Failed to get file size. Error: %lu", error);
         return 0;
     }
 
@@ -354,51 +353,6 @@ std::string FileSystem::GetExtension(const std::string& fileName)
     return fileName.substr(lastDot + 1);
 }
 
-// 실행 파일 경로 얻기 함수
-std::string FileSystem::GetExecutablePath()
-{
-    char path[MAX_PATH] = { 0 };
-    DWORD length = GetModuleFileNameA(nullptr, path, MAX_PATH);
-
-    if (length == 0 || length == MAX_PATH)
-    {
-        // Try with longer buffer for long paths
-        WCHAR longPath[HS_CHAR_INIT_LONG_LENGTH] = { 0 };
-        DWORD longLength = GetModuleFileNameW(nullptr, longPath, HS_CHAR_INIT_LONG_LENGTH);
-
-        if (longLength > 0 && longLength < 32768)
-        {
-            return Utf16ToUtf8(std::wstring(longPath));
-        }
-
-        HS_LOG(error, "Failed to get executable path. Error: %lu", GetLastError());
-        return "";
-    }
-
-    return std::string(path);
-}
-
-// 리소스 경로 얻기 함수
-std::string FileSystem::GetDefaultResourceDirectory()
-{
-    std::string executablePath = FileSystem::GetExecutablePath();
-    if (executablePath.empty())
-    {
-        return "";
-    }
-
-    std::string executableDir = FileSystem::GetDirectory(executablePath);
-    std::string resourceRootDir = executableDir + "Resource" + HS_DIR_SEPERATOR;
-
-    return resourceRootDir;
-}
-
-// Resource 루트 디렉터리 기준으로의 상대경로 얻기 함수
-std::string FileSystem::GetDefaultResourcePath(const std::string& relativePath)
-{
-    return (FileSystem::GetDefaultResourceDirectory() + relativePath);
-}
-
 // 절대 경로 확인 함수
 bool FileSystem::IsAbsolutePath(const std::string& path)
 {
@@ -428,14 +382,11 @@ bool FileSystem::IsAbsolutePath(const std::string& path)
 // 실행 파일 기준 상대 경로 얻기 함수
 std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 {
-    std::string exePath = FileSystem::GetExecutablePath();
-    if (exePath.empty())
+    std::string baseDir = SystemContext::Get()->executableDirectory;
+if(baseDir.empty())
     {
-        return absolutePath;
-    }
-
-    std::string baseDir = FileSystem::GetDirectory(exePath);
-
+        return absolutePath; // If base directory is empty, return the absolute path
+}
     // Convert to lowercase for case-insensitive comparison (Windows is case-insensitive)
     std::string lowerAbsolute = absolutePath;
     std::string lowerBase = baseDir;
@@ -463,13 +414,11 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
         return relativePath;
     }
 
-    std::string exePath = FileSystem::GetExecutablePath();
-    if (exePath.empty())
+    std::string baseDir = SystemContext::Get()->executableDirectory;
+    if(baseDir.empty())
     {
         return relativePath;
-    }
-
-    std::string baseDir = FileSystem::GetDirectory(exePath);
+	}
     return baseDir + relativePath;
 }
 
