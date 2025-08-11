@@ -1,4 +1,4 @@
-﻿//
+//
 //  GUIRendererPass.h
 //  HSMR
 //
@@ -8,7 +8,7 @@
 #define __HS_GUI_RENDERER_PASS_H__
 #include "Precompile.h"
 
-#include "Engine/RendererPass/RendererPass.h"
+#include "Core/RendererPass/RendererPass.h"
 
 HS_NS_EDITOR_BEGIN
 

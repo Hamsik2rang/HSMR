@@ -1,4 +1,4 @@
-﻿//
+//
 //  GUIRenderer.h
 //  HSMR
 //
@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/Renderer.h"
+#include "Core/Renderer/Renderer.h"
 
 
 HS_NS_EDITOR_BEGIN

@@ -1,17 +1,17 @@
-﻿//
+//
 //  Renderer.mm
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-#include "Engine/Renderer/Renderer.h"
+#include "Core/Renderer/Renderer.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Core/Window.h"
-#include "Engine/Core/EngineContext.h"
+#include "Core/Log.h"
+#include "Core/Window.h"
+#include "Core/EngineContext.h"
 
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RendererPass/RendererPass.h"
+#include "Core/RHI/Swapchain.h"
+#include "Core/RendererPass/RendererPass.h"
 
 HS_NS_BEGIN
 

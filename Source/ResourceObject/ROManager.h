@@ -1,5 +1,5 @@
-﻿//
-//  ResourceManager.h
+//
+//  ROManager.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/7/25.
@@ -9,15 +9,15 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/FileSystem.h"
+#include "HAL/SystemContext.h"
+#include "HAL/FileSystem.h"
 
-#include "Engine/Object/Image.h"
-#include "Engine/Object/Mesh.h"
+#include "ResourceObject/Image.h"
+#include "ResourceObject/Mesh.h"
 
 HS_NS_BEGIN
 
-class ResourceManager
+class ROManager
 {
 public:
     static bool Initialize();

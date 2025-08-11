@@ -1,7 +1,7 @@
-#include "Engine/Core/Application.h"
+#include "Core/Application.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Core/Window.h"
+#include "Core/Log.h"
+#include "Core/Window.h"
 
 HS_NS_BEGIN
 

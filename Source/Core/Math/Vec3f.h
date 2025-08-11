@@ -2,8 +2,7 @@
 #define __HS_VEC_3F_H__
 
 #include "Precompile.h"
-
-#include <glm/glm.hpp>
+#include "Core/Math/Common.h"
 
 HS_NS_BEGIN
 

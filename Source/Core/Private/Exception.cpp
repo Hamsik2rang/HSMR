@@ -1,6 +1,6 @@
-#include "Engine/Core/Exception.h"
+#include "Core/Exception.h"
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 #include <cstring>
 #include <sstream>

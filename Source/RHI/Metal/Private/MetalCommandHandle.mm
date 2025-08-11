@@ -1,10 +1,10 @@
-#include "Engine/RHI/Metal/CommandHandleMetal.h"
+#include "Core/RHI/Metal/CommandHandleMetal.h"
 
-#include "Engine/RHI/Metal/RHIContextMetal.h"
-#include "Engine/RHI/Metal/ResourceHandleMetal.h"
-#include "Engine/RHI/Metal/RenderHandleMetal.h"
+#include "Core/RHI/Metal/RHIContextMetal.h"
+#include "Core/RHI/Metal/ResourceHandleMetal.h"
+#include "Core/RHI/Metal/RenderHandleMetal.h"
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 #include <vector>
 

@@ -1,18 +1,15 @@
-﻿//
-//  Math.h
-//  Engine
 //
-//  Created by Yongsik Im on 2025.5.16
+//  Common.h
+//  Core
 //
-#ifndef __HS_MATH_H__
-#define __HS_MATH_H__
+//  Created by Yongsik Im on 5/16/2025
+//
+#ifndef __HS_COMMON_H__
+#define __HS_COMMON_H__
 
 #include "Precompile.h"
 
-#include "Engine/Math/Vec4f.h"
-#include "Engine/Math/Vec3f.h"
-#include "Engine/Math/Vec2f.h"
-#include "Engine/Math/Mat4f.h"
+#include "Core/ThirdParty/glm/glm.hpp"
 
 #ifdef __cplusplus
     #include <cmath>

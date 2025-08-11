@@ -1,16 +1,16 @@
-#include "Engine/RHI/Metal/SwapchainMetal.h"
+#include "Core/RHI/Metal/SwapchainMetal.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Core/Window.h"
+#include "Core/Log.h"
+#include "Core/Window.h"
 
-#include "Engine/Platform/Mac/PlatformWindowMac.h"
+#include "Core/Platform/Mac/PlatformWindowMac.h"
 
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Core/Renderer/RenderDefinition.h"
 
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
-#include "Engine/RHI/Metal/RenderHandleMetal.h"
-#include "Engine/RHI/Metal/CommandHandleMetal.h"
-#include "Engine/RHI/Metal/ResourceHandleMetal.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/Metal/RenderHandleMetal.h"
+#include "Core/RHI/Metal/CommandHandleMetal.h"
+#include "Core/RHI/Metal/ResourceHandleMetal.h"
 
 #import <MetalKit/MetalKit.h>
 

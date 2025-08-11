@@ -1,4 +1,4 @@
-﻿//
+//
 //  Precompile.h
 //  HSMR
 //
@@ -213,6 +213,7 @@ typedef uint64_t uint64;
     {
 
 #define HS_NS_END }
+
 
 #define HS_NS_EDITOR_BEGIN \
     namespace HS           \

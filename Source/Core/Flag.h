@@ -1,8 +1,8 @@
 //
 //  Flag.h
-//  Engine
+//  Core
 //
-//  Created by Yongsik Im on 2025.3.22
+//  Created by Yongsik Im on 3/22/2025
 //
 
 #ifndef __HS_FLAG_H__

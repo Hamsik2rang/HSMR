@@ -10,6 +10,6 @@
 
 #include "Precompile.h"
 
-#include "Engine/ECS/System/ComponentSystem.h"
+#include "Core/ECS/System/ComponentSystem.h"
 
 #endif /* __RENDER_COMPONENT_SYSTEM_H__ */

@@ -1,4 +1,4 @@
-﻿//
+//
 //  RenderTarget.h
 //  HSMR
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/ResourceHandle.h"
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Core/RHI/ResourceHandle.h"
+#include "Core/Renderer/RenderDefinition.h"
 
 HS_NS_BEGIN
 

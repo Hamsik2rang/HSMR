@@ -3,16 +3,14 @@ set(TARGET_NAME Core)
 set(TOTAL_FILES)
 
 set(CORE_HEADERS
-    Application.h
+
+    # Application.h
     Color.h
-    EngineContext.h
     Event.h
     Exception.h
     Flag.h
     Hash.h
     Log.h
-    String.h
-    Swapchain.h
     Window.h
 )
 
@@ -20,16 +18,14 @@ source_group("Public" FILES ${CORE_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
-    Private/Application.cpp
+
+    # Private/Application.cpp
     Private/Color.cpp
-    Private/EngineContext.cpp
     Private/Event.cpp
     Private/Exception.cpp
     Private/Flag.cpp
     Private/Hash.cpp
     Private/Log.cpp
-    Private/String.cpp
-    Private/Swapchain.cpp
     Private/Window.cpp
 )
 
@@ -42,6 +38,7 @@ set(CORE_MATH_HEADERS
     Math/Vec2f.h
     Math/Vec3f.h
     Math/Vec4f.h
+    Math/Math.h
 )
 
 source_group("Math\\Public" FILES ${CORE_MATH_HEADERS})
@@ -73,6 +70,8 @@ source_group("Utility\\Private" FILES ${CORE_UTILITY_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_UTILITY_SOURCES})
 
 add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
+
+add_dependencies(${TARGET_NAME} HAL)
 
 target_include_directories(${TARGET_NAME}
     PRIVATE

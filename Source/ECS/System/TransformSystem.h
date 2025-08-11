@@ -10,6 +10,6 @@
 
 #include "Precompile.h"
 
-#include "Engine/ECS/System/ComponentSystem.h"
+#include "Core/ECS/System/ComponentSystem.h"
 
 #endif /* __HS_TRANSFORM_COMPONENT_SYSTEM__ */

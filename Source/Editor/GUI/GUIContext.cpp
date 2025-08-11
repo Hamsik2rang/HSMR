@@ -1,8 +1,8 @@
-﻿#include "Editor/GUI/GUIContext.h"
+#include "Editor/GUI/GUIContext.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Log.h"
-#include "Engine/Core/FileSystem.h"
+#include "Core/EngineContext.h"
+#include "Core/Log.h"
+#include "Core/FileSystem.h"
 
 #include <string>
 

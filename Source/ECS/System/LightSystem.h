@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/ECS/System/ComponentSystem.h"
+#include "Core/ECS/System/ComponentSystem.h"
 
 
 class LightComponentSystem : public IComponentSystem

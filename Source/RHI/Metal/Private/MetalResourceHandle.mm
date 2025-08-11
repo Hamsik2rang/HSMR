@@ -1,7 +1,7 @@
-#include "Engine/RHI/Metal/ResourceHandleMetal.h"
+#include "Core/RHI/Metal/ResourceHandleMetal.h"
 
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
-#include "Engine/Core/EngineContext.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/EngineContext.h"
 
 #import <Metal/Metal.h>
 

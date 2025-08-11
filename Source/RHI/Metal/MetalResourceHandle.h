@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/ResourceHandle.h"
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/ResourceHandle.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
 
 HS_NS_BEGIN
 

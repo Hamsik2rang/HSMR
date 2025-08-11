@@ -1,15 +1,13 @@
 //
-//  PlatformWindowMac.h
-//  Engine
+//  MacWindow.h
+//  HAL
 //
-//  Created by Yongsik Im on 2025.5.16
+//  Created by Yongsik Im on 8/9/2025
 //
-#ifndef __HS_PLATFORM_OSX_H__
-#define __HS_PLATFORM_OSX_H__
+#ifndef __HS_MAC_WINDOW_H__
+#define __HS_MAC_WINDOW_H__
 
 #include "Precompile.h"
-
-#include "Engine/Platform/PlatformWindow.h"
 
 #import <Cocoa/Cocoa.h>
 

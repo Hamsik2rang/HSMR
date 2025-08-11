@@ -1,16 +1,16 @@
 #include "Editor/GUI/ImGuiExtension.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Window.h"
+#include "Core/EngineContext.h"
+#include "Core/Window.h"
 
-#include "Engine/RHI/Metal/RHIContextMetal.h"
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
-#include "Engine/RHI/Metal/ResourceHandleMetal.h"
-#include "Engine/RHI/Metal/RenderHandleMetal.h"
-#include "Engine/RHI/Metal/CommandHandleMetal.h"
-#include "Engine/RHI/Metal/SwapchainMetal.h"
+#include "Core/RHI/Metal/RHIContextMetal.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/Metal/ResourceHandleMetal.h"
+#include "Core/RHI/Metal/RenderHandleMetal.h"
+#include "Core/RHI/Metal/CommandHandleMetal.h"
+#include "Core/RHI/Metal/SwapchainMetal.h"
 
-#include "Engine/Platform/Mac/PlatformWindowMac.h"
+#include "Core/Platform/Mac/PlatformWindowMac.h"
 
 #include "ImGui/imgui_impl_metal.h"
 #include "ImGui/imgui_impl_osx.h"

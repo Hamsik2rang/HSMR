@@ -1,7 +1,7 @@
 #include "Editor/EntryPoint/EditorMain.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Core/EngineContext.h"
+#include "Core/Renderer/Renderer.h"
 
 #include "Editor/Core/EditorApplication.h"
 

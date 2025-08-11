@@ -1,4 +1,4 @@
-﻿//
+//
 //  Renderer.h
 //  HSMR
 //
@@ -9,10 +9,10 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/RenderTarget.h"
-#include "Engine/Renderer/RenderDefinition.h"
-#include "Engine/RHI/RHIDefinition.h"
-#include "Engine/RHI/RHIContext.h"
+#include "Core/Renderer/RenderTarget.h"
+#include "Core/Renderer/RenderDefinition.h"
+#include "Core/RHI/RHIDefinition.h"
+#include "Core/RHI/RHIContext.h"
 
 #include <vector>
 #include <unordered_map>

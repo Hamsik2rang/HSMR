@@ -10,8 +10,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/RenderHandle.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
 
 
 HS_NS_BEGIN

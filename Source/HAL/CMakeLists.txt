@@ -3,7 +3,6 @@ set(TARGET_NAME HAL)
 set(TOTAL_FILES)
 
 set(HAL_HEADERS
-    NativeApplication.h
     HALDefinition.h
     FileSystem.h
     NativeWindow.h
@@ -17,23 +16,22 @@ list(APPEND TOTAL_FILES ${HAL_HEADERS})
 set(HAL_SOURCES
     Private/Timer.cpp
     Private/FileSystem.cpp
-    Private/SystemContext.cpp
 )
 source_group("Private" FILES ${HAL_SOURCES})
 list(APPEND TOTAL_FILES ${HAL_SOURCES})
 
 if(WIN32)
     set(HAL_WIN_HEADERS
-        Win/WinApplication.h
         Win/WinFileSystem.h
+        Win/WinSystemContext.h
         Win/WinWindow.h
     )
     source_group("Win\\Public" FILES ${HAL_WIN_HEADERS})
     list(APPEND TOTAL_FILES ${HAL_WIN_HEADERS})
 
     set(HAL_WIN_SOURCES
-        Win/Private/WinApplication.cpp
         Win/Private/WinFileSystem.cpp
+        Win/Private/WinSystemContext.cpp
         Win/Private/WinWindow.cpp
     )
     source_group("Win\\Private" FILES ${HAL_WIN_SOURCES})
@@ -41,8 +39,8 @@ if(WIN32)
 else() # MAC
     set(HAL_MAC_HEADERS
         Mac/AutoReleasePool.h
-        Mac/MacApplication.h
         Mac/MacFileSystem.h
+        Mac/MacSystemContext.h
         Mac/MacWindow.h
     )
     source_group("Mac\\Public" FILES ${HAL_MAC_HEADERS})
@@ -50,8 +48,8 @@ else() # MAC
 
     set(HAL_MAC_HEADERS
         Mac/Private/AutoReleasePool.mm
-        Mac/Private/MacApplication.mm
         Mac/Private/MacFileSystem.mm
+        Mac/Private/MacSystemContext.mm
         Mac/Private/MacWindow.mm
     )
     source_group("Mac\\Private" FILES ${HAL_MAC_HEADERS})

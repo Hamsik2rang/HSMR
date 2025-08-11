@@ -1,4 +1,4 @@
-﻿//
+//
 //  Camera.h
 //  HSMR
 //
@@ -8,8 +8,8 @@
 #define __HS_EDITOR_CAMERA_H__
 
 #include "Precompile.h"
-#include "Engine/Object/Object.h"
-#include "Engine/Core/Flag.h"
+#include "Resource/Object.h"
+#include "Core/Flag.h"
 
 #include "glm/glm.hpp"
 

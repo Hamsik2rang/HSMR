@@ -1,7 +1,7 @@
-#include "Engine/Platform/Mac/PlatformWindowMac.h"
+#include "HAL/Mac/MacWindow.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Window.h"
+//NOTE: 중복 아님!
+#include "HAL/NativeWindow.h"
 
 #include <cstring>
 #include <unordered_map>
@@ -90,7 +90,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    hs_window_push_event(_pHsNativeWindow, HS::EWindowEvent::CLOSE);
+    PushNativeEvent(_pHsNativeWindow, HS::EWindowEvent::CLOSE);
 
     [_window setDelegate:nil];
     [_window setContentViewController:nil];
@@ -131,7 +131,7 @@
 
 HS_NS_BEGIN
 
-bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
+bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
     NSRect frame     = NSMakeRect(0, 0, (CGFloat)width, (CGFloat)height);
     NSWindow* window = [[NSWindow alloc] initWithContentRect:frame styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
@@ -154,14 +154,14 @@ bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EW
     [vc setHSWindow:&outNativeWindow];
 }
 
-void hs_platform_window_destroy(NativeWindow& window)
+void DestroyNativeWindow(NativeWindow& window)
 {
     // Autorelease되므로 직접 Release할 필요 없음.
     //    NSWindow* handle = (__bridge NSWindow*)window.handle;
     //    [handle release];
 }
 
-void hs_platform_window_show(const NativeWindow& nativeWindow)
+void ShowNativeWindow(const NativeWindow& nativeWindow)
 {
     NSWindow* window = (__bridge NSWindow*)(nativeWindow.handle);
     [window center];
@@ -171,7 +171,7 @@ void hs_platform_window_show(const NativeWindow& nativeWindow)
     [window becomeKeyWindow];
 }
 
-void hs_platform_window_poll_event()
+void PollNativeEvent()
 {
     @autoreleasepool
     {

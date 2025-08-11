@@ -1,15 +1,14 @@
-﻿//
-//  FileSystem.h
-//  Engine
 //
-//  Created by Yongsik Im on 2025.2.7
+//  FileSystem.h
+//  HAL
+//
+//  Created by Yongsik Im on 2/7/2025
 //
 
 #ifndef __HS_FILE_SYSTEM_H__
 #define __HS_FILE_SYSTEM_H__
 
 #include "Precompile.h"
-
 
 HS_NS_BEGIN
 
@@ -25,7 +24,6 @@ typedef void* FileHandle;
 class FileSystem
 {
 public:
-
     enum class EAccessFlag
     {
         READ_ONLY,
@@ -33,23 +31,20 @@ public:
         READ_WRITE
     };
 
-   static bool Copy(const std::string& src, const std::string& dst);
-   static bool Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
-   static bool Close(FileHandle fileHandle);
-   static size_t Read(FileHandle fileHandle, void* buffer, size_t byteSize);
-   static size_t Write(FileHandle fileHandle, void* buffer, size_t byteSize);
-   static bool SetPos(FileHandle fileHandle, const int64 pos);
-   static bool Flush(FileHandle fileHandle);
-   static bool IsEOF(FileHandle fileHandle);
-   static size_t GetSize(FileHandle fileHandle);
+    static bool Copy(const std::string& src, const std::string& dst);
+    static bool Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
+    static bool Close(FileHandle fileHandle);
+    static size_t Read(FileHandle fileHandle, void* buffer, size_t byteSize);
+    static size_t Write(FileHandle fileHandle, void* buffer, size_t byteSize);
+    static bool SetPos(FileHandle fileHandle, const int64 pos);
+    static bool Flush(FileHandle fileHandle);
+    static bool IsEOF(FileHandle fileHandle);
+    static size_t GetSize(FileHandle fileHandle);
 
     static std::string GetDirectory(const std::string& absolutePath);
     static std::string GetExtension(const std::string& fileNmae);
 
-    static std::string GetExecutablePath();
-    static std::string GetDefaultResourceDirectory();
     static std::string GetDefaultResourcePath(const std::string& relativePath);
-    
 
     static bool IsAbsolutePath(const std::string& path);
     static std::string GetRelativePath(const std::string& absolutePath);

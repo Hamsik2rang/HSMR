@@ -1,1 +1,1 @@
-#include "Engine/ECS/Component/NameComponent.h"
+#include "Core/ECS/Component/NameComponent.h"

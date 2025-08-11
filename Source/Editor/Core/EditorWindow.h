@@ -1,4 +1,4 @@
-﻿//
+//
 //  EditorWindow.h
 //  Editor
 //
@@ -10,8 +10,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Window.h"
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Core/Window.h"
+#include "Core/Renderer/RenderDefinition.h"
 
 namespace HS
 {

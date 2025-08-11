@@ -1,4 +1,4 @@
-﻿//
+//
 //  Mesh.h
 //  HSMR
 //
@@ -9,9 +9,9 @@
 
 #include "Precompile.h"
 
-#include "Engine/Object/Object.h"
+#include "ResourceObject/Object.h"
 
-#include "Engine/Math/Math.h"
+#include "Core/Math/Math.h"
 
 HS_NS_BEGIN
 

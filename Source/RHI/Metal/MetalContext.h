@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIContext.h"
+#include "Core/RHI/RHIContext.h"
 
 HS_NS_BEGIN
 

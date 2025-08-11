@@ -1,9 +1,9 @@
-﻿#include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorWindow.h"
 
-#include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/Renderer/ForwardRenderer.h"
+#include "Core/RendererPass/Forward/ForwardOpaquePass.h"
+#include "Core/RHI/Swapchain.h"
+#include "Core/RHI/RenderHandle.h"
+#include "Core/Renderer/ForwardRenderer.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -32,7 +32,7 @@ void EditorWindow::Render()
 void EditorWindow::ProcessEvent()
 {
 	EWindowEvent event;
-	while (hs_window_peek_event(&_nativeWindow, event, true))
+	while (PeekNativeEvent(&_nativeWindow, event, true))
 	{
 		switch (event)
 		{

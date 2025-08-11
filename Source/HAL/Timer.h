@@ -1,6 +1,6 @@
 //
 //  Timer.h
-//  Engine
+//  HAL
 //
 //  Created by Yongsik Im on 2/8/25.
 //
