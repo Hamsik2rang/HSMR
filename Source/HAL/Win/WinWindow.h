@@ -9,16 +9,21 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Window.h"
-#include "Engine/Platform/PlatformWindow.h"
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <functional>
+#ifndef HS_NATIVE_HANDLE
+#define HS_NATIVE_HANDLE	\
+struct Handle				\
+{							\
+	HWND hWnd;				\
+	HINSTANCE hInstance;	\
+}
+#endif
 
 HS_NS_BEGIN
 
-void hs_platform_window_set_pre_event_handler(std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> fnHandler);
+void SetNativePreEventHandler(std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> fnHandler);
 
 HS_NS_END
 

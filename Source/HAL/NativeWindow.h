@@ -1,4 +1,4 @@
-//
+﻿//
 //  NativeWindow.h
 //  Engine
 //
@@ -10,12 +10,14 @@
 
 #include "Precompile.h"
 
+#ifdef __WIN32__
+#include "HAL/Win/WinWindow.h"
+#else
+#include "HAL/Mac/MacWindow.h"
+#endif
+
 #include <string>
 
-namespace HS
-{
-class EngineContext;
-}
 
 HS_NS_BEGIN
 
@@ -98,7 +100,7 @@ struct NativeWindow
 {
     EWindowFlags flags;
 
-    void* handle;
+	HS_NATIVE_HANDLE handle; // HWND for Windows, NSWindow for macOS, etc.
 
     const char* title;
     uint16 width;

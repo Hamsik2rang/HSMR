@@ -11,6 +11,5 @@
 
 #include "HAL/SystemContext.h"
 
-HS_API void* hs_platform_get_hinstance();
 
 #endif
