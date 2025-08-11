@@ -1,1 +1,1 @@
-#include "Engine/ECS/Component/LightComponent.h"
+#include "Core/ECS/Component/LightComponent.h"

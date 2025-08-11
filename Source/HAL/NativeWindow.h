@@ -1,8 +1,8 @@
-﻿//
-//  PlatformWindow.h
+//
+//  NativeWindow.h
 //  Engine
 //
-//  Created by Yongsik Im on 2025.5.16
+//  Created by Yongsik Im on 5/16/2025
 //
 
 #ifndef __HS_PLATFORM_WINDOW_H__
@@ -21,18 +21,18 @@ HS_NS_BEGIN
 
 enum class EWindowEvent : uint8
 {
-	NONE        = 0,
-	OPEN        = 1,
-	CLOSE       = 2,
-	RESIZE      = 3,
-	MOVE_ENTER  = 4,
-	MOVE_EXIT   = 5,
-	MOVE        = 6,
-	MINIMIZE    = 7,
-	MAXIMIZE    = 8,
-	FOCUS_IN    = 9,
-	FOCUS_OUT   = 10,
-	RESTORE     = 11,
+    NONE       = 0,
+    OPEN       = 1,
+    CLOSE      = 2,
+    RESIZE     = 3,
+    MOVE_ENTER = 4,
+    MOVE_EXIT  = 5,
+    MOVE       = 6,
+    MINIMIZE   = 7,
+    MAXIMIZE   = 8,
+    FOCUS_IN   = 9,
+    FOCUS_OUT  = 10,
+    RESTORE    = 11,
 };
 
 // Same with SDL_WindowFlags.
@@ -103,7 +103,7 @@ struct NativeWindow
     const char* title;
     uint16 width;
     uint16 height;
-    uint32 surfaceWidth;
+    uint16 surfaceWidth;
     uint16 surfaceHeight;
 
     float scale = 1.0f;
@@ -116,14 +116,19 @@ struct NativeWindow
     bool shuoldUpdate : 1;
     bool shouldRender : 1;
     bool shouldClose  : 1;
+    bool futureUse    : 1; // padding.
 };
 
-bool hs_platform_window_create(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
-void hs_platform_window_destroy(NativeWindow& nativeWindow);
-void hs_platform_window_show(const NativeWindow& nativeWindow);
-void hs_platform_window_poll_event(NativeWindow& nativeWindow);
-void hs_platform_window_set_size(uint16 width, uint16 height);
-void hs_platform_window_get_size(uint16& outWidth, uint16& outHeight);
+bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
+void DestroyNativeWindow(NativeWindow& nativeWindow);
+void ShowNativeWindow(const NativeWindow& nativeWindow);
+void PollNativeEvent(NativeWindow& nativeWindow);
+void SetNativeWindowSize(uint16 width, uint16 height);
+void GetNativeWindowSize(uint16& outWidth, uint16& outHeight);
+
+bool PeekNativeEvent(HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent, bool remove);
+void PushNativeEvent(const HS::NativeWindow* pWindow, HS::EWindowEvent event);
+HS::EWindowEvent PopNativeEvent(const HS::NativeWindow* pWindow);
 
 HS_NS_END
 

@@ -1,14 +1,14 @@
-﻿//
+//
 //  Mesh.cpp
 //  HSMR
 //
 //  Created by Yongsik Im on 2/5/25.
 //
-#include "Engine/Object/Mesh.h"
+#include "ResourceObject/Mesh.h"
 #include <limits>
 #include <algorithm>
 
-#include "Engine/Math/Math.h"
+#include "Core/Math/Math.h"
 
 HS_NS_BEGIN
 

@@ -2,7 +2,7 @@
 //  AutoReleasePool.h
 //  Engine
 //
-//  Created by Yongsik Im on 2025.5.24
+//  Created by Yongsik Im on 5/24/2025
 //
 #if defined(__APPLE__)
 

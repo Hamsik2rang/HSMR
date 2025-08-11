@@ -8,6 +8,7 @@ set(RHI_HEADERS
     ResourceHandle.h
     RHIContext.h
     RHIDefinition.h
+    Swapchain.h
 )
 
 source_group("Public" FIELS ${RHI_HEADERS})
@@ -18,6 +19,7 @@ set(RHI_SOURCES
     Private/RenderHandle.cpp
     Private/ResourceHandle.cpp
     Private/RHIDefinition.cpp
+    Private/Swapchain.cpp
 )
 
 source_group("Private" FIELS ${RHI_SOURCES})
@@ -60,11 +62,8 @@ else()
         Metal/MetalCommandHandle.h
         Metal/MetalContext.h
         Metal/MetalDefinition.h
-        Metal/MetalDescriptorPoolAllocator.h
-        Metal/MetalDevice.h
         Metal/MetalRenderHandle.h
         Metal/MetalResourceHandle.h
-        Metal/MetalStagingBuffer.h
         Metal/MetalSwapchain.h
         Metal/MetalUtility.h
     )
@@ -73,16 +72,13 @@ else()
     list(APPEND TOTAL_FILES ${RHI_METAL_HEADERS})
 
     set(RHI_METAL_SOURCES
-        Metal/Private/MetalCommandHandle.cpp
-        Metal/Private/MetalContext.cpp
-        Metal/Private/MetalDefinition.cpp
-        Metal/Private/MetalDescriptorPoolAllocator.cpp
-        Metal/Private/MetalDevice.cpp
-        Metal/Private/MetalRenderHandle.cpp
-        Metal/Private/MetalResourceHandle.cpp
-        Metal/Private/MetalStagingBuffer.cpp
-        Metal/Private/MetalSwapchain.cpp
-        Metal/Private/MetalUtility.cpp
+        Metal/Private/MetalCommandHandle.mm
+        Metal/Private/MetalContext.mm
+        Metal/Private/MetalDefinition.mm
+        Metal/Private/MetalRenderHandle.mm
+        Metal/Private/MetalResourceHandle.mm
+        Metal/Private/MetalSwapchain.mm
+        Metal/Private/MetalUtility.mm
     )
 
     source_group("Metal\\Private" FILES ${RHI_METAL_SOURCES})
@@ -110,7 +106,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Resource)
+add_dependencies(${TARGET_NAME} ResourceObject)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE

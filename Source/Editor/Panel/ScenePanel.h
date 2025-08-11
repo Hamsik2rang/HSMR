@@ -1,4 +1,4 @@
-﻿//
+//
 //  ScenePanel.hpp
 //  Editor
 //
@@ -11,10 +11,10 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Core/Renderer/RenderTarget.h"
 
 
-#include "Engine/Utility/Geometry.h"
+#include "Core/Utility/Geometry.h"
 
 namespace HS
 {

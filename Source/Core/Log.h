@@ -1,15 +1,15 @@
-﻿//
-//  Log.hpp
-//  Engine
 //
-//  Created by Yongsik Im on 2025.2.6
+//  Log.hpp
+//  Core
+//
+//  Created by Yongsik Im on 2/6/2025
 //
 
 #ifndef __HS_LOG_H__
 #define __HS_LOG_H__
 
 #include "Precompile.h"
-#include "Engine/Core/Exception.h"
+#include "Core/Exception.h"
 
 #include <cstdio>
 #include <cstdarg>

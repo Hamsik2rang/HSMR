@@ -1,8 +1,7 @@
 
-#include "Engine/Platform/Mac/PlatformFileSystemMac.h"
+#include "HAL/Mac/MacFileSystem.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Log.h"
+#include "HAL/SystemContext.h"
 
 #include <cstddef>
 #include <string>
@@ -288,37 +287,11 @@ std::string FileSystem::GetExtension(const std::string& fileName)
     }
 }
 
-std::string FileSystem::GetExecutablePath()
-{
-    @autoreleasepool
-    {
-        char path[PATH_MAX] = {0};
-        uint32_t size       = sizeof(path);
-        if (_NSGetExecutablePath(path, &size) == 0)
-        {
-            char resolvedPath[PATH_MAX] = {0};
-            realpath(path, resolvedPath);
-            return std::string(resolvedPath);
-        }
-        return "";
-    }
-}
-
-// 리소스 경로 얻기 함수
-std::string FileSystem::GetDefaultResourceDirectory()
-{
-    std::string executablePath = GetExecutablePath();
-    std::string executableDir  = GetDirectory(executablePath);
-
-    std::string resourceRootDir = executableDir + "Resource" + HS_DIR_SEPERATOR;
-
-    return resourceRootDir;
-}
-
 // Resource 루트 디렉터리 기준으로의 상대경로 얻기 함수
 std::string FileSystem::GetDefaultResourcePath(const std::string& relativePath)
 {
-    return (GetDefaultResourceDirectory() + relativePath);
+    SystemContext* context = SystemContext::Get();
+    return (context->resourceDirectory + relativePath);
 }
 
 // 절대 경로 확인 함수
@@ -334,8 +307,13 @@ bool FileSystem::IsAbsolutePath(const std::string& path)
 // 실행 파일 기준 상대 경로 얻기 함수
 std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 {
-    std::string exePath = GetExecutablePath();
-    if (exePath.empty()) return absolutePath;
+    SystemContext* context = SystemContext::Get();
+
+    std::string exePath = context->executablePath;
+    if (exePath.empty())
+    {
+        return absolutePath;
+    }
 
     std::string baseDir = exePath.substr(0, exePath.find_last_of(HS_DIR_SEPERATOR));
 
@@ -354,10 +332,17 @@ std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
 {
     if (IsAbsolutePath(relativePath))
+    {
         return relativePath;
+    }
 
-    std::string exePath = GetExecutablePath();
-    if (exePath.empty()) return relativePath;
+    SystemContext* context = SystemContext::Get();
+
+    std::string exePath = context->executablePath;
+    if (exePath.empty())
+    {
+        return relativePath;
+    }
 
     std::string baseDir = exePath.substr(0, exePath.find_last_of(HS_DIR_SEPERATOR));
     return baseDir + HS_DIR_SEPERATOR + relativePath;
@@ -365,14 +350,10 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
 
 std::wstring FileSystem::Utf8ToUtf16(const std::string& utf8)
 {
-    
 }
 
 std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
 {
-    
 }
-
-
 
 HS_NS_END

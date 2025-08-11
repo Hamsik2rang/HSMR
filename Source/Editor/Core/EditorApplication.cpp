@@ -1,16 +1,16 @@
-﻿#include "Editor/Core/EditorApplication.h"
+#include "Editor/Core/EditorApplication.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Platform/PlatformApplication.h"
-#include "Engine/Platform/PlatformWindow.h"
-#include "Engine/Utility/ResourceManager.h"
+#include "Core/Log.h"
+#include "Core/Platform/PlatformApplication.h"
+#include "Core/Platform/PlatformWindow.h"
+#include "Core/Utility/ROManager.h"
 
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
 #if defined(__APPLE__)
-#include "Engine/Platform/Mac/AutoReleasePool.h"
+#include "Core/Platform/Mac/AutoReleasePool.h"
 #endif
 
 HS_NS_EDITOR_BEGIN
@@ -41,7 +41,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     _guiContext = new GUIContext();
     _guiContext->Initialize();
     
-    ResourceManager::Initialize();
+    ROManager::Initialize();
 
     EWindowFlags windowFlags = EWindowFlags::NONE;
     windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
@@ -55,7 +55,7 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
         return false;
     }
 
-    hs_platform_window_show(_window->GetNativeWindow());
+    ShowNativeWindow(_window->GetNativeWindow());
     
 
     _isInitialized = true;
@@ -85,7 +85,7 @@ void EditorApplication::Finalize()
     }
     //...
 
-    ResourceManager::Finalize();
+    ROManager::Finalize();
 
     hs_platform_shutdown(this);
 }

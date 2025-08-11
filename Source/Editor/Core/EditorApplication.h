@@ -1,4 +1,4 @@
-﻿//
+//
 //  EditorApplication.h
 //  HSMR
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Application.h"
-#include "Engine/Core/Window.h"
+#include "Core/Application.h"
+#include "Core/Window.h"
 
 HS_NS_EDITOR_BEGIN
 

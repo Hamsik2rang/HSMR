@@ -1,19 +1,19 @@
-﻿//
+//
 //  Image.cpp
 //  HSMR
 //
 //  Created by Yongsik Im on 2/5/25.
 //
-#include "Engine/Object/Image.h"
+#include "ResourceObject/Image.h"
 
-#include "Engine/Utility/ResourceManager.h"
+#include "ResourceObject/ROManager.h"
 
 HS_NS_BEGIN
 
 Image::Image(const char* path) noexcept
     : Object(EType::IMAGE)
 {
-    Scoped<Image> image = ResourceManager::LoadImageFromFile(path);
+    Scoped<Image> image = ROManager::LoadImageFromFile(path);
     Image* pImage       = image.get();
     _rawData            = std::move(pImage->_rawData);
     _width              = pImage->_width;

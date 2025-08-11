@@ -1,17 +1,15 @@
 //
 //  Application.h
-//  HSMR
+//  Core
 //
-//  Created by Yongsik Im on 2025.2.7
+//  Created by Yongsik Im on 2/7/2025
 //
 #ifndef __HS_APPLICATION_H__
 #define __HS_APPLICATION_H__
 
 #include "Precompile.h"
 
-#include "Engine/Core/EngineContext.h"
-
-#include "Engine/Platform/PlatformApplication.h"
+#include "HAL/SystemContext.h"
 
 namespace HS
 {

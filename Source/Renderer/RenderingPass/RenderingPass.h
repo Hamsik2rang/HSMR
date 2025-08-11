@@ -1,4 +1,4 @@
-﻿//
+//
 //  RendererPass.h
 //  HSMR
 //
@@ -11,9 +11,9 @@
 
 #include <typeinfo>
 
-#include "Engine/Renderer/RenderDefinition.h"
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Core/Renderer/RenderDefinition.h"
+#include "Core/RHI/RenderHandle.h"
+#include "Core/Renderer/RenderTarget.h"
 
 HS_NS_BEGIN
 

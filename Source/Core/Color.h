@@ -1,16 +1,16 @@
 //
 //  Color.h
-//  Engine
+//  Core
 //
-//  Created by Yongsik Im on 2/8/25.
+//  Created by Yongsik Im on 2/8/2025
 //
 #ifndef __HS_COLOR_H__
 #define __HS_COLOR_H__
 
 #include "Precompile.h"
 
-#include "Engine/Core/Log.h"
-#include <glm/glm.hpp>
+#include "Core/Log.h"
+#include "ThirdParty/glm/glm.hpp"
 // #include <simd/simd.h>
 
 class Color

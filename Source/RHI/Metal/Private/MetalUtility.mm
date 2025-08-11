@@ -1,6 +1,6 @@
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 #import <Foundation/Foundation.h>
 

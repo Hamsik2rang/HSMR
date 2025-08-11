@@ -1,4 +1,4 @@
-set(TARGET_NAME Resource)
+set(TARGET_NAME ResourceObject)
 
 set(TOTAL_FILES)
 
@@ -8,26 +8,30 @@ else() # TODO
     set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
 endif()
 
-set(RESOURCE_HEADERS
+set(RESOURCE_OBJECT_HEADERS
     Image.h
     Material.h
     Mesh.h
     Object.h
-    ResourceManager.h
+    ROManager.h
 )
 
-source_group("Public" FILES ${RESOURCE_HEADERS})
-list(APPEND TOTAL_FILES ${RESOURCE_HEADERS})
+source_group("Public" FILES ${RESOURCE_OBJECT_HEADERS})
+list(APPEND TOTAL_FILES ${RESOURCE_OBJECT_HEADERS})
 
-set(RESOURCE_SOURCES
+set(RESOURCE_OBJECT_SOURCES
     Private/Image.cpp
     Private/Material.cpp
     Private/Mesh.cpp
     Private/Object.cpp
-    Private/ResourceManager.cpp
+    Private/ROManager.cpp
 )
+source_group("Private" FILES ${RESOURCE_OBJECT_SOURCES})
+list(APPEND TOTAL_FILES ${RESOURCE_OBJECT_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
+
+add_dependencies(${TARGET_NAME} HAL Core)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -37,10 +41,10 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RESOURCE
     HS_API_EXPORT
-    HS_RESOURCE_API_EXPORT
+    HS_RESOURCE_OBJECT_API_EXPORT
 )
 
-target_Link_libraries(${TARGET_NAME} PRIVATE Core)
+target_Link_libraries(${TARGET_NAME} PRIVATE Core ${ASSIMP})
 
 if(APPLE)
     # On macOS, copy the .dylib file

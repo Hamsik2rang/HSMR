@@ -1,15 +1,15 @@
-﻿#include "ForwardOpaquePass.h"
+#include "ForwardOpaquePass.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/FileSystem.h"
+#include "Core/EngineContext.h"
+#include "Core/FileSystem.h"
 
-#include "Engine/Renderer/Renderer.h"
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/RHI/CommandHandle.h"
+#include "Core/Renderer/Renderer.h"
+#include "Core/RHI/RenderHandle.h"
+#include "Core/RHI/CommandHandle.h"
 
-#include "Engine/Object/Material.h"
+#include "Resource/Material.h"
 
-#include "Engine/Utility/ResourceManager.h"
+#include "Core/Utility/ROManager.h"
 
 HS_NS_BEGIN
 
@@ -142,7 +142,7 @@ void ForwardOpaquePass::createResourceHandles()
 	},
 	};
 
-	const Mesh& fallbackMesh = ResourceManager::GetFallbackMeshCube();
+	const Mesh& fallbackMesh = ROManager::GetFallbackMeshCube();
 	const auto& pos = fallbackMesh.GetPosition();
 	const auto& color = fallbackMesh.GetColor();
 

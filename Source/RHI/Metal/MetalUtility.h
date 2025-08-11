@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIDefinition.h"
+#include "Core/RHI/RHIDefinition.h"
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>

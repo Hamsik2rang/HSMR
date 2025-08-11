@@ -1,4 +1,4 @@
-﻿#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 HS_NS_BEGIN
 #if defined(__APPLE__)

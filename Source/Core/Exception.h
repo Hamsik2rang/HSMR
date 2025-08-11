@@ -1,8 +1,8 @@
 //
 //  FileSystem.h
-//  Engine
+//  Core
 //
-//  Created by Yongsik Im on 2025.2.8
+//  Created by Yongsik Im on 2/8/2025
 //
 #ifndef __HS_EXCEPTION_H__
 #define __HS_EXCEPTION_H__

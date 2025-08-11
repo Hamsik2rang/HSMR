@@ -1,8 +1,8 @@
 //
 //  Hash.h
-//  Engine
+//  Core
 //
-//  Created by Yongsik Im on 2/23/25.
+//  Created by Yongsik Im on 2/23/2025.
 //
 
 #ifndef __HS_HASH_H__

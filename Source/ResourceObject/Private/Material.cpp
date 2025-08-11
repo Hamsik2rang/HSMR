@@ -1,21 +1,16 @@
-﻿//
-//  Material.cpp
-//  HSMR
-//
-//  Created by Yongsik Im on 2/5/25.
-//
-#include "Engine/Object/Material.h"
-//#include "Engine/Object/Shader.h"
-#include "Engine/RHI/ResourceHandle.h"
-#include "Engine/Object/Image.h"
-#include "Engine/Core/Log.h"
+#include "ResourceObject/Material.h"
+//#include "ResourceObject/Shader.h"
+
+#include "ResourceObject/Image.h"
+#include "Core/Log.h"
+#include "Core/Math/Vec2f.h"
 
 HS_NS_BEGIN
 
 Material::~Material()
 {
     // Note: We don't delete textures here as they might be shared between materials
-    // ResourceManager should handle texture lifecycle
+    // ROManager should handle texture lifecycle
     _textures.clear();
 }
 
@@ -56,7 +51,7 @@ void Material::SetShaderParameter(const char* name, float value)
     // This would interact with the shader system to set uniform values
 }
 
-void Material::SetShaderParameter(const char* name, const glm::vec2& value)
+void Material::SetShaderParameter(const char* name, const Vec2f& value)
 {
     // TODO: Implement parameter storage and binding
 }

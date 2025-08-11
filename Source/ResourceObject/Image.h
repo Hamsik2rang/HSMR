@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Object/Object.h"
+#include "ResourceObject/Object.h"
 
 HS_NS_BEGIN
 

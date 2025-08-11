@@ -1,8 +1,6 @@
-﻿#include "Engine/Core/Window.h"
+#include "Core/Window.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RHI/RenderHandle.h"
+#include "Core/Log.h"
 
 #include <queue>
 
@@ -13,23 +11,11 @@ std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_eventQueueTa
 Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags)
     : _isClosed(false)
     , _shouldClose(false)
-    , _renderer(nullptr)
-    , _scene(nullptr)
 {
-    if (!hs_platform_window_create(name, width, height, flags, _nativeWindow))
+    if (!CreateNativeWindow(name, width, height, flags, _nativeWindow))
     {
         HS_LOG(crash, "Fail to create NativeWindow");
     }
-
-    _rhiContext = hs_engine_get_rhi_context();
-
-    SwapchainInfo swInfo{};
-    swInfo.nativeWindow = &_nativeWindow;
-    swInfo.useDepth     = false;
-    swInfo.useMSAA      = false;
-    swInfo.useStencil   = false;
-
-    _swapchain = _rhiContext->CreateSwapchain(swInfo);
 
     s_eventQueueTable.insert({&_nativeWindow, std::queue<EWindowEvent>()});
 
@@ -40,64 +26,60 @@ Window::~Window()
 {
     Shutdown();
 }
-
-void Window::NextFrame()
-{
-    onNextFrame();
-
-    for (auto* child : _childs)
-    {
-        child->NextFrame();
-    }
-}
-
-void Window::Update()
-{
-    onUpdate();
-
-    for (auto* child : _childs)
-    {
-        child->Update();
-    }
-}
-
-// Render는 Preorder로 수행
-void Window::Render()
-{
-    if (nullptr != _renderer)
-    {
-        onRender();
-    }
-
-    for (auto* child : _childs)
-    {
-        child->Render();
-    }
-}
-
-void Window::Present()
-{
-    onPresent();
-
-    for (auto* child : _childs)
-    {
-        child->Present();
-    }
-}
+//
+//void Window::NextFrame()
+//{
+//    onNextFrame();
+//
+//    for (auto* child : _childs)
+//    {
+//        child->NextFrame();
+//    }
+//}
+//
+//void Window::Update()
+//{
+//    onUpdate();
+//
+//    for (auto* child : _childs)
+//    {
+//        child->Update();
+//    }
+//}
+//
+//// Render는 Preorder로 수행
+//void Window::Render()
+//{
+//    if (nullptr != _renderer)
+//    {
+//        onRender();
+//    }
+//
+//    for (auto* child : _childs)
+//    {
+//        child->Render();
+//    }
+//}
+//
+//void Window::Present()
+//{
+//    onPresent();
+//
+//    for (auto* child : _childs)
+//    {
+//        child->Present();
+//    }
+//}
 
 void Window::Shutdown()
 {
     onShutdown();
 
-    hs_platform_window_destroy(_nativeWindow);
+    DestroyNativeWindow(_nativeWindow);
 
     _isClosed = true;
 }
 
-void Window::ProcessEvent()
-{
-    // empty.
-}
 
 void Window::Flush()
 {
@@ -139,11 +121,11 @@ HS_NS_END
 
 using namespace HS;
 
-bool hs_window_peek_event(NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
+bool PeekNativeEvent(NativeWindow* pWindow, EWindowEvent& outEvent, bool remove)
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 
-    hs_platform_window_poll_event(*pWindow);
+    PollNativeEvent(*pWindow);
     
     outEvent = EWindowEvent::NONE;
 
@@ -163,7 +145,7 @@ bool hs_window_peek_event(NativeWindow* pWindow, EWindowEvent& outEvent, bool re
     return true;
 }
 
-void hs_window_push_event(const NativeWindow* pWindow, EWindowEvent event)
+void PushNativeEvent(const NativeWindow* pWindow, EWindowEvent event)
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 
@@ -172,7 +154,7 @@ void hs_window_push_event(const NativeWindow* pWindow, EWindowEvent event)
     eventQueue.push(event);
 }
 
-EWindowEvent hs_window_pop_event(const NativeWindow* pWindow)
+EWindowEvent PopNativeEvent(const NativeWindow* pWindow)
 {
     HS_ASSERT(s_eventQueueTable.find(pWindow) != s_eventQueueTable.end(), "NativeWindow is not created. you should call \'hs_platform_create_window()\' first.");
 

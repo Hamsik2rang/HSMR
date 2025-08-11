@@ -23,9 +23,8 @@ message(STATUS "HS_SRC_DIR: ${HS_SRC_DIR}")
 set(HS_RES_DIR ${HS_ROOT_DIR}/Resource)
 message(STATUS "HS_RES_DIR: ${HS_RES_DIR}")
 
-set(HS_RES_SHADER_DIR ${HS_RES_DIR}/Shader)
-message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
-
+# set(HS_RES_SHADER_DIR ${HS_RES_DIR}/Shader)
+# message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
 message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
@@ -80,7 +79,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(HS_HAL_DIR "Source/HAL")
 set(HS_CORE_DIR "Source/Core")
-set(HS_RESOURCE_DIR "Source/Resource")
+set(HS_RESOURCE_OBJECT_DIR "Source/ResourceObject")
 set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 set(HS_RHI_DIR "Source/RHI")
 set(HS_PHYSICS_DIR "Source/Physics")
@@ -95,7 +94,7 @@ set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 
 add_subdirectory(${HS_HAL_DIR})
 add_subdirectory(${HS_CORE_DIR})
-add_subdirectory(${HS_RESOURCE_DIR})
+add_subdirectory(${HS_RESOURCE_OBJECT_DIR})
 add_subdirectory(${HS_SHADERSYSTEM_DIR})
 add_subdirectory(${HS_RHI_DIR})
 

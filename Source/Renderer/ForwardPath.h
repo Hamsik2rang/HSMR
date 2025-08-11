@@ -1,9 +1,9 @@
-﻿#ifndef __HS_FORWARD_RENDERER_H__
+#ifndef __HS_FORWARD_RENDERER_H__
 #define __HS_FORWARD_RENDERER_H__
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/Renderer.h"
+#include "Core/Renderer/Renderer.h"
 
 HS_NS_BEGIN
 

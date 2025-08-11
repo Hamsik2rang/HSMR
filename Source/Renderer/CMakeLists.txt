@@ -63,7 +63,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} RHI)
+add_dependencies(${TARGET_NAME} HAL Core RHI)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -80,7 +80,7 @@ target_compile_definitions(${TARGET_NAME}
 
 if(USE_SHADERSYSTEM)
     add_dependencies(${TARGET_NAME} ShaderSystem)
-    tareg_compile_definitions(${TARGET_NAME} HS_SHADERSYSTEM_API_IMPORT)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HS_SHADERSYSTEM_API_IMPORT)
 endif()
 
 if(APPLE)

@@ -1,8 +1,8 @@
 //
-//  PlatformDefinition.h
-//  Engine
+//  HALDefinition.h
+//  HAL
 //
-//  Created by Yongsik Im on 2025.5.16
+//  Created by Yongsik Im on 5/16/2025
 //
 #ifndef __HS_PLATFORM_DEFINITION_H__
 #define __HS_PLATFORM_DEFINITION_H__

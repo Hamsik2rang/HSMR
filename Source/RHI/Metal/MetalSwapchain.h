@@ -9,9 +9,9 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/Swapchain.h"
+#include "Core/RHI/Swapchain.h"
 
-#include "Engine/RHI/Metal/RHIUtilityMetal.h"
+#include "Core/RHI/Metal/RHIUtilityMetal.h"
 
 #import <MetalKit/MetalKit.h>
 

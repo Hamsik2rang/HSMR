@@ -1,4 +1,4 @@
-﻿//
+//
 //  RenderDefinition.h
 //  Engine
 //
@@ -7,7 +7,7 @@
 #ifndef __HS_RENDER_DEFINITION_H__
 #define __HS_RENDER_DEFINITION_H__
 
-#include "Engine/RHI/RHIDefinition.h"
+#include "Core/RHI/RHIDefinition.h"
 
 HS_NS_BEGIN
 

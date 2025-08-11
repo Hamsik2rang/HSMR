@@ -1,4 +1,4 @@
-﻿//
+//
 //  Swapchian.h
 //  Engine
 //
@@ -9,11 +9,9 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIDefinition.h"
-#include "Engine/Core/Log.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Core/Log.h"
 
-#include "Engine/Platform/PlatformWindow.h"
+#include "HAL/NativeWindow.h"
 
 namespace HS { class CommandBuffer; }
 namespace HS { class RenderTarget; }

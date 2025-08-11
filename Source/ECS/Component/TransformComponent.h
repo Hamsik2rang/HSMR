@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/ECS/Component/Component.h"
+#include "Core/ECS/Component/Component.h"
 
 HS_NS_BEGIN
 

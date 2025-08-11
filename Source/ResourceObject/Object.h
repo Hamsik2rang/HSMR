@@ -8,7 +8,7 @@
 #define __HS_OBJECT_H__
 
 #include "Precompile.h"
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 HS_NS_BEGIN
 

@@ -1,4 +1,4 @@
-﻿//
+//
 //  Material.h
 //  HSMR
 //
@@ -9,12 +9,11 @@
 
 #include "Precompile.h"
 
-#include "Engine/Object/Object.h"
-#include "Engine/Renderer/RenderDefinition.h"
+#include "ResourceObject/Object.h"
 
-#include "BuiltInMaterialLayout.h"
+//#include "BuiltInMaterialLayout.h"
 
-#include <glm/glm.hpp>
+#include "Core/Math/Math.h"
 #include <unordered_map>
 #include <string>
 
