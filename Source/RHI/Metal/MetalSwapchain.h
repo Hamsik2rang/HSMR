@@ -21,7 +21,7 @@ class CommandBuffer;
 
 class SwapchainMetal : public Swapchain
 {
-    friend class RHIContextMetal;
+    friend class MetalContext;
 
 public:
     SwapchainMetal(const SwapchainInfo& info);

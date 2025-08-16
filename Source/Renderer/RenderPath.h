@@ -1,5 +1,5 @@
-//
-//  Renderer.h
+﻿//
+//  RenderPath.h
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
@@ -9,48 +9,48 @@
 
 #include "Precompile.h"
 
-#include "Core/Renderer/RenderTarget.h"
-#include "Core/Renderer/RenderDefinition.h"
-#include "Core/RHI/RHIDefinition.h"
-#include "Core/RHI/RHIContext.h"
+#include "Renderer/RenderTarget.h"
+#include "Renderer/RendererDefinition.h"
+#include "RHI/RHIDefinition.h"
+#include "RHI/RHIContext.h"
 
 #include <vector>
 #include <unordered_map>
 
 namespace HS { class EngineContext; }
-namespace HS { class RendererPass; }
+namespace HS { class RenderPass; }
 namespace HS { class Scene; }
 namespace HS { class Swapchain; }
-namespace HS { class Framebuffer; }
+namespace HS { class RHIFramebuffer; }
 namespace HS { struct NativeWindow; }
 
 HS_NS_BEGIN
 
-class Renderer
+class RenderPath
 {
 public:
     class RHIHandleCache
     {
-        friend Renderer;
+        friend RenderPath;
 
     public:
-        RHIHandleCache(Renderer* renderer);
+        RHIHandleCache(RenderPath* renderer);
         ~RHIHandleCache();
 
-        RenderPass*       GetRenderPass(const RenderPassInfo& info);
-        Framebuffer*      GetFramebuffer(RenderPass* renderPass, RenderTarget* renderTarget);
-        GraphicsPipeline* GetGraphicsPipeline(const GraphicsPipelineInfo& info);
+        RHIRenderPass*       GetRenderPass(const RenderPassInfo& info);
+        RHIFramebuffer*      GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget);
+        RHIGraphicsPipeline* GetGraphicsPipeline(const GraphicsPipelineInfo& info);
 
     private:
-        Renderer* _renderer;
+        RenderPath* _renderer;
 
-        std::unordered_map<uint32, RenderPass*>       _renderPassCache;
-        std::unordered_map<uint32, Framebuffer*>      _framebufferCache;
-        std::unordered_map<uint32, GraphicsPipeline*> _gPipelineCache;
+        std::unordered_map<uint32, RHIRenderPass*>       _renderPassCache;
+        std::unordered_map<uint32, RHIFramebuffer*>      _framebufferCache;
+        std::unordered_map<uint32, RHIGraphicsPipeline*> _gPipelineCache;
     };
 
-    Renderer(RHIContext* rhiContext);
-    virtual ~Renderer();
+    RenderPath(RHIContext* rhiContext);
+    virtual ~RenderPath();
 
     virtual bool Initialize();
 
@@ -58,7 +58,7 @@ public:
 
     virtual void Render(const RenderParameter& param, RenderTarget* renderTexture);
 
-    virtual void AddPass(RendererPass* pass)
+    virtual void AddPass(RenderPass* pass)
     {
         _rendererPasses.push_back(pass);
         _isPassListSorted = false;
@@ -77,9 +77,9 @@ public:
 protected:
     RHIContext*     _rhiContext;
     RHIHandleCache* _rhiHandleCache;
-    CommandBuffer*  _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
+    RHICommandBuffer*  _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
 
-    std::vector<RendererPass*> _rendererPasses;
+    std::vector<RenderPass*> _rendererPasses;
     uint32                     frameIndex       = 0;
     bool                       _isInitialized    = false;
     bool                       _isPassListSorted = true;

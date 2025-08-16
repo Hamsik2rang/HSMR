@@ -3,7 +3,7 @@
 #include "Core/EngineContext.h"
 #include "Core/Window.h"
 
-#include "Core/RHI/Metal/RHIContextMetal.h"
+#include "Core/RHI/Metal/MetalContext.h"
 #include "Core/RHI/Metal/RHIUtilityMetal.h"
 #include "Core/RHI/Metal/ResourceHandleMetal.h"
 #include "Core/RHI/Metal/RenderHandleMetal.h"

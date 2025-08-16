@@ -1,4 +1,4 @@
-//
+﻿//
 //  Swapchian.h
 //  Engine
 //
@@ -9,17 +9,15 @@
 
 #include "Precompile.h"
 
-#include "Core/Log.h"
-
 #include "HAL/NativeWindow.h"
+#include "RHI/RHIDefinition.h"
 
-namespace HS { class CommandBuffer; }
-namespace HS { class RenderTarget; }
-namespace HS { class Framebuffer; }
+namespace HS { class RHICommandBuffer; }
+namespace HS { class RHIFramebuffer; }
 
 HS_NS_BEGIN
 
-class Swapchain
+class Swapchain : public RHIHandle
 {
 public:
     Swapchain(const SwapchainInfo& info);
@@ -29,27 +27,21 @@ public:
     //    HS_FORCEINLINE const std::vector<CommandBuffer*>& GetSubmittedCmdBuffers() const {return _submittedCmdBuffers;}
     //    HS_FORCEINLINE void ClearSubmittedCmdBuffers() { _submittedCmdBuffers.clear();}
 
-    virtual uint8          GetMaxFrameCount() const                   = 0;
-    virtual uint8          GetCurrentFrameIndex() const               = 0;
-    virtual CommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
-    virtual CommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
-    virtual RenderTarget   GetRenderTargetForCurrentFrame() const     = 0;
-    virtual Framebuffer* GetFramebufferForCurrentFrame() const = 0;
+    virtual uint8           GetMaxFrameCount() const                   = 0;
+    virtual uint8           GetCurrentFrameIndex() const               = 0;
+    virtual RHICommandBuffer*  GetCommandBufferForCurrentFrame() const    = 0;
+    virtual RHICommandBuffer*  GetCommandBufferByIndex(uint8 index) const = 0;
+    virtual RHIFramebuffer*    GetFramebufferForCurrentFrame() const = 0;
 
     HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->surfaceWidth; }
     HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->surfaceHeight; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
-    HS_FORCEINLINE RenderPass*   GetRenderPass() const { return _renderPass; }
+    HS_FORCEINLINE RHIRenderPass*   GetRenderPass() const { return _renderPass; }
 
 protected:
-    virtual void setRenderTargets() = 0;
-    virtual void setRenderPass()    = 0;
-
-    SwapchainInfo _info;
-
-    RenderPass*                 _renderPass;
-    std::vector<RenderTarget>   _renderTargets;
+    SwapchainInfo   _info;
+    RHIRenderPass*     _renderPass;
 };
 
 HS_NS_END

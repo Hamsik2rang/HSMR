@@ -1,4 +1,4 @@
-//
+﻿//
 //  ForwardPass.h
 //  HSMR
 //
@@ -12,10 +12,10 @@
 
 HS_NS_BEGIN
 
-class ForwardPass : public RendererPass
+class ForwardPass : public RenderPass
 {
 public:
-    ForwardPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    ForwardPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
     ~ForwardPass() override {}
 
 protected:

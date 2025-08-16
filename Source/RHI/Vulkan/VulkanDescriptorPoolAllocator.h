@@ -3,13 +3,13 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
+#include "RHI/Vulkan/VulkanResourceHandle.h"
 
 #include <vector>
 
 HS_NS_BEGIN
 
-class RHIDeviceVulkan;
+class VulkanDevice;
 
 class DescriptorPoolAllocatorVulkan
 {
@@ -23,7 +23,7 @@ public:
 	DescriptorPoolAllocatorVulkan();
 	~DescriptorPoolAllocatorVulkan();
 
-	bool Initialize(VkInstance instanceVk, RHIDeviceVulkan* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios);
+	bool Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios);
 	void Finalize();
 
 	VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next);
@@ -33,7 +33,7 @@ private:
 	VkDescriptorPool acquirePool();
 	
 	VkInstance _instanceVk;
-	RHIDeviceVulkan* _device = nullptr;
+	VulkanDevice* _device = nullptr;
 
 	std::vector<PoolSizeRatio> _ratios;
 	std::vector<VkDescriptorPool> _readyPools;

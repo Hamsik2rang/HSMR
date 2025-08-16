@@ -1,10 +1,10 @@
-﻿#include "Engine/RHI/Vulkan/SwapchainVulkan.h"
+﻿#include "RHI/Vulkan/VulkanSwapchain.h"
 
-#include "Engine/Platform/Windows/PlatformWindowWindows.h"
+#include "Core/Window.h"
 
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
-#include "Engine/RHI/Vulkan/RHIContextVulkan.h"
-#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
+#include "RHI/Vulkan/VulkanUtility.h"
+#include "RHI/Vulkan/VulkanContext.h"
+#include "RHI/Vulkan/VulkanCommandHandle.h"
 
 
 #include <vulkan/vulkan.h>
@@ -30,69 +30,37 @@ SwapchainVulkan::~SwapchainVulkan()
 	destroySwapchainVK();
 }
 
-void SwapchainVulkan::setRenderTargets()
-{
-	// Vulkan에서는 필요 없음.
-
- //   RenderTargetInfo info{};
- //   info.isSwapchainTarget      = true;
-	//info.swapchain				= this;
- //   info.colorTextureCount      = 1;
- //   info.useDepthStencilTexture = false; // TOOD: 선택 가능하면 좋을듯함.
-
- //   TextureInfo colorTextureInfo{};
- //   colorTextureInfo.extent.width         = _info.nativeWindow->width;
- //   colorTextureInfo.extent.height        = _info.nativeWindow->height;
- //   colorTextureInfo.extent.depth         = 1;
- //   colorTextureInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
- //   colorTextureInfo.usage                = ETextureUsage::COLOR_RENDER_TARGET;
- //   colorTextureInfo.arrayLength          = 1;
- //   colorTextureInfo.mipLevel             = 1;
- //   colorTextureInfo.isCompressed         = false;
- //   colorTextureInfo.useGenerateMipmap    = false;
- //   colorTextureInfo.isDepthStencilBuffer = false;
- //   colorTextureInfo.type                 = ETextureType::TEX_2D;
-	//colorTextureInfo.isSwapchainTexture = true;
-
- //   info.colorTextureInfos.emplace_back(colorTextureInfo);
-
- //   for (auto& renderTarget : _renderTargets)
- //   {
- //       renderTarget.Create(info);
- //   }
-}
-
-void SwapchainVulkan::setRenderPass()
-{
-	Attachment colorAttachment{};
-	colorAttachment.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
-	colorAttachment.clearValue = ClearValue(0.3, 0.3, 0.3, 1.0);
-	colorAttachment.loadAction = ELoadAction::CLEAR;
-	colorAttachment.storeAction = EStoreAction::STORE;
-	colorAttachment.isDepthStencil = false;
-
-	Area renderArea{};
-	renderArea.x = 0;
-	renderArea.y = 0;
-	renderArea.width = _info.nativeWindow->surfaceWidth;
-	renderArea.height = _info.nativeWindow->surfaceHeight;
-
-	RenderPassInfo info{};
-	info.isSwapchainRenderPass = true;
-	info.colorAttachments = { colorAttachment };
-	info.colorAttachmentCount = 1;
-	info.useDepthStencilAttachment = false;
-
-	_renderPass = hs_engine_get_rhi_context()->CreateRenderPass("Swapchain RenderPass", info);
-}
+//void SwapchainVulkan::setRenderPass()
+//{
+//	Attachment colorAttachment{};
+//	colorAttachment.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
+//	colorAttachment.clearValue = ClearValue(0.3, 0.3, 0.3, 1.0);
+//	colorAttachment.loadAction = ELoadAction::CLEAR;
+//	colorAttachment.storeAction = EStoreAction::STORE;
+//	colorAttachment.isDepthStencil = false;
+//
+//	Area renderArea{};
+//	renderArea.x = 0;
+//	renderArea.y = 0;
+//	renderArea.width = _info.nativeWindow->surfaceWidth;
+//	renderArea.height = _info.nativeWindow->surfaceHeight;
+//
+//	RenderPassInfo info{};
+//	info.isSwapchainRenderPass = true;
+//	info.colorAttachments = { colorAttachment };
+//	info.colorAttachmentCount = 1;
+//	info.useDepthStencilAttachment = false;
+//
+//	_renderPass = RHIContext::Get()->CreateRenderPass("Swapchain RenderPass", info);
+//}
 
 void SwapchainVulkan::setFramebuffers()
 {
 	HS_ASSERT(_framebuffers == nullptr, "Framebuffer is already exists. you should destroy it before creating new one.");
 
-	_framebuffers = new Framebuffer * [imageVks.size()] { nullptr };
+	_framebuffers = new RHIFramebuffer * [imageVks.size()] { nullptr };
 
-	RHIContext* rhiContext = hs_engine_get_rhi_context();
+	RHIContext* rhiContext = RHIContext::Get();
 
 	// Framebuffer는 스왑체인 이미지와 1대1 대응이므로 VkImage개수와 동일하게 생성합니다.
 	for (uint8 i = 0; i < imageVks.size(); i++)
@@ -113,7 +81,7 @@ void SwapchainVulkan::setFramebuffers()
 		tInfo.byteSize = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
 		tInfo.isDepthStencilBuffer = false;
 
-		Texture* texture = rhiContext->CreateTexture("Swapchain Framebffer Texture", nullptr, tInfo);
+		RHITexture* texture = rhiContext->CreateTexture("Swapchain Framebffer Texture", nullptr, tInfo);
 		
 		FramebufferInfo fbInfo{};
 		fbInfo.depthStencilBuffer = nullptr;
@@ -124,7 +92,7 @@ void SwapchainVulkan::setFramebuffers()
 		fbInfo.renderPass = _renderPass;
 		fbInfo.colorBuffers.push_back(texture);
 
-		Framebuffer* framebuffer = rhiContext->CreateFramebuffer("Swapchain Framebuffer", fbInfo);
+		RHIFramebuffer* framebuffer = rhiContext->CreateFramebuffer("Swapchain Framebuffer", fbInfo);
 		_framebuffers[i] = framebuffer;
 	}
 }
@@ -188,7 +156,7 @@ void SwapchainVulkan::getSwapchainImages()
 	return;
 }
 
-bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance instance, RHIDeviceVulkan* deviceVulkan)
+bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan)
 {
 	_deviceVulkan = deviceVulkan;
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_deviceVulkan->physicalDevice, surface, &surfaceCapabilities);
@@ -296,8 +264,6 @@ bool SwapchainVulkan::initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance i
 		VK_CHECK_RESULT(vkCreateFence(_deviceVulkan->logicalDevice, &fenceInfo, nullptr, &(syncObjects.inFlightFences[i])));
 	}
 
-	setRenderTargets();
-	setRenderPass();
 	setFramebuffers();
 
 	_isInitialized = true;
@@ -310,7 +276,7 @@ void SwapchainVulkan::destroySwapchainVK()
 	{
 		return;
 	}
-	RHIContext* rhiContext = hs_engine_get_rhi_context();
+	RHIContext* rhiContext = RHIContext::Get();
 	rhiContext->WaitForIdle();
 
 	for (size_t i = 0; i < imageViewVks.size(); i++)

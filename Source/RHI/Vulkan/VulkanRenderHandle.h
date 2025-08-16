@@ -9,22 +9,22 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+#include "RHI/RenderHandle.h"
+#include "RHI/Vulkan/VulkanDevice.h"
 
 HS_NS_BEGIN
 
-struct RenderPassVulkan : public RenderPass
+struct RenderPassVulkan : public RHIRenderPass
 {
-	RenderPassVulkan(const char* name, const RenderPassInfo& info) : RenderPass(name, info) {}
+	RenderPassVulkan(const char* name, const RenderPassInfo& info) : RHIRenderPass(name, info) {}
 	~RenderPassVulkan() override = default;
 
 	VkRenderPass handle = VK_NULL_HANDLE;
 };
 
-struct FramebufferVulkan : public Framebuffer
+struct FramebufferVulkan : public RHIFramebuffer
 {
-	FramebufferVulkan(const char* name, const FramebufferInfo& info) : Framebuffer(name, info) {}
+	FramebufferVulkan(const char* name, const FramebufferInfo& info) : RHIFramebuffer(name, info) {}
 	~FramebufferVulkan() override = default;
 
 	VkFramebuffer handle = VK_NULL_HANDLE;
@@ -35,15 +35,15 @@ struct PipelineVulkanBase
 	VkPipeline handle = VK_NULL_HANDLE;
 };
 
-struct GraphicsPipelineVulkan : public GraphicsPipeline, public PipelineVulkanBase
+struct GraphicsPipelineVulkan : public RHIGraphicsPipeline, public PipelineVulkanBase
 {
-	GraphicsPipelineVulkan(const char* name, const GraphicsPipelineInfo& info) : GraphicsPipeline(name, info) {}
+	GraphicsPipelineVulkan(const char* name, const GraphicsPipelineInfo& info) : RHIGraphicsPipeline(name, info) {}
 	~GraphicsPipelineVulkan() override = default;
 };
 
-struct ComputePipelineVulkan : public ComputePipeline, public PipelineVulkanBase
+struct ComputePipelineVulkan : public RHIComputePipeline, public PipelineVulkanBase
 {
-	ComputePipelineVulkan(const char* name, const ComputePipelineInfo& info) : ComputePipeline(name, info) {}
+	ComputePipelineVulkan(const char* name, const ComputePipelineInfo& info) : RHIComputePipeline(name, info) {}
 	~ComputePipelineVulkan() override = default;
 };
 

@@ -1,4 +1,4 @@
-//
+﻿//
 //  ScenePanel.hpp
 //  Editor
 //
@@ -18,7 +18,7 @@
 
 namespace HS
 {
-class Framebuffer;
+class RHIFramebuffer;
 }
 
 HS_NS_EDITOR_BEGIN

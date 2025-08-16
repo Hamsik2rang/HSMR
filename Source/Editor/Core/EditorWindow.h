@@ -1,4 +1,4 @@
-//
+﻿//
 //  EditorWindow.h
 //  Editor
 //
@@ -11,12 +11,12 @@
 #include "Precompile.h"
 
 #include "Core/Window.h"
-#include "Core/Renderer/RenderDefinition.h"
+#include "Renderer/RendererDefinition.h"
 
 namespace HS
 {
 class RenderTarget;
-class Renderer;
+class RenderPath;
 } // namespace HS
 
 namespace HS
@@ -57,6 +57,8 @@ private:
     void onRenderGUI();
 
     std::vector<RenderTarget> _renderTargets;
+
+    RHIContext* _pRHIContext;
     
     Panel* _basePanel;
     Panel* _menuPanel;

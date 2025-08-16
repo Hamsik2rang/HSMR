@@ -1,10 +1,10 @@
 ﻿#include "Editor/EntryPoint/EditorMain.h"
 
 #include "Editor/Core/EditorApplication.h"
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Platform/PlatformWindow.h"
+//#include "Core/EngineContext.h"
+#include "Core/Window.h"
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
 using namespace HS;
 

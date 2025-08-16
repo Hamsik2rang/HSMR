@@ -1,4 +1,4 @@
-//
+﻿//
 //  Material.h
 //  HSMR
 //
@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "ResourceObject/Object.h"
+#include "Object/Object.h"
 
 //#include "BuiltInMaterialLayout.h"
 
@@ -19,11 +19,11 @@
 
 HS_NS_BEGIN
 
-class Shader;
+class RHIShader;
 class Image;
 
 // Common material texture types
-enum class EMaterialTextureType : uint8
+enum class HS_OBJECT_API EMaterialTextureType : uint8
 {
     DIFFUSE = 0,
     SPECULAR,
@@ -37,15 +37,15 @@ enum class EMaterialTextureType : uint8
     MAX_TEXTURE_TYPES
 };
 
-class Material : public Object
+class HS_OBJECT_API Material : public Object
 {
 public:
     Material() : Object(EType::MATERIAL), _shader(nullptr) {}
     ~Material() override;
     
     // Shader management
-    void SetShader(Shader* shader);
-    HS_FORCEINLINE Shader* GetShader() const { return _shader; }
+    void SetShader(RHIShader* shader);
+    HS_FORCEINLINE RHIShader* GetShader() const { return _shader; }
     
     // Texture management
     void SetTexture(EMaterialTextureType type, Image* texture);
@@ -85,7 +85,7 @@ public:
     HS_FORCEINLINE bool IsTwoSided() const { return _isTwoSided; }
     
 private:
-    Shader* _shader;
+    RHIShader* _shader;
     
     // Textures
     std::unordered_map<EMaterialTextureType, Image*> _textures;

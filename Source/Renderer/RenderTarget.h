@@ -1,4 +1,4 @@
-//
+﻿//
 //  RenderTarget.h
 //  HSMR
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/ResourceHandle.h"
-#include "Core/Renderer/RenderDefinition.h"
+#include "RHI/ResourceHandle.h"
+#include "Renderer/RendererDefinition.h"
 
 HS_NS_BEGIN
 
@@ -29,10 +29,10 @@ public:
     uint32 GetWidth() const { return _info.width; }
     uint32 GetHeight() const { return _info.height; }
 
-    Texture* GetColorTexture(uint32 index) const { return _colorTextures[index]; }
-    Texture* GetDepthStencilTexture() const { return _depthStencilTexture; }
+    RHITexture* GetColorTexture(uint32 index) const { return _colorTextures[index]; }
+    RHITexture* GetDepthStencilTexture() const { return _depthStencilTexture; }
 
-    const std::vector<Texture*>& GetColorTextures() const { return _colorTextures; }
+    const std::vector<RHITexture*>& GetColorTextures() const { return _colorTextures; }
     size_t                       GetColorTextureCount() const { return _colorTextures.size(); }
 
     const TextureInfo& GetColorTextureInfo(uint32 index) const { return _colorTextures[index]->info; }
@@ -42,8 +42,8 @@ public:
 
 private:
     RenderTargetInfo      _info;
-    std::vector<Texture*> _colorTextures;
-    Texture*              _depthStencilTexture;
+    std::vector<RHITexture*> _colorTextures;
+    RHITexture*              _depthStencilTexture;
 };
 
 template <>
@@ -57,13 +57,13 @@ struct Hasher<RenderTarget>
         hash        = HashCombine(hash, Hasher<size_t>::Get(key.GetColorTextureCount()), info.useDepthStencilTexture);
         for (size_t i = 0; i < key.GetColorTextureCount(); i++)
         {
-            Texture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
+            RHITexture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
             hash                  = HashCombine(hash, Hasher<TextureInfo>::Get(colorTexture->info), PointerHash(colorTexture));
         }
 
         if (info.useDepthStencilTexture)
         {
-            Texture* depthTexture = key.GetDepthStencilTexture();
+            RHITexture* depthTexture = key.GetDepthStencilTexture();
             uint32   b            = Hasher<TextureInfo>::Get(depthTexture->info);
             uint32   c            = PointerHash(depthTexture);
 

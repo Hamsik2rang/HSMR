@@ -1,4 +1,4 @@
-#include "Editor/GUI/GUIContext.h"
+﻿#include "Editor/GUI/GUIContext.h"
 
 #include "Core/EngineContext.h"
 #include "Core/Log.h"
@@ -31,7 +31,7 @@ void GUIContext::Initialize()
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-#if defined(__WIN32__)
+#if defined(__WINDOWS__)
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport 
 #endif
 	const char* filePath = _defaultLayoutPath.c_str();

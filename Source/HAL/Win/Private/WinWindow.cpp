@@ -7,7 +7,9 @@
 #include <cassert>
 
 static HS::NativeWindow* s_boundHsWindow = nullptr;
-std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> s_preEventHandler = nullptr;
+LRESULT(*s_preEventHandler)(HWND, UINT, WPARAM, LPARAM) = nullptr;
+
+
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -45,14 +47,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	}
 	break;
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-		// TODO: Add any drawing code that uses hdc here...
-		EndPaint(hWnd, &ps);
-		break;
-	}
 	case WM_SIZING:
 	{
 		break;
@@ -123,12 +117,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 HS_NS_BEGIN
 
+struct PlatformHandle
+{
+	HWND hWnd;
+	HINSTANCE hInstance;
+};;
+
 bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
 	s_boundHsWindow = &outNativeWindow;
 
 	HINSTANCE hInstance = GetModuleHandleW(nullptr);
-
 
 	WNDCLASSEX wcex = {};
 	wcex.cbSize = sizeof(WNDCLASSEXW);
@@ -200,8 +199,7 @@ bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFl
 	outNativeWindow.surfaceHeight = surfaceRect.bottom - surfaceRect.top;
 	outNativeWindow.flags = flag;
 	outNativeWindow.title = name;
-	outNativeWindow.handle.hWnd = hWnd;
-	outNativeWindow.handle.hInstance = hInstance;
+	outNativeWindow.handle = hWnd;
 	outNativeWindow.isMaximized = false;
 	outNativeWindow.isMinimized = false;
 	outNativeWindow.resizable = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
@@ -221,14 +219,14 @@ void DestroyNativeWindow(NativeWindow& nativeWindow)
 
 void ShowNativeWindow(const NativeWindow& nativeWindow)
 {
-	ShowWindow(nativeWindow.handle.hWnd, SW_SHOW);
+	ShowWindow((HWND)nativeWindow.handle, SW_SHOW);
 }
 
 void PollNativeEvent(NativeWindow& nativeWindow)
 {
 	s_boundHsWindow = &nativeWindow;
 	MSG msg;
-	while (::PeekMessage(&msg, nativeWindow.handle.hWnd, 0u, 0u, PM_REMOVE))
+	while (::PeekMessage(&msg, (HWND)nativeWindow.handle, 0u, 0u, PM_REMOVE))
 	{
 		::TranslateMessage(&msg);
 		::DispatchMessage(&msg);
@@ -245,9 +243,10 @@ void GetNativeWindowPosition(NativeWindow& nativeWindow)
 
 }
 
-void SetNativePreEventHandler(std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> fnHandler)
+void SetNativePreEventHandler(void* fnHandler)
 {
-	s_preEventHandler = fnHandler;
+	LRESULT(*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT(*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
+	s_preEventHandler = func;
 }
 
 void SetNativeWindowSize(uint16 width, uint16 height)

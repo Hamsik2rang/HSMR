@@ -1,9 +1,9 @@
-#include "Editor/Core/EditorApplication.h"
+﻿#include "Editor/Core/EditorApplication.h"
 
 #include "Core/Log.h"
-#include "Core/Platform/PlatformApplication.h"
-#include "Core/Platform/PlatformWindow.h"
-#include "Core/Utility/ROManager.h"
+#include "HAL/SystemContext.h"
+#include "HAL/NativeWindow.h"
+#include "Object/ObjectManager.h"
 
 
 #include "Editor/GUI/GUIContext.h"
@@ -36,12 +36,12 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
         return true;
     }
     _engineContext = engineContext;
-    hs_engine_set_context(engineContext);
+    //hs_engine_set_context(engineContext);
     
     _guiContext = new GUIContext();
     _guiContext->Initialize();
     
-    ROManager::Initialize();
+    ObjectManager::Initialize();
 
     EWindowFlags windowFlags = EWindowFlags::NONE;
     windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
@@ -85,7 +85,7 @@ void EditorApplication::Finalize()
     }
     //...
 
-    ROManager::Finalize();
+    ObjectManager::Finalize();
 
     hs_platform_shutdown(this);
 }

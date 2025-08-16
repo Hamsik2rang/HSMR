@@ -1,4 +1,4 @@
-#include "Core/RHI/Metal/RHIContextMetal.h"
+#include "Core/RHI/Metal/MetalContext.h"
 
 #include "Core/RHI/Metal/SwapchainMetal.h"
 #include "Core/RHI/Metal/RHIUtilityMetal.h"
@@ -16,7 +16,7 @@ HS_NS_BEGIN
 id<MTLDevice> s_device         = nil;
 id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
-bool RHIContextMetal::Initialize()
+bool MetalContext::Initialize()
 {
     NSLog(@"System: %@", [NSProcessInfo processInfo]);
     NSLog(@"Available MTL devices: %@", MTLCopyAllDevices());
@@ -27,20 +27,20 @@ bool RHIContextMetal::Initialize()
     _device = (__bridge void*)s_device;
 }
 
-void RHIContextMetal::Finalize()
+void MetalContext::Finalize()
 {
     //...
 }
 
-void RHIContextMetal::Suspend(Swapchain* swapchain)
+void MetalContext::Suspend(Swapchain* swapchain)
 {
 }
 
-void RHIContextMetal::Restore(Swapchain* swapchain)
+void MetalContext::Restore(Swapchain* swapchain)
 {
 }
 
-uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
+uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
 {
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
 
@@ -65,14 +65,14 @@ uint32 RHIContextMetal::AcquireNextImage(Swapchain* swapchain)
     swRenderPassMetal->handle          = rpDesc;
 }
 
-Swapchain* RHIContextMetal::CreateSwapchain(SwapchainInfo info)
+Swapchain* MetalContext::CreateSwapchain(SwapchainInfo info)
 {
     SwapchainMetal* swMetal = new SwapchainMetal(info);
 
     return static_cast<Swapchain*>(swMetal);
 }
 
-void RHIContextMetal::DestroySwapchain(Swapchain* swapchain)
+void MetalContext::DestroySwapchain(Swapchain* swapchain)
 {
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
     // Swapchain에 들어간 view, layer등은 모두 reference이기 때문에 별도로 제거할 필요가 없다.
@@ -80,21 +80,21 @@ void RHIContextMetal::DestroySwapchain(Swapchain* swapchain)
     delete swMetal;
 }
 
-RenderPass* RHIContextMetal::CreateRenderPass(const char* name, const RenderPassInfo& info)
+RenderPass* MetalContext::CreateRenderPass(const char* name, const RenderPassInfo& info)
 {
     RenderPassMetal* rpMetal = new RenderPassMetal(name, info);
 
     return static_cast<RenderPass*>(rpMetal);
 }
 
-void RHIContextMetal::DestroyRenderPass(RenderPass* renderPass)
+void MetalContext::DestroyRenderPass(RenderPass* renderPass)
 {
     RenderPassMetal* rpMetal = static_cast<RenderPassMetal*>(renderPass);
 
     delete rpMetal;
 }
 
-Framebuffer* RHIContextMetal::CreateFramebuffer(const char* name, const FramebufferInfo& info)
+Framebuffer* MetalContext::CreateFramebuffer(const char* name, const FramebufferInfo& info)
 {
     FramebufferMetal* fbMetal = new FramebufferMetal(name, info);
 
@@ -106,14 +106,14 @@ Framebuffer* RHIContextMetal::CreateFramebuffer(const char* name, const Framebuf
     return static_cast<Framebuffer*>(fbMetal);
 }
 
-void RHIContextMetal::DestroyFramebuffer(Framebuffer* framebuffer)
+void MetalContext::DestroyFramebuffer(Framebuffer* framebuffer)
 {
     FramebufferMetal* fbMetal = static_cast<FramebufferMetal*>(framebuffer);
 
     delete fbMetal;
 }
 
-GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
+GraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
 {
     GraphicsPipelineMetal* pipelineMetal = new GraphicsPipelineMetal(name, info);
 
@@ -214,14 +214,14 @@ GraphicsPipeline* RHIContextMetal::CreateGraphicsPipeline(const char* name, cons
     return static_cast<GraphicsPipeline*>(pipelineMetal);
 }
 
-void RHIContextMetal::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
+void MetalContext::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
 {
     GraphicsPipelineMetal* pipelineMetal = static_cast<GraphicsPipelineMetal*>(pipeline);
 
     delete pipelineMetal;
 }
 
-Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info, const char* path)
+Shader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
     FileHandle handle = 0;
 
@@ -250,7 +250,7 @@ Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info, 
     return shader;
 }
 
-Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize)
+Shader* MetalContext::CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize)
 {
     const static std::string metalLibPath = hs_engine_get_context()->resourceDirectory + std::string("Shader") + HS_DIR_SEPERATOR + "default.metallib";
 
@@ -308,14 +308,14 @@ Shader* RHIContextMetal::CreateShader(const char* name, const ShaderInfo& info, 
     return shaderMetal;
 }
 
-void RHIContextMetal::DestroyShader(Shader* shader)
+void MetalContext::DestroyShader(Shader* shader)
 {
     ShaderMetal* shaderMetal = static_cast<ShaderMetal*>(shader);
 
     delete shaderMetal;
 }
 
-Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
+Buffer* MetalContext::CreateBuffer(const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
 {
     BufferInfo info{};
     info.usage        = usage;
@@ -325,7 +325,7 @@ Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, EBuffer
 
     return result;
 }
-Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info)
+Buffer* MetalContext::CreateBuffer(const void* data, size_t dataSize, const BufferInfo& info)
 {
     BufferMetal* bufferMetal = new BufferMetal(info);
 
@@ -341,14 +341,14 @@ Buffer* RHIContextMetal::CreateBuffer(const void* data, size_t dataSize, const B
     return static_cast<Buffer*>(bufferMetal);
 }
 
-void RHIContextMetal::DestroyBuffer(Buffer* buffer)
+void MetalContext::DestroyBuffer(Buffer* buffer)
 {
     BufferMetal* bufferMetal = static_cast<BufferMetal*>(buffer);
 
     delete bufferMetal;
 }
 
-Texture* RHIContextMetal::CreateTexture(void* image, const TextureInfo& info)
+Texture* MetalContext::CreateTexture(void* image, const TextureInfo& info)
 {
     TextureMetal* textureMetal = new TextureMetal(info);
 
@@ -371,7 +371,7 @@ Texture* RHIContextMetal::CreateTexture(void* image, const TextureInfo& info)
     return static_cast<Texture*>(textureMetal);
 }
 
-Texture* RHIContextMetal::CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
+Texture* MetalContext::CreateTexture(void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
 {
     TextureInfo info{};
     info.extent.width  = width;
@@ -386,131 +386,131 @@ Texture* RHIContextMetal::CreateTexture(void* image, uint32 width, uint32 height
     return result;
 }
 
-void RHIContextMetal::DestroyTexture(Texture* texture)
+void MetalContext::DestroyTexture(Texture* texture)
 {
     TextureMetal* textureMetal = static_cast<TextureMetal*>(texture);
 
     delete textureMetal;
 }
 
-Sampler* RHIContextMetal::CreateSampler(const SamplerInfo& info)
+Sampler* MetalContext::CreateSampler(const SamplerInfo& info)
 {
     SamplerMetal* samplerMetal = new SamplerMetal(info);
 
     return static_cast<Sampler*>(samplerMetal);
 }
 
-void RHIContextMetal::DestroySampler(Sampler* sampler)
+void MetalContext::DestroySampler(Sampler* sampler)
 {
     SamplerMetal* samplerMetal = static_cast<SamplerMetal*>(sampler);
 
     delete samplerMetal;
 }
 
-ResourceLayout* RHIContextMetal::CreateResourceLayout()
+ResourceLayout* MetalContext::CreateResourceLayout()
 {
     ResourceLayoutMetal* resLayoutMetal = new ResourceLayoutMetal();
 
     return resLayoutMetal;
 }
 
-void RHIContextMetal::DestroyResourceLayout(ResourceLayout* resLayout)
+void MetalContext::DestroyResourceLayout(ResourceLayout* resLayout)
 {
     ResourceLayoutMetal* resLayoutMetal = static_cast<ResourceLayoutMetal*>(resLayout);
 
     delete resLayoutMetal;
 }
 
-ResourceSet* RHIContextMetal::CreateResourceSet()
+ResourceSet* MetalContext::CreateResourceSet()
 {
     ResourceSetMetal* resSetMetal = new ResourceSetMetal();
 
     return static_cast<ResourceSet*>(resSetMetal);
 }
 
-void RHIContextMetal::DestroyResourceSet(ResourceSet* resSet)
+void MetalContext::DestroyResourceSet(ResourceSet* resSet)
 {
     ResourceSetMetal* resSetMetal = static_cast<ResourceSetMetal*>(resSet);
 
     delete resSetMetal;
 }
 
-ResourceSetPool* RHIContextMetal::CreateResourceSetPool()
+ResourceSetPool* MetalContext::CreateResourceSetPool()
 {
     ResourceSetPoolMetal* resSetPoolMetal = new ResourceSetPoolMetal();
 
     return static_cast<ResourceSetPool*>(resSetPoolMetal);
 }
 
-void RHIContextMetal::DestroyResourceSetPool(ResourceSetPool* resSetPool)
+void MetalContext::DestroyResourceSetPool(ResourceSetPool* resSetPool)
 {
     ResourceSetPoolMetal* resSetPoolMetal = static_cast<ResourceSetPoolMetal*>(resSetPool);
 
     delete resSetPoolMetal;
 }
 
-CommandPool* RHIContextMetal::CreateCommandPool(uint32 queueFamilyIndices)
+CommandPool* MetalContext::CreateCommandPool(uint32 queueFamilyIndices)
 {
     CommandPoolMetal* cmdPoolMetal = new CommandPoolMetal();
 
     return static_cast<CommandPool*>(cmdPoolMetal);
 }
 
-void RHIContextMetal::DestroyCommandPool(CommandPool* cmdPool)
+void MetalContext::DestroyCommandPool(CommandPool* cmdPool)
 {
     CommandPoolMetal* cmdPoolMetal = static_cast<CommandPoolMetal*>(cmdPool);
 
     delete cmdPoolMetal;
 }
 
-CommandBuffer* RHIContextMetal::CreateCommandBuffer()
+CommandBuffer* MetalContext::CreateCommandBuffer()
 {
     CommandBufferMetal* cmdBufferMetal = new CommandBufferMetal(s_device, s_cmdQueue);
 
     return static_cast<CommandBuffer*>(cmdBufferMetal);
 }
 
-void RHIContextMetal::DestroyCommandBuffer(CommandBuffer* cmdBuffer)
+void MetalContext::DestroyCommandBuffer(CommandBuffer* cmdBuffer)
 {
     CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(cmdBuffer);
 
     delete cmdBufferMetal;
 }
 
-Fence* RHIContextMetal::CreateFence()
+Fence* MetalContext::CreateFence()
 {
     FenceMetal* fenceMetal = new FenceMetal();
 
     return static_cast<Fence*>(fenceMetal);
 }
 
-void RHIContextMetal::DestroyFence(Fence* fence)
+void MetalContext::DestroyFence(Fence* fence)
 {
     FenceMetal* fenceMetal = static_cast<FenceMetal*>(fence);
 
     delete fenceMetal;
 }
 
-Semaphore* RHIContextMetal::CreateSemaphore()
+Semaphore* MetalContext::CreateSemaphore()
 {
     SemaphoreMetal* semaMetal = new SemaphoreMetal();
 
     return static_cast<Semaphore*>(semaMetal);
 }
 
-void RHIContextMetal::DestroySemaphore(Semaphore* semaphore)
+void MetalContext::DestroySemaphore(Semaphore* semaphore)
 {
     SemaphoreMetal* semaMetal = static_cast<SemaphoreMetal*>(semaphore);
 
     delete semaMetal;
 }
 
-void RHIContextMetal::Submit(Swapchain* swapchain, CommandBuffer** cmdBuffers, size_t bufferCount)
+void MetalContext::Submit(Swapchain* swapchain, CommandBuffer** cmdBuffers, size_t bufferCount)
 {
     //...
 }
 
-void RHIContextMetal::Present(Swapchain* swapchain)
+void MetalContext::Present(Swapchain* swapchain)
 {
     SwapchainMetal* swMetal  = static_cast<SwapchainMetal*>(swapchain);
     CommandBuffer* cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
@@ -521,7 +521,7 @@ void RHIContextMetal::Present(Swapchain* swapchain)
     [cmdBufferMetal->handle waitUntilCompleted];
 }
 
-void RHIContextMetal::WaitForIdle() const
+void MetalContext::WaitForIdle() const
 {
     //...
 }

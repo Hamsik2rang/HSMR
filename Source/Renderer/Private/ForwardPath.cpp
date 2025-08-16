@@ -1,9 +1,9 @@
-#include "Core/Renderer/ForwardRenderer.h"
-
+﻿#include "Renderer/ForwardPath.h"
+#include "RHI/RHIContext.h"
 HS_NS_BEGIN
 
 ForwardRenderer::ForwardRenderer(RHIContext* rhiContext)
-    : Renderer(rhiContext)
+    : RenderPath(rhiContext)
 {
 }
 

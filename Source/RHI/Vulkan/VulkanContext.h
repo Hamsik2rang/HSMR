@@ -1,5 +1,5 @@
 ﻿//
-//  RHIContextVulkan.h
+//  VulkanContext.h
 //  Engine
 //
 //  Created by Yongsik Im on 4/11/25.
@@ -9,19 +9,19 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIContext.h"
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
-#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
-#include "Engine/RHI/Vulkan/DescriptorPoolAllocatorVulkan.h"
+#include "RHI/RHIContext.h"
+#include "RHI/Vulkan/VulkanUtility.h"
+#include "RHI/Vulkan/VulkanDevice.h"
+#include "RHI/Vulkan/VulkanDescriptorPoolAllocator.h"
 
 
 HS_NS_BEGIN
 
-class RHIContextVulkan final : public RHIContext
+class VulkanContext final : public RHIContext
 {
 public:
-	RHIContextVulkan() = default;
-	~RHIContextVulkan() final;
+	VulkanContext() = default;
+	~VulkanContext() final;
 
 	bool Initialize() final;
 	void Finalize() final;
@@ -34,49 +34,49 @@ public:
 	Swapchain* CreateSwapchain(SwapchainInfo info) final;
 	void DestroySwapchain(Swapchain* swapchain) final;
 
-	RenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) final;
-	void DestroyRenderPass(RenderPass* renderPass) final;
+	RHIRenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) final;
+	void DestroyRenderPass(RHIRenderPass* renderPass) final;
 
-	Framebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) final;
-	void DestroyFramebuffer(Framebuffer* framebuffer) final;
+	RHIFramebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) final;
+	void DestroyFramebuffer(RHIFramebuffer* framebuffer) final;
 
-	GraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) final;
-	void DestroyGraphicsPipeline(GraphicsPipeline* pipeline) final;
+	RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) final;
+	void DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) final;
 
-	Shader* CreateShader(const char* name, const ShaderInfo& info, const char* path) final;
-	Shader* CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) final;
-	void DestroyShader(Shader* shader) final;
+	RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* path) final;
+	RHIShader* CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) final;
+	void DestroyShader(RHIShader* shader) final;
 
-	Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) final;
-	Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) final;
-	void DestroyBuffer(Buffer* buffer) final;
+	RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) final;
+	RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) final;
+	void DestroyBuffer(RHIBuffer* buffer) final;
 
-	Texture* CreateTexture(const char* name, void* image, const TextureInfo& info) final;
-	Texture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) final;
-	void DestroyTexture(Texture* texture) final;
+	RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) final;
+	RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) final;
+	void DestroyTexture(RHITexture* texture) final;
 
-	Sampler* CreateSampler(const char* name, const SamplerInfo& info) final;
-	void DestroySampler(Sampler* sampler) final;
+	RHISampler* CreateSampler(const char* name, const SamplerInfo& info) final;
+	void DestroySampler(RHISampler* sampler) final;
 
-	ResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) final;
-	void DestroyResourceLayout(ResourceLayout* resourceLayout) final;
+	RHIResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) final;
+	void DestroyResourceLayout(RHIResourceLayout* resourceLayout) final;
 
-	ResourceSet* CreateResourceSet(const char* name, ResourceLayout* resourceLayouts) final;
-	void DestroyResourceSet(ResourceSet* resourceSet) final;
+	RHIResourceSet* CreateResourceSet(const char* name, RHIResourceLayout* resourceLayouts) final;
+	void DestroyResourceSet(RHIResourceSet* resourceSet) final;
 
-	ResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) final;
-	void DestroyResourceSetPool(ResourceSetPool* resourceSetPool) final;
+	RHIResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) final;
+	void DestroyResourceSetPool(RHIResourceSetPool* resourceSetPool) final;
 
-	// CommandQueue* CreateCommandQueue() final;
-	// void DestroyCommandQueue(CommandQueue* cmdQueue) final;
+	// RHICommandQueue* CreateCommandQueue() final;
+	// void DestroyCommandQueue(RHICommandQueue* cmdQueue) final;
 
-	CommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) final;
-	void         DestroyCommandPool(CommandPool* cmdPool) final;
+	RHICommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) final;
+	void         DestroyCommandPool(RHICommandPool* cmdPool) final;
 
-	CommandBuffer* CreateCommandBuffer(const char* name) final;
-	void DestroyCommandBuffer(CommandBuffer* commandBuffer) final;
+	RHICommandBuffer* CreateCommandBuffer(const char* name) final;
+	void DestroyCommandBuffer(RHICommandBuffer* commandBuffer) final;
 
-	void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) final;
+	void Submit(Swapchain* swapchain, RHICommandBuffer** buffers, size_t bufferCount) final;
 
 	void Present(Swapchain* swapchain) final;
 
@@ -84,7 +84,7 @@ public:
 
 	// TODO: ImGui 백엔드 변경되면 없애야합니다.
 	const VkInstance GetInstance() const { return _instanceVk; }
-	const RHIDeviceVulkan* GetDevice() const  { return &(_device); }
+	const VulkanDevice* GetDevice() const  { return &(_device); }
 
 private:
 	bool createInstance();
@@ -110,7 +110,7 @@ private:
 
 	//std::vector<std::string> _supportedInstanceExtensions;
 	VkInstance _instanceVk = VK_NULL_HANDLE;
-	RHIDeviceVulkan _device;
+	VulkanDevice _device;
 	VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
 	DescriptorPoolAllocatorVulkan _descriptorPoolAllocator;
 

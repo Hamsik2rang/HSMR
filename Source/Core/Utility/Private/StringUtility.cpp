@@ -2,7 +2,7 @@
 
 HS_NS_BEGIN
 
-std::string hs_string_format(const char* fmt, ...)
+std::string StringFormat(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

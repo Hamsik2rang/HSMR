@@ -11,7 +11,6 @@ set(CORE_HEADERS
     Flag.h
     Hash.h
     Log.h
-    Window.h
 )
 
 source_group("Public" FILES ${CORE_HEADERS})
@@ -26,7 +25,6 @@ set(CORE_SOURCES
     Private/Flag.cpp
     Private/Hash.cpp
     Private/Log.cpp
-    Private/Window.cpp
 )
 
 source_group("Private" FILES ${CORE_SOURCES})

@@ -3,7 +3,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
+#include "RHI/Vulkan/VulkanUtility.h"
 
 #include <string>
 #include <vector>
@@ -11,11 +11,11 @@
 HS_NS_BEGIN
 
 
-class RHIDeviceVulkan final
+class VulkanDevice final
 {
 public:
-	RHIDeviceVulkan() = default;
-	~RHIDeviceVulkan();
+	VulkanDevice() = default;
+	~VulkanDevice();
 	
 	bool Create(VkInstance instance);
 	void Destroy();

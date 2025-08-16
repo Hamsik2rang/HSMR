@@ -1,26 +1,26 @@
-#include "Engine/RHI/CommandHandle.h"
+﻿#include "RHI/CommandHandle.h"
 
 HS_NS_BEGIN
 
-CommandQueue::CommandQueue(const char* name)
+RHICommandQueue::RHICommandQueue(const char* name)
 	: RHIHandle(EType::COMMAND_QUEUE, name)
 {}
 
-CommandQueue::~CommandQueue()
+RHICommandQueue::~RHICommandQueue()
 {}
 
-CommandPool::CommandPool(const char* name)
+RHICommandPool::RHICommandPool(const char* name)
 	: RHIHandle(EType::COMMAND_POOL, name)
 {}
 
-CommandPool::~CommandPool()
+RHICommandPool::~RHICommandPool()
 {}
 
-CommandBuffer::CommandBuffer(const char* name)
+RHICommandBuffer::RHICommandBuffer(const char* name)
 	: RHIHandle(EType::COMMAND_BUFFER, name)
 {}
 
-CommandBuffer::~CommandBuffer()
+RHICommandBuffer::~RHICommandBuffer()
 {}
 
 HS_NS_END

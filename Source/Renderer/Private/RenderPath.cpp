@@ -1,21 +1,21 @@
-//
-//  Renderer.mm
+﻿//
+//  RenderPath.mm
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-#include "Core/Renderer/Renderer.h"
+#include "Renderer/RenderPath.h"
 
 #include "Core/Log.h"
 #include "Core/Window.h"
-#include "Core/EngineContext.h"
+//#include "Core/EngineContext.h"
 
-#include "Core/RHI/Swapchain.h"
-#include "Core/RendererPass/RendererPass.h"
+#include "RHI/Swapchain.h"
+#include "Renderer/RenderPass/RenderPass.h"
 
 HS_NS_BEGIN
 
-Renderer::RHIHandleCache::RHIHandleCache(Renderer* renderer)
+RenderPath::RHIHandleCache::RHIHandleCache(RenderPath* renderer)
     : _renderer(renderer)
     , _renderPassCache()
     , _framebufferCache()
@@ -23,7 +23,7 @@ Renderer::RHIHandleCache::RHIHandleCache(Renderer* renderer)
 {
 }
 
-Renderer::RHIHandleCache::~RHIHandleCache()
+RenderPath::RHIHandleCache::~RHIHandleCache()
 {
     //...
     RHIContext* rhiContext = _renderer->GetRHIContext();
@@ -60,13 +60,13 @@ Renderer::RHIHandleCache::~RHIHandleCache()
     _gPipelineCache.clear();
 }
 
-RenderPass* Renderer::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
+RHIRenderPass* RenderPath::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
 {
     uint32 hash = Hasher<RenderPassInfo>::Get(info);
 
     if (_renderPassCache.find(hash) == _renderPassCache.end())
     {
-        RenderPass* renderPass = _renderer->GetRHIContext()->CreateRenderPass("RenderPass", info);
+        RHIRenderPass* renderPass = _renderer->GetRHIContext()->CreateRenderPass("RenderPass", info);
 
         _renderPassCache.insert(std::make_pair(hash, renderPass));
     }
@@ -74,9 +74,9 @@ RenderPass* Renderer::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
     return _renderPassCache[hash];
 }
 
-Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, RenderTarget* renderTarget)
+RHIFramebuffer* RenderPath::RHIHandleCache::GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget)
 {
-    uint32 hash = HashCombine(Hasher<RenderTarget>::Get(*renderTarget), Hasher<RenderPass>::Get(*renderPass));
+    uint32 hash = HashCombine(Hasher<RenderTarget>::Get(*renderTarget), Hasher<RHIRenderPass>::Get(*renderPass));
 
     if (_framebufferCache.find(hash) == _framebufferCache.end())
     {
@@ -88,7 +88,7 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
         fbInfo.isSwapchainFramebuffer = renderPass->info.isSwapchainRenderPass;
         fbInfo.renderPass             = renderPass;
 
-        Framebuffer* fb = _renderer->GetRHIContext()->CreateFramebuffer("Framebuffer", fbInfo);
+        RHIFramebuffer* fb = _renderer->GetRHIContext()->CreateFramebuffer("Framebuffer", fbInfo);
 
         _framebufferCache.insert(std::make_pair(hash, fb));
     }
@@ -96,12 +96,12 @@ Framebuffer* Renderer::RHIHandleCache::GetFramebuffer(RenderPass* renderPass, Re
     return _framebufferCache[hash];
 }
 
-GraphicsPipeline* Renderer::RHIHandleCache::GetGraphicsPipeline(const GraphicsPipelineInfo& info)
+RHIGraphicsPipeline* RenderPath::RHIHandleCache::GetGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
     return nullptr;
 }
 
-Renderer::Renderer(RHIContext* context)
+RenderPath::RenderPath(RHIContext* context)
     : _rhiContext(context)
     , _currentRenderTarget(nullptr)
     , frameIndex(0)
@@ -109,12 +109,12 @@ Renderer::Renderer(RHIContext* context)
 {
 }
 
-Renderer::~Renderer()
+RenderPath::~RenderPath()
 {
     Shutdown();
 }
 
-bool Renderer::Initialize()
+bool RenderPath::Initialize()
 {
     _rhiHandleCache = new RHIHandleCache(this);
     _isInitialized = true;
@@ -122,7 +122,7 @@ bool Renderer::Initialize()
     return _isInitialized;
 }
 
-void Renderer::NextFrame(Swapchain* swapchain)
+void RenderPath::NextFrame(Swapchain* swapchain)
 {
     frameIndex = _rhiContext->AcquireNextImage(swapchain);
     if (frameIndex == UINT32_MAX)
@@ -133,7 +133,7 @@ void Renderer::NextFrame(Swapchain* swapchain)
     _curCommandBuffer = swapchain->GetCommandBufferForCurrentFrame();
 }
 
-void Renderer::Render(const RenderParameter& param, RenderTarget* renderTarget)
+void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget)
 {
     for (auto* pass : _rendererPasses)
     {
@@ -144,7 +144,7 @@ void Renderer::Render(const RenderParameter& param, RenderTarget* renderTarget)
     {
         pass->Configure(renderTarget);
 
-        RenderPass* renderPass = GetHandleCache()->GetRenderPass(pass->GetFixedSettingForCurrentPass());
+        RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(pass->GetFixedSettingForCurrentPass());
 
         pass->Execute(_curCommandBuffer, renderPass);
     }
@@ -155,7 +155,7 @@ void Renderer::Render(const RenderParameter& param, RenderTarget* renderTarget)
     }
 }
 
-void Renderer::Shutdown()
+void RenderPath::Shutdown()
 {
     for (size_t i = 0; i < _rendererPasses.size(); i++)
     {

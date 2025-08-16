@@ -1,4 +1,4 @@
-//
+﻿//
 //  Object.h
 //  HSMR
 //
@@ -12,7 +12,7 @@
 
 HS_NS_BEGIN
 
-class Referencable
+class HS_OBJECT_API Referencable
 {
 public:
     int Retain()
@@ -33,7 +33,7 @@ private:
     int _refCount = 0;
 };
 
-class Object : public Referencable
+class HS_OBJECT_API Object : public Referencable
 {
 public:
     enum class EType

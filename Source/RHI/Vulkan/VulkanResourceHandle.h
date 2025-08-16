@@ -9,15 +9,15 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/ResourceHandle.h"
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
+#include "RHI/ResourceHandle.h"
+#include "RHI/Vulkan/VulkanUtility.h"
 
 
 HS_NS_BEGIN
 
-struct TextureVulkan : public Texture
+struct TextureVulkan : public RHITexture
 {
-	TextureVulkan(const char* name, const TextureInfo& info) noexcept : Texture(name, info) {}
+	TextureVulkan(const char* name, const TextureInfo& info) noexcept : RHITexture(name, info) {}
 	~TextureVulkan() final = default;
 
 	VkImage handle = VK_NULL_HANDLE;
@@ -26,17 +26,17 @@ struct TextureVulkan : public Texture
 	VkImageLayout layoutVk = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
-struct SamplerVulkan : public Sampler
+struct SamplerVulkan : public RHISampler
 {
-	SamplerVulkan(const char* name,  const SamplerInfo& info) noexcept : Sampler(name, info) {}
+	SamplerVulkan(const char* name,  const SamplerInfo& info) noexcept : RHISampler(name, info) {}
 	~SamplerVulkan() final = default;
 
 	VkSampler handle = VK_NULL_HANDLE;
 };
 
-struct BufferVulkan : public Buffer
+struct BufferVulkan : public RHIBuffer
 {
-	BufferVulkan(const char* name, const BufferInfo& info) noexcept : Buffer(name, info) {}
+	BufferVulkan(const char* name, const BufferInfo& info) noexcept : RHIBuffer(name, info) {}
 	~BufferVulkan() final = default;
 
 	void Map();
@@ -46,36 +46,36 @@ struct BufferVulkan : public Buffer
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 };
 
-struct ShaderVulkan : public Shader
+struct ShaderVulkan : public RHIShader
 {
-	ShaderVulkan(const char* name, const ShaderInfo& info) noexcept : Shader(name, info) {}
+	ShaderVulkan(const char* name, const ShaderInfo& info) noexcept : RHIShader(name, info) {}
 	~ShaderVulkan() final = default;
 
 	VkShaderModule handle;
 	VkPipelineShaderStageCreateInfo stageInfo = {};
 };
 
-struct ResourceLayoutVulkan : public ResourceLayout
+struct ResourceLayoutVulkan : public RHIResourceLayout
 {
-	ResourceLayoutVulkan(const char* name) noexcept : ResourceLayout(name) {}
+	ResourceLayoutVulkan(const char* name, ResourceBinding* bindings, size_t bindingCount) noexcept : RHIResourceLayout(name, bindings, bindingCount) {}
 	~ResourceLayoutVulkan() final = default;
 
 	VkDescriptorSetLayout handle = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSetLayoutBinding> bindingVks;
 };
 
-struct ResourceSetVulkan : public ResourceSet
+struct ResourceSetVulkan : public RHIResourceSet
 {
-	ResourceSetVulkan(const char* name) noexcept : ResourceSet(name) {}
+	ResourceSetVulkan(const char* name) noexcept : RHIResourceSet(name) {}
 	~ResourceSetVulkan() final = default;
 
 	VkDescriptorSet handle = VK_NULL_HANDLE;
 	ResourceLayoutVulkan* layoutVK = nullptr;
 };
 
-struct ResourceSetPoolVulkan : public ResourceSetPool
+struct ResourceSetPoolVulkan : public RHIResourceSetPool
 {
-	ResourceSetPoolVulkan(const char* name) noexcept : ResourceSetPool(name) {}
+	ResourceSetPoolVulkan(const char* name) noexcept : RHIResourceSetPool(name) {}
 	~ResourceSetPoolVulkan() final = default;
 
 	VkDescriptorPool handle = VK_NULL_HANDLE;

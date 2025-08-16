@@ -11,19 +11,20 @@ set(RHI_HEADERS
     Swapchain.h
 )
 
-source_group("Public" FIELS ${RHI_HEADERS})
-list(APPEND TOTLA_FILES ${RHI_HEADERS})
+source_group("Public" FILES ${RHI_HEADERS})
+list(APPEND TOTAL_FILES ${RHI_HEADERS})
 
 set(RHI_SOURCES
     Private/CommandHandle.cpp
     Private/RenderHandle.cpp
     Private/ResourceHandle.cpp
+    Private/RHIContext.cpp
     Private/RHIDefinition.cpp
     Private/Swapchain.cpp
 )
 
-source_group("Private" FIELS ${RHI_SOURCES})
-list(APPEND TOTLA_FILES ${RHI_SOURCES})
+source_group("Private" FILES ${RHI_SOURCES})
+list(APPEND TOTAL_FILES ${RHI_SOURCES})
 
 if(WIN32)
     set(RHI_VULKAN_HEADERS
@@ -106,7 +107,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} ResourceObject)
+add_dependencies(${TARGET_NAME} HAL Core)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE

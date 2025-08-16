@@ -1,4 +1,4 @@
-//
+﻿//
 //  Mesh.h
 //  HSMR
 //
@@ -9,13 +9,13 @@
 
 #include "Precompile.h"
 
-#include "ResourceObject/Object.h"
+#include "Object/Object.h"
 
 #include "Core/Math/Math.h"
 
 HS_NS_BEGIN
 
-class Mesh : public Object
+class HS_OBJECT_API Mesh : public Object
 {
 public:
     Mesh()

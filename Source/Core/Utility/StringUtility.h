@@ -1,4 +1,4 @@
-//
+﻿//
 //  StringUtility.h
 //  Core
 //
@@ -13,7 +13,7 @@
 HS_NS_BEGIN
 
 
-std::string hs_string_format(const char* fmt, ...);
+std::string StringFormat(const char* fmt, ...);
 
 
 HS_NS_END

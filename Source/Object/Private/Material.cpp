@@ -1,7 +1,7 @@
-#include "ResourceObject/Material.h"
-//#include "ResourceObject/Shader.h"
+﻿#include "Object/Material.h"
+//#include "Object/Shader.h"
 
-#include "ResourceObject/Image.h"
+#include "Object/Image.h"
 #include "Core/Log.h"
 #include "Core/Math/Vec2f.h"
 
@@ -10,11 +10,11 @@ HS_NS_BEGIN
 Material::~Material()
 {
     // Note: We don't delete textures here as they might be shared between materials
-    // ROManager should handle texture lifecycle
+    // ObjectManager should handle texture lifecycle
     _textures.clear();
 }
 
-void Material::SetShader(Shader* shader)
+void Material::SetShader(RHIShader* shader)
 {
     _shader = shader;
 }

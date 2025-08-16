@@ -4,7 +4,7 @@
 //
 //  Created by Yongsik Im on 2/5/25.
 //
-#include "ResourceObject/Mesh.h"
+#include "Object/Mesh.h"
 #include <limits>
 #include <algorithm>
 

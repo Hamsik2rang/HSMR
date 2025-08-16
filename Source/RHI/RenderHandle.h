@@ -10,57 +10,57 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIDefinition.h"
+#include "RHI/RHIDefinition.h"
 
 HS_NS_BEGIN
 
-class RenderPass : public RHIHandle
+class RHIRenderPass : public RHIHandle
 {
 public:
 
-    ~RenderPass() override;
+    ~RHIRenderPass() override;
 
     const RenderPassInfo info;
 
 protected:
-    RenderPass(const char* name, const RenderPassInfo& info);
+    RHIRenderPass(const char* name, const RenderPassInfo& info);
 };
 
-class Framebuffer : public RHIHandle
+class RHIFramebuffer : public RHIHandle
 {
 public:
-    ~Framebuffer() override;
+    ~RHIFramebuffer() override;
 
     const FramebufferInfo info;
     
 protected:
-    Framebuffer(const char* name, const FramebufferInfo& info);
+    RHIFramebuffer(const char* name, const FramebufferInfo& info);
 };
 
-class GraphicsPipeline : public RHIHandle
+class RHIGraphicsPipeline : public RHIHandle
 {
 public:
-    ~GraphicsPipeline() override;
+    ~RHIGraphicsPipeline() override;
 
     const GraphicsPipelineInfo info;
 protected:
-    GraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
+    RHIGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
 };
 
-class ComputePipeline : public RHIHandle
+class RHIComputePipeline : public RHIHandle
 {
 public:
-    ~ComputePipeline() override;
+    ~RHIComputePipeline() override;
 
 	const ComputePipelineInfo info;
 protected:
-    ComputePipeline(const char* name, const ComputePipelineInfo& info);
+    RHIComputePipeline(const char* name, const ComputePipelineInfo& info);
 };
 
 template<>
-struct Hasher<RenderPass>
+struct Hasher<RHIRenderPass>
 {
-    static uint32 Get(const RenderPass& key)
+    static uint32 Get(const RHIRenderPass& key)
     {
         return 0;
     }

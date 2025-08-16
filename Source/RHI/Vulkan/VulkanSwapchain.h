@@ -3,12 +3,12 @@
 
 #include "Precompile.h"	
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
-#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
-#include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
+#include "RHI/Swapchain.h"
+#include "RHI/Vulkan/VulkanDevice.h"
+#include "RHI/Vulkan/VulkanCommandHandle.h"
+#include "RHI/Vulkan/VulkanRenderHandle.h"
 
 HS_NS_BEGIN
 
@@ -18,23 +18,20 @@ class RHIContext;
 class SwapchainVulkan final : public Swapchain
 {
 public:
-	friend class RHIContextVulkan;
+	friend class VulkanContext;
 	SwapchainVulkan(const SwapchainInfo& info, VkSurfaceKHR surface);
 	~SwapchainVulkan() override;
 
 	HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
 	HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
-	HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return static_cast<CommandBuffer*>(_commandBufferVKs[_frameIndex]); }
-	HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<CommandBuffer*>(_commandBufferVKs[index]); }
-	HS_FORCEINLINE Framebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
-	HS_FORCEINLINE RenderTarget   GetRenderTargetForCurrentFrame() const override { return _renderTargets[_curImageIndex]; }
+	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override { return static_cast<RHICommandBuffer*>(_commandBufferVKs[_frameIndex]); }
+	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]); }
+	HS_FORCEINLINE RHIFramebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
 	HS_FORCEINLINE uint32		  GetCurrentImageIndex() const { return _curImageIndex; }
 
-	bool initSwapchainVK(RHIContextVulkan* rhiContext, VkInstance instance, RHIDeviceVulkan* deviceVulkan);
+	bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
 	void destroySwapchainVK();
 
-	void setRenderTargets() override;
-	void setRenderPass() override;
 	void setFramebuffers();
 	void getSwapchainImages();
 
@@ -59,9 +56,9 @@ private:
 	uint8 _frameIndex = static_cast<uint8>(-1);
 	uint8 _maxFrameCount = 3;
 	uint32 _curImageIndex = static_cast<uint32>(-1);
-	RHIDeviceVulkan* _deviceVulkan;
+	VulkanDevice* _deviceVulkan;
 	CommandBufferVulkan** _commandBufferVKs;
-	Framebuffer** _framebuffers;
+	RHIFramebuffer** _framebuffers;
 	bool _isSuspended;
 	bool _isInitialized = false;
 };

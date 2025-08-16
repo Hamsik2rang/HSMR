@@ -177,7 +177,7 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI ResourceObject ECS)
+add_dependencies(${TARGET_NAME} HAL Core RHI Object ECS)
 
 if(USE_SHADERSYSTEM)
     add_dependencies(${TARGET_NAME} ShaderSystem)
