@@ -10,12 +10,6 @@
 
 #include "Precompile.h"
 
-#ifdef __WINDOWS__
-#include "HAL/Win/WinWindow.h"
-#else
-#include "HAL/Mac/MacWindow.h"
-#endif
-
 #include <string>
 
 

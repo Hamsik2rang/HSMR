@@ -1,6 +1,6 @@
-//
+﻿//
 //  CameraComponent.h
-//  Engine
+//  ECS
 //
 //  Created by Yongsik Im on 3/22/25.
 //
@@ -10,11 +10,11 @@
 
 #include "Precompile.h"
 
-#include "Core/ECS/Component/Component.h"
+#include "ECS/Component/Component.h"
 
 HS_NS_BEGIN
 
-class CameraComponent : public IComponent
+class CameraComponent : public Component
 {
 public:
     

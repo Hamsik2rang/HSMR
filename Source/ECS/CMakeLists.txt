@@ -30,6 +30,7 @@ list(APPEND TOTAL_FILES ${ECS_COMPONENT_HEADERS})
 
 set(ECS_COMPONENT_SOURCES
     Component/Private/CameraComponent.cpp
+    Component/Private/Component.cpp
     Component/Private/LightComponent.cpp
     Component/Private/NameComponent.cpp
     Component/Private/RenderComponent.cpp
@@ -39,22 +40,23 @@ source_group("Component\\Private" FILES ${ECS_COMPONENT_SOURCES})
 list(APPEND TOTAL_FILES ${ECS_COMPONENT_SOURCES})
 
 set(ECS_SYSTEM_HEADERS
-    System/CameraSystem.h
-    System/LightSystem.h
-    System/NameSystem.h
-    System/RenderSystem.h
-    System/System.h
-    System/TransformSystem.h
+    System/CameraComponentSystem.h
+    System/LightComponentSystem.h
+    System/NameComponentSystem.h
+    System/RenderComponentSystem.h
+    System/ComponentSystem.h
+    System/TransformComponentSystem.h
 )
 source_group("System\\Public" FILES ${ECS_SYSTEM_HEADERS})
 list(APPEND TOTAL_FILES ${ECS_SYSTEM_HEADERS})
 
 set(ECS_SYSTEM_SOURCES
-    System/Private/CameraSystem.cpp
-    System/Private/LightSystem.cpp
-    System/Private/NameSystem.cpp
-    System/Private/RenderSystem.cpp
-    System/Private/TransformSystem.cpp
+    System/Private/CameraComponentSystem.cpp
+    System/Private/ComponentSystem.cpp
+    System/Private/LightComponentSystem.cpp
+    System/Private/NameComponentSystem.cpp
+    System/Private/RenderComponentSystem.cpp
+    System/Private/TransformComponentSystem.cpp
 )
 source_group("System\\Private" FILES ${ECS_SYSTEM_SOURCES})
 list(APPEND TOTAL_FILES ${ECS_SYSTEM_SOURCES})
@@ -79,9 +81,8 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_ECS
     HS_ECS_API_EXPORT
-    HS_API_EXPORT
 
-    HS_RESOURCE_API_IMPORT
+    HS_OBJECT_API_IMPORT
     HS_RENDERER_API_IMPORT
 )
 

@@ -35,9 +35,9 @@ public:
     static const Image* GetFallbackImage2DBlue();
     
     // TODO: PTR로변경
-    static const Mesh& GetFallbackMeshPlane();
-    static const Mesh& GetFallbackMeshCube();
-    static const Mesh& GetFallbackMeshSphere();
+    static const Mesh* GetFallbackMeshPlane();
+    static const Mesh* GetFallbackMeshCube();
+    static const Mesh* GetFallbackMeshSphere();
     
 private:
     static bool s_isInitialize;
@@ -53,9 +53,9 @@ private:
     static Image* s_fallbackImage2DGreen;
     static Image* s_fallbackImage2DBlue;
     
-    static Mesh s_fallbackMeshPlane;
-    static Mesh s_fallbackMeshCube;
-    static Mesh s_fallbackMeshSphere;
+    static Mesh* s_fallbackMeshPlane;
+    static Mesh* s_fallbackMeshCube;
+    static Mesh* s_fallbackMeshSphere;
     
 };
 

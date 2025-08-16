@@ -27,9 +27,9 @@ Image* ObjectManager::s_fallbackImage2DRed;
 Image* ObjectManager::s_fallbackImage2DGreen;
 Image* ObjectManager::s_fallbackImage2DBlue;
 
-Mesh ObjectManager::s_fallbackMeshPlane;
-Mesh ObjectManager::s_fallbackMeshCube;
-Mesh ObjectManager::s_fallbackMeshSphere;
+Mesh* ObjectManager::s_fallbackMeshPlane;
+Mesh* ObjectManager::s_fallbackMeshCube;
+Mesh* ObjectManager::s_fallbackMeshSphere;
 
 bool ObjectManager::Initialize()
 {
@@ -585,12 +585,12 @@ void ObjectManager::calculatePlane()
         0, 3, 2  // 두 번째 삼각형 (시계방향)
     };
 
-    s_fallbackMeshPlane.SetPosition(std::move(positions));
-    s_fallbackMeshPlane.SetNormal(std::move(normals));
-    s_fallbackMeshPlane.SetTexCoord(std::move(texcoords), 0);
-    s_fallbackMeshPlane.SetTangent(std::move(tangents));
-    s_fallbackMeshPlane.SetBitangent(std::move(bitangents));
-    s_fallbackMeshPlane.SetIndices(std::move(indices));
+    s_fallbackMeshPlane->SetPosition(std::move(positions));
+    s_fallbackMeshPlane->SetNormal(std::move(normals));
+    s_fallbackMeshPlane->SetTexCoord(std::move(texcoords), 0);
+    s_fallbackMeshPlane->SetTangent(std::move(tangents));
+    s_fallbackMeshPlane->SetBitangent(std::move(bitangents));
+    s_fallbackMeshPlane->SetIndices(std::move(indices));
 }
 void ObjectManager::calculateCube()
 {
@@ -742,11 +742,11 @@ void ObjectManager::calculateCube()
         20, 23, 22
     };
 
-    s_fallbackMeshCube.SetPosition(std::move(positions));
-    s_fallbackMeshCube.SetColor(std::move(colors));
-    s_fallbackMeshCube.SetNormal(std::move(normals));
-    s_fallbackMeshCube.SetTexCoord(std::move(texcoords), 0);
-    s_fallbackMeshCube.SetIndices(std::move(indices));
+    s_fallbackMeshCube->SetPosition(std::move(positions));
+    s_fallbackMeshCube->SetColor(std::move(colors));
+    s_fallbackMeshCube->SetNormal(std::move(normals));
+    s_fallbackMeshCube->SetTexCoord(std::move(texcoords), 0);
+    s_fallbackMeshCube->SetIndices(std::move(indices));
 }
 void ObjectManager::calculateSphere()
 {
@@ -816,10 +816,10 @@ void ObjectManager::calculateSphere()
         }
     }
 
-    s_fallbackMeshSphere.SetPosition(std::move(positions));
-    s_fallbackMeshSphere.SetNormal(std::move(normals));
-    s_fallbackMeshSphere.SetTexCoord(std::move(texcoords), 0);
-    s_fallbackMeshSphere.SetIndices(std::move(indices));
+    s_fallbackMeshSphere->SetPosition(std::move(positions));
+    s_fallbackMeshSphere->SetNormal(std::move(normals));
+    s_fallbackMeshSphere->SetTexCoord(std::move(texcoords), 0);
+    s_fallbackMeshSphere->SetIndices(std::move(indices));
 }
 
 const Image* ObjectManager::GetFallbackImage2DWhite()
@@ -867,7 +867,7 @@ const Image* ObjectManager::GetFallbackImage2DBlue()
     return s_fallbackImage2DBlue; // Return empty image or handle error appropriately
 }
 
-const Mesh& ObjectManager::GetFallbackMeshPlane()
+const Mesh* ObjectManager::GetFallbackMeshPlane()
 {
     if (!s_isInitialize)
     {
@@ -876,7 +876,7 @@ const Mesh& ObjectManager::GetFallbackMeshPlane()
     return s_fallbackMeshPlane; // Return empty mesh or handle error appropriately
 }
 
-const Mesh& ObjectManager::GetFallbackMeshCube()
+const Mesh* ObjectManager::GetFallbackMeshCube()
 {
     if (!s_isInitialize)
     {
@@ -885,7 +885,7 @@ const Mesh& ObjectManager::GetFallbackMeshCube()
     return s_fallbackMeshCube; // Return empty mesh or handle error appropriately
 }
 
-const Mesh& ObjectManager::GetFallbackMeshSphere()
+const Mesh* ObjectManager::GetFallbackMeshSphere()
 {
     if (!s_isInitialize)
     {

@@ -1,6 +1,6 @@
-//
+﻿//
 //  Entity.h
-//  Engine
+//  ECS
 //
 //  Created by Yongsik Im on 3/22/25.
 //
@@ -10,10 +10,13 @@
 
 #include "Precompile.h"
 
+#define ENTITY_INVALID_ID 0xFFFFFFFF
+
 class Entity
 {
 public:
-    
+    Entity() = default;
+    ~Entity() = default;
     
     HS_FORCEINLINE uint32 ID() { return _id; }
     

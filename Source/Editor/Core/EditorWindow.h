@@ -10,13 +10,14 @@
 
 #include "Precompile.h"
 
-#include "Core/Window.h"
+#include "Engine/Window.h"
 #include "Renderer/RendererDefinition.h"
 
 namespace HS
 {
 class RenderTarget;
 class RenderPath;
+class RHIContext;
 } // namespace HS
 
 namespace HS
@@ -58,7 +59,7 @@ private:
 
     std::vector<RenderTarget> _renderTargets;
 
-    RHIContext* _pRHIContext;
+    RHIContext* _rhiContext;
     
     Panel* _basePanel;
     Panel* _menuPanel;

@@ -1,5 +1,5 @@
 ﻿//
-//  ForwardPass.h
+//  ForwardRenderPass.h
 //  HSMR
 //
 //  Created by Yongsik Im on 2/4/25.
@@ -8,15 +8,15 @@
 #define __HS_FORWARD_PASS_H__
 
 #include "Precompile.h"
-#include "Core/RendererPass/RendererPass.h"
+#include "Renderer/RenderPass/RenderPass.h"
 
 HS_NS_BEGIN
 
-class ForwardPass : public RenderPass
+class ForwardRenderPass : public RenderPass
 {
 public:
-    ForwardPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
-    ~ForwardPass() override {}
+    ForwardRenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
+    ~ForwardRenderPass() override {}
 
 protected:
     

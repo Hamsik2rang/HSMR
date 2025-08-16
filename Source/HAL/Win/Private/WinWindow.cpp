@@ -117,13 +117,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 HS_NS_BEGIN
 
-struct PlatformHandle
-{
-	HWND hWnd;
-	HINSTANCE hInstance;
-};;
-
-bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
+bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
 	s_boundHsWindow = &outNativeWindow;
 
@@ -212,17 +206,17 @@ bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFl
 
 	return true;
 }
-void DestroyNativeWindow(NativeWindow& nativeWindow)
+void DestroyNativeWindowInternal(NativeWindow& nativeWindow)
 {
 	// empty
 }
 
-void ShowNativeWindow(const NativeWindow& nativeWindow)
+void ShowNativeWindowInternal(const NativeWindow& nativeWindow)
 {
 	ShowWindow((HWND)nativeWindow.handle, SW_SHOW);
 }
 
-void PollNativeEvent(NativeWindow& nativeWindow)
+void PollNativeEventInternal(NativeWindow& nativeWindow)
 {
 	s_boundHsWindow = &nativeWindow;
 	MSG msg;
@@ -243,20 +237,22 @@ void GetNativeWindowPosition(NativeWindow& nativeWindow)
 
 }
 
+void SetNativeWindowSizeInternal(uint16 width, uint16 height)
+{
+
+}
+
+void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight)
+{
+
+}
+
+#pragma region Platform-dependent functions
 void SetNativePreEventHandler(void* fnHandler)
 {
 	LRESULT(*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT(*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
 	s_preEventHandler = func;
 }
-
-void SetNativeWindowSize(uint16 width, uint16 height)
-{
-
-}
-
-void GetNativeWindowSize(uint16& outWidth, uint16& outHeight)
-{
-
-}
+#pragma endregion
 
 HS_NS_END

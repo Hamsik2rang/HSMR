@@ -1,4 +1,4 @@
-set(TARGET_NAME HAL)
+﻿set(TARGET_NAME HAL)
 
 set(TOTAL_FILES)
 
