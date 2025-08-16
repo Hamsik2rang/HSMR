@@ -1,4 +1,4 @@
-#include "HAL/SystemContext.h"
+﻿#include "HAL/SystemContext.h"
 
 HS_NS_BEGIN
 
@@ -12,18 +12,21 @@ SystemContext* SystemContext::Get()
     return s_instance;
 }
 
-bool SystemContext::Initialize()
+SystemContext::SystemContext()
 {
-    
-    
-    
-    return true;
+    Initialize();
 }
 
-void SystemContext::Finalize()
+SystemContext::~SystemContext()
 {
-    
+    if (s_instance)
+    {
+		Finalize();
+        delete s_instance;
+        s_instance = nullptr;
+    }
 }
+
 
 HS_NS_END
 

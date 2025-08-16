@@ -7,7 +7,6 @@
 #include "RHI/Vulkan/VulkanDevice.h"
 #include "RHI/Vulkan/VulkanSwapchain.h"
 
-#include "Core/Window.h"
 #include "Core/Application.h"
 #include "Core/Utility/StringUtility.h"
 

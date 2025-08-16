@@ -1,7 +1,5 @@
 ﻿#include "RHI/Vulkan/VulkanSwapchain.h"
 
-#include "Core/Window.h"
-
 #include "RHI/Vulkan/VulkanUtility.h"
 #include "RHI/Vulkan/VulkanContext.h"
 #include "RHI/Vulkan/VulkanCommandHandle.h"

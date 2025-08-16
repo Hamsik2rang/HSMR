@@ -7,8 +7,6 @@
 
 HS_NS_BEGIN
 
-SystemContext* g_systemContext = nullptr;
-
 bool SystemContext::Initialize()
 {
 	char path[MAX_PATH] = { 0 };
@@ -39,25 +37,6 @@ bool SystemContext::Initialize()
 void SystemContext::Finalize()
 {
 	//...
-}
-
-SystemContext* SystemContext::Get()
-{
-	if (nullptr == g_systemContext)
-	{
-		g_systemContext = new SystemContext();
-	}
-	return g_systemContext;
-}
-
-SystemContext::SystemContext()
-{
-	Initialize();
-}
-
-SystemContext::~SystemContext()
-{
-	Finalize();
 }
 
 HS_NS_END

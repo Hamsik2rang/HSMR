@@ -27,6 +27,8 @@ public:
 private:
     SystemContext();
     ~SystemContext();
+    
+    static SystemContext* s_instance;
 };
 
 HS_NS_END
