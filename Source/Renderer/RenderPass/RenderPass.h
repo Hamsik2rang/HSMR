@@ -1,6 +1,6 @@
-//
-//  RendererPass.h
-//  HSMR
+﻿//
+//  RenderPass.h
+//  Renderer
 //
 //  Created by Yongsik Im on 1/30/25.
 //
@@ -11,23 +11,23 @@
 
 #include <typeinfo>
 
-#include "Core/Renderer/RenderDefinition.h"
-#include "Core/RHI/RenderHandle.h"
-#include "Core/Renderer/RenderTarget.h"
+#include "Renderer/RendererDefinition.h"
+#include "RHI/RenderHandle.h"
+#include "Renderer/RenderTarget.h"
 
 HS_NS_BEGIN
 
-class Renderer;
-class CommandBuffer;
-class Framebuffer;
+class RenderPath;
+class RHICommandBuffer;
+class RHIFramebuffer;
 
-enum class ERenderingOrder
+enum class ERenderingOrder : uint16
 {
     INVALID = 0,
 
-    OPAQUE      = 500,
-    SKYBOX      = 600,
-    TRANSPARENT = 800,
+    SKYBOX      = 500,
+    OPAQUE      = 1000,
+    TRANSPARENT = 2000,
 
     //...
 };
@@ -37,18 +37,18 @@ constexpr bool operator<(ERenderingOrder lhs, ERenderingOrder rhs)
     return static_cast<uint16>(lhs) < static_cast<uint16>(rhs);
 }
 
-class RendererPass
+class RenderPass
 {
 public:
-    RendererPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    RenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
 
-    virtual ~RendererPass() = default;
+    virtual ~RenderPass() = default;
 
     virtual void OnBeforeRendering(uint32_t submitIndex) = 0;
 
     virtual void Configure(RenderTarget* renderTarget) = 0;
 
-    virtual void Execute(CommandBuffer* commandBuffer, RenderPass* renderPass) = 0;
+    virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) = 0;
 
     virtual void OnAfterRendering() = 0;
 
@@ -56,7 +56,7 @@ public:
 
     HS_FORCEINLINE bool IsExecutable() const { return _isExecutable; }
 
-    HS_FORCEINLINE Renderer* GetRenderer() const { return _renderer; }
+    HS_FORCEINLINE RenderPath* GetRenderer() const { return _renderer; }
 
     HS_FORCEINLINE const RenderPassInfo& GetFixedSettingForCurrentPass() const { return _renderPassInfo; }
 
@@ -65,7 +65,7 @@ public:
     ERenderingOrder renderingOrder;
 
 protected:
-    Renderer* _renderer;
+    RenderPath* _renderer;
     bool      _isExecutable = true;
     size_t    frameIndex;
 

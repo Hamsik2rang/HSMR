@@ -55,7 +55,7 @@ if(APPLE)
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/mac/$<CONFIG>")
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 else()
-    add_compile_definitions(__WIN32__)
+    add_compile_definitions(__WINDOWS__)
 
     set(HS_DEPS_LIB_DIR "${HS_DEPS_DIR}/lib/win/$<CONFIG>")
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/win/$<CONFIG>")
@@ -79,7 +79,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(HS_HAL_DIR "Source/HAL")
 set(HS_CORE_DIR "Source/Core")
-set(HS_RESOURCE_OBJECT_DIR "Source/ResourceObject")
+set(HS_RESOURCE_OBJECT_DIR "Source/Object")
 set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 set(HS_RHI_DIR "Source/RHI")
 set(HS_PHYSICS_DIR "Source/Physics")
@@ -87,13 +87,14 @@ set(HS_RENDERER_DIR "Source/Renderer")
 set(HS_ANIMATION_DIR "Source/Animation")
 set(HS_GEOMETRY_DIR "Source/Geometry")
 set(HS_ECS_DIR "Source/ECS")
-set(HS_GAMEPLAY_DIR "Source/Gameplay")
+set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 
 add_subdirectory(${HS_HAL_DIR})
 add_subdirectory(${HS_CORE_DIR})
+
 add_subdirectory(${HS_RESOURCE_OBJECT_DIR})
 add_subdirectory(${HS_SHADERSYSTEM_DIR})
 add_subdirectory(${HS_RHI_DIR})
@@ -106,12 +107,13 @@ add_subdirectory(${HS_RENDERER_DIR})
 # add_subdirectory(${HS_GEOMETRY_DIR})
 add_subdirectory(${HS_ECS_DIR})
 
-# add_subdirectory(${HS_GAMEPLAY_DIR})
+add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
-
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}
     COMMENT "Regenerating CMake..."
 )
+
+set_property(TARGET RegenerateCMake PROPERTY FOLDER "Commands")

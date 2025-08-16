@@ -1,4 +1,4 @@
-//
+﻿//
 //  Log.hpp
 //  Core
 //
@@ -74,7 +74,7 @@ namespace LogSymbol
 #define HS_CHECK(x, msg)
 
 #define HS_THROW(fmt, ...) \
-    do { \x
+    do { \
         HS::Log::Print( __FILE__, __LINE__, HS::LogSymbol::crash, fmt, ##__VA_ARGS__); \
         throw HS::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
     } while (false)

@@ -26,7 +26,7 @@ public:
 
 private:
     SystemContext();
-    ~SystemContext() = default;
+    ~SystemContext();
 };
 
 HS_NS_END

@@ -1,37 +1,28 @@
-set(TARGET_NAME ResourceObject)
+set(TARGET_NAME Engine)
 
 set(TOTAL_FILES)
 
-if(APPLE)
-    set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.5.4.3.dylib)
-else() # TODO
-    set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
-endif()
-
-set(RESOURCE_OBJECT_HEADERS
-    Image.h
-    Material.h
-    Mesh.h
-    Object.h
-    ROManager.h
+set(ENGINE_HEADERS
+    EngineContext.h
+    Window.h
 )
 
-source_group("Public" FILES ${RESOURCE_OBJECT_HEADERS})
-list(APPEND TOTAL_FILES ${RESOURCE_OBJECT_HEADERS})
+source_group("Public" FILES ${ENGINE_HEADERS})
+list(APPEND TOTAL_FILES ${ENGINE_HEADERS})
 
-set(RESOURCE_OBJECT_SOURCES
-    Private/Image.cpp
-    Private/Material.cpp
-    Private/Mesh.cpp
-    Private/Object.cpp
-    Private/ROManager.cpp
+set(ENGINE_SOURCES
+    Private/EngineContext.cpp
+    Private/Window.cpp
 )
-source_group("Private" FILES ${RESOURCE_OBJECT_SOURCES})
-list(APPEND TOTAL_FILES ${RESOURCE_OBJECT_SOURCES})
+
+source_group("Private" FILES ${ENGINE_SOURCES})
+list(APPEND TOTAL_FILES ${ENGINE_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL Core)
+add_dependencies(${TARGET_NAME} Renderer Object ECS)
+
+target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI Renderer Object ECS)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -39,12 +30,19 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
-    HS_RESOURCE
+    HS_RENDERER
     HS_API_EXPORT
-    HS_RESOURCE_OBJECT_API_EXPORT
+
+    HS_RENDERER_API_IMPORT
+    HS_RESOURCE_API_IMPORT
+
+    HS_ENGINE_API_EXPORT
 )
 
-target_Link_libraries(${TARGET_NAME} PRIVATE Core ${ASSIMP})
+if(USE_SHADERSYSTEM)
+    add_dependencies(${TARGET_NAME} ShaderSystem)
+    target_compile_definitions(${TARGET_NAME} PRIVATE HS_SHADERSYSTEM_API_IMPORT)
+endif()
 
 if(APPLE)
     # On macOS, copy the .dylib file

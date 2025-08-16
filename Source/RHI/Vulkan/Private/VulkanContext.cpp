@@ -1,18 +1,18 @@
-﻿#include "Engine/RHI/Vulkan/RHIContextVulkan.h"
+﻿#include "RHI/Vulkan/VulkanContext.h"
 
-#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
-#include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
-#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
-#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
-#include "Engine/RHI/Vulkan/SwapchainVulkan.h"
+#include "RHI/Vulkan/VulkanCommandHandle.h"
+#include "RHI/Vulkan/VulkanRenderHandle.h"
+#include "RHI/Vulkan/VulkanResourceHandle.h"
+#include "RHI/Vulkan/VulkanUtility.h"
+#include "RHI/Vulkan/VulkanDevice.h"
+#include "RHI/Vulkan/VulkanSwapchain.h"
 
-#include "Engine/Core/Window.h"
-#include "Engine/Core/Application.h"
+#include "Core/Window.h"
+#include "Core/Application.h"
+#include "Core/Utility/StringUtility.h"
 
-#include "Engine/Platform/Windows/PlatformApplicationWindows.h"
-#include "Engine/Core/FileSystem.h"
-#include "Engine/Core/String.h"
+#include "HAL/NativeWindow.h"
+#include "HAL/FileSystem.h"
 
 
 static const std::vector<const char*> s_validationLayers =
@@ -53,7 +53,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 			break;
 		}
 		newMessage.append(oldMessage.substr(ptr, nextPtr - ptr));
-		newMessage.append(HS::hs_string_format("[%s]", name));
+		newMessage.append(HS::StringFormat("[%s]", name));
 		ptr = nextPtr + 2 /*strlen("[]")*/;
 	}
 
@@ -83,12 +83,12 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 
 HS_NS_BEGIN
 
-RHIContextVulkan::~RHIContextVulkan()
+VulkanContext::~VulkanContext()
 {
 	Finalize();
 }
 
-bool RHIContextVulkan::Initialize()
+bool VulkanContext::Initialize()
 {
 	if (false == createInstance())
 	{
@@ -117,7 +117,7 @@ bool RHIContextVulkan::Initialize()
 	return true;
 }
 
-void RHIContextVulkan::Finalize()
+void VulkanContext::Finalize()
 {
 	if (!_isInitialized)
 	{
@@ -139,9 +139,9 @@ void RHIContextVulkan::Finalize()
 	_isInitialized = false;
 }
 
-void RHIContextVulkan::Suspend(Swapchain* swapchain)
+void VulkanContext::Suspend(Swapchain* swapchain)
 {
-	HS_ASSERT(swapchain != nullptr, "Swapchain is null in RHIContextVulkan::Suspend");
+	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Suspend");
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	if (swapchainVK->_isSuspended)
@@ -152,9 +152,9 @@ void RHIContextVulkan::Suspend(Swapchain* swapchain)
 	swapchainVK->_isSuspended = true;
 }
 
-void RHIContextVulkan::Restore(Swapchain* swapchain)
+void VulkanContext::Restore(Swapchain* swapchain)
 {
-	HS_ASSERT(swapchain != nullptr, "Swapchain is null in RHIContextVulkan::Restore");
+	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Restore");
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	if (!swapchainVK->_isSuspended)
@@ -162,7 +162,7 @@ void RHIContextVulkan::Restore(Swapchain* swapchain)
 		return;
 	}
 
-	const Framebuffer* swFramebuffer = swapchainVK->_framebuffers[0];
+	const RHIFramebuffer* swFramebuffer = swapchainVK->_framebuffers[0];
 
 	// Resize 혹은 Maximize된 상황
 	if (swFramebuffer->info.width != swapchainVK->_info.nativeWindow->surfaceWidth ||
@@ -175,9 +175,9 @@ void RHIContextVulkan::Restore(Swapchain* swapchain)
 	swapchainVK->_isSuspended = false;
 }
 
-uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
+uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
 {
-	HS_ASSERT(swapchain != nullptr, "Swapchain is null in RHIContextVulkan::AcquireNextImage");
+	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::AcquireNextImage");
 
 	// Acquire the next image from the swapchain
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
@@ -213,7 +213,7 @@ uint32 RHIContextVulkan::AcquireNextImage(Swapchain* swapchain)
 	return swapchainVK->_curImageIndex;
 }
 
-Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
+Swapchain* VulkanContext::CreateSwapchain(SwapchainInfo info)
 {
 	VkSurfaceKHR surface = createSurface(*info.nativeWindow);
 	SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, surface);
@@ -222,7 +222,7 @@ Swapchain* RHIContextVulkan::CreateSwapchain(SwapchainInfo info)
 	return static_cast<Swapchain*>(swapchainVK);
 }
 
-void RHIContextVulkan::DestroySwapchain(Swapchain* swapchain)
+void VulkanContext::DestroySwapchain(Swapchain* swapchain)
 {
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	swapchainVK->destroySwapchainVK(); //소멸자에서 호출되지만 컨벤션 통일을 위해 명시적 호출함.
@@ -230,7 +230,7 @@ void RHIContextVulkan::DestroySwapchain(Swapchain* swapchain)
 	delete swapchainVK;
 }
 
-RenderPass* RHIContextVulkan::CreateRenderPass(const char* name, const RenderPassInfo& info)
+RHIRenderPass* VulkanContext::CreateRenderPass(const char* name, const RenderPassInfo& info)
 {
 	RenderPassVulkan* renderPassVK = new RenderPassVulkan(name, info);
 
@@ -245,7 +245,7 @@ RenderPass* RHIContextVulkan::CreateRenderPass(const char* name, const RenderPas
 	return renderPassVK;
 }
 
-void RHIContextVulkan::DestroyRenderPass(RenderPass* renderPass)
+void VulkanContext::DestroyRenderPass(RHIRenderPass* renderPass)
 {
 	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(renderPass);
 	if (renderPassVK->handle != VK_NULL_HANDLE)
@@ -256,7 +256,7 @@ void RHIContextVulkan::DestroyRenderPass(RenderPass* renderPass)
 	delete renderPassVK; // Delete the RenderPassVulkan object
 }
 
-Framebuffer* RHIContextVulkan::CreateFramebuffer(const char* name, const FramebufferInfo& info)
+RHIFramebuffer* VulkanContext::CreateFramebuffer(const char* name, const FramebufferInfo& info)
 {
 	HS_ASSERT(info.renderPass->info.colorAttachmentCount == info.colorBuffers.size(), "Framebuffer Info is not matched with RenderPass Info");
 
@@ -300,10 +300,10 @@ Framebuffer* RHIContextVulkan::CreateFramebuffer(const char* name, const Framebu
 
 	setDebugObjectName(VK_OBJECT_TYPE_FRAMEBUFFER, reinterpret_cast<uint64>(framebufferVk), name);
 
-	return static_cast<Framebuffer*>(framebufferVK);
+	return static_cast<RHIFramebuffer*>(framebufferVK);
 }
 
-void RHIContextVulkan::DestroyFramebuffer(Framebuffer* framebuffer)
+void VulkanContext::DestroyFramebuffer(RHIFramebuffer* framebuffer)
 {
 	// Destroy the Vulkan framebuffer
 	FramebufferVulkan* framebufferVK = static_cast<FramebufferVulkan*>(framebuffer);
@@ -315,7 +315,7 @@ void RHIContextVulkan::DestroyFramebuffer(Framebuffer* framebuffer)
 	delete framebufferVK;
 }
 
-GraphicsPipeline* RHIContextVulkan::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
+RHIGraphicsPipeline* VulkanContext::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
 {
 	GraphicsPipelineVulkan* pipelineVK = new GraphicsPipelineVulkan(name, info);
 
@@ -324,10 +324,10 @@ GraphicsPipeline* RHIContextVulkan::CreateGraphicsPipeline(const char* name, con
 
 	setDebugObjectName(VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<uint64>(pipelineVk), name);
 
-	return static_cast<GraphicsPipeline*>(pipelineVK);
+	return static_cast<RHIGraphicsPipeline*>(pipelineVK);
 }
 
-void RHIContextVulkan::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
+void VulkanContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
 {
 	// Destroy the Vulkan graphics pipeline
 	GraphicsPipelineVulkan* pipelineVK = static_cast<GraphicsPipelineVulkan*>(pipeline);
@@ -340,7 +340,7 @@ void RHIContextVulkan::DestroyGraphicsPipeline(GraphicsPipeline* pipeline)
 	delete pipelineVK;
 }
 
-Shader* RHIContextVulkan::CreateShader(const char* name, const ShaderInfo& info, const char* path)
+RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
 	FileHandle fileHandle = nullptr;
 	if (!FileSystem::Open(path, EFileAccess::READ_ONLY, fileHandle))
@@ -372,7 +372,7 @@ Shader* RHIContextVulkan::CreateShader(const char* name, const ShaderInfo& info,
 	return shaderVK;
 }
 
-Shader* RHIContextVulkan::CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
+RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
 {
 	// Create a Vulkan shader from byte code
 	VkShaderModuleCreateInfo shaderCreateInfo{};
@@ -399,10 +399,10 @@ Shader* RHIContextVulkan::CreateShader(const char* name, const ShaderInfo& info,
 
 	setDebugObjectName(VK_OBJECT_TYPE_SHADER_MODULE, reinterpret_cast<uint64>(shaderVK->handle), name);
 
-	return static_cast<Shader*>(shaderVK);
+	return static_cast<RHIShader*>(shaderVK);
 }
 
-void RHIContextVulkan::DestroyShader(Shader* shader)
+void VulkanContext::DestroyShader(RHIShader* shader)
 {
 	ShaderVulkan* shaderVulkan = static_cast<ShaderVulkan*>(shader);
 	if (shaderVulkan->handle)
@@ -412,7 +412,7 @@ void RHIContextVulkan::DestroyShader(Shader* shader)
 	}
 }
 
-Buffer* RHIContextVulkan::CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
+RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption)
 {
 	BufferInfo info{};
 	info.usage = usage;
@@ -421,7 +421,7 @@ Buffer* RHIContextVulkan::CreateBuffer(const char* name, const void* data, size_
 	return CreateBuffer(name, data, dataSize, info);
 }
 
-Buffer* RHIContextVulkan::CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info)
+RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info)
 {
 	VkBuffer bufferVk;
 	// Create a Vulkan buffer
@@ -474,10 +474,10 @@ Buffer* RHIContextVulkan::CreateBuffer(const char* name, const void* data, size_
 
 	setDebugObjectName(VK_OBJECT_TYPE_BUFFER, reinterpret_cast<uint64>(bufferVk), name);
 
-	return static_cast<Buffer*>(bufferVK);
+	return static_cast<RHIBuffer*>(bufferVK);
 }
 
-void RHIContextVulkan::DestroyBuffer(Buffer* buffer)
+void VulkanContext::DestroyBuffer(RHIBuffer* buffer)
 {
 	BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
 	if (bufferVK->handle != VK_NULL_HANDLE)
@@ -494,7 +494,7 @@ void RHIContextVulkan::DestroyBuffer(Buffer* buffer)
 	delete bufferVK;
 }
 
-Texture* RHIContextVulkan::CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
+RHITexture* VulkanContext::CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
 {
 	// Create a Vulkan texture with specific parameters
 	TextureInfo info{};
@@ -507,7 +507,7 @@ Texture* RHIContextVulkan::CreateTexture(const char* name, void* image, uint32 w
 	return CreateTexture(name, image, info);
 }
 
-Texture* RHIContextVulkan::CreateTexture(const char* name, void* image, const TextureInfo& info)
+RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const TextureInfo& info)
 {
 	bool isColorRenderTarget = ((info.usage & ETextureUsage::COLOR_ATTACHMENT) != 0);
 	bool isSwapchainTexture = info.isSwapchainTexture;
@@ -528,7 +528,7 @@ Texture* RHIContextVulkan::CreateTexture(const char* name, void* image, const Te
 				textureVK->memoryVk = VK_NULL_HANDLE; // Swapchain textures do not have dedicated memory
 				textureVK->layoutVk = VK_IMAGE_LAYOUT_UNDEFINED; // Swapchain images start in undefined layout
 
-				return static_cast<Texture*>(textureVK);
+				return static_cast<RHITexture*>(textureVK);
 			}
 		}
 		HS_ASSERT(false, "No available swapchain Image for texture creation. Are Framebuffers full?");
@@ -723,10 +723,10 @@ Texture* RHIContextVulkan::CreateTexture(const char* name, void* image, const Te
 	setDebugObjectName(VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
 	setDebugObjectName(VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
 
-	return static_cast<Texture*>(textureVK);
+	return static_cast<RHITexture*>(textureVK);
 }
 
-void RHIContextVulkan::DestroyTexture(Texture* texture)
+void VulkanContext::DestroyTexture(RHITexture* texture)
 {
 	// Destroy the Vulkan texture
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(texture);
@@ -749,7 +749,7 @@ void RHIContextVulkan::DestroyTexture(Texture* texture)
 	delete textureVK;
 }
 
-Sampler* RHIContextVulkan::CreateSampler(const char* name, const SamplerInfo& info)
+RHISampler* VulkanContext::CreateSampler(const char* name, const SamplerInfo& info)
 {
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -772,10 +772,10 @@ Sampler* RHIContextVulkan::CreateSampler(const char* name, const SamplerInfo& in
 
 	setDebugObjectName(VK_OBJECT_TYPE_SAMPLER, reinterpret_cast<uint64>(vkSampler), name);
 
-	return static_cast<Sampler*>(samplerVK);
+	return static_cast<RHISampler*>(samplerVK);
 }
 
-void RHIContextVulkan::DestroySampler(Sampler* sampler)
+void VulkanContext::DestroySampler(RHISampler* sampler)
 {
 	SamplerVulkan* samplerVK = static_cast<SamplerVulkan*>(sampler);
 	if (samplerVK->handle)
@@ -787,9 +787,9 @@ void RHIContextVulkan::DestroySampler(Sampler* sampler)
 	delete samplerVK;
 }
 
-ResourceLayout* RHIContextVulkan::CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount)
+RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount)
 {
-	ResourceLayoutVulkan* resourceLayoutVK = new ResourceLayoutVulkan(name);
+	ResourceLayoutVulkan* resourceLayoutVK = new ResourceLayoutVulkan(name, bindings, bindingCount);
 	std::vector<VkDescriptorSetLayoutBinding>& bindingVks = resourceLayoutVK->bindingVks;
 	bindingVks.resize(bindingCount);
 
@@ -849,10 +849,10 @@ ResourceLayout* RHIContextVulkan::CreateResourceLayout(const char* name, Resourc
 
 	setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, reinterpret_cast<uint64>(layout), name);
 
-	return static_cast<ResourceLayout*>(resourceLayoutVK);
+	return static_cast<RHIResourceLayout*>(resourceLayoutVK);
 }
 
-void RHIContextVulkan::DestroyResourceLayout(ResourceLayout* resourceLayout)
+void VulkanContext::DestroyResourceLayout(RHIResourceLayout* resourceLayout)
 {
 	// Destroy the Vulkan resource layout
 
@@ -864,7 +864,7 @@ void RHIContextVulkan::DestroyResourceLayout(ResourceLayout* resourceLayout)
 	}
 }
 
-ResourceSet* RHIContextVulkan::CreateResourceSet(const char* name, ResourceLayout* resourceLayouts)
+RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLayout* resourceLayouts)
 {
 	// Create a Vulkan resource set
 	VkDescriptorSet rSetVk = _descriptorPoolAllocator.AllocateDescriptorSet(static_cast<ResourceLayoutVulkan*>(resourceLayouts)->handle, nullptr);
@@ -879,10 +879,10 @@ ResourceSet* RHIContextVulkan::CreateResourceSet(const char* name, ResourceLayou
 
 	setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
 
-	return static_cast<ResourceSet*>(resourceSetVK);
+	return static_cast<RHIResourceSet*>(resourceSetVK);
 }
 
-void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
+void VulkanContext::DestroyResourceSet(RHIResourceSet* resourceSet)
 {
 	// Destroy the Vulkan resource set
 	ResourceSetVulkan* resourceSetVK = static_cast<ResourceSetVulkan*>(resourceSet);
@@ -894,7 +894,7 @@ void RHIContextVulkan::DestroyResourceSet(ResourceSet* resourceSet)
 	delete resourceSetVK;
 }
 
-ResourceSetPool* RHIContextVulkan::CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize)
+RHIResourceSetPool* VulkanContext::CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize)
 {
 	VkDescriptorPoolSize poolSizes[]{
 		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferSize },
@@ -922,10 +922,10 @@ ResourceSetPool* RHIContextVulkan::CreateResourceSetPool(const char* name, uint3
 
 	setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_POOL, reinterpret_cast<uint64>(descriptorPool), name);
 
-	return static_cast<ResourceSetPool*>(resourceSetPoolVK);
+	return static_cast<RHIResourceSetPool*>(resourceSetPoolVK);
 }
 
-void RHIContextVulkan::DestroyResourceSetPool(ResourceSetPool* resourceSetPool)
+void VulkanContext::DestroyResourceSetPool(RHIResourceSetPool* resourceSetPool)
 {
 	// Destroy the Vulkan resource set pool
 	ResourceSetPoolVulkan* resourceSetPoolVK = static_cast<ResourceSetPoolVulkan*>(resourceSetPool);
@@ -937,7 +937,7 @@ void RHIContextVulkan::DestroyResourceSetPool(ResourceSetPool* resourceSetPool)
 	delete resourceSetPoolVK;
 }
 
-CommandPool* RHIContextVulkan::CreateCommandPool(const char* name, uint32 queueFamilyIndex)
+RHICommandPool* VulkanContext::CreateCommandPool(const char* name, uint32 queueFamilyIndex)
 {
 	// Create a Vulkan command pool
 	VkCommandPoolCreateInfo poolInfo{};
@@ -954,10 +954,10 @@ CommandPool* RHIContextVulkan::CreateCommandPool(const char* name, uint32 queueF
 
 	setDebugObjectName(VK_OBJECT_TYPE_COMMAND_POOL, reinterpret_cast<uint64>(commandPool), name);
 
-	return static_cast<CommandPool*>(commandPoolVK);
+	return static_cast<RHICommandPool*>(commandPoolVK);
 }
 
-void RHIContextVulkan::DestroyCommandPool(CommandPool* commandPool)
+void VulkanContext::DestroyCommandPool(RHICommandPool* commandPool)
 {
 	// Destroy the Vulkan command pool
 	CommandPoolVulkan* commandPoolVK = static_cast<CommandPoolVulkan*>(commandPool);
@@ -970,7 +970,7 @@ void RHIContextVulkan::DestroyCommandPool(CommandPool* commandPool)
 	delete commandPoolVK;
 }
 
-CommandBuffer* RHIContextVulkan::CreateCommandBuffer(const char* name)
+RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
 {
 	// Create a Vulkan command buffer
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -987,10 +987,10 @@ CommandBuffer* RHIContextVulkan::CreateCommandBuffer(const char* name)
 
 	setDebugObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
 
-	return static_cast<CommandBuffer*>(commandBufferVK);
+	return static_cast<RHICommandBuffer*>(commandBufferVK);
 }
 
-void RHIContextVulkan::DestroyCommandBuffer(CommandBuffer* commandBuffer)
+void VulkanContext::DestroyCommandBuffer(RHICommandBuffer* commandBuffer)
 {
 	// Destroy the Vulkan command buffer
 	CommandBufferVulkan* commandBufferVK = static_cast<CommandBufferVulkan*>(commandBuffer);
@@ -1002,12 +1002,12 @@ void RHIContextVulkan::DestroyCommandBuffer(CommandBuffer* commandBuffer)
 	delete commandBuffer;
 }
 
-void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount)
+void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, size_t bufferCount)
 {
 	static std::vector<VkCommandBuffer> commandBufferVks;
 
-	HS_ASSERT(swapchain != nullptr, "Swapchain is null in RHIContextVulkan::Submit");
-	HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in RHIContextVulkan::Submit");
+	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Submit");
+	HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in VulkanContext::Submit");
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 
@@ -1038,9 +1038,9 @@ void RHIContextVulkan::Submit(Swapchain* swapchain, CommandBuffer** buffers, siz
 	//vkQueueWaitIdle(_device.graphicsQueue); // TEST: Wait for the queue to finish processing the submitted commands
 }
 
-void RHIContextVulkan::Present(Swapchain* swapchain)
+void VulkanContext::Present(Swapchain* swapchain)
 {
-	HS_ASSERT(swapchain != nullptr, "Swapchain is null in RHIContextVulkan::Present");
+	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Present");
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 
 	VkPresentInfoKHR presentInfo{};
@@ -1063,13 +1063,13 @@ void RHIContextVulkan::Present(Swapchain* swapchain)
 	}
 }
 
-void RHIContextVulkan::WaitForIdle() const
+void VulkanContext::WaitForIdle() const
 {
 	// Wait for the Vulkan device to be idle
 	vkDeviceWaitIdle(_device.logicalDevice);
 }
 
-void RHIContextVulkan::cleanup()
+void VulkanContext::cleanup()
 {
 	if (s_enableValidationLayers)
 	{
@@ -1081,7 +1081,7 @@ void RHIContextVulkan::cleanup()
 }
 #pragma region >>> Implementation create functions
 
-bool RHIContextVulkan::createInstance()
+bool VulkanContext::createInstance()
 {
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -1168,7 +1168,7 @@ bool RHIContextVulkan::createInstance()
 	return true;
 }
 
-void RHIContextVulkan::createDefaultCommandPool()
+void VulkanContext::createDefaultCommandPool()
 {
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -1178,12 +1178,12 @@ void RHIContextVulkan::createDefaultCommandPool()
 	VK_CHECK_RESULT(vkCreateCommandPool(_device, &poolInfo, nullptr, &_defaultCommandPool));
 }
 
-VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
+VkSurfaceKHR VulkanContext::createSurface(const NativeWindow& nativeWindow)
 {
 	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hinstance = (HINSTANCE)hs_platform_get_hinstance();
-	surfaceCreateInfo.hwnd = static_cast<HWND>(nativeWindow.handle);
+	surfaceCreateInfo.hinstance = (HINSTANCE)GetModuleHandleW(NULL);
+	surfaceCreateInfo.hwnd = (HWND)nativeWindow.handle;
 	surfaceCreateInfo.pNext = nullptr;
 	surfaceCreateInfo.flags = 0;
 
@@ -1193,7 +1193,7 @@ VkSurfaceKHR RHIContextVulkan::createSurface(const NativeWindow& nativeWindow)
 	return surface;
 }
 
-VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
+VkRenderPass VulkanContext::createRenderPass(const RenderPassInfo& info)
 {
 	auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
 
@@ -1272,7 +1272,7 @@ VkRenderPass RHIContextVulkan::createRenderPass(const RenderPassInfo& info)
 	return renderPassVk; // Placeholder, implement the rest of the function
 }
 
-VkFramebuffer RHIContextVulkan::createFramebuffer(const FramebufferInfo& info)
+VkFramebuffer VulkanContext::createFramebuffer(const FramebufferInfo& info)
 {
 	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(info.renderPass);
 
@@ -1309,7 +1309,7 @@ VkFramebuffer RHIContextVulkan::createFramebuffer(const FramebufferInfo& info)
 	return framebufferVk;
 }
 
-VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& info)
+VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1507,7 +1507,7 @@ VkPipeline RHIContextVulkan::createGraphicsPipeline(const GraphicsPipelineInfo& 
 	return pipelineVk;
 }
 
-VkPipeline RHIContextVulkan::createComputePipeline(const ComputePipelineInfo& info)
+VkPipeline VulkanContext::createComputePipeline(const ComputePipelineInfo& info)
 {
 	return VK_NULL_HANDLE;
 
@@ -1518,7 +1518,7 @@ VkPipeline RHIContextVulkan::createComputePipeline(const ComputePipelineInfo& in
 #pragma region >>> Resource Utility Functions
 
 
-uint32 RHIContextVulkan::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties)
+uint32 VulkanContext::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
 	vkGetPhysicalDeviceMemoryProperties(_device.physicalDevice, &deviceMemoryProperties);
@@ -1540,7 +1540,7 @@ uint32 RHIContextVulkan::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFla
 
 #pragma region >>> Command Utility Functions
 
-VkCommandBuffer RHIContextVulkan::beginSingleTimeCommands()
+VkCommandBuffer VulkanContext::beginSingleTimeCommands()
 {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1560,7 +1560,7 @@ VkCommandBuffer RHIContextVulkan::beginSingleTimeCommands()
 	return commandBufferVk;
 }
 
-void RHIContextVulkan::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+void VulkanContext::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 {
 	vkEndCommandBuffer(commandBuffer);
 
@@ -1575,7 +1575,7 @@ void RHIContextVulkan::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 	vkFreeCommandBuffers(_device, _defaultCommandPool, 1, &commandBuffer);
 }
 
-void RHIContextVulkan::traisitionImageLayout(
+void VulkanContext::traisitionImageLayout(
 	VkImage image,
 	VkFormat format,
 	VkImageLayout oldLayout,
@@ -1637,7 +1637,7 @@ void RHIContextVulkan::traisitionImageLayout(
 	endSingleTimeCommands(cmdBufferVk);
 }
 
-void RHIContextVulkan::copyBufferToImage(
+void VulkanContext::copyBufferToImage(
 	VkBuffer buffer,
 	VkImage image,
 	uint32 width,
@@ -1669,7 +1669,7 @@ void RHIContextVulkan::copyBufferToImage(
 
 #pragma region >>> Debugging Functions
 
-HS_FORCEINLINE void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
+HS_FORCEINLINE void VulkanContext::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
 {
 #ifdef _DEBUG
 	static auto vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instanceVk, "vkSetDebugUtilsObjectNameEXT");
@@ -1686,7 +1686,7 @@ HS_FORCEINLINE void RHIContextVulkan::setDebugObjectName(VkObjectType type, uint
 #endif
 }
 
-VkResult RHIContextVulkan::createDebugUtilsMessengerEXT
+VkResult VulkanContext::createDebugUtilsMessengerEXT
 (
 	VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -1705,7 +1705,7 @@ VkResult RHIContextVulkan::createDebugUtilsMessengerEXT
 	}
 }
 
-void RHIContextVulkan::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT pDebugMessenger, const VkAllocationCallbacks* npAllocator = nullptr)
+void VulkanContext::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT pDebugMessenger, const VkAllocationCallbacks* npAllocator = nullptr)
 {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr)

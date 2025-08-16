@@ -7,7 +7,7 @@
 #ifndef __HS_STAGING_BUFFER_VULKAN_H__
 #define __HS_STAGING_BUFFER_VULKAN_H__
 
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
+//#include "RHI/Vulkan/VulkanUtility.h"
 
 
 // TODO:

@@ -1,55 +1,13 @@
-﻿#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
+﻿#include "RHI/Vulkan/VulkanCommandHandle.h"
 
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
-#include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
-#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
+#include "RHI/Vulkan/VulkanUtility.h"
+#include "RHI/Vulkan/VulkanRenderHandle.h"
+#include "RHI/Vulkan/VulkanResourceHandle.h"
 
 HS_NS_BEGIN
 
-SemaphoreVulkan::SemaphoreVulkan(RHIDeviceVulkan device, const char* name)
-	: Semaphore(name),
-	deviceVulkan(device)
-	
-{
-	VkSemaphoreCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	createInfo.flags = 0;
-	createInfo.pNext = nullptr;
-
-	vkCreateSemaphore(device, &createInfo, nullptr, &handle);
-}
-
-SemaphoreVulkan::~SemaphoreVulkan()
-{
-	if (handle != VK_NULL_HANDLE)
-	{
-		vkDestroySemaphore(deviceVulkan, handle, nullptr);
-		handle = VK_NULL_HANDLE;
-	}
-}
-
-FenceVulkan::FenceVulkan(RHIDeviceVulkan device, const char* name)
-	: Fence(name)
-	, deviceVulkan(device)
-{
-	VkFenceCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	createInfo.pNext = nullptr;
-	vkCreateFence(deviceVulkan, &createInfo, nullptr, &handle);
-}
-
-FenceVulkan::~FenceVulkan()
-{
-	if (handle != VK_NULL_HANDLE)
-	{
-		vkDestroyFence(deviceVulkan, handle, nullptr);
-		handle = VK_NULL_HANDLE;
-	}
-}
-
 CommandQueueVulkan::CommandQueueVulkan(const char* name)
-	: CommandQueue(name)
+	: RHICommandQueue(name)
 {
 
 }
@@ -60,7 +18,7 @@ CommandQueueVulkan::~CommandQueueVulkan()
 }
 
 CommandPoolVulkan::CommandPoolVulkan(const char* name)
-	: CommandPool(name)
+	: RHICommandPool(name)
 {
 
 }
@@ -71,7 +29,7 @@ CommandPoolVulkan::~CommandPoolVulkan()
 }
 
 CommandBufferVulkan::CommandBufferVulkan(const char* name)
-	:CommandBuffer(name)
+	:RHICommandBuffer(name)
 {
 
 }
@@ -108,7 +66,7 @@ void CommandBufferVulkan::Reset()
 	_isBegan = false;
 }
 
-void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea)
+void CommandBufferVulkan::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea)
 {
 	static std::vector<VkClearValue> clearValues;
 
@@ -168,7 +126,7 @@ void CommandBufferVulkan::BeginRenderPass(RenderPass* renderPass, Framebuffer* f
 	_isBlitBegan = false;
 }
 
-void CommandBufferVulkan::BindPipeline(GraphicsPipeline* pipeline)
+void CommandBufferVulkan::BindPipeline(RHIGraphicsPipeline* pipeline)
 {
 	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
 	HS_ASSERT(pipeline, "Pipeline is nullptr");
@@ -176,7 +134,7 @@ void CommandBufferVulkan::BindPipeline(GraphicsPipeline* pipeline)
 	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineVK->handle);
 }
 
-void CommandBufferVulkan::BindResourceSet(ResourceSet* rSet)
+void CommandBufferVulkan::BindResourceSet(RHIResourceSet* rSet)
 {
 	// TODO: Implementation it.
 }
@@ -206,7 +164,7 @@ void CommandBufferVulkan::SetScissor(const uint32 x, const uint32 y, const uint3
 	vkCmdSetScissor(handle, 0, 1, &rectVk);
 }
 
-void CommandBufferVulkan::BindIndexBuffer(Buffer* indexBuffer)
+void CommandBufferVulkan::BindIndexBuffer(RHIBuffer* indexBuffer)
 {
 	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
 	HS_ASSERT(indexBuffer, "Index Buffer is nullptr");
@@ -216,7 +174,7 @@ void CommandBufferVulkan::BindIndexBuffer(Buffer* indexBuffer)
 
 }
 
-void CommandBufferVulkan::BindVertexBuffers(const Buffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
+void CommandBufferVulkan::BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
 {
 	std::vector<VkBuffer> vertexBufferHandles(bufferCount);
 	std::vector<VkDeviceSize> vertexOffsets(bufferCount);
@@ -248,12 +206,12 @@ void CommandBufferVulkan::EndRenderPass()
 	_isGraphicsBegan = false;
 }
 
-void CommandBufferVulkan::CopyTexture(Texture* srcTexture, Texture* dstTexture)
+void CommandBufferVulkan::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
 {
 
 }
 
-void CommandBufferVulkan::UpdateBuffer(Buffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
+void CommandBufferVulkan::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
 
 }

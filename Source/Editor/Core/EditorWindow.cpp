@@ -1,9 +1,9 @@
-#include "Editor/Core/EditorWindow.h"
+﻿#include "Editor/Core/EditorWindow.h"
 
-#include "Core/RendererPass/Forward/ForwardOpaquePass.h"
-#include "Core/RHI/Swapchain.h"
-#include "Core/RHI/RenderHandle.h"
-#include "Core/Renderer/ForwardRenderer.h"
+#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
+#include "RHI/Swapchain.h"
+#include "RHI/RenderHandle.h"
+#include "Renderer/ForwardPath.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -122,7 +122,7 @@ void EditorWindow::ProcessEvent()
 
 bool EditorWindow::onInitialize()
 {
-	_renderer = new ForwardRenderer(_rhiContext);
+	_renderer = new ForwardRenderer(_pRHIContext);
 	_renderer->Initialize();
 
 	ImGuiExtension::InitializeBackend(_swapchain);
@@ -198,7 +198,7 @@ void EditorWindow::onRender()
 	{
 		return;
 	}
-	CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
+	RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
 	cmdBuffer->Begin();
 
 	uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
@@ -214,7 +214,7 @@ void EditorWindow::onRender()
 
 	cmdBuffer->End();
 
-	_rhiContext->Submit(_swapchain, &cmdBuffer, 1);
+	_pRHIContext->Submit(_swapchain, &cmdBuffer, 1);
 }
 
 void EditorWindow::onPresent()
@@ -223,7 +223,7 @@ void EditorWindow::onPresent()
 	{
 		return;
 	}
-	hs_engine_get_rhi_context()->Present(_swapchain);
+	RHIContext::Get()->Present(_swapchain);
 }
 
 void EditorWindow::onShutdown()
@@ -250,12 +250,12 @@ void EditorWindow::onRenderGUI()
 
 void EditorWindow::onSuspend()
 {
-	_rhiContext->Suspend(_swapchain);
+	_pRHIContext->Suspend(_swapchain);
 }
 
 void EditorWindow::onRestore()
 {
-	_rhiContext->Restore(_swapchain);
+	_pRHIContext->Restore(_swapchain);
 }
 
 void EditorWindow::setupPanels()

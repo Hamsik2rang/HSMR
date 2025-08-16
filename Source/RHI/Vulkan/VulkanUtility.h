@@ -1,5 +1,5 @@
 ﻿//
-//  RHIContextVulkan.h
+//  VulkanContext.h
 //  Engine
 //
 //  Created by Yongsik Im on 4/11/25.
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/RHI/RHIDefinition.h"
+#include "Core/Log.h"
+#include "RHI/RHIDefinition.h"
 
 #define VK_USE_PLATFORM_WIN32_KHR 
 

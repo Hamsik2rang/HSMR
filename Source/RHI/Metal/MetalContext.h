@@ -1,5 +1,5 @@
 //
-//  RHIContextMetal.h
+//  MetalContext.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/11/25.
@@ -14,11 +14,11 @@
 
 HS_NS_BEGIN
 
-class RHIContextMetal : public RHIContext
+class MetalContext : public RHIContext
 {
 public:
-    RHIContextMetal() {}
-    ~RHIContextMetal() override {}
+    MetalContext() {}
+    ~MetalContext() override {}
 
     bool Initialize() override;
     void Finalize() override;

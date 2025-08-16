@@ -16,6 +16,8 @@ list(APPEND TOTAL_FILES ${HAL_HEADERS})
 set(HAL_SOURCES
     Private/Timer.cpp
     Private/FileSystem.cpp
+    Private/NativeWindow.cpp
+    Private/SystemContext.cpp
 )
 source_group("Private" FILES ${HAL_SOURCES})
 list(APPEND TOTAL_FILES ${HAL_SOURCES})

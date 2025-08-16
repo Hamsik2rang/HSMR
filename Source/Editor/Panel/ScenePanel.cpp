@@ -1,4 +1,4 @@
-#include "Editor/Panel/ScenePanel.h"
+﻿#include "Editor/Panel/ScenePanel.h"
 
 #include "Core/RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -31,7 +31,7 @@ void ScenePanel::Draw()
     uint32 height = _currentRenderTarget->GetHeight();
     
     ImVec2 viewportSize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-    Texture* texture = _currentRenderTarget->GetColorTexture(0);
+    RHITexture* texture = _currentRenderTarget->GetColorTexture(0);
     
     ImGuiExtension::ImageOffscreen(texture, viewportSize);
 

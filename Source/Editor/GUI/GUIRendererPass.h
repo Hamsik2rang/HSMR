@@ -1,4 +1,4 @@
-//
+﻿//
 //  GUIRendererPass.h
 //  HSMR
 //
@@ -15,7 +15,7 @@ HS_NS_EDITOR_BEGIN
 
 
 
-class HS_EDITOR_API GUIRendererPass : public RendererPass
+class HS_EDITOR_API GUIRendererPass : public RenderPass
 {
 
 

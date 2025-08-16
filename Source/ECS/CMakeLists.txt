@@ -64,6 +64,8 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
+add_dependencies(${TARGET_NAME} HAL Core RHI Object Renderer)
+
 target_include_directories(${TARGET_NAME}
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}

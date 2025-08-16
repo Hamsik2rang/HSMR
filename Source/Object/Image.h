@@ -1,4 +1,4 @@
-//
+﻿//
 //  Image.h
 //  HSMR
 //
@@ -9,11 +9,11 @@
 
 #include "Precompile.h"
 
-#include "ResourceObject/Object.h"
+#include "Object/Object.h"
 
 HS_NS_BEGIN
 
-class Image : public Object
+class HS_OBJECT_API Image : public Object
 {
 public:
     enum ImageType

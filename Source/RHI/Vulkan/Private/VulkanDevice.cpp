@@ -1,8 +1,8 @@
-﻿#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+﻿#include "RHI/Vulkan/VulkanDevice.h"
 
-#include "Engine/RHI/Vulkan/RHIUtilityVulkan.h"
+#include "RHI/Vulkan/VulkanUtility.h"
 
-#include "Engine/Core/Log.h"
+#include "Core/Log.h"
 #include <algorithm>
 #include <utility>
 
@@ -12,12 +12,12 @@ std::vector<const char*> s_requiredDeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-RHIDeviceVulkan::~RHIDeviceVulkan()
+VulkanDevice::~VulkanDevice()
 {
 	Destroy();
 }
 
-bool RHIDeviceVulkan::Create(VkInstance instance)
+bool VulkanDevice::Create(VkInstance instance)
 {
 	_instanceVk = instance;
 
@@ -26,12 +26,12 @@ bool RHIDeviceVulkan::Create(VkInstance instance)
 	return true;
 }
 
-void RHIDeviceVulkan::Destroy()
+void VulkanDevice::Destroy()
 {
 	vkDestroyDevice(logicalDevice, nullptr);
 }
 
-void RHIDeviceVulkan::getPhysicalDevice()
+void VulkanDevice::getPhysicalDevice()
 {
 	uint32 physicalDeviceCount = 0;
 	vkEnumeratePhysicalDevices(_instanceVk, &physicalDeviceCount, nullptr);
@@ -85,7 +85,7 @@ void RHIDeviceVulkan::getPhysicalDevice()
 		(properties.apiVersion & 0xFFF));
 }
 
-void RHIDeviceVulkan::createLogicalDevice()
+void VulkanDevice::createLogicalDevice()
 {
 	// Set queue family indices
 	uint32 queueFamilyCount = 0;
@@ -149,7 +149,7 @@ void RHIDeviceVulkan::createLogicalDevice()
 	}
 }
 
-uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
+uint32 VulkanDevice::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 {
 
 	VkPhysicalDeviceProperties properties{};
@@ -178,7 +178,7 @@ uint32 RHIDeviceVulkan::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 	return score;
 }
 
-void RHIDeviceVulkan::createSurface()
+void VulkanDevice::createSurface()
 {
 
 }

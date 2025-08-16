@@ -1,6 +1,6 @@
 #include "Core/RHI/Metal/CommandHandleMetal.h"
 
-#include "Core/RHI/Metal/RHIContextMetal.h"
+#include "Core/RHI/Metal/MetalContext.h"
 #include "Core/RHI/Metal/ResourceHandleMetal.h"
 #include "Core/RHI/Metal/RenderHandleMetal.h"
 

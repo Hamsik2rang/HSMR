@@ -1,4 +1,4 @@
-#include "ResourceObject/ROManager.h"
+﻿#include "Object/ObjectManager.h"
 
 #include "HAL/FileSystem.h"
 #include "Core/Math/Math.h"
@@ -11,27 +11,27 @@
 #include "stb_image.h"
 
 #include "Core/Log.h"
-#include "ResourceObject/Mesh.h"
-#include "ResourceObject/Material.h"
+#include "Object/Mesh.h"
+#include "Object/Material.h"
 
 #include <unordered_map>
 
 HS_NS_BEGIN
 
-bool ROManager::s_isInitialize        = false;
-std::string ROManager::s_resourcePath = "";
+bool ObjectManager::s_isInitialize        = false;
+std::string ObjectManager::s_resourcePath = "";
 
-Image* ROManager::s_fallbackImage2DWhite;
-Image* ROManager::s_fallbackImage2DBlack;
-Image* ROManager::s_fallbackImage2DRed;
-Image* ROManager::s_fallbackImage2DGreen;
-Image* ROManager::s_fallbackImage2DBlue;
+Image* ObjectManager::s_fallbackImage2DWhite;
+Image* ObjectManager::s_fallbackImage2DBlack;
+Image* ObjectManager::s_fallbackImage2DRed;
+Image* ObjectManager::s_fallbackImage2DGreen;
+Image* ObjectManager::s_fallbackImage2DBlue;
 
-Mesh ROManager::s_fallbackMeshPlane;
-Mesh ROManager::s_fallbackMeshCube;
-Mesh ROManager::s_fallbackMeshSphere;
+Mesh ObjectManager::s_fallbackMeshPlane;
+Mesh ObjectManager::s_fallbackMeshCube;
+Mesh ObjectManager::s_fallbackMeshSphere;
 
-bool ROManager::Initialize()
+bool ObjectManager::Initialize()
 {
     // Get resource path from engine context
     SystemContext* sysContext = SystemContext::Get();
@@ -44,7 +44,7 @@ bool ROManager::Initialize()
         }
     }
 
-    HS_LOG(info, "ROManager initialized with path: %s", s_resourcePath.c_str());
+    HS_LOG(info, "ObjectManager initialized with path: %s", s_resourcePath.c_str());
 
     // 1x1 White Image 2D
     {
@@ -90,7 +90,7 @@ bool ROManager::Initialize()
     return s_isInitialize;
 }
 
-void ROManager::Finalize()
+void ObjectManager::Finalize()
 {
     if (!s_isInitialize)
     {
@@ -290,7 +290,7 @@ std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::s
                     HS_LOG(info, "Loading texture: %s for material %s", texturePath.c_str(), material->name);
 
                     // Load the texture
-                    Scoped<Image> texture = ROManager::LoadImageFromFile(texturePath, true);
+                    Scoped<Image> texture = ObjectManager::LoadImageFromFile(texturePath, true);
                     if (texture)
                     {
                         EMaterialTextureType hsTextureType = ConvertTextureType(type);
@@ -421,7 +421,7 @@ Scoped<Mesh> ProcessNode(aiNode* node, const aiScene* scene, std::vector<Scoped<
     return rootMesh;
 }
 
-Scoped<Image> ROManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
+Scoped<Image> ObjectManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
 {
     int width   = 0;
     int height  = 0;
@@ -451,7 +451,7 @@ Scoped<Image> ROManager::LoadImageFromFile(const std::string& path, bool isAbsol
     return pImage;
 }
 
-Scoped<Mesh> ROManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
+Scoped<Mesh> ObjectManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
     const char* filePath = nullptr;
     if (isAbsolutePath)
@@ -489,7 +489,7 @@ Scoped<Mesh> ROManager::LoadMeshFromFile(const std::string& path, bool isAbsolut
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        HS_LOG(error, "ROManager cannot import mesh (%s): %s", filePath, importer.GetErrorString());
+        HS_LOG(error, "ObjectManager cannot import mesh (%s): %s", filePath, importer.GetErrorString());
         return nullptr;
     }
 
@@ -523,7 +523,7 @@ Scoped<Mesh> ROManager::LoadMeshFromFile(const std::string& path, bool isAbsolut
     return rootMesh;
 }
 
-void ROManager::FreeImage(Image* image)
+void ObjectManager::FreeImage(Image* image)
 {
     uint8* data = image->GetRawData();
     if (nullptr == data)
@@ -534,13 +534,13 @@ void ROManager::FreeImage(Image* image)
     stbi_image_free(static_cast<void*>(data));
 }
 
-void ROManager::FreeMesh(Mesh* mesh)
+void ObjectManager::FreeMesh(Mesh* mesh)
 {
     // The mesh destructor should handle cleanup
     // This is here for any additional cleanup if needed
 }
 
-void ROManager::calculatePlane()
+void ObjectManager::calculatePlane()
 {
     // Plane Mesh (LH)
 
@@ -592,7 +592,7 @@ void ROManager::calculatePlane()
     s_fallbackMeshPlane.SetBitangent(std::move(bitangents));
     s_fallbackMeshPlane.SetIndices(std::move(indices));
 }
-void ROManager::calculateCube()
+void ObjectManager::calculateCube()
 {
 
     // Cube Mesh (LH)
@@ -748,7 +748,7 @@ void ROManager::calculateCube()
     s_fallbackMeshCube.SetTexCoord(std::move(texcoords), 0);
     s_fallbackMeshCube.SetIndices(std::move(indices));
 }
-void ROManager::calculateSphere()
+void ObjectManager::calculateSphere()
 {
     // Sphere Mesh (LH)
     const int segments = 32; // 경도 분할 수
@@ -822,74 +822,74 @@ void ROManager::calculateSphere()
     s_fallbackMeshSphere.SetIndices(std::move(indices));
 }
 
-const Image* ROManager::GetFallbackImage2DWhite()
+const Image* ObjectManager::GetFallbackImage2DWhite()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback image.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
     }
 
     // Return the fallback white image
     return s_fallbackImage2DWhite;
 }
-const Image* ROManager::GetFallbackImage2DBlack()
+const Image* ObjectManager::GetFallbackImage2DBlack()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback image.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
     }
     // Return the fallback black image
     return s_fallbackImage2DBlack;
 }
-const Image* ROManager::GetFallbackImage2DRed()
+const Image* ObjectManager::GetFallbackImage2DRed()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback image.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
     }
 
     return s_fallbackImage2DRed; // Return empty image or handle error appropriately
 }
-const Image* ROManager::GetFallbackImage2DGreen()
+const Image* ObjectManager::GetFallbackImage2DGreen()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback image.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
     }
     return s_fallbackImage2DGreen; // Return empty image or handle error appropriately
 }
-const Image* ROManager::GetFallbackImage2DBlue()
+const Image* ObjectManager::GetFallbackImage2DBlue()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback image.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
     }
     return s_fallbackImage2DBlue; // Return empty image or handle error appropriately
 }
 
-const Mesh& ROManager::GetFallbackMeshPlane()
+const Mesh& ObjectManager::GetFallbackMeshPlane()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback mesh.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback mesh.");
     }
     return s_fallbackMeshPlane; // Return empty mesh or handle error appropriately
 }
 
-const Mesh& ROManager::GetFallbackMeshCube()
+const Mesh& ObjectManager::GetFallbackMeshCube()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback mesh.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback mesh.");
     }
     return s_fallbackMeshCube; // Return empty mesh or handle error appropriately
 }
 
-const Mesh& ROManager::GetFallbackMeshSphere()
+const Mesh& ObjectManager::GetFallbackMeshSphere()
 {
     if (!s_isInitialize)
     {
-        HS_LOG(crash, "ROManager is not initialized. Cannot get fallback mesh.");
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback mesh.");
     }
     return s_fallbackMeshSphere; // Return empty mesh or handle error appropriately
 }

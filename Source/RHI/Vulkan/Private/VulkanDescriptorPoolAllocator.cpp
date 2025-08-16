@@ -1,6 +1,6 @@
-﻿#include "Engine/RHI/Vulkan/DescriptorPoolAllocatorVulkan.h"
+﻿#include "RHI/Vulkan/VulkanDescriptorPoolAllocator.h"
 
-#include "Engine/RHI/Vulkan/RHIDeviceVulkan.h"
+#include "RHI/Vulkan/VulkanDevice.h"
 
 
 HS_NS_BEGIN
@@ -25,7 +25,7 @@ DescriptorPoolAllocatorVulkan::~DescriptorPoolAllocatorVulkan()
 }
 
 
-bool DescriptorPoolAllocatorVulkan::Initialize(VkInstance instanceVk, RHIDeviceVulkan* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios)
+bool DescriptorPoolAllocatorVulkan::Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios)
 {
 	_instanceVk = instanceVk;
 	_device = device;

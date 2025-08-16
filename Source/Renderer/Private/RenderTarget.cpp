@@ -1,7 +1,6 @@
-#include "Core/Renderer/RenderTarget.h"
+﻿#include "Renderer/RenderTarget.h"
 
-#include "Core/RHI/RHIDefinition.h"
-#include "Core/EngineContext.h"
+#include "RHI/RHIDefinition.h"
 
 HS_NS_BEGIN
 
@@ -35,7 +34,7 @@ void RenderTarget::Create(const RenderTargetInfo& info)
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
             
-            Texture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
+            RHITexture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
             _colorTextures.push_back(texture);
         }
     }

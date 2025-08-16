@@ -1,13 +1,13 @@
-#ifndef __HS_FORWARD_RENDERER_H__
+﻿#ifndef __HS_FORWARD_RENDERER_H__
 #define __HS_FORWARD_RENDERER_H__
 
 #include "Precompile.h"
 
-#include "Core/Renderer/Renderer.h"
+#include "Renderer/RenderPath.h"
 
 HS_NS_BEGIN
 
-class ForwardRenderer : public Renderer
+class ForwardRenderer : public RenderPath
 {
 public:
     ForwardRenderer(RHIContext* rhiContext);

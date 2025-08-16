@@ -12,34 +12,34 @@
 
 HS_NS_BEGIN
 
-class RenderPass;
-class Framebuffer;
+class RHIRenderPass;
+class RHIFramebuffer;
 class Pipeline;
 
 class ForwardOpaquePass : public ForwardPass
 {
 public:
-    ForwardOpaquePass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
+    ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
     ~ForwardOpaquePass() override;
 
     void OnBeforeRendering(uint32_t submitIndex) override;
 
     void Configure(RenderTarget* renderTarget) override;
 
-    void Execute(CommandBuffer* commandBuffer, RenderPass* renderPass) override;
+    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) override;
 
     void OnAfterRendering() override;
 
 private:
     void createResourceHandles();
-    void createPipelineHandles(RenderPass* renderPass);
+    void createPipelineHandles(RHIRenderPass* renderPass);
 
     RenderTarget* _currentRenderTarget = nullptr;
-    Buffer* _vertexBuffer[2];
-    Buffer* _indexBuffer;
-    Shader* _vertexShader        = nullptr;
-    Shader* _fragmentShader      = nullptr;
-    GraphicsPipeline* _gPipeline = nullptr;
+    RHIBuffer* _vertexBuffer[2];
+    RHIBuffer* _indexBuffer;
+    RHIShader* _vertexShader        = nullptr;
+    RHIShader* _fragmentShader      = nullptr;
+    RHIGraphicsPipeline* _gPipeline = nullptr;
 
     size_t _indexCount = 0;
 };

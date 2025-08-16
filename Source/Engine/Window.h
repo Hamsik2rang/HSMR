@@ -1,8 +1,8 @@
-//
+﻿//
 //  Window.h
-//  Core
+//  Engine
 //
-//  Created by Yongsik Im on 2025.2.7
+//  Created by Yongsik Im on 2025/2/7
 //
 #ifndef __HS_WINDOW_H__
 #define __HS_WINDOW_H__

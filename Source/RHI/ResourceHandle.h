@@ -1,4 +1,4 @@
-//
+﻿//
 //  ResourceHandle.h
 //  Engine
 //
@@ -9,36 +9,36 @@
 
 #include "Precompile.h"
 
-#include "Engine/RHI/RHIDefinition.h"
+#include "RHI/RHIDefinition.h"
 
 HS_NS_BEGIN
 
-class Texture : public RHIHandle
+class RHITexture : public RHIHandle
 {
 public:
-    ~Texture() override;
+    ~RHITexture() override;
 
     const TextureInfo info;
 
 protected:
-    Texture(const char* name, const TextureInfo& info);
+    RHITexture(const char* name, const TextureInfo& info);
 };
 
-class Sampler : public RHIHandle
+class RHISampler : public RHIHandle
 {
 public:
-    ~Sampler() override;
+    ~RHISampler() override;
 
     const SamplerInfo info;
 
 protected:
-    Sampler(const char* name, const SamplerInfo& info);
+    RHISampler(const char* name, const SamplerInfo& info);
 };
 
-class Buffer : public RHIHandle
+class RHIBuffer : public RHIHandle
 {
 public:
-    ~Buffer() override;
+    ~RHIBuffer() override;
 
     const BufferInfo info;
 
@@ -46,100 +46,100 @@ public:
     size_t byteSize;
 
 protected:
-    Buffer(const char* name, const BufferInfo& info);
+    RHIBuffer(const char* name, const BufferInfo& info);
 };
 
-class Shader : public RHIHandle
+class RHIShader : public RHIHandle
 {
 public:
-    ~Shader() override;
+    ~RHIShader() override;
 
     const ShaderInfo info;
 
 protected:
-    Shader(const char* name, const ShaderInfo& info) noexcept;
+    RHIShader(const char* name, const ShaderInfo& info) noexcept;
 };
 
-class ResourceLayout : public RHIHandle
+class RHIResourceLayout : public RHIHandle
 {
 public:
-    ~ResourceLayout() override;
+    ~RHIResourceLayout() override;
 
     std::vector<ResourceBinding> bindings;
 
 protected:
-    ResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount);
+    RHIResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount);
 };
 
-class ResourceSet : public RHIHandle
+class RHIResourceSet : public RHIHandle
 {
 public:
-    ~ResourceSet() override;
+    ~RHIResourceSet() override;
 
-    std::vector<ResourceLayout*> layouts;
+    std::vector<RHIResourceLayout*> layouts;
 
 protected:
-    ResourceSet(const char* name);
+    RHIResourceSet(const char* name);
 };
 
-class ResourceSetPool : public RHIHandle
+class RHIResourceSetPool : public RHIHandle
 {
 public:
-    ~ResourceSetPool() override;
+    ~RHIResourceSetPool() override;
 
 protected:
-    ResourceSetPool(const char* name);
+    RHIResourceSetPool(const char* name);
 };
 
 template <>
-struct Hasher<Texture>
+struct Hasher<RHITexture>
 {
-    static uint32 Get(const Texture& key)
+    static uint32 Get(const RHITexture& key)
     {
         return Hasher<TextureInfo>::Get(key.info);
     }
 };
 
 template <>
-struct Hasher<Texture*>
+struct Hasher<RHITexture*>
 {
-    static uint32 Get(const Texture*& key)
+    static uint32 Get(const RHITexture*& key)
     {
         return Hasher<TextureInfo>::Get(key->info);
     }
 };
 
 template <>
-struct Hasher<Sampler>
+struct Hasher<RHISampler>
 {
-    static uint32 Get(const Sampler& key)
+    static uint32 Get(const RHISampler& key)
     {
         return Hasher<SamplerInfo>::Get(key.info);
     }
 };
 
 template <>
-struct Hasher<Sampler*>
+struct Hasher<RHISampler*>
 {
-    static uint32 Get(const Sampler*& key)
+    static uint32 Get(const RHISampler*& key)
     {
         return Hasher<SamplerInfo>::Get(key->info);
     }
 };
 
 template <>
-struct Hasher<Buffer>
+struct Hasher<RHIBuffer>
 {
-    static uint32 Get(const Buffer& key)
+    static uint32 Get(const RHIBuffer& key)
     {
         return Hasher<BufferInfo>::Get(key.info);
     }
 };
 
 template <>
-struct Hasher<Buffer*>
+struct Hasher<RHIBuffer*>
 {
-    static uint32 Get(const Buffer*& key)
+    static uint32 Get(const RHIBuffer*& key)
     {
         return Hasher<BufferInfo>::Get(key->info);
     }

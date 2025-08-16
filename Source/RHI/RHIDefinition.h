@@ -1,4 +1,4 @@
-//
+﻿//
 //  RHIDefinition
 //  HSMR
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Utility/Hash.h"
+#include "Core/Log.h"
+#include "Core/Hash.h"
 
 #include <vector>
 #include <string>
@@ -25,6 +25,7 @@ class RHIHandle
 public:
 	enum class EType
 	{
+		SWAPCHAIN,
 		BUFFER,
 		TEXTURE,
 		SAMPLER,
@@ -79,6 +80,18 @@ protected:
 	int    _refs = 1; // Create한 순간 자동으로 Ratain하는 것으로 판단.
 	uint32 _hash;
 	//...
+};
+
+enum class ERHIPlatform
+{
+	INVALID = 0,
+	VULKAN,
+	METAL,
+	//DIRECTX12,
+	//OPENGL,
+	//OPENGL_ES,
+	//WEBGPU,
+	VIRTUAL,
 };
 
 enum class EVertexFormat
@@ -174,7 +187,6 @@ HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)
 	return (false == (static_cast<uint16>(lhs) == rhs));
 }
 
-
 struct TextureInfo
 {
 	EPixelFormat  format = EPixelFormat::R8G8B8A8_UNORM;
@@ -230,7 +242,7 @@ struct SamplerInfo
 	bool isPixelCoordinate = false;
 };
 
-struct Buffer;
+struct RHIBuffer;
 
 enum class EBufferUsage
 {
@@ -281,9 +293,9 @@ struct BufferInfo
 	EBufferMemoryOption memoryOption;
 };
 
-struct Texture;
-struct RenderPass;
-struct ResourceLayout;
+struct RHITexture;
+struct RHIRenderPass;
+struct RHIResourceLayout;
 
 struct RenderTexture
 {
@@ -291,8 +303,8 @@ struct RenderTexture
 	uint32       width;
 	uint32       height;
 
-	std::vector<Texture*> colorBuffers;
-	Texture* depthStencilBuffer;
+	std::vector<RHITexture*> colorBuffers;
+	RHITexture* depthStencilBuffer;
 };
 
 struct SwapchainInfo
@@ -376,14 +388,14 @@ struct RenderPassInfo
 	bool isSwapchainRenderPass = false;
 };
 
-class RenderPass;
+class RHIRenderPass;
 
 struct FramebufferInfo
 {
-	RenderPass* renderPass;
-	std::vector<Texture*> colorBuffers;
-	Texture* depthStencilBuffer;
-	Texture* resolveBuffer;
+	RHIRenderPass* renderPass;
+	std::vector<RHITexture*> colorBuffers;
+	RHITexture* depthStencilBuffer;
+	RHITexture* resolveBuffer;
 
 	uint32 width = 1;
 	uint32 height = 1;
@@ -507,15 +519,15 @@ enum class EResourceType : uint8
 	INPUT_ATTACHMENT,
 };
 
-struct Sampler;
+struct RHISampler;
 
 struct ResourceBinding
 {
 	struct Resource
 	{
-		std::vector<Buffer*>  buffers;
-		std::vector<Texture*> textures;
-		std::vector<Sampler*> samplers;
+		std::vector<RHIBuffer*>  buffers;
+		std::vector<RHITexture*> textures;
+		std::vector<RHISampler*> samplers;
 
 		std::vector<uint32> offsets;
 	};
@@ -530,12 +542,12 @@ struct ResourceBinding
 	uint32      nameHash;
 };
 
-class Shader;
+class RHIShader;
 
 
 struct ShaderProgramDescriptor
 {
-	std::vector<Shader*> stages;
+	std::vector<RHIShader*> stages;
 };
 
 struct VertexInputLayoutDescriptor
@@ -767,8 +779,8 @@ struct GraphicsPipelineInfo
 	DepthStencilStateDescriptor		depthStencilDesc;
 	ColorBlendStateDescriptor		colorBlendDesc;
 
-	ResourceLayout* resourceLayout;
-	RenderPass* renderPass;
+	RHIResourceLayout* resourceLayout;
+	RHIRenderPass* renderPass;
 };
 
 struct ComputePipelineInfo
@@ -777,7 +789,7 @@ struct ComputePipelineInfo
 };
 
 template <>
-struct Hasher<Attachment>
+struct HS::Hasher<Attachment>
 {
 	static uint32 Get(const Attachment& key)
 	{
@@ -789,7 +801,7 @@ struct Hasher<Attachment>
 };
 
 template <>
-struct Hasher<RenderPassInfo>
+struct HS::Hasher<RenderPassInfo>
 {
 	static uint32 Get(const RenderPassInfo& key)
 	{

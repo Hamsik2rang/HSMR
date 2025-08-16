@@ -1,4 +1,4 @@
-//
+﻿//
 //  Application.h
 //  Core
 //
@@ -13,12 +13,12 @@
 
 namespace HS
 {
-class Renderer;
+class RenderPath;
 }
 
 HS_NS_BEGIN
 
-class Renderer;
+class RenderPath;
 class Scene;
 class Window;
 
@@ -28,14 +28,14 @@ public:
     Application(const char* appName) noexcept;
     virtual ~Application() = default;
 
-    virtual bool Initialize(EngineContext* engineContext) = 0;
+    //virtual bool Initialize(EngineContext* engineContext) = 0;
     virtual void Run()                                    = 0;
     virtual void Finalize()                               = 0;
 
 protected:
     const char* _name;
 
-    EngineContext* _engineContext;
+    //EngineContext* _engineContext;
     Window* _window;
 };
 

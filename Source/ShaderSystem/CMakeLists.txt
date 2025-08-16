@@ -86,7 +86,7 @@ if(USE_SHADERSYSTEM)
 
     add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-    add_dependencies(${TARGET_NAME} Core)
+    add_dependencies(${TARGET_NAME} HAL Core)
 
     target_Link_libraries(${TARGET_NAME} PRIVATE Core ${SLANG_LIB} ${SPIRV_CROSS})
 

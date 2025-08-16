@@ -1,5 +1,5 @@
-//
-//  ROManager.h
+﻿//
+//  ObjectManager.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/7/25.
@@ -12,12 +12,12 @@
 #include "HAL/SystemContext.h"
 #include "HAL/FileSystem.h"
 
-#include "ResourceObject/Image.h"
-#include "ResourceObject/Mesh.h"
+#include "Object/Image.h"
+#include "Object/Mesh.h"
 
 HS_NS_BEGIN
 
-class ROManager
+class HS_OBJECT_API ObjectManager
 {
 public:
     static bool Initialize();

@@ -1,4 +1,4 @@
-set(TARGET_NAME Renderer)
+﻿set(TARGET_NAME Renderer)
 
 set(TOTAL_FILES)
 
@@ -6,7 +6,7 @@ set(RENDERER_HEADERS
     DeferredPath.h
     ForwardPath.h
     RenderPath.h
-    RenderDefinition.h
+    RendererDefinition.h
     RenderTarget.h
 )
 
@@ -23,35 +23,35 @@ set(RENDERER_SOURCES
 source_group("Private" FILES ${RENDERER_SOURCES})
 list(APPEND TOTAL_FILES ${RENDERER_SOURCES})
 
-set(RENDERER_RENDERING_PASS_HEADERS
-    RenderingPass/RenderingPass.h
+set(RENDERER_RENDER_PASS_HEADERS
+    RenderPass/RenderPass.h
 )
 
-source_group("RenderingPass\\Public" FILES ${RENDERER_RENDERING_PASS_HEADERS})
-list(APPEND TOTAL_FILES ${RENDERER_RENDERING_PASS_HEADERS})
+source_group("RenderPass\\Public" FILES ${RENDERER_RENDER_PASS_HEADERS})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_PASS_HEADERS})
 
-set(RENDERER_RENDERING_PASS_SOURCES
-    RenderingPass/Private/RenderingPass.cpp
+set(RENDERER_RENDER_PASS_SOURCES
+    RenderPass/Private/RenderPass.cpp
 )
 
-source_group("RenderingPass\\Private" FILES ${RENDERER_RENDERING_PASS_SOURCES})
-list(APPEND TOTAL_FILES ${RENDERER_RENDERING_PASS_SOURCES})
+source_group("RenderPass\\Private" FILES ${RENDERER_RENDER_PASS_SOURCES})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_PASS_SOURCES})
 
-set(RENDERER_RENDERING_FORWARD_PASS_HEADERS
-    RenderingPass/Forward/ForwardPass.h
-    RenderingPass/Forward/ForwardOpaquePass.h
+set(RENDERER_RENDER_FORWARD_PASS_HEADERS
+    RenderPass/Forward/ForwardRenderPass.h
+    RenderPass/Forward/ForwardOpaquePass.h
 )
 
-source_group("RenderingPass\\Forward\\Public" FILES ${RENDERER_RENDERING_FORWARD_PASS_HEADERS})
-list(APPEND TOTAL_FILES ${RENDERER_RENDERING_FORWARD_PASS_HEADERS})
+source_group("RenderPass\\Forward\\Public" FILES ${RENDERER_RENDER_FORWARD_PASS_HEADERS})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_FORWARD_PASS_HEADERS})
 
-set(RENDERER_RENDERING_FORWARD_PASS_SOURCES
-    RenderingPass/Forward/Private/ForwardPass.cpp
-    RenderingPass/Forward/Private/ForwardOpaquePass.cpp
+set(RENDERER_RENDER_FORWARD_PASS_SOURCES
+    RenderPass/Forward/Private/ForwardRenderPass.cpp
+    RenderPass/Forward/Private/ForwardOpaquePass.cpp
 )
 
-source_group("RenderingPass\\Forward\\Private" FILES ${RENDERER_RENDERING_FORWARD_PASS_SOURCES})
-list(APPEND TOTAL_FILES ${RENDERER_RENDERING_FORWARD_PASS_SOURCES})
+source_group("RenderPass\\Forward\\Private" FILES ${RENDERER_RENDER_FORWARD_PASS_SOURCES})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_FORWARD_PASS_SOURCES})
 
 add_library(${TARGET_NAME}
     SHARED

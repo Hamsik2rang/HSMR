@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class RHIContextMetal;
+class MetalContext;
 
 class PipelineMetal;
 class RenderPassMetal;
