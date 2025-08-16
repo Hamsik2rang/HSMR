@@ -1,5 +1,5 @@
 //
-//  RenderHandleMetal.h
+//  MetalRenderHandle.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/14/25.
@@ -10,31 +10,31 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/RenderHandle.h"
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "RHI/RenderHandle.h"
+#include "RHI/Metal/MetalUtility.h"
 
 
 HS_NS_BEGIN
 
 
-struct RenderPassMetal : public RenderPass
+struct MetalRenderPass : public RHIRenderPass
 {
-    RenderPassMetal(const char* name, const RenderPassInfo& info);
-    ~RenderPassMetal() override;
+    MetalRenderPass(const char* name, const RenderPassInfo& info);
+    ~MetalRenderPass() override;
     
     MTLRenderPassDescriptor* handle;
 };
 
-struct FramebufferMetal : public Framebuffer
+struct MetalFramebuffer : public RHIFramebuffer
 {
-    FramebufferMetal(const char* name, const FramebufferInfo& info);
-    ~FramebufferMetal() override;
+    MetalFramebuffer(const char* name, const FramebufferInfo& info);
+    ~MetalFramebuffer() override;
 };
 
-struct GraphicsPipelineMetal : public GraphicsPipeline
+struct MetalGraphicsPipeline : public RHIGraphicsPipeline
 {
-    GraphicsPipelineMetal(const char* name, const GraphicsPipelineInfo& info);
-    ~GraphicsPipelineMetal() override;
+    MetalGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
+    ~MetalGraphicsPipeline() override;
     
     id<MTLRenderPipelineState> pipelineState;
     id<MTLDepthStencilState> depthStencilState;

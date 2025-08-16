@@ -1,4 +1,4 @@
-﻿//
+//
 //  MacWindow.h
 //  HAL
 //
@@ -9,19 +9,19 @@
 
 #include "Precompile.h"
 
-#import <Cocoa/Cocoa.h>
+#include "HAL/NativeWindow.h"
 
-
-@interface HSViewController : NSViewController<NSWindowDelegate>
-
-@property (nonatomic, strong) NSWindow* window;
-
-- (instancetype)initWithWindow:(NSWindow*)window;
-- (CGSize)getBackingViewSize;
-
-@end
 
 HS_NS_BEGIN
+
+
+bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
+void DestroyNativeWindowInternal(NativeWindow& nativeWindow);
+void ShowNativeWindowInternal(const NativeWindow& nativeWindow);
+void PollNativeEventInternal(NativeWindow& nativeWindow);
+void SetNativeWindowSizeInternal(uint16 width, uint16 height);
+void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
+
 
 HS_NS_END
 

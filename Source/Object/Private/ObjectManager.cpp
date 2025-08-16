@@ -1,4 +1,4 @@
-﻿#include "Object/ObjectManager.h"
+#include "Object/ObjectManager.h"
 
 #include "HAL/FileSystem.h"
 #include "Core/Math/Math.h"

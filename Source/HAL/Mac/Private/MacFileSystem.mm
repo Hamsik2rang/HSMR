@@ -287,13 +287,6 @@ std::string FileSystem::GetExtension(const std::string& fileName)
     }
 }
 
-// Resource 루트 디렉터리 기준으로의 상대경로 얻기 함수
-std::string FileSystem::GetDefaultResourcePath(const std::string& relativePath)
-{
-    SystemContext* context = SystemContext::Get();
-    return (context->resourceDirectory + relativePath);
-}
-
 // 절대 경로 확인 함수
 bool FileSystem::IsAbsolutePath(const std::string& path)
 {

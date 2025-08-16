@@ -1,4 +1,4 @@
-﻿//
+//
 //  ObjectManager.h
 //  Engine
 //

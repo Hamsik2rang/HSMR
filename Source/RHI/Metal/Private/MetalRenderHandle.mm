@@ -1,33 +1,33 @@
-#include "Core/RHI/Metal/RenderHandleMetal.h"
+#include "RHI/Metal/MetalRenderHandle.h"
 
 HS_NS_BEGIN
 
-RenderPassMetal::RenderPassMetal(const char* name, const RenderPassInfo& info)
-    : RenderPass(name, info)
+MetalRenderPass::MetalRenderPass(const char* name, const RenderPassInfo& info)
+    : RHIRenderPass(name, info)
 {
 }
 
-RenderPassMetal::~RenderPassMetal()
+MetalRenderPass::~MetalRenderPass()
 {
 }
 
-FramebufferMetal::FramebufferMetal(const char* name, const FramebufferInfo& info)
-    : Framebuffer(name, info)
-{
-    
-}
-
-FramebufferMetal::~FramebufferMetal()
+MetalFramebuffer::MetalFramebuffer(const char* name, const FramebufferInfo& info)
+    : RHIFramebuffer(name, info)
 {
     
 }
 
-GraphicsPipelineMetal::GraphicsPipelineMetal(const char* name, const GraphicsPipelineInfo& info)
-    : GraphicsPipeline(name, info)
+MetalFramebuffer::~MetalFramebuffer()
+{
+    
+}
+
+MetalGraphicsPipeline::MetalGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
+    : RHIGraphicsPipeline(name, info)
 {
 }
 
-GraphicsPipelineMetal::~GraphicsPipelineMetal()
+MetalGraphicsPipeline::~MetalGraphicsPipeline()
 {
 }
 HS_NS_END

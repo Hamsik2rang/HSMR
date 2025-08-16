@@ -1,70 +1,69 @@
-#include "Core/RHI/Metal/ResourceHandleMetal.h"
+#include "RHI/Metal/MetalResourceHandle.h"
 
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
-#include "Core/EngineContext.h"
+#include "RHI/Metal/MetalUtility.h"
 
 #import <Metal/Metal.h>
 
 HS_NS_BEGIN
 
-TextureMetal::TextureMetal(const char* name, const TextureInfo& info)
-    : Texture(name, info)
+MetalTexture::MetalTexture(const char* name, const TextureInfo& info)
+    : RHITexture(name, info)
 {
 }
 
-TextureMetal::~TextureMetal()
+MetalTexture::~MetalTexture()
 {
 }
 
-SamplerMetal::SamplerMetal(const char* name, const SamplerInfo& info)
-    : Sampler(name, info)
+MetalSampler::MetalSampler(const char* name, const SamplerInfo& info)
+    : RHISampler(name, info)
 {}
 
-SamplerMetal::~SamplerMetal()
+MetalSampler::~MetalSampler()
 {}
 
-BufferMetal::BufferMetal(const char* name, const BufferInfo& info)
-    : Buffer(name, info)
+MetalBuffer::MetalBuffer(const char* name, const BufferInfo& info)
+    : RHIBuffer(name, info)
 {
 }
 
-BufferMetal::~BufferMetal()
+MetalBuffer::~MetalBuffer()
 {
 }
 
-ShaderMetal::ShaderMetal(const char* name, const ShaderInfo& info)
-    : Shader(name, info)
+MetalShader::MetalShader(const char* name, const ShaderInfo& info)
+    : RHIShader(name, info)
 {
 }
 
-ShaderMetal::~ShaderMetal()
+MetalShader::~MetalShader()
 {
 }
 
-ResourceLayoutMetal::ResourceLayoutMetal(const char* name, ResourceBinding* bindings, size_t bindingCount)
-    : ResourceLayout(name, bindings, bindingCount)
+MetalResourceLayout::MetalResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount)
+    : RHIResourceLayout(name, bindings, bindingCount)
 {
 }
 
-ResourceLayoutMetal::~ResourceLayoutMetal()
+MetalResourceLayout::~MetalResourceLayout()
 {
 }
 
-ResourceSetMetal::ResourceSetMetal(const char* name)
-    : ResourceSet(name)
+MetalResourceSet::MetalResourceSet(const char* name)
+    : RHIResourceSet(name)
 {
 }
 
-ResourceSetMetal::~ResourceSetMetal()
+MetalResourceSet::~MetalResourceSet()
 {
 }
 
-ResourceSetPoolMetal::ResourceSetPoolMetal(const char* name)
-    : ResourceSetPool(name)
+MetalResourceSetPool::MetalResourceSetPool(const char* name)
+    : RHIResourceSetPool(name)
 {
 }
 
-ResourceSetPoolMetal::~ResourceSetPoolMetal()
+MetalResourceSetPool::~MetalResourceSetPool()
 {
 }
 
