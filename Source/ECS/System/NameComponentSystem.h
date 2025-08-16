@@ -1,4 +1,4 @@
-//
+﻿//
 //  RenderComponent.h
 //  Engine
 //
@@ -10,6 +10,6 @@
 
 #include "Precompile.h"
 
-#include "Core/ECS/System/ComponentSystem.h"
+#include "ECS/System/ComponentSystem.h"
 
 #endif /* __NAME_COMPONENT_SYSTEM_H__ */

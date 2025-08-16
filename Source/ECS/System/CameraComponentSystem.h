@@ -1,4 +1,4 @@
-//
+﻿//
 //  CameraComponentSystem.h
 //  Engine
 //
@@ -10,9 +10,9 @@
 
 #include "Precompile.h"
 
-#include "Core/ECS/System/ComponentSystem.h"
+#include "ECS/System/ComponentSystem.h"
 
-class CameraComponentSystem : public IComponentSystem
+class CameraComponentSystem : public ComponentSystem
 {
     
 };

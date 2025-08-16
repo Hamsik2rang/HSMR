@@ -1,6 +1,6 @@
-//
+﻿//
 //  Scene.h
-//  Engine
+//  ECS
 //
 //  Created by Yongsik Im on 3/22/25.
 //

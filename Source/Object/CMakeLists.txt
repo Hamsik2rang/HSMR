@@ -31,7 +31,7 @@ list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL Core)
+add_dependencies(${TARGET_NAME} HAL Core RHI)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -39,8 +39,8 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
-    HS_RESOURCE
-    HS_API_EXPORT
+    HS_OBJECT
+
     HS_OBJECT_API_EXPORT
 )
 

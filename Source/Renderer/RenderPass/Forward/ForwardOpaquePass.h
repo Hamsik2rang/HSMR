@@ -8,7 +8,7 @@
 #define __HS_FORWARD_OPAQUE_PASS_H__
 
 #include "Precompile.h"
-#include "ForwardPass.h"
+#include "Renderer/RenderPass/Forward/ForwardRenderPass.h"
 
 HS_NS_BEGIN
 
@@ -16,7 +16,7 @@ class RHIRenderPass;
 class RHIFramebuffer;
 class Pipeline;
 
-class ForwardOpaquePass : public ForwardPass
+class ForwardOpaquePass : public ForwardRenderPass
 {
 public:
     ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);

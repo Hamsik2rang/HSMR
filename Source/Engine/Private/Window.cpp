@@ -16,8 +16,6 @@ Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags
         HS_LOG(crash, "Fail to create NativeWindow");
     }
 
-    s_eventQueueTable.insert({&_nativeWindow, std::queue<EWindowEvent>()});
-
     onInitialize();
 }
 

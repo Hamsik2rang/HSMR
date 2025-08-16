@@ -1,4 +1,4 @@
-//
+﻿//
 //  RenderComponent.h
 //  Engine
 //
@@ -10,10 +10,10 @@
 
 #include "Precompile.h"
 
-#include "Core/ECS/System/ComponentSystem.h"
+#include "ECS/System/ComponentSystem.h"
 
 
-class LightComponentSystem : public IComponentSystem
+class LightComponentSystem : public ComponentSystem
 {
     
     

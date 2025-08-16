@@ -1,4 +1,4 @@
-//
+﻿//
 //  MacWindow.h
 //  HAL
 //

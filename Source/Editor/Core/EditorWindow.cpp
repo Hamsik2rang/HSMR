@@ -122,7 +122,7 @@ void EditorWindow::ProcessEvent()
 
 bool EditorWindow::onInitialize()
 {
-	_renderer = new ForwardRenderer(_pRHIContext);
+	_renderer = new ForwardRenderer(_rhiContext);
 	_renderer->Initialize();
 
 	ImGuiExtension::InitializeBackend(_swapchain);
@@ -214,7 +214,7 @@ void EditorWindow::onRender()
 
 	cmdBuffer->End();
 
-	_pRHIContext->Submit(_swapchain, &cmdBuffer, 1);
+	_rhiContext->Submit(_swapchain, &cmdBuffer, 1);
 }
 
 void EditorWindow::onPresent()
@@ -250,12 +250,12 @@ void EditorWindow::onRenderGUI()
 
 void EditorWindow::onSuspend()
 {
-	_pRHIContext->Suspend(_swapchain);
+	_rhiContext->Suspend(_swapchain);
 }
 
 void EditorWindow::onRestore()
 {
-	_pRHIContext->Restore(_swapchain);
+	_rhiContext->Restore(_swapchain);
 }
 
 void EditorWindow::setupPanels()

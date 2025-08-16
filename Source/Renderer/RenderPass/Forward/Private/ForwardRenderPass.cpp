@@ -1,10 +1,10 @@
-﻿#include "Core/RendererPass/Forward/ForwardPass.h"
+﻿#include "Renderer/RenderPass/Forward/ForwardRenderPass.h"
 
 HS_NS_BEGIN
 
 
 
-ForwardPass::ForwardPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
+ForwardRenderPass::ForwardRenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
 : RenderPass(name, renderer, renderingOrder)
 {
 }

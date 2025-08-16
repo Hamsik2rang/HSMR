@@ -1,20 +1,19 @@
-﻿#include "ForwardOpaquePass.h"
+﻿#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
 
-#include "Core/EngineContext.h"
-#include "Core/FileSystem.h"
+#include "HAL/FileSystem.h"
 
-#include "Core/Renderer/Renderer.h"
-#include "Core/RHI/RenderHandle.h"
-#include "Core/RHI/CommandHandle.h"
+#include "Renderer/RenderPath.h"
+#include "RHI/RenderHandle.h"
+#include "RHI/CommandHandle.h"
 
-#include "Resource/Material.h"
+#include "Object/Material.h"
 
-#include "Core/Utility/ObjectManager.h"
+#include "Object/ObjectManager.h"
 
 HS_NS_BEGIN
 
 ForwardOpaquePass::ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
-	: ForwardPass(name, renderer, renderingOrder)
+	: ForwardRenderPass(name, renderer, renderingOrder)
 {
 	createResourceHandles();
 }
@@ -127,6 +126,12 @@ void ForwardOpaquePass::createResourceHandles()
 {
 	RHIContext* rhiContext = _renderer->GetRHIContext();
 
+	struct VSINPUT_BASIC
+	{
+		Vec4f position; // float4 Pos
+		Vec4f color;    // float4 Color
+	};
+
 	VSINPUT_BASIC vertices[]{
 	{
 		{0.5f, -0.5f, 0.0f, 1.0f},
@@ -142,9 +147,9 @@ void ForwardOpaquePass::createResourceHandles()
 	},
 	};
 
-	const Mesh& fallbackMesh = ObjectManager::GetFallbackMeshCube();
-	const auto& pos = fallbackMesh.GetPosition();
-	const auto& color = fallbackMesh.GetColor();
+	const Mesh* fallbackMesh = ObjectManager::GetFallbackMeshCube();
+	const auto& pos = fallbackMesh->GetPosition();
+	const auto& color = fallbackMesh->GetColor();
 
 	//_vertexBuffer[0] = rhiContext->CreateBuffer(static_cast<const void*>(pos.data()), pos.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 	//_vertexBuffer[1] = rhiContext->CreateBuffer(static_cast<const void*>(color.data()), color.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
@@ -156,7 +161,7 @@ void ForwardOpaquePass::createResourceHandles()
 #ifdef __APPLE__
 	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
 #elif __WINDOWS__
-	std::string libPath = FileSystem::GetDefaultResourceDirectory() + std::string("Shader\\HLSL\\Basic.vert.spv");
+	std::string libPath = SystemContext::Get()->resourceDirectory + std::string("Shader\\HLSL\\Basic.vert.spv");
 #endif
 	ShaderInfo vsInfo{};
 	vsInfo.entryName = "main";
@@ -167,7 +172,7 @@ void ForwardOpaquePass::createResourceHandles()
 		HS_LOG(crash, "Shader is nullptr");
 	}
 #ifdef __WINDOWS__
-	libPath = FileSystem::GetDefaultResourceDirectory() + std::string("Shader\\HLSL\\Basic.frag.spv");
+	libPath = SystemContext::Get()->resourceDirectory + std::string("Shader\\HLSL\\Basic.frag.spv");
 #endif
 	ShaderInfo fsInfo{};
 	fsInfo.entryName = "main";

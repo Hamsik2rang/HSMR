@@ -20,12 +20,12 @@
     #include <utility>
     #include <functional>
     #include <type_traits>
-
+    #include <cassert>
 #else
     #include <stdio.h>
     #include <string.h>
     #include <stdint.h>
-
+    #include <assert.h>
 #endif
 
 
@@ -110,44 +110,58 @@ typedef uint64_t uint64;
 #else
     #if defined(HS_RESOURCE_API_EXPORT)
         #define HS_RESOURCE_API __declspec(dllexport)
-    #else
+    #elif defined(HS_RESOURCE_API_IMPORT)
         #define HS_RESOURCE_API __declspec(dllimport)
+    #else    
+        #define HS_RESOURCE_API
     #endif
 
     #if defined(HS_SHADERSYSTEM_API_EXPORT)
         #define HS_SHADERSYSTEM_API __declspec(dllexport)
-    #else
+    #elif defined (HS_SHADERSYSTEM_API_IMPORT)
         #define HS_SHADERSYSTEM_API __declspec(dllimport)
+    #else
+        #define HS_SHADERSYSTEM_API
     #endif
 
     #if defined(HS_OBJECT_API_EXPORT)
         #define HS_OBJECT_API __declspec(dllexport)
-    #else    
+    #elif defined(HS_OBJECT_API_IMPORT)
         #define HS_OBJECT_API __declspec(dllimport)
+    #else
+        #define HS_OBJECT_API
     #endif
 
     #if defined(HS_RENDERER_API_EXPORT)
         #define HS_RENDERER_API __declspec(dllexport)
-    #else    
+    #elif defined(HS_RENDERER_API_IMPORT)
         #define HS_RENDERER_API __declspec(dllimport)
+    #else
+        #define HS_RENDERER_API
     #endif
 
     #if defined(HS_ECS_API_EXPORT)
         #define HS_ECS_API __declspec(dllexport)
-    #else  
+    #elif defined(HS_ECS_API_IMPORT)
         #define HS_ECS_API __declspec(dllimport)
+    #else
+        #define HS_ECS_API
     #endif
 
     #if defined(HS_ENGINE_API_EXPORT)
         #define HS_ENGINE_API __declspec(dllexport)
-    #else        
+    #elif defined(HS_ENGINE_API_IMPORT)        
         #define HS_ENGINE_API __declspec(dllimport)
+    #else
+        #define HS_ENGINE_API    
     #endif
 
     #if defined(HS_EDITOR_API_EXPORT)
         #define HS_EDITOR_API __declspec(dllexport)
-    #else
+    #elif defined(HS_EDITOR_API_IMPORT)
         #define HS_EDITOR_API __declspec(dllimport)
+    #else
+        #define HS_EDITOR_API
     #endif
 #endif
 

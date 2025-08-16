@@ -63,7 +63,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI)
+add_dependencies(${TARGET_NAME} HAL Core RHI Object)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -72,10 +72,9 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RENDERER
-    HS_API_EXPORT
-    HS_RENDERER_API_EXPORT
 
-    HS_RESOURCE_API_IMPORT
+    HS_RENDERER_API_EXPORT
+    HS_OBJECT_API_IMPORT
 )
 
 if(USE_SHADERSYSTEM)
