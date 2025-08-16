@@ -1,5 +1,5 @@
 //
-//  SwapchainMetal.h
+//  MetalSwapchain.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/14/25.
@@ -9,9 +9,9 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/Swapchain.h"
+#include "RHI/Swapchain.h"
 
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "RHI/Metal/MetalUtility.h"
 
 #import <MetalKit/MetalKit.h>
 
@@ -31,25 +31,24 @@ public:
 
     HS_FORCEINLINE uint8 GetMaxFrameCount() const override { return _maxFrameCount; }
     HS_FORCEINLINE uint8 GetCurrentFrameIndex() const override { return _frameIndex; }
-    HS_FORCEINLINE CommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBufferMTLs[_frameIndex]; }
-    HS_FORCEINLINE CommandBuffer* GetCommandBufferByIndex(uint8 index) const override
+    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBufferMTLs[_frameIndex]; }
+    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
         HS_ASSERT(index < _maxFrameCount, "Count of commandbuffer is less than index");
         return _commandBufferMTLs[index];
     }
-    HS_FORCEINLINE RenderTarget GetRenderTargetForCurrentFrame() const override { return _renderTargets[_frameIndex]; }
-    HS_FORCEINLINE Framebuffer* GetFramebufferForCurrentFrame() const override { _framebuffers[_frameIndex]; }
+    HS_FORCEINLINE RHIFramebuffer* GetFramebufferForCurrentFrame() const override { return _framebuffers[_frameIndex]; }
 
 private:
     uint8 _frameIndex;
     uint8 _maxFrameCount = 3;
 
-    void setRenderTargets() override;
-    void setRenderPass() override;
+    void setRenderTargets();
+    void setRenderPass();
 
     id<CAMetalDrawable> _drawable;
-    CommandBuffer** _commandBufferMTLs;
-    Framebuffer** _framebuffers;
+    RHICommandBuffer** _commandBufferMTLs;
+    RHIFramebuffer** _framebuffers;
     
     bool _isSuspended;
     bool _isInitialized;

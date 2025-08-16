@@ -3,12 +3,12 @@
 #include "Core/EngineContext.h"
 #include "Core/Window.h"
 
-#include "Core/RHI/Metal/MetalContext.h"
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
-#include "Core/RHI/Metal/ResourceHandleMetal.h"
-#include "Core/RHI/Metal/RenderHandleMetal.h"
-#include "Core/RHI/Metal/CommandHandleMetal.h"
-#include "Core/RHI/Metal/SwapchainMetal.h"
+#include "RHI/Metal/MetalContext.h"
+#include "RHI/Metal/MetalUtility.h"
+#include "RHI/Metal/MetalResourceHandle.h"
+#include "RHI/Metal/MetalRenderHandle.h"
+#include "RHI/Metal/MetalCommandHandle.h"
+#include "RHI/Metal/MetalSwapchain.h"
 
 #include "Core/Platform/Mac/PlatformWindowMac.h"
 
@@ -21,7 +21,7 @@ namespace ImGuiExt
 {
 void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
-    TextureMetal* texMetal = static_cast<TextureMetal*>(use_texture);
+    MetalTexture* texMetal = static_cast<MetalTexture*>(use_texture);
 
     ImGui::Image(reinterpret_cast<ImTextureID>(texMetal->handle), image_size, uv0, uv1);
 }
@@ -56,7 +56,7 @@ void BeginRender(Swapchain* swapchain)
     io.DisplaySize.y = backingSize.height;
     io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
     
-    MTLRenderPassDescriptor* rpDesc = static_cast<RenderPassMetal*>(swMetal->GetRenderPass())->handle;
+    MTLRenderPassDescriptor* rpDesc = static_cast<MetalRenderPass*>(swMetal->GetRenderPass())->handle;
 
     ImGui_ImplMetal_NewFrame(rpDesc);
     ImGui_ImplOSX_NewFrame(view);
@@ -65,11 +65,11 @@ void BeginRender(Swapchain* swapchain)
 
 void EndRender(Swapchain* swapchain)
 {
-    CommandBufferMetal* cmdBufferMetal = static_cast<CommandBufferMetal*>(swapchain->GetCommandBufferForCurrentFrame());
-    cmdBufferMetal->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
+    MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(swapchain->GetCommandBufferForCurrentFrame());
+    cmdMetalBuffer->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
 
     ImGui::Render();
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBufferMetal->handle, cmdBufferMetal->curRenderEncoder);
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
 }
 
 void FinalizeBackend()

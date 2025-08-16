@@ -1,5 +1,5 @@
 //
-//  RHIUtilityMetal.h
+//  MetalUtility.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/14/25.
@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/RHIDefinition.h"
+#include "RHI/RHIDefinition.h"
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>

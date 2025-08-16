@@ -1,6 +1,6 @@
-﻿#include "Editor/Panel/ScenePanel.h"
+#include "Editor/Panel/ScenePanel.h"
 
-#include "Core/RHI/ResourceHandle.h"
+#include "RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 HS_NS_EDITOR_BEGIN

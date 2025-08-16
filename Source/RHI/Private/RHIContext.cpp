@@ -1,4 +1,4 @@
-﻿#include "RHI/RHIContext.h"
+#include "RHI/RHIContext.h"
 
 #ifdef __WINDOWS__
 #include "RHI/Vulkan/VulkanContext.h"
@@ -19,12 +19,13 @@ RHIContext* RHIContext::Create(ERHIPlatform platform)
 
 	switch (platform)
 	{
+#if defined(__WINDOWS__)
 	case ERHIPlatform::VULKAN:
 	{
 		g_pRHIContext = new VulkanContext();
 	}
 	break;
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 	case ERHIPlatform::METAL:
 	{
 		g_pRHIContext = new MetalContext();

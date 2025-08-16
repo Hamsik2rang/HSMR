@@ -1,8 +1,8 @@
-#include "Core/RHI/Metal/CommandHandleMetal.h"
+#include "RHI/Metal/MetalCommandHandle.h"
 
-#include "Core/RHI/Metal/MetalContext.h"
-#include "Core/RHI/Metal/ResourceHandleMetal.h"
-#include "Core/RHI/Metal/RenderHandleMetal.h"
+#include "RHI/Metal/MetalContext.h"
+#include "RHI/Metal/MetalResourceHandle.h"
+#include "RHI/Metal/MetalRenderHandle.h"
 
 #include "Core/Log.h"
 
@@ -14,13 +14,13 @@ HS_NS_BEGIN
 // id<MTLCommandBuffer>        handle;
 // id<MTLRenderCommandEncoder> curRenderEncoder;
 // MTLRenderPassDescriptor*    curRenderPassDesc;
-// RenderPassMetal*            curBindRenderPass;
-// FramebufferMetal*           curBindFramebuffer;
-// GraphicsPipelineMetal*      curBindPipeline;
-// BufferMetal*                curBindIndexBuffer;
+// MetalRenderPass*            curBindRenderPass;
+// MetalFramebuffer*           curBindFramebuffer;
+// MetalGraphicsPipeline*      curBindPipeline;
+// MetalBuffer*                curBindIndexBuffer;
 
-CommandBufferMetal::CommandBufferMetal(const char* name, id<MTLDevice> device, id<MTLCommandQueue> commandQueue)
-    : CommandBuffer(name)
+MetalCommandBuffer::MetalCommandBuffer(const char* name, id<MTLDevice> device, id<MTLCommandQueue> commandQueue)
+    : RHICommandBuffer(name)
     , device(device)
     , cmdQueue(commandQueue)
     , handle(nil)
@@ -33,11 +33,11 @@ CommandBufferMetal::CommandBufferMetal(const char* name, id<MTLDevice> device, i
 {
 }
 
-CommandBufferMetal::~CommandBufferMetal()
+MetalCommandBuffer::~MetalCommandBuffer()
 {
 }
 
-void CommandBufferMetal::Begin()
+void MetalCommandBuffer::Begin()
 {
     HS_ASSERT(!_isBegan, "CommandBuffer is already began");
 
@@ -54,14 +54,14 @@ void CommandBufferMetal::Begin()
     _isRenderPassBegan = false;
 }
 
-void CommandBufferMetal::End()
+void MetalCommandBuffer::End()
 {
     HS_ASSERT(_isBegan, "Commandbuffer isn't began yet");
     
     Reset();
 }
 
-void CommandBufferMetal::Reset()
+void MetalCommandBuffer::Reset()
 {
     if (nil != curRenderEncoder)
     {
@@ -72,7 +72,7 @@ void CommandBufferMetal::Reset()
     _isBegan = false;
 }
 
-void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, const Area& renderArea)
+void MetalCommandBuffer::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
     HS_CHECK(renderPass, "RenderPass is null");
@@ -80,7 +80,7 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
     if (renderPass->info.isSwapchainRenderPass)
     {
         //        HS_ASSERT(framebuffer->info.isSwapchainFramebuffer, "Swapchain RenderPass, but Framebuffer isn't");
-        curRenderPassDesc = static_cast<RenderPassMetal*>(renderPass)->handle;
+        curRenderPassDesc = static_cast<MetalRenderPass*>(renderPass)->handle;
     }
     else
     {
@@ -95,7 +95,7 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
         {
             const Attachment& curAttachment = renderPass->info.colorAttachments[i];
 
-            curRenderPassDesc.colorAttachments[i].texture     = static_cast<TextureMetal*>(framebuffer->info.colorBuffers[i])->handle;
+            curRenderPassDesc.colorAttachments[i].texture     = static_cast<MetalTexture*>(framebuffer->info.colorBuffers[i])->handle;
             curRenderPassDesc.colorAttachments[i].loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
             curRenderPassDesc.colorAttachments[i].storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
             curRenderPassDesc.colorAttachments[i].clearColor  = hs_rhi_to_clear_color(curAttachment.clearValue.color);
@@ -104,7 +104,7 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
         if (useDepthStencil)
         {
             const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
-            curRenderPassDesc.depthAttachment.texture     = static_cast<TextureMetal*>(framebuffer->info.depthStencilBuffer)->handle;
+            curRenderPassDesc.depthAttachment.texture     = static_cast<MetalTexture*>(framebuffer->info.depthStencilBuffer)->handle;
             curRenderPassDesc.depthAttachment.loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
             curRenderPassDesc.depthAttachment.storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
             curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depthStencil.depth);
@@ -117,18 +117,18 @@ void CommandBufferMetal::BeginRenderPass(RenderPass* renderPass, Framebuffer* fr
     }
 
     curRenderEncoder          = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
-    curBindRenderPass         = static_cast<RenderPassMetal*>(renderPass);
+    curBindRenderPass         = static_cast<MetalRenderPass*>(renderPass);
     curBindRenderPass->handle = curRenderPassDesc;
-    curBindFramebuffer        = static_cast<FramebufferMetal*>(framebuffer);
+    curBindFramebuffer        = static_cast<MetalFramebuffer*>(framebuffer);
     _isRenderPassBegan        = true;
 }
 
-void CommandBufferMetal::BindPipeline(GraphicsPipeline* pipeline)
+void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
     HS_CHECK(_isRenderPassBegan, "RenderPass isn't began yet");
     HS_CHECK(pipeline, "Pipeline is null");
-    curBindPipeline = static_cast<GraphicsPipelineMetal*>(pipeline);
+    curBindPipeline = static_cast<MetalGraphicsPipeline*>(pipeline);
 
     [curRenderEncoder setRenderPipelineState:curBindPipeline->pipelineState];
     if (curBindRenderPass->info.useDepthStencilAttachment)
@@ -139,10 +139,10 @@ void CommandBufferMetal::BindPipeline(GraphicsPipeline* pipeline)
     [curRenderEncoder setCullMode:hs_rhi_to_cull_mode(pipeline->info.rasterizerDesc.cullMode)];
     [curRenderEncoder setTriangleFillMode:hs_rhi_to_polygon_mode(pipeline->info.rasterizerDesc.polygonMode)];
 
-    curBindPipeline = static_cast<GraphicsPipelineMetal*>(pipeline);
+    curBindPipeline = static_cast<MetalGraphicsPipeline*>(pipeline);
 }
 
-void CommandBufferMetal::BindResourceSet(ResourceSet* rSet)
+void MetalCommandBuffer::BindResourceSet(RHIResourceSet* rSet)
 {
     for (size_t i = 0; i < rSet->layouts.size(); i++)
     {
@@ -179,33 +179,33 @@ void CommandBufferMetal::BindResourceSet(ResourceSet* rSet)
     }
 }
 
-void CommandBufferMetal::SetViewport(const Viewport& viewport)
+void MetalCommandBuffer::SetViewport(const Viewport& viewport)
 {
     [curRenderEncoder setViewport:hs_rhi_to_viewport(viewport)];
 }
 
-void CommandBufferMetal::SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height)
+void MetalCommandBuffer::SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height)
 {
     MTLScissorRect rect = {x, y, width, height};
     [curRenderEncoder setScissorRect:rect];
 }
 
-void CommandBufferMetal::BindIndexBuffer(Buffer* indexBuffer)
+void MetalCommandBuffer::BindIndexBuffer(RHIBuffer* indexBuffer)
 {
-    curBindIndexBuffer = static_cast<BufferMetal*>(indexBuffer);
+    curBindIndexBuffer = static_cast<MetalBuffer*>(indexBuffer);
 }
 
-void CommandBufferMetal::BindVertexBuffers(const Buffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
+void MetalCommandBuffer::BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
 {
     for (uint8 i = 0; i < bufferCount; i++)
     {
-        auto vertexBuffer = static_cast<const BufferMetal*>(vertexBuffers[i]);
+        auto vertexBuffer = static_cast<const MetalBuffer*>(vertexBuffers[i]);
 
         [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:i];
     }
 }
 
-void CommandBufferMetal::DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount)
+void MetalCommandBuffer::DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount)
 {
     MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
@@ -215,7 +215,7 @@ void CommandBufferMetal::DrawArrays(const uint32 firstVertex, const uint32 verte
                        instanceCount:instanceCount
                         baseInstance:0];
 }
-void CommandBufferMetal::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
+void MetalCommandBuffer::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
     MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
@@ -229,7 +229,7 @@ void CommandBufferMetal::DrawIndexed(const uint32 firstIndex, const uint32 index
                                baseInstance:0];
 }
 
-void CommandBufferMetal::EndRenderPass()
+void MetalCommandBuffer::EndRenderPass()
 {
     curRenderPassDesc  = nil;
     curBindRenderPass  = nullptr;
@@ -239,14 +239,14 @@ void CommandBufferMetal::EndRenderPass()
     _isRenderPassBegan = false;
 }
 
-void CommandBufferMetal::CopyTexture(Texture* srcTexture, Texture* dstTexture)
+void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
 {
 }
-void CommandBufferMetal::UpdateBuffer(Buffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
+void MetalCommandBuffer::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
 }
 
-void CommandBufferMetal::PushDebugMark(const char* label, float* color)
+void MetalCommandBuffer::PushDebugMark(const char* label, float* color)
 {
     HS_ASSERT(_isBegan, "CommandBuffer isn't began yet");
 
@@ -254,14 +254,14 @@ void CommandBufferMetal::PushDebugMark(const char* label, float* color)
     [curRenderEncoder pushDebugGroup:labelStr];
 }
 
-void CommandBufferMetal::PopDebugMark()
+void MetalCommandBuffer::PopDebugMark()
 {
     [curRenderEncoder popDebugGroup];
 }
 
-void CommandBufferMetal::bindBuffers(EShaderStage stage, uint8 binding, Buffer* const* buffers, const uint32* offsets, uint8 arrayCount)
+void MetalCommandBuffer::bindBuffers(EShaderStage stage, uint8 binding, RHIBuffer* const* buffers, const uint32* offsets, uint8 arrayCount)
 {
-    BufferMetal* const* bufferMetals = reinterpret_cast<BufferMetal* const*>(buffers);
+    MetalBuffer* const* MetalBuffers = reinterpret_cast<MetalBuffer* const*>(buffers);
     std::vector<id<MTLBuffer>> handles(arrayCount);
     std::vector<NSUInteger> nsOffsets(arrayCount);
     for (size_t i = 0; i < arrayCount; i++)
@@ -289,9 +289,9 @@ void CommandBufferMetal::bindBuffers(EShaderStage stage, uint8 binding, Buffer* 
     }
 }
 
-void CommandBufferMetal::bindTextures(EShaderStage stage, uint8 binding, Texture* const* textures, uint8 arrayCount)
+void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHITexture* const* textures, uint8 arrayCount)
 {
-    TextureMetal* const* textureMetals = reinterpret_cast<TextureMetal* const*>(textures);
+    MetalTexture* const* MetalTextures = reinterpret_cast<MetalTexture* const*>(textures);
     std::vector<id<MTLTexture>> handles(arrayCount);
 
     switch (stage)
@@ -312,9 +312,9 @@ void CommandBufferMetal::bindTextures(EShaderStage stage, uint8 binding, Texture
     }
 }
 
-void CommandBufferMetal::bindSamplers(EShaderStage stage, uint8 binding, Sampler* const* samplers, uint8 arrayCount)
+void MetalCommandBuffer::bindSamplers(EShaderStage stage, uint8 binding, RHISampler* const* samplers, uint8 arrayCount)
 {
-    SamplerMetal* const* samplerMetals = reinterpret_cast<SamplerMetal* const*>(samplers);
+    MetalSampler* const* MetalSamplers = reinterpret_cast<MetalSampler* const*>(samplers);
     std::vector<id<MTLSamplerState>> handles(arrayCount);
 
     switch (stage)

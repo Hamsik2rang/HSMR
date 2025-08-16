@@ -1,7 +1,6 @@
-#include "Core/Renderer/RenderDefinition.h"
+#include "RHI/RHIDefinition.h"
 
 #include "Core/Log.h"
-#include "Core/Renderer/Renderer.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>

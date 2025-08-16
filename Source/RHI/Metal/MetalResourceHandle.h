@@ -1,5 +1,5 @@
 //
-//  ResourceHandleMetal.h
+//  MetalResourceHandle.h
 //  Engine
 //
 //  Created by Yongsik Im on 2/14/25.
@@ -9,63 +9,63 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/ResourceHandle.h"
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "RHI/ResourceHandle.h"
+#include "RHI/Metal/MetalUtility.h"
 
 HS_NS_BEGIN
 
-struct TextureMetal : public Texture
+struct MetalTexture : public RHITexture
 {
-    //    TextureMetal(void* image, const TextureInfo& texInfo);
-    TextureMetal(const char* name, const TextureInfo& info);
-    ~TextureMetal() override;
+    //    MetalTexture(void* image, const TextureInfo& texInfo);
+    MetalTexture(const char* name, const TextureInfo& info);
+    ~MetalTexture() override;
 
     id<MTLTexture> handle;
 };
 
-struct SamplerMetal : public Sampler
+struct MetalSampler : public RHISampler
 {
-    //    SamplerMetal(const SamplerInfo& info);
-    SamplerMetal(const char* name, const SamplerInfo& info);
-    ~SamplerMetal() override;
+    //    MetalSampler(const SamplerInfo& info);
+    MetalSampler(const char* name, const SamplerInfo& info);
+    ~MetalSampler() override;
 
     id<MTLSamplerState> handle;
 };
 
-struct BufferMetal : public Buffer
+struct MetalBuffer : public RHIBuffer
 {
-    //    BufferMetal(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
-    BufferMetal(const char* name, const BufferInfo& info);
-    ~BufferMetal() override;
+    //    MetalBuffer(void* data, size_t byteSize, EBufferUsage usage, EBufferMemoryOption memoryOption);
+    MetalBuffer(const char* name, const BufferInfo& info);
+    ~MetalBuffer() override;
 
     id<MTLBuffer> handle;
 };
 
-struct ShaderMetal : public Shader
+struct MetalShader : public RHIShader
 {
-    ShaderMetal(const char* name, const ShaderInfo& info);
-    ~ShaderMetal() override;
+    MetalShader(const char* name, const ShaderInfo& info);
+    ~MetalShader() override;
 
     id<MTLLibrary> library;
     id<MTLFunction> handle;
 };
 
-struct ResourceLayoutMetal : public ResourceLayout
+struct MetalResourceLayout : public RHIResourceLayout
 {
-    ResourceLayoutMetal(const char* name, ResourceBinding* bindings, size_t bindingCount);
-    ~ResourceLayoutMetal() override;
+    MetalResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount);
+    ~MetalResourceLayout() override;
 };
 
-struct ResourceSetMetal : public ResourceSet
+struct MetalResourceSet : public RHIResourceSet
 {
-    ResourceSetMetal(const char* name);
-    ~ResourceSetMetal() override;
+    MetalResourceSet(const char* name);
+    ~MetalResourceSet() override;
 };
 
-struct ResourceSetPoolMetal : public ResourceSetPool
+struct MetalResourceSetPool : public RHIResourceSetPool
 {
-    ResourceSetPoolMetal(const char* name);
-    ~ResourceSetPoolMetal() override;
+    MetalResourceSetPool(const char* name);
+    ~MetalResourceSetPool() override;
 };
 
 HS_NS_END

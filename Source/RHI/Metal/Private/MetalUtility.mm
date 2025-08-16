@@ -1,4 +1,4 @@
-#include "Core/RHI/Metal/RHIUtilityMetal.h"
+#include "RHI/Metal/MetalUtility.h"
 
 #include "Core/Log.h"
 

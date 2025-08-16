@@ -1,4 +1,4 @@
-﻿//
+//
 //  ImGuiExtension.h
 //  Editor
 //
@@ -13,8 +13,8 @@
 #include "ImGui/imgui.h"
 
 /* #include "Core/Swapchain.h" */ namespace HS { struct Swapchain; }
-/* #include "Core/RHI/ResourceHandle.h" */ namespace HS { struct RHITexture; }
-/* #include "Core/RHI/CommandHandle.h" */ namespace HS { struct RHICommandBuffer; }
+/* #include "RHI/ResourceHandle.h" */ namespace HS { struct RHITexture; }
+/* #include "RHI/CommandHandle.h" */ namespace HS { struct RHICommandBuffer; }
 
 HS_NS_EDITOR_BEGIN
 

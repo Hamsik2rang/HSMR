@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Core/RHI/RHIContext.h"
+#include "RHI/RHIContext.h"
 
 HS_NS_BEGIN
 
@@ -31,46 +31,46 @@ public:
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
     void       DestroySwapchain(Swapchain* swapchain) override;
 
-    RenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) override;
-    void        DestroyRenderPass(RenderPass* renderPass) override;
+    RHIRenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) override;
+    void        DestroyRenderPass(RHIRenderPass* renderPass) override;
 
-    Framebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) override;
-    void         DestroyFramebuffer(Framebuffer* framebuffer) override;
+    RHIFramebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) override;
+    void         DestroyFramebuffer(RHIFramebuffer* framebuffer) override;
 
-    GraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) override;
-    void              DestroyGraphicsPipeline(GraphicsPipeline* pipeline) override;
+    RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) override;
+    void              DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) override;
 
-    Shader* CreateShader(const char* name, const ShaderInfo& info, const char* path) override;
-    Shader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) override;
-    void    DestroyShader(Shader* shader) override;
+    RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* path) override;
+    RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) override;
+    void    DestroyShader(RHIShader* shader) override;
 
-    Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
-    Buffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) override;
-    void    DestroyBuffer(Buffer* buffer) override;
+    RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
+    RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) override;
+    void    DestroyBuffer(RHIBuffer* buffer) override;
 
-    Texture* CreateTexture(const char* name, void* image, const TextureInfo& info) override;
-    Texture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
-    void     DestroyTexture(Texture* texture) override;
+    RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) override;
+    RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
+    void     DestroyTexture(RHITexture* texture) override;
 
-    Sampler* CreateSampler(const char* name, const SamplerInfo& info) override;
-    void     DestroySampler(Sampler* sampler) override;
+    RHISampler* CreateSampler(const char* name, const SamplerInfo& info) override;
+    void     DestroySampler(RHISampler* sampler) override;
 
-    ResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) override;
-    void            DestroyResourceLayout(ResourceLayout* rLayout) override;
+    RHIResourceLayout* CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount) override;
+    void            DestroyResourceLayout(RHIResourceLayout* rLayout) override;
 
-    ResourceSet* CreateResourceSet(const char* name, ResourceLayout* resourceLayouts) override;
-    void         DestroyResourceSet(ResourceSet* resSet) override;
+    RHIResourceSet* CreateResourceSet(const char* name, RHIResourceLayout* resourceLayouts) override;
+    void         DestroyResourceSet(RHIResourceSet* resSet) override;
 
-    ResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) override;
-    void             DestroyResourceSetPool(ResourceSetPool* resSetPool) override;
+    RHIResourceSetPool* CreateResourceSetPool(const char* name, uint32 bufferSize, uint32 textureSize) override;
+    void             DestroyResourceSetPool(RHIResourceSetPool* resSetPool) override;
 
-    CommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) override;
-    void         DestroyCommandPool(CommandPool* cmdPool) override;
+    RHICommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) override;
+    void         DestroyCommandPool(RHICommandPool* cmdPool) override;
 
-    CommandBuffer* CreateCommandBuffer(const char* name) override;
-    void           DestroyCommandBuffer(CommandBuffer* cmdBuffer) override;
+    RHICommandBuffer* CreateCommandBuffer(const char* name) override;
+    void           DestroyCommandBuffer(RHICommandBuffer* cmdBuffer) override;
 
-    void Submit(Swapchain* swapchain, CommandBuffer** buffers, size_t bufferCount) override;
+    void Submit(Swapchain* swapchain, RHICommandBuffer** buffers, size_t bufferCount) override;
 
     void Present(Swapchain* swapchain) override;
 

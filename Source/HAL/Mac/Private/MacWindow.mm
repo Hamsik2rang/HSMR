@@ -1,15 +1,22 @@
 #include "HAL/Mac/MacWindow.h"
 
-//NOTE: 중복 아님!
-#include "HAL/NativeWindow.h"
-
 #include <cstring>
 #include <unordered_map>
 #include <queue>
 #include <utility>
 
+#import <Cocoa/Cocoa.h>
 #import <MetalKit/MetalKit.h>
 #import <QuartzCore/CAMetalLayer.h>
+
+@interface HSViewController : NSViewController<NSWindowDelegate>
+
+@property (nonatomic, strong) NSWindow* window;
+
+- (instancetype)initWithWindow:(NSWindow*)window;
+- (CGSize)getBackingViewSize;
+
+@end
 
 @implementation HSViewController
 {
@@ -131,7 +138,7 @@
 
 HS_NS_BEGIN
 
-bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
+bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
     NSRect frame     = NSMakeRect(0, 0, (CGFloat)width, (CGFloat)height);
     NSWindow* window = [[NSWindow alloc] initWithContentRect:frame styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
@@ -154,14 +161,14 @@ bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFl
     [vc setHSWindow:&outNativeWindow];
 }
 
-void DestroyNativeWindow(NativeWindow& window)
+void DestroyNativeWindowInternal(NativeWindow& window)
 {
     // Autorelease되므로 직접 Release할 필요 없음.
     //    NSWindow* handle = (__bridge NSWindow*)window.handle;
     //    [handle release];
 }
 
-void ShowNativeWindow(const NativeWindow& nativeWindow)
+void ShowNativeWindowInternal(const NativeWindow& nativeWindow)
 {
     NSWindow* window = (__bridge NSWindow*)(nativeWindow.handle);
     [window center];
@@ -171,7 +178,7 @@ void ShowNativeWindow(const NativeWindow& nativeWindow)
     [window becomeKeyWindow];
 }
 
-void PollNativeEvent()
+void PollNativeEventInternal()
 {
     @autoreleasepool
     {
@@ -189,6 +196,16 @@ void PollNativeEvent()
             [NSApp sendEvent:event];
         }
     }
+}
+
+void SetNativeWindowSizeInternal(uint16 width, uint16 height)
+{
+    
+}
+
+void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight)
+{
+    
 }
 
 HS_NS_END
