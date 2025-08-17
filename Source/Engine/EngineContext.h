@@ -13,20 +13,21 @@
 //#include "RHI/RHIContext.h" 
 namespace HS { class RHIContext; }
 
-
-
 HS_NS_BEGIN
 
 class HS_ENGINE_API EngineContext
 {
 public:
 	EngineContext() = delete;
-	EngineContext(const char* name, RHI::ERHIPlatform rhiPlatform);
+	EngineContext(const char* name, ERHIPlatform rhiPlatform);
+	~EngineContext();
 
 
-
+	const char* const name;
 private:
-	
+
+	RHIContext* _rhiContext = nullptr;
+
 };
 
 HS_NS_END

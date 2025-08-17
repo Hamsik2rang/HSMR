@@ -1,8 +1,9 @@
 ﻿#include "Editor/GUI/GUIContext.h"
 
-#include "Core/EngineContext.h"
+#include "Engine/EngineContext.h"
 #include "Core/Log.h"
-#include "Core/FileSystem.h"
+#include "HAL/FileSystem.h"
+#include "HAL/SystemContext.h"
 
 #include <string>
 
@@ -12,8 +13,9 @@ HS_EDITOR_API GUIContext* s_guiContext = nullptr;
 
 HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
 
-GUIContext::GUIContext()
-	: _defaultLayoutPath(FileSystem::GetDefaultResourcePath("imgui.ini"))
+GUIContext::GUIContext(EngineContext* enginContext)
+	: _engineContext(enginContext)
+	, _defaultLayoutPath(SystemContext::Get()->resourceDirectory + "imgui.ini")
 	, _font{ nullptr }
 	, _context(nullptr)
 {}
@@ -155,7 +157,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF(FileSystem::GetDefaultResourcePath(fontPath).c_str(), 18.0f);
+	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->resourceDirectory + fontPath).c_str(), 18.0f);
 
 	io.Fonts->Build();
 }

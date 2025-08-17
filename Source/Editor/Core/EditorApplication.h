@@ -1,4 +1,4 @@
-//
+﻿//
 //  EditorApplication.h
 //  HSMR
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Core/Application.h"
-#include "Core/Window.h"
+#include "Engine/Application.h"
+#include "Engine/Window.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -19,17 +19,15 @@ class GUIContext;
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
-    EditorApplication(const char* appName) noexcept;
+    EditorApplication(const char* appName, EngineContext* engineContext) noexcept;
     ~EditorApplication() override ;
     
-    bool Initialize(EngineContext* engineContext) override;
     void Run() override;
-    void Finalize() override;
+    void Shutdown() override;
     
 private:
     GUIContext* _guiContext;
 
-    bool _isInitialized = false;
     float _deltaTime = 0.0f;
 };
 

@@ -24,7 +24,7 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API GUIContext
 {
 public:
-    GUIContext();
+    GUIContext(EngineContext* engineContext);
     ~GUIContext();
 
     void Initialize();
@@ -40,6 +40,8 @@ private:
     ImGuiContext* _context; // 네임스페이스 없이 사용
     ImFont* _font;
     std::string _defaultLayoutPath;
+
+	EngineContext* _engineContext;
 };
 
 HS_EDITOR_API GUIContext* hs_editor_get_gui_context();

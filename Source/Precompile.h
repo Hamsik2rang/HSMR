@@ -66,12 +66,6 @@ typedef uint64_t uint64;
 #endif
 
 #if defined(__APPLE__)
-    #if defined(HS_RESOURCE_API_EXPORT)
-        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_RESOURCE_API
-    #endif
-
     #if defined(HS_SHADERSYSTEM_API_EXPORT)
         #define HS_SHADERSYSTEM_API __attribute__((__visibility__("default")))
     #else
@@ -82,6 +76,18 @@ typedef uint64_t uint64;
         #define HS_OBJECT_API __attribute__((__visibility__("default")))
     #else    
         #define HS_OBJECT_API 
+    #endif
+
+    #if defined(HS_GEOMETRY_API_EXPORT)
+        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_RESOURCE_API
+    #endif
+
+    #if defined(HS_PHYSICS_API_EXPORT)
+        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_RESOURCE_API
     #endif
 
     #if defined(HS_RENDERER_API_EXPORT)
@@ -108,14 +114,6 @@ typedef uint64_t uint64;
         #define HS_EDITOR_API
     #endif
 #else
-    #if defined(HS_RESOURCE_API_EXPORT)
-        #define HS_RESOURCE_API __declspec(dllexport)
-    #elif defined(HS_RESOURCE_API_IMPORT)
-        #define HS_RESOURCE_API __declspec(dllimport)
-    #else    
-        #define HS_RESOURCE_API
-    #endif
-
     #if defined(HS_SHADERSYSTEM_API_EXPORT)
         #define HS_SHADERSYSTEM_API __declspec(dllexport)
     #elif defined (HS_SHADERSYSTEM_API_IMPORT)
@@ -130,6 +128,22 @@ typedef uint64_t uint64;
         #define HS_OBJECT_API __declspec(dllimport)
     #else
         #define HS_OBJECT_API
+    #endif
+
+    #if defined(HS_GEOMETRY_API_EXPORT)
+        #define HS_GEOMETRY_API __declspec(dllexport)
+    #elif defined(HS_GEOMETRY_API_IMPORT)
+        #define HS_GEOMETRY_API __declspec(dllimport)
+    #else
+        #define HS_GEOMETRY_API
+    #endif
+
+    #if defined(HS_PHYSICS_API_EXPORT)
+        #define HS_PHYSICS_API __declspec(dllexport)
+    #elif defined(HS_PHYSICS_API_IMPORT)
+        #define HS_PHYSICS_API __declspec(dllimport)
+    #else
+        #define HS_PHYSICS_API 
     #endif
 
     #if defined(HS_RENDERER_API_EXPORT)

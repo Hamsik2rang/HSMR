@@ -1,13 +1,15 @@
-//
-//  Geometry.h
-//  Engine
+﻿//
+//  GeometryDefinition.h
+//  Geometry
 //
 //  Created by Yongsik Im on 2/8/25.
 //
-#ifndef __HS_GEOMETRY_H__
-#define __HS_GEOMETRY_H__
+#ifndef __HS_GEOMETRY_DEFINITION_H__
+#define __HS_GEOMETRY_DEFINITION_H__
 
-struct Resolution
+#include "Precompile.h"
+
+struct HS_GEOMETRY_API Resolution
 {
     uint32 width  = 1;
     uint32 height = 1;
@@ -33,7 +35,7 @@ struct Resolution
     }
 };
 
-struct Rect
+struct HS_GEOMETRY_API Rect
 {
     float x;
     float y;
@@ -47,12 +49,12 @@ struct Rect
         , height(height)
     {}
 
-    bool operator==(const Rect& rhs) const
+    HS_FORCEINLINE bool operator==(const Rect& rhs) const
     {
         return ((x == rhs.x) && (y == rhs.y) && (width == rhs.width) && (height == rhs.height));
     }
     
-    bool operator!=(const Rect& rhs) const
+    HS_FORCEINLINE bool operator!=(const Rect& rhs) const
     {
         return (*this == rhs);
     }

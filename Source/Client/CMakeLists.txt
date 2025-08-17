@@ -19,7 +19,7 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        HAL Core RHI Resource ECS
+        HAL Core Resource ECS
         Editor
         ${OSX_FRAMEWORK}
     )
@@ -33,7 +33,7 @@ else()
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        HAL Core RHI Resource ECS
+        HAL Core Resource ECS
         Editor
     )
 endif()

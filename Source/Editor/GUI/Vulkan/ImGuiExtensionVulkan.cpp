@@ -11,7 +11,8 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_vulkan.h"
 
-#include "Core/Window.h"
+#include "Engine/Window.h"
+#include "HAL/Win/WinWindow.h"
 
 #include <unordered_map>
 
@@ -104,7 +105,7 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	initInfo.PhysicalDevice = rhiDeviceVK->physicalDevice;
 	initInfo.Queue = rhiDeviceVK->graphicsQueue;
 	initInfo.QueueFamily = rhiDeviceVK->queueFamilyIndices.graphics;
-	initInfo.RHIRenderPass = renderPassVK->handle;
+	initInfo.RenderPass = renderPassVK->handle;
 	initInfo.PipelineCache = s_pipelineCacheVk;
 	initInfo.CheckVkResultFn = check_vk_result;
 	initInfo.ImageCount = static_cast<uint32>(swapchainVK->GetMaxFrameCount());

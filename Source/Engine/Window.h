@@ -14,11 +14,13 @@
 #include <list>
 #include <queue>
 
+/*#include "RHI/Swapchain.h"*/ namespace HS { class Swapchain; }
+
 HS_NS_BEGIN
 
 #define HS_WINDOW_INVALID_ID HS_UINT32_MAX
 
-class Window
+class HS_ENGINE_API Window
 {
 public:
     Window(const char* name, uint16 width, uint16 height, EWindowFlags flags);
@@ -53,6 +55,8 @@ protected:
 
     std::list<Window*> _childs;
     Window*            _parent = nullptr;
+    
+    Swapchain* _swapchain;
 
     NativeWindow _nativeWindow;
 

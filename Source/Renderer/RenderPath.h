@@ -17,16 +17,14 @@
 #include <vector>
 #include <unordered_map>
 
-namespace HS { class EngineContext; }
-namespace HS { class RenderPass; }
-namespace HS { class Scene; }
-namespace HS { class Swapchain; }
-namespace HS { class RHIFramebuffer; }
-namespace HS { struct NativeWindow; }
+/*#include "Renderer/RenderPass/RenderPass.h"*/ namespace HS { class RenderPass; }
+/*#include "RHI/Swapchain.h"*/ namespace HS { class Swapchain; }
+/*#include "RHI/RenderHandle.h"*/ namespace HS { class RHIFramebuffer; }
+/*#include "HAL/NativeWindow.h"*/ namespace HS { struct NativeWindow; }
 
 HS_NS_BEGIN
 
-class RenderPath
+class HS_RENDERER_API RenderPath
 {
 public:
     class RHIHandleCache
@@ -37,15 +35,15 @@ public:
         RHIHandleCache(RenderPath* renderer);
         ~RHIHandleCache();
 
-        RHIRenderPass*       GetRenderPass(const RenderPassInfo& info);
-        RHIFramebuffer*      GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget);
+        RHIRenderPass* GetRenderPass(const RenderPassInfo& info);
+        RHIFramebuffer* GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget);
         RHIGraphicsPipeline* GetGraphicsPipeline(const GraphicsPipelineInfo& info);
 
     private:
         RenderPath* _renderer;
 
-        std::unordered_map<uint32, RHIRenderPass*>       _renderPassCache;
-        std::unordered_map<uint32, RHIFramebuffer*>      _framebufferCache;
+        std::unordered_map<uint32, RHIRenderPass*> _renderPassCache;
+        std::unordered_map<uint32, RHIFramebuffer*> _framebufferCache;
         std::unordered_map<uint32, RHIGraphicsPipeline*> _gPipelineCache;
     };
 
@@ -75,14 +73,14 @@ public:
     HS_FORCEINLINE RHIHandleCache* GetHandleCache() const { return _rhiHandleCache; }
 
 protected:
-    RHIContext*     _rhiContext;
+    RHIContext* _rhiContext;
     RHIHandleCache* _rhiHandleCache;
     RHICommandBuffer*  _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
 
     std::vector<RenderPass*> _rendererPasses;
-    uint32                     frameIndex       = 0;
-    bool                       _isInitialized    = false;
-    bool                       _isPassListSorted = true;
+    uint32 frameIndex       = 0;
+    bool _isInitialized    = false;
+    bool _isPassListSorted = true;
 
     RenderTarget* _currentRenderTarget;
 };

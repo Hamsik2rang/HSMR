@@ -5,6 +5,7 @@ set(TOTAL_FILES)
 set(ENGINE_HEADERS
     EngineContext.h
     Window.h
+    Application.h
 )
 
 source_group("Public" FILES ${ENGINE_HEADERS})
@@ -13,6 +14,7 @@ list(APPEND TOTAL_FILES ${ENGINE_HEADERS})
 set(ENGINE_SOURCES
     Private/EngineContext.cpp
     Private/Window.cpp
+    Private/Application.cpp
 )
 
 source_group("Private" FILES ${ENGINE_SOURCES})

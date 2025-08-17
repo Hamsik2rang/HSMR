@@ -160,7 +160,7 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    HAL Core RHI Resource ECS
+    HAL Core RHI Object Renderer Geometry Physics Engine ECS
 )
 
 if(USE_SHADERSYSTEM)
@@ -177,7 +177,7 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI Object ECS)
+add_dependencies(${TARGET_NAME} HAL Core RHI Object Renderer Geometry Physics ECS)
 
 if(USE_SHADERSYSTEM)
     add_dependencies(${TARGET_NAME} ShaderSystem)
