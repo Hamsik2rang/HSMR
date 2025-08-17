@@ -3,6 +3,8 @@
 #include "RHI/RHIContext.h"
 #include "RHI/RHIDefinition.h"
 
+#include "Core/Log.h"
+
 HS_NS_BEGIN
 
 RenderTarget::RenderTarget(const RenderTargetInfo& info)

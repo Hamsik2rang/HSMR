@@ -7,7 +7,7 @@
 
 HS_NS_BEGIN
 
-class ForwardRenderer : public RenderPath
+class HS_RENDERER_API ForwardRenderer : public RenderPath
 {
 public:
     ForwardRenderer(RHIContext* rhiContext);

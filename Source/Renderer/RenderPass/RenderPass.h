@@ -21,7 +21,7 @@ class RenderPath;
 class RHICommandBuffer;
 class RHIFramebuffer;
 
-enum class ERenderingOrder : uint16
+enum class HS_RENDERER_API ERenderingOrder : uint16
 {
     INVALID = 0,
 
@@ -37,7 +37,7 @@ constexpr bool operator<(ERenderingOrder lhs, ERenderingOrder rhs)
     return static_cast<uint16>(lhs) < static_cast<uint16>(rhs);
 }
 
-class RenderPass
+class HS_RENDERER_API RenderPass
 {
 public:
     RenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);

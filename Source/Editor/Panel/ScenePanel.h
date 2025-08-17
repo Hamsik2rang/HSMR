@@ -11,10 +11,10 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
-#include "Core/Renderer/RenderTarget.h"
+#include "Renderer/RenderTarget.h"
 
 
-#include "Core/Utility/Geometry.h"
+#include "Geometry/GeometryDefinition.h"
 
 namespace HS
 {

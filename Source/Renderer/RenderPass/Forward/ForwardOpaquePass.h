@@ -10,13 +10,13 @@
 #include "Precompile.h"
 #include "Renderer/RenderPass/Forward/ForwardRenderPass.h"
 
+/*#include "RHI/RenderHandle.h"*/ namespace HS { class RHIRenderPass; }
+/*#include "RHI/RenderHandle.h"*/ namespace HS { class RHIFramebuffer; }
+/*#include "RHI/RenderHandle.h"*/ namespace HS { class RHIGraphicsPipeline; }
+
 HS_NS_BEGIN
 
-class RHIRenderPass;
-class RHIFramebuffer;
-class Pipeline;
-
-class ForwardOpaquePass : public ForwardRenderPass
+class HS_RENDERER_API ForwardOpaquePass : public ForwardRenderPass
 {
 public:
     ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);

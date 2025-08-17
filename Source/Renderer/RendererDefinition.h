@@ -11,7 +11,7 @@
 
 HS_NS_BEGIN
 
-struct RenderTargetInfo
+struct HS_RENDERER_API  RenderTargetInfo
 {
     uint32 width;
     uint32 height;
@@ -38,7 +38,7 @@ enum class ERenderGroup : uint16
     UI = 2000
 };
 
-struct RenderParameter
+struct HS_RENDERER_API  RenderParameter
 {
 };
 

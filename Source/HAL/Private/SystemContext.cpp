@@ -2,6 +2,8 @@
 
 HS_NS_BEGIN
 
+SystemContext* SystemContext::s_instance;
+
 SystemContext* SystemContext::Get()
 {
     if(!s_instance)

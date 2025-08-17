@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class RenderTarget
+class HS_RENDERER_API RenderTarget
 {
 public:
     RenderTarget() = default;

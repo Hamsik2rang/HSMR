@@ -15,32 +15,14 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const char* appName) noexcept
-    : Application(appName)
-	, _isInitialized(false)
+EditorApplication::EditorApplication(const char* appName, EngineContext* engineContext) noexcept
+    : Application(appName, engineContext)
     , _guiContext(nullptr)
     , _deltaTime(0.0f)
 {
-}
-
-EditorApplication::~EditorApplication()
-{
-    Finalize();
-}
-
-bool EditorApplication::Initialize(EngineContext* engineContext)
-{
-    if (_isInitialized)
-    {
-        HS_LOG(error, "Application is already initialized");
-        return true;
-    }
-    _engineContext = engineContext;
-    //hs_engine_set_context(engineContext);
-    
-    _guiContext = new GUIContext();
+    _guiContext = new GUIContext(engineContext);
     _guiContext->Initialize();
-    
+
     ObjectManager::Initialize();
 
     EWindowFlags windowFlags = EWindowFlags::NONE;
@@ -52,24 +34,18 @@ bool EditorApplication::Initialize(EngineContext* engineContext)
     if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");
-        return false;
     }
 
     ShowNativeWindow(_window->GetNativeWindow());
-    
-
-    _isInitialized = true;
-
-    return _isInitialized;
 }
 
-void EditorApplication::Finalize()
+EditorApplication::~EditorApplication()
 {
-    if(false == _isInitialized)
-    {
-        return;
-    }
-    
+    Shutdown();
+}
+
+void EditorApplication::Shutdown()
+{
     if (_window && _window->IsOpened())
     {
         _window->Shutdown();
@@ -86,14 +62,10 @@ void EditorApplication::Finalize()
     //...
 
     ObjectManager::Finalize();
-
-    hs_platform_shutdown(this);
 }
 
 void EditorApplication::Run()
 {
-    HS_ASSERT(_isInitialized, "Application isn't initialized");
-
     // TODO: Elapse Timer
 
     while (true)
@@ -119,7 +91,7 @@ void EditorApplication::Run()
         _window->Flush();
     }
 
-    Finalize();
+    Shutdown();
 }
 
 HS_NS_EDITOR_END

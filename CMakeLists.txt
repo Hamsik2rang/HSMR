@@ -97,18 +97,20 @@ add_subdirectory(${HS_CORE_DIR})
 
 add_subdirectory(${HS_RESOURCE_OBJECT_DIR})
 add_subdirectory(${HS_SHADERSYSTEM_DIR})
-add_subdirectory(${HS_RHI_DIR})
 
-# add_subdirectory(${HS_PHYSICS_DIR})
+add_subdirectory(${HS_RHI_DIR})
+add_subdirectory(${HS_GEOMETRY_DIR})
+add_subdirectory(${HS_PHYSICS_DIR})
+
 add_subdirectory(${HS_RENDERER_DIR})
 
 # add_subdirectory(${HS_ANIMATION_DIR})
-
-# add_subdirectory(${HS_GEOMETRY_DIR})
 add_subdirectory(${HS_ECS_DIR})
 
 add_subdirectory(${HS_ENGINE_DIR})
+
 add_subdirectory(${HS_EDITOR_DIR})
+
 add_subdirectory(${HS_CLIENT_DIR})
 add_custom_target(
     RegenerateCMake

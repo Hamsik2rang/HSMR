@@ -77,9 +77,8 @@ public:
     void CalculateBounds();
     void CalculateNormal();
     void CalculateTangent();
+
 private:
-    
-    
     std::vector<float> _position;
     std::vector<float> _texcoord[8];
     std::vector<float> _normal;

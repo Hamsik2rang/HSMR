@@ -32,7 +32,7 @@ void EditorWindow::Render()
 void EditorWindow::ProcessEvent()
 {
 	EWindowEvent event;
-	while (PeekNativeEvent(&_nativeWindow, event, true))
+	while (PeekNativeEvent(&_nativeWindow, event))
 	{
 		switch (event)
 		{

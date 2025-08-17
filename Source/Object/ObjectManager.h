@@ -1,6 +1,6 @@
-//
+﻿//
 //  ObjectManager.h
-//  Engine
+//  Object
 //
 //  Created by Yongsik Im on 2/7/25.
 //
