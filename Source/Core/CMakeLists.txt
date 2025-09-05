@@ -67,6 +67,36 @@ set(CORE_UTILITY_SOURCES
 source_group("Utility\\Private" FILES ${CORE_UTILITY_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_UTILITY_SOURCES})
 
+# Memory management
+set(CORE_MEMORY_HEADERS
+    Memory/MemoryPool.h
+)
+
+source_group("Memory\\Public" FILES ${CORE_MEMORY_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_MEMORY_HEADERS})
+
+set(CORE_MEMORY_SOURCES
+    Memory/Private/MemoryPool.cpp
+)
+
+source_group("Memory\\Private" FILES ${CORE_MEMORY_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
+
+# Container library
+set(CORE_CONTAINER_HEADERS
+    Container/List.h
+)
+
+source_group("Container\\Public" FILES ${CORE_CONTAINER_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_CONTAINER_HEADERS})
+
+set(CORE_CONTAINER_SOURCES
+    Container/ListExample.cpp
+)
+
+source_group("Container\\Private" FILES ${CORE_CONTAINER_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_CONTAINER_SOURCES})
+
 add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
 
 add_dependencies(${TARGET_NAME} HAL)

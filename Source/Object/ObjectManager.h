@@ -14,6 +14,7 @@
 
 #include "Object/Image.h"
 #include "Object/Mesh.h"
+#include "Object/Shader.h"
 
 HS_NS_BEGIN
 
@@ -27,6 +28,10 @@ public:
     static void FreeImage(Image* image);
     static Scoped<Mesh> LoadMeshFromFile(const std::string& path, bool isAbsolutePath = false);
     static void FreeMesh(Mesh* mesh);
+    
+    static Scoped<Shader> LoadShaderFromFile(const std::string& vertexPath, const std::string& fragmentPath, bool isAbsolutePath = false);
+    static Scoped<Shader> LoadComputeShaderFromFile(const std::string& computePath, bool isAbsolutePath = false);
+    static void FreeShader(Shader* shader);
     
     static const Image* GetFallbackImage2DWhite();
     static const Image* GetFallbackImage2DBlack();

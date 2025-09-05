@@ -2,16 +2,16 @@
 
 HS_NS_BEGIN
 
-SystemContext* SystemContext::s_instance;
+Scoped<SystemContext> SystemContext::s_instance;
 
 SystemContext* SystemContext::Get()
 {
     if(!s_instance)
     {
-        s_instance = new SystemContext();
+        s_instance = hs_make_scoped<SystemContext>();
     }
     
-    return s_instance;
+    return s_instance.get();
 }
 
 SystemContext::SystemContext()
@@ -23,9 +23,8 @@ SystemContext::~SystemContext()
 {
     if (s_instance)
     {
-		Finalize();
-        delete s_instance;
-        s_instance = nullptr;
+        Finalize();
+        s_instance.reset();  // Automatic cleanup with Scoped<>
     }
 }
 

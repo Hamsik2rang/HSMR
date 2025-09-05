@@ -19,6 +19,17 @@ struct RenderPassVulkan : public RHIRenderPass
 	RenderPassVulkan(const char* name, const RenderPassInfo& info) : RHIRenderPass(name, info) {}
 	~RenderPassVulkan() override = default;
 
+protected:
+	void OnDestroy() override
+	{
+		if (handle != VK_NULL_HANDLE && VulkanDevice::GetCurrent())
+		{
+			vkDestroyRenderPass(VulkanDevice::GetCurrent()->GetDevice(), handle, nullptr);
+			handle = VK_NULL_HANDLE;
+		}
+	}
+
+public:
 	VkRenderPass handle = VK_NULL_HANDLE;
 };
 
@@ -27,6 +38,17 @@ struct FramebufferVulkan : public RHIFramebuffer
 	FramebufferVulkan(const char* name, const FramebufferInfo& info) : RHIFramebuffer(name, info) {}
 	~FramebufferVulkan() override = default;
 
+protected:
+	void OnDestroy() override
+	{
+		if (handle != VK_NULL_HANDLE && VulkanDevice::GetCurrent())
+		{
+			vkDestroyFramebuffer(VulkanDevice::GetCurrent()->GetDevice(), handle, nullptr);
+			handle = VK_NULL_HANDLE;
+		}
+	}
+
+public:
 	VkFramebuffer handle = VK_NULL_HANDLE;
 };
 

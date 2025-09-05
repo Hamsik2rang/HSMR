@@ -50,12 +50,12 @@ private:
 
     std::vector<RenderTarget> _renderTargets;
 
-    RHIContext* _rhiContext;
-    RenderPath* _renderer;
+    RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
+    Scoped<RenderPath> _renderer;
     
-    Panel* _basePanel;
-    Panel* _menuPanel;
-    Panel* _scenePanel;
+    Scoped<Panel> _basePanel;
+    Scoped<Panel> _menuPanel;
+    Scoped<Panel> _scenePanel;
 };
 
 HS_NS_EDITOR_END

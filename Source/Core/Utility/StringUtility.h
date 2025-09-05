@@ -12,9 +12,12 @@
 
 HS_NS_BEGIN
 
+namespace StringUtil
+{
 
-std::string StringFormat(const char* fmt, ...);
+std::string Format(const char* fmt, ...);
 
+}
 
 HS_NS_END
 

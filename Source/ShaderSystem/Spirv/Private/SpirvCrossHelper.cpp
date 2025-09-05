@@ -86,79 +86,91 @@ SpirvReflectionData SpirvCrossHelper::ExtractReflection(const std::vector<uint32
 
 std::string SpirvCrossHelper::CrossCompileToMSL(const std::vector<uint32>& spirvBytecode, bool enableDebugInfo)
 {
-	try
+	if (spirvBytecode.empty())
 	{
-		spirv_cross::CompilerMSL compiler(spirvBytecode);
-
-		spirv_cross::CompilerMSL::Options options;
-		options.enable_decoration_binding = true;
-		options.enable_frag_output_mask = 0xFFFFFFFF;
-		options.enable_frag_depth_builtin = true;
-		options.enable_frag_stencil_ref_builtin = true;
-		options.disable_rasterization = false;
-
-		if (enableDebugInfo)
-		{
-			options.enable_decoration_binding = true;
-		}
-
-		compiler.set_msl_options(options);
-
-		std::string mslSource = compiler.compile();
-		return mslSource;
-	}
-	catch (const std::exception& e)
-	{
-		HS_LOG(error, "Failed to cross-compile SPIR-V to MSL: {}", e.what());
+		HS_LOG(crash, "Cannot cross-compile empty SPIR-V bytecode to MSL");
 		return "";
 	}
+
+	spirv_cross::CompilerMSL compiler(spirvBytecode);
+
+	spirv_cross::CompilerMSL::Options options;
+	options.enable_decoration_binding = true;
+	options.enable_frag_output_mask = 0xFFFFFFFF;
+	options.enable_frag_depth_builtin = true;
+	options.enable_frag_stencil_ref_builtin = true;
+	options.disable_rasterization = false;
+
+	if (enableDebugInfo)
+	{
+		options.enable_decoration_binding = true;
+	}
+
+	compiler.set_msl_options(options);
+
+	std::string mslSource = compiler.compile();
+	if (mslSource.empty())
+	{
+		HS_LOG(error, "Failed to cross-compile SPIR-V to MSL: compile() returned empty string");
+		return "";
+	}
+	
+	return mslSource;
 }
 
 std::string SpirvCrossHelper::CrossCompileToHLSL(const std::vector<uint32>& spirvBytecode, bool enableDebugInfo)
 {
-	try
+	if (spirvBytecode.empty())
 	{
-		spirv_cross::CompilerHLSL compiler(spirvBytecode);
-
-		spirv_cross::CompilerHLSL::Options options;
-		options.shader_model = 50;
-		options.point_size_compat = true;
-		options.point_coord_compat = true;
-
-		compiler.set_hlsl_options(options);
-
-		std::string hlslSource = compiler.compile();
-		return hlslSource;
-	}
-	catch (const std::exception& e)
-	{
-		HS_LOG(error, "Failed to cross-compile SPIR-V to HLSL: {}", e.what());
+		HS_LOG(crash, "Cannot cross-compile empty SPIR-V bytecode to HLSL");
 		return "";
 	}
+
+	spirv_cross::CompilerHLSL compiler(spirvBytecode);
+
+	spirv_cross::CompilerHLSL::Options options;
+	options.shader_model = 50;
+	options.point_size_compat = true;
+	options.point_coord_compat = true;
+
+	compiler.set_hlsl_options(options);
+
+	std::string hlslSource = compiler.compile();
+	if (hlslSource.empty())
+	{
+		HS_LOG(error, "Failed to cross-compile SPIR-V to HLSL: compile() returned empty string");
+		return "";
+	}
+	
+	return hlslSource;
 }
 
 std::string SpirvCrossHelper::CrossCompileToGLSL(const std::vector<uint32>& spirvBytecode, uint32 version, bool es)
 {
-	try
+	if (spirvBytecode.empty())
 	{
-		spirv_cross::CompilerGLSL compiler(spirvBytecode);
-
-		spirv_cross::CompilerGLSL::Options options;
-		options.version = version;
-		options.es = es;
-		options.vulkan_semantics = true;
-		options.separate_shader_objects = true;
-
-		compiler.set_common_options(options);
-
-		std::string glslSource = compiler.compile();
-		return glslSource;
-	}
-	catch (const std::exception& e)
-	{
-		HS_LOG(error, "Failed to cross-compile SPIR-V to GLSL: {}", e.what());
+		HS_LOG(crash, "Cannot cross-compile empty SPIR-V bytecode to GLSL");
 		return "";
 	}
+
+	spirv_cross::CompilerGLSL compiler(spirvBytecode);
+
+	spirv_cross::CompilerGLSL::Options options;
+	options.version = version;
+	options.es = es;
+	options.vulkan_semantics = true;
+	options.separate_shader_objects = true;
+
+	compiler.set_common_options(options);
+
+	std::string glslSource = compiler.compile();
+	if (glslSource.empty())
+	{
+		HS_LOG(error, "Failed to cross-compile SPIR-V to GLSL: compile() returned empty string");
+		return "";
+	}
+	
+	return glslSource;
 }
 
 void SpirvCrossHelper::ProcessBufferResource(

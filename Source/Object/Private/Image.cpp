@@ -23,71 +23,55 @@ Image::Image(const char* path) noexcept
 
 Image::Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept
     : Object(EType::IMAGE)
-    , _rawData(nullptr)
     , _width(width)
     , _height(height)
     , _channel(channel)
-    , _rawDataSize(width * height * channel)
 {
-    _rawData = new uint8[_rawDataSize];
-    ::memcpy(_rawData, data, _rawDataSize);
+    size_t size = width * height * channel;
+    _rawData.resize(size);
+    ::memcpy(_rawData.data(), data, size);
 }
 
 Image::Image(const Image& o) noexcept
     : Object(EType::IMAGE)
-    , _rawData(nullptr)
-    , _rawDataSize(o._rawDataSize)
+    , _rawData(o._rawData)  // std::vector copy constructor handles memory safely
     , _width(o._width)
     , _height(o._height)
     , _channel(o._channel)
     , _type(o._type)
-
 {
-    _rawData = new uint8[o._rawDataSize];
-    ::memcpy(_rawData, o._rawData, o._rawDataSize);
+    // std::vector automatically handles memory allocation and copying
 }
 
 Image::Image(Image&& o) noexcept
     : Object(EType::IMAGE)
-    , _rawData(std::move(o._rawData))
-    , _rawDataSize(o._rawDataSize)
+    , _rawData(std::move(o._rawData))  // std::vector move constructor
     , _width(o._width)
     , _height(o._height)
     , _channel(o._channel)
     , _type(o._type)
 {
-    o._rawData = nullptr;
-    o._rawDataSize = 0;
+    // Reset moved-from object
     o._width = 0;
     o._height = 0;
     o._channel = 0;
+    // std::vector automatically cleared by move
 }
 
 Image::~Image()
 {
-    if (_rawData)
-    {
-        delete[] _rawData;
-        _rawData = nullptr;
-    }
+    // std::vector automatically cleans up memory - no manual delete needed
 }
 
 Image& Image::operator=(const Image& o)
 {
     if (this != &o)
     {
-        if (_rawData != nullptr)
-        {
-            delete[] _rawData;
-        }
-
-        _rawData = new uint8[o._rawDataSize];
-        ::memcpy(_rawData, o._rawData, o._rawDataSize);
-        _rawDataSize = o._rawDataSize;
-        _type        = o._type;
-        _width       = o._width;
-        _height      = o._height;
-        _channel     = o._channel;
+        _rawData = o._rawData;  // std::vector assignment handles memory automatically
+        _type    = o._type;
+        _width   = o._width;
+        _height  = o._height;
+        _channel = o._channel;
     }
 
     return *this;
@@ -97,12 +81,16 @@ Image& Image::operator=(Image&& o)
 {
     if (this != &o)
     {
-        _rawData     = std::move(o._rawData);
-        _rawDataSize = o._rawDataSize;
-        _type        = o._type;
-        _width       = o._width;
-        _height      = o._height;
-        _channel     = o._channel;
+        _rawData = std::move(o._rawData);  // std::vector move assignment
+        _type    = o._type;
+        _width   = o._width;
+        _height  = o._height;
+        _channel = o._channel;
+        
+        // Reset moved-from object
+        o._width = 0;
+        o._height = 0;
+        o._channel = 0;
     }
 
     return *this;

@@ -3,17 +3,26 @@
 set(TOTAL_FILES)
 
 if(APPLE)
-    set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.5.4.3.dylib)
-else() # TODO
+    set(ASSIMP ${HS_DEPS_LIB_DIR}/libassimp.a)
+    set(STB_INCLUDE ${HS_DEPS_INCLUDE_DIR}/stb)
+else()
     set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)
+    set(STB_INCLUDE ${HS_DEPS_INCLUDE_DIR}/stb)
 endif()
 
 set(OBJECT_HEADERS
     Image.h
     Material.h
     Mesh.h
+    Shader.h
     Object.h
     ObjectManager.h
+    ObjectProxy.h
+    ImageProxy.h
+    MeshProxy.h
+    MaterialProxy.h
+    ShaderProxy.h
+    ShaderParameterCollection.h
 )
 
 source_group("Public" FILES ${OBJECT_HEADERS})
@@ -23,8 +32,15 @@ set(OBJECT_SOURCES
     Private/Image.cpp
     Private/Material.cpp
     Private/Mesh.cpp
+    Private/Shader.cpp
     Private/Object.cpp
     Private/ObjectManager.cpp
+    Private/ObjectProxy.cpp
+    Private/ImageProxy.cpp
+    Private/MeshProxy.cpp
+    Private/MaterialProxy.cpp
+    Private/ShaderProxy.cpp
+    Private/ShaderParameterCollection.cpp
 )
 source_group("Private" FILES ${OBJECT_SOURCES})
 list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
@@ -44,7 +60,10 @@ target_compile_definitions(${TARGET_NAME}
     HS_OBJECT_API_EXPORT
 )
 
-target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ${ASSIMP})
+target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ShaderSystem ${ASSIMP})
+
+# Add STB include directory
+target_include_directories(${TARGET_NAME} PRIVATE ${STB_INCLUDE})
 
 if(APPLE)
     # On macOS, copy the .dylib file

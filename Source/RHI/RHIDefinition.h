@@ -47,39 +47,85 @@ public:
 		: _type(type)
 		, name(name)
 	{}
-	virtual ~RHIHandle() {}
+
+	// RAII: Virtual destructor calls Release() automatically
+	virtual ~RHIHandle() 
+	{
+		// Only cleanup if we're the last reference
+		if (_refs == 1)
+		{
+			OnDestroy();  // Virtual method for platform-specific cleanup
+		}
+	}
+
+	// Copy constructor - increase reference count
+	RHIHandle(const RHIHandle& other) = delete;  // Disable copy to prevent issues
+	
+	// Move constructor - transfer ownership
+	RHIHandle(RHIHandle&& other) noexcept
+		: _type(other._type)
+		, name(other.name)
+		, _refs(other._refs)
+		, _hash(other._hash)
+	{
+		other._refs = 0;  // Moved-from object should not trigger destruction
+	}
+
+	// Move assignment
+	RHIHandle& operator=(RHIHandle&& other) noexcept
+	{
+		if (this != &other)
+		{
+			// Release current resource
+			if (_refs == 1)
+			{
+				OnDestroy();
+			}
+			
+			// Transfer from other
+			_type = other._type;
+			name = other.name;
+			_refs = other._refs;
+			_hash = other._hash;
+			other._refs = 0;
+		}
+		return *this;
+	}
 
 	HS_FORCEINLINE RHIHandle::EType GetType() const { return _type; }
 	HS_FORCEINLINE uint32           GetHash() const { return _hash; }
 	HS_FORCEINLINE void GetName(const char* name) { this->name = name; }
-	HS_FORCEINLINE int              Retain()
+	
+	// For external reference counting when needed
+	HS_FORCEINLINE int Retain()
 	{
 		return ++_refs;
 	}
 
 	HS_FORCEINLINE int Release()
 	{
-		if (_refs <= 0)
-		{
-			HS_LOG(crash, "Over Released");
-		}
-
+		HS_ASSERT(_refs > 0, "Over Released!");
+		
 		if (--_refs == 0)
 		{
-			// add pending delete list
+			OnDestroy();
+			return 0;
 		}
-
 		return _refs;
 	}
+
+	HS_FORCEINLINE int GetRefCount() const { return _refs; }
+	HS_FORCEINLINE bool IsValid() const { return _refs > 0; }
 
 	const char* name;
 
 protected:
-	const EType _type;
+	// Pure virtual method for platform-specific resource cleanup
+	virtual void OnDestroy() = 0;
 
-	int    _refs = 1; // Create한 순간 자동으로 Ratain하는 것으로 판단.
-	uint32 _hash;
-	//...
+	const EType _type;
+	int    _refs = 1;      // Start with 1 reference
+	uint32 _hash = 0;
 };
 
 enum class ERHIPlatform
@@ -125,6 +171,8 @@ enum class EPixelFormat
 {
 	INVALID = 0,
 
+	R8_UNORM = 10,
+	RG8_UNORM = 30,
 	R8G8B8A8_UNORM = 70,
 	R8G8B8A8_SRGB = 71,
 	B8G8A8R8_UNORM = 80,
@@ -449,6 +497,31 @@ struct Viewport
 	float height = 0;
 	float zNear = 0.0f;
 	float zFar = 1.0f;
+};
+
+enum class ERHIVertexElementType
+{
+	Float,
+	Float2,
+	Float3,
+	Float4,
+	Int,
+	Int2,
+	Int3,
+	Int4,
+	UInt,
+	UInt2,
+	UInt3,
+	UInt4
+};
+
+struct VertexAttribute
+{
+	ERHIVertexElementType type;
+	uint32 offset;
+	uint32 size;
+	std::string name;
+	uint32 location;
 };
 
 #ifdef DOMAIN

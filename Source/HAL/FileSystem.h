@@ -1,4 +1,4 @@
-//
+﻿//
 //  FileSystem.h
 //  HAL
 //
@@ -43,8 +43,6 @@ public:
 
     static std::string GetDirectory(const std::string& absolutePath);
     static std::string GetExtension(const std::string& fileNmae);
-
-    static std::string GetDefaultResourcePath(const std::string& relativePath);
 
     static bool IsAbsolutePath(const std::string& path);
     static std::string GetRelativePath(const std::string& absolutePath);
