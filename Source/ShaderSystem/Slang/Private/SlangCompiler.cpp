@@ -26,7 +26,7 @@ bool SlangCompiler::Initialize()
     SlangResult result = slang::createGlobalSession(_globalSession.writeRef());
     if (SLANG_FAILED(result))
     {
-        HS_LOG(error, "Failed to create Slang global session: {}", result);
+        HS_LOG(crash, "Failed to create Slang global session: {}", result);
         return false;
     }
 
@@ -53,7 +53,7 @@ bool SlangCompiler::InitializeSession()
     SlangResult result = _globalSession->createSession(sessionDesc, _session.writeRef());
     if (SLANG_FAILED(result))
     {
-        HS_LOG(error, "Failed to create Slang session: {}", result);
+        HS_LOG(crash, "Failed to create Slang session: {}", result);
         return false;
     }
 

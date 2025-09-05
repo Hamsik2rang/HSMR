@@ -62,28 +62,33 @@ bool ObjectManager::Initialize()
 
     // 1x1 Red Image 2D
     {
-        uint8 redPixel[4]    = {1, 0, 0, 255}; // RGBA
+        uint8 redPixel[4]    = {255, 0, 0, 255}; // RGBA
         s_fallbackImage2DRed = new Image(redPixel, 1, 1, 4);
         s_fallbackImage2DRed->SetType(Image::ImageType::BUFFER);
     }
 
     // 1x1 Green Image 2D
     {
-        uint8 greenPixel[4]    = {0, 1, 0, 255}; // RGBA
+        uint8 greenPixel[4]    = {0, 255, 0, 255}; // RGBA
         s_fallbackImage2DGreen = new Image(greenPixel, 1, 1, 4);
         s_fallbackImage2DGreen->SetType(Image::ImageType::BUFFER);
     }
 
     // 1x1 Blue Image 2D
     {
-        uint8 bluePixel[4]    = {0, 0, 1, 255}; // RGBA
+        uint8 bluePixel[4]    = {0, 0, 255, 255}; // RGBA
         s_fallbackImage2DBlue = new Image(bluePixel, 1, 1, 4);
         s_fallbackImage2DBlue->SetType(Image::ImageType::BUFFER);
     }
 
+    // Create fallback meshes
+    s_fallbackMeshPlane = new Mesh();
+    s_fallbackMeshCube = new Mesh();
+    s_fallbackMeshSphere = new Mesh();
+
     calculatePlane();
     calculateCube();
-    calculatePlane();
+    calculateSphere();
 
     s_isInitialize = true;
 
@@ -121,6 +126,24 @@ void ObjectManager::Finalize()
         delete s_fallbackImage2DBlue;
         s_fallbackImage2DBlue = nullptr;
     }
+
+    // Clean up fallback meshes
+    if (s_fallbackMeshPlane)
+    {
+        delete s_fallbackMeshPlane;
+        s_fallbackMeshPlane = nullptr;
+    }
+    if (s_fallbackMeshCube)
+    {
+        delete s_fallbackMeshCube;
+        s_fallbackMeshCube = nullptr;
+    }
+    if (s_fallbackMeshSphere)
+    {
+        delete s_fallbackMeshSphere;
+        s_fallbackMeshSphere = nullptr;
+    }
+
     s_isInitialize = false;
 }
 
@@ -537,6 +560,83 @@ void ObjectManager::FreeImage(Image* image)
 void ObjectManager::FreeMesh(Mesh* mesh)
 {
     // The mesh destructor should handle cleanup
+    // This is here for any additional cleanup if needed
+}
+
+Scoped<Shader> ObjectManager::LoadShaderFromFile(const std::string& vertexPath, const std::string& fragmentPath, bool isAbsolutePath)
+{
+    std::string finalVertexPath;
+    std::string finalFragmentPath;
+    
+    if (isAbsolutePath)
+    {
+        finalVertexPath = vertexPath;
+        finalFragmentPath = fragmentPath;
+    }
+    else
+    {
+        finalVertexPath = s_resourcePath + vertexPath;
+        finalFragmentPath = s_resourcePath + fragmentPath;
+    }
+
+    Scoped<Shader> shader = hs_make_scoped<Shader>();
+    
+    if (!shader->LoadFromFile(finalVertexPath, finalFragmentPath))
+    {
+        HS_LOG(error, "Failed to load shader from files: {} + {}", finalVertexPath, finalFragmentPath);
+        return nullptr;
+    }
+
+    // Add default variant and compile
+    shader->AddVariant("default", {});
+    
+    if (!shader->CompileVariants())
+    {
+        HS_LOG(error, "Failed to compile shader variants for: {} + {}", finalVertexPath, finalFragmentPath);
+        return nullptr;
+    }
+
+    HS_LOG(info, "Successfully loaded and compiled shader: {} + {}", finalVertexPath, finalFragmentPath);
+    return shader;
+}
+
+Scoped<Shader> ObjectManager::LoadComputeShaderFromFile(const std::string& computePath, bool isAbsolutePath)
+{
+    std::string finalComputePath;
+    
+    if (isAbsolutePath)
+    {
+        finalComputePath = computePath;
+    }
+    else
+    {
+        finalComputePath = s_resourcePath + computePath;
+    }
+
+    Scoped<Shader> shader = hs_make_scoped<Shader>();
+    
+    if (!shader->LoadComputeFromFile(finalComputePath))
+    {
+        HS_LOG(error, "Failed to load compute shader from file: {}", finalComputePath);
+        return nullptr;
+    }
+
+    // Add default variant and compile
+    shader->AddVariant("default", {});
+    
+    if (!shader->CompileVariants())
+    {
+        HS_LOG(error, "Failed to compile compute shader variants for: {}", finalComputePath);
+        return nullptr;
+    }
+
+    HS_LOG(info, "Successfully loaded and compiled compute shader: {}", finalComputePath);
+    return shader;
+}
+
+void ObjectManager::FreeShader(Shader* shader)
+{
+    // The shader destructor should handle cleanup
     // This is here for any additional cleanup if needed
 }
 

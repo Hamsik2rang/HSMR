@@ -122,7 +122,7 @@ void EditorWindow::ProcessEvent()
 
 bool EditorWindow::onInitialize()
 {
-	_renderer = new ForwardRenderer(_rhiContext);
+	_renderer = hs_make_scoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();
 
 	ImGuiExtension::InitializeBackend(_swapchain);
@@ -207,7 +207,7 @@ void EditorWindow::onRender()
 	//     1. Render Scene to Scene Panel
 	_renderer->Render({}, curRT);
 
-	static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
 	// 2. Render GUI
 	onRenderGUI();
@@ -230,11 +230,10 @@ void EditorWindow::onShutdown()
 {
 	ImGuiExtension::FinalizeBackend();
 
-	if (nullptr != _renderer)
+	if (_renderer)
 	{
 		_renderer->Shutdown();
-		delete _renderer;
-		_renderer = nullptr;
+		_renderer.reset();  // Automatic cleanup with Scoped<>
 	}
 }
 
@@ -260,16 +259,16 @@ void EditorWindow::onRestore()
 
 void EditorWindow::setupPanels()
 {
-	_basePanel = new DockspacePanel(this);
+	_basePanel = hs_make_scoped<DockspacePanel>(this);
 	_basePanel->Setup();
 
-	_menuPanel = new MenuPanel(this);
+	_menuPanel = hs_make_scoped<MenuPanel>(this);
 	_menuPanel->Setup();
-	_basePanel->InsertPanel(_menuPanel);
+	_basePanel->InsertPanel(_menuPanel.get());
 
-	_scenePanel = new ScenePanel(this);
+	_scenePanel = hs_make_scoped<ScenePanel>(this);
 	_scenePanel->Setup();
-	_basePanel->InsertPanel(_scenePanel);
+	_basePanel->InsertPanel(_scenePanel.get());
 }
 
 

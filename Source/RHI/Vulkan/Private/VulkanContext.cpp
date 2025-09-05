@@ -51,7 +51,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 			break;
 		}
 		newMessage.append(oldMessage.substr(ptr, nextPtr - ptr));
-		newMessage.append(HS::StringFormat("[%s]", name));
+		newMessage.append(HS::StringUtil::Format("[%s]", name));
 		ptr = nextPtr + 2 /*strlen("[]")*/;
 	}
 

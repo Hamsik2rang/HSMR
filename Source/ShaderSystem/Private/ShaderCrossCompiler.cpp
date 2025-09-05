@@ -126,7 +126,7 @@ CompiledShader ShaderCrossCompiler::CompileSlangToSpirv(
     SlangCompiler slangCompiler;
     if (!slangCompiler.Initialize())
     {
-        HS_LOG(error, "Failed to initialize Slang compiler");
+        HS_LOG(crash, "Failed to initialize Slang compiler");
         return result;
     }
 
@@ -172,7 +172,7 @@ bool ShaderCrossCompiler::CrossCompileSpirv(
     SpirvCrossHelper helper;
     if (!helper.Initialize())
     {
-        HS_LOG(error, "Failed to initialize SPIRV-Cross helper");
+        HS_LOG(crash, "Failed to initialize SPIRV-Cross helper");
         return false;
     }
 

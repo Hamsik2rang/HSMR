@@ -32,20 +32,20 @@ bool ShaderCacheManager::Initialize(const std::string& cacheDirectory)
         _cacheDirectory = cacheDirectory;
     }
 
-    try
+    std::error_code ec;
+    if (!std::filesystem::create_directories(_cacheDirectory, ec))
     {
-        std::filesystem::create_directories(_cacheDirectory);
-    }
-    catch (const std::exception& e)
-    {
-        HS_LOG(error, "Failed to create cache directory {}: {}", _cacheDirectory, e.what());
-        return false;
+        if (ec)
+        {
+            HS_LOG(crash, "Failed to create cache directory {}: {}", _cacheDirectory, ec.message());
+            return false;
+        }
     }
 
     _compiler = std::make_unique<ShaderCrossCompiler>();
     if (!_compiler->Initialize())
     {
-        HS_LOG(error, "Failed to initialize ShaderCrossCompiler");
+        HS_LOG(crash, "Failed to initialize ShaderCrossCompiler");
         return false;
     }
 
@@ -180,38 +180,45 @@ bool ShaderCacheManager::SaveCacheToDisk()
 
     std::string cacheFilePath = GetCacheFilePath();
     
-    try
+    std::ofstream file(cacheFilePath, std::ios::binary);
+    if (!file.is_open())
     {
-        std::ofstream file(cacheFilePath, std::ios::binary);
-        if (!file.is_open())
-        {
-            HS_LOG(error, "Failed to open cache file for writing: {}", cacheFilePath);
-            return false;
-        }
-
-        uint64 cacheSize = _cache.size();
-        file.write(reinterpret_cast<const char*>(&cacheSize), sizeof(cacheSize));
-
-        for (const auto& pair : _cache)
-        {
-            uint64 hash = pair.first;
-            file.write(reinterpret_cast<const char*>(&hash), sizeof(hash));
-            
-            std::string serializedEntry = SerializeCacheEntry(pair.second);
-            uint64 entrySize = serializedEntry.size();
-            file.write(reinterpret_cast<const char*>(&entrySize), sizeof(entrySize));
-            file.write(serializedEntry.data(), entrySize);
-        }
-
-        file.close();
-        HS_LOG(info, "Saved {} cached shaders to disk", cacheSize);
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        HS_LOG(error, "Failed to save cache to disk: {}", e.what());
+        HS_LOG(error, "Failed to open cache file for writing: {}", cacheFilePath);
         return false;
     }
+
+    uint64 cacheSize = _cache.size();
+    file.write(reinterpret_cast<const char*>(&cacheSize), sizeof(cacheSize));
+    if (file.fail())
+    {
+        HS_LOG(error, "Failed to write cache size to file: {}", cacheFilePath);
+        return false;
+    }
+
+    for (const auto& pair : _cache)
+    {
+        uint64 hash = pair.first;
+        file.write(reinterpret_cast<const char*>(&hash), sizeof(hash));
+        if (file.fail())
+        {
+            HS_LOG(error, "Failed to write hash to cache file");
+            return false;
+        }
+        
+        std::string serializedEntry = SerializeCacheEntry(pair.second);
+        uint64 entrySize = serializedEntry.size();
+        file.write(reinterpret_cast<const char*>(&entrySize), sizeof(entrySize));
+        file.write(serializedEntry.data(), entrySize);
+        if (file.fail())
+        {
+            HS_LOG(error, "Failed to write entry to cache file");
+            return false;
+        }
+    }
+
+    file.close();
+    HS_LOG(info, "Saved {} cached shaders to disk", cacheSize);
+    return true;
 }
 
 bool ShaderCacheManager::LoadCacheFromDisk()
@@ -224,45 +231,60 @@ bool ShaderCacheManager::LoadCacheFromDisk()
         return true;
     }
 
-    try
+    std::ifstream file(cacheFilePath, std::ios::binary);
+    if (!file.is_open())
     {
-        std::ifstream file(cacheFilePath, std::ios::binary);
-        if (!file.is_open())
-        {
-            HS_LOG(error, "Failed to open cache file for reading: {}", cacheFilePath);
-            return false;
-        }
-
-        uint64 cacheSize;
-        file.read(reinterpret_cast<char*>(&cacheSize), sizeof(cacheSize));
-
-        _cache.reserve(static_cast<size_t>(cacheSize));
-
-        for (uint64 i = 0; i < cacheSize; ++i)
-        {
-            uint64 hash;
-            file.read(reinterpret_cast<char*>(&hash), sizeof(hash));
-            
-            uint64 entrySize;
-            file.read(reinterpret_cast<char*>(&entrySize), sizeof(entrySize));
-            
-            std::string serializedData(entrySize, '\0');
-            file.read(serializedData.data(), entrySize);
-            
-            CachedShaderEntry entry = DeserializeCacheEntry(serializedData);
-            _cache[hash] = entry;
-        }
-
-        file.close();
-        HS_LOG(info, "Loaded {} cached shaders from disk", cacheSize);
-        return true;
+        HS_LOG(error, "Failed to open cache file for reading: {}", cacheFilePath);
+        return false;
     }
-    catch (const std::exception& e)
+
+    uint64 cacheSize;
+    file.read(reinterpret_cast<char*>(&cacheSize), sizeof(cacheSize));
+    if (file.fail() || file.gcount() != sizeof(cacheSize))
     {
-        HS_LOG(error, "Failed to load cache from disk: {}", e.what());
+        HS_LOG(error, "Failed to read cache size from file: {}", cacheFilePath);
         _cache.clear();
         return false;
     }
+
+    _cache.reserve(static_cast<size_t>(cacheSize));
+
+    for (uint64 i = 0; i < cacheSize; ++i)
+    {
+        uint64 hash;
+        file.read(reinterpret_cast<char*>(&hash), sizeof(hash));
+        if (file.fail() || file.gcount() != sizeof(hash))
+        {
+            HS_LOG(error, "Failed to read hash from cache file at entry {}", i);
+            _cache.clear();
+            return false;
+        }
+        
+        uint64 entrySize;
+        file.read(reinterpret_cast<char*>(&entrySize), sizeof(entrySize));
+        if (file.fail() || file.gcount() != sizeof(entrySize))
+        {
+            HS_LOG(error, "Failed to read entry size from cache file at entry {}", i);
+            _cache.clear();
+            return false;
+        }
+        
+        std::string serializedData(entrySize, '\0');
+        file.read(serializedData.data(), entrySize);
+        if (file.fail() || static_cast<uint64>(file.gcount()) != entrySize)
+        {
+            HS_LOG(error, "Failed to read entry data from cache file at entry {}", i);
+            _cache.clear();
+            return false;
+        }
+        
+        CachedShaderEntry entry = DeserializeCacheEntry(serializedData);
+        _cache[hash] = entry;
+    }
+
+    file.close();
+    HS_LOG(info, "Loaded {} cached shaders from disk", cacheSize);
+    return true;
 }
 
 uint64 ShaderCacheManager::GenerateShaderHash(
