@@ -178,18 +178,18 @@ public:
 
     HS_FORCEINLINE reference At(size_type index)
     {
-        if (index >= _size) [[unlikely]]
+        if (index >= _size)
         {
-            HS_LOG(crash, "List index {} out of bounds (size: {})", index, _size);
+            HS_LOG(crash, "List index %zu out of bounds (size: %zu)", index, _size);
         }
         return _data[index];
     }
 
     HS_FORCEINLINE const_reference At(size_type index) const
     {
-        if (index >= _size) [[unlikely]]
+        if (index >= _size)
         {
-            HS_LOG(crash, "List index {} out of bounds (size: {})", index, _size);
+            HS_LOG(crash, "List index %zu out of bounds (size: %zu)", index, _size);
         }
         return _data[index];
     }
@@ -375,7 +375,7 @@ public:
     template<typename... Args>
     reference EmplaceBack(Args&&... args)
     {
-        if (_size == _capacity) [[unlikely]]
+        if (_size == _capacity)
         {
             size_type newCapacity = _capacity == 0 ? DEFAULT_CAPACITY : 
                 (_capacity * GROWTH_FACTOR_NUMERATOR) / GROWTH_FACTOR_DENOMINATOR;

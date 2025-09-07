@@ -29,7 +29,7 @@ LinearAllocator& DefaultAllocator::GetGlobalPool()
     });
     
     LinearAllocator* pool = MemoryManager::GetGlobalPool();
-    if (!pool) [[unlikely]]
+    if (!pool)
     {
         HS_LOG(crash, "Global memory pool not initialized");
     }

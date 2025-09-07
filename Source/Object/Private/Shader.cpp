@@ -44,14 +44,14 @@ bool Shader::LoadFromFile(const std::string& vertexPath, const std::string& frag
     std::string vertexSource = LoadShaderSourceFromFile(vertexPath);
     if (vertexSource.empty())
     {
-        HS_LOG(error, "Failed to load vertex shader: {}", vertexPath);
+        HS_LOG(error, "Failed to load vertex shader: %s", vertexPath.c_str());
         return false;
     }
 
     std::string fragmentSource = LoadShaderSourceFromFile(fragmentPath);
     if (fragmentSource.empty())
     {
-        HS_LOG(error, "Failed to load fragment shader: {}", fragmentPath);
+        HS_LOG(error, "Failed to load fragment shader: %s", fragmentPath.c_str());
         return false;
     }
 
@@ -60,7 +60,7 @@ bool Shader::LoadFromFile(const std::string& vertexPath, const std::string& frag
 
     name = (vertexPath + "+" + fragmentPath).c_str();
 
-    HS_LOG(info, "Loaded shader from files: {} + {}", vertexPath, fragmentPath);
+    HS_LOG(info, "Loaded shader from files: %s + %s", vertexPath.c_str(), fragmentPath.c_str());
     return true;
 }
 
@@ -69,7 +69,7 @@ bool Shader::LoadComputeFromFile(const std::string& computePath)
     std::string computeSource = LoadShaderSourceFromFile(computePath);
     if (computeSource.empty())
     {
-        HS_LOG(error, "Failed to load compute shader: {}", computePath);
+        HS_LOG(error, "Failed to load compute shader: %s", computePath.c_str());
         return false;
     }
 
@@ -78,7 +78,7 @@ bool Shader::LoadComputeFromFile(const std::string& computePath)
 
     name = computePath.c_str();
 
-    HS_LOG(info, "Loaded compute shader from file: {}", computePath);
+    HS_LOG(info, "Loaded compute shader from file: %s", computePath.c_str());
     return true;
 }
 
@@ -93,7 +93,7 @@ void Shader::AddVariant(const std::string& variantName, const std::vector<std::s
     _variants[variantName] = variant;
     _isCompiled = false;
 
-    HS_LOG(info, "Added shader variant: {} with {} defines", variantName, defines.size());
+    HS_LOG(info, "Added shader variant: %s with %zu defines", variantName.c_str(), defines.size());
 }
 
 void Shader::RemoveVariant(const std::string& variantName)
@@ -102,7 +102,7 @@ void Shader::RemoveVariant(const std::string& variantName)
     if (it != _variants.end())
     {
         _variants.erase(it);
-        HS_LOG(info, "Removed shader variant: {}", variantName);
+        HS_LOG(info, "Removed shader variant: %s", variantName.c_str());
     }
 }
 
@@ -170,7 +170,7 @@ bool Shader::CompileVariant(const std::string& variantName)
     auto it = _variants.find(variantName);
     if (it == _variants.end())
     {
-        HS_LOG(error, "Shader variant '{}' not found", variantName);
+        HS_LOG(error, "Shader variant '%s' not found", variantName.c_str());
         return false;
     }
 
@@ -187,7 +187,7 @@ bool Shader::CompileVariant(const std::string& variantName)
         }
         else
         {
-            HS_LOG(error, "No compute shader source for variant '{}'", variantName);
+            HS_LOG(error, "No compute shader source for variant '%s'", variantName.c_str());
             return false;
         }
     }
@@ -218,11 +218,11 @@ bool Shader::CompileVariant(const std::string& variantName)
     {
         // Register parameter interface from reflection
         RegisterParameterInterface(variant.compiledShader.reflection);
-        HS_LOG(info, "Successfully compiled shader variant: {}", variantName);
+        HS_LOG(info, "Successfully compiled shader variant: %s", variantName.c_str());
     }
     else
     {
-        HS_LOG(error, "Failed to compile shader variant: {}", variantName);
+        HS_LOG(error, "Failed to compile shader variant: %s", variantName.c_str());
     }
 
     return success;
@@ -294,7 +294,7 @@ std::string Shader::LoadShaderSourceFromFile(const std::string& filepath)
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        HS_LOG(error, "Cannot open shader file: {}", filepath);
+        HS_LOG(error, "Cannot open shader file: %s", filepath.c_str());
         return "";
     }
 

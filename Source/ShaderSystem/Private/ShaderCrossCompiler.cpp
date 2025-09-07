@@ -68,19 +68,19 @@ CompiledShader ShaderCrossCompiler::CompileShader(
         return result;
     }
 
-    HS_LOG(info, "Compiling shader: {}", filename);
+    HS_LOG(info, "Compiling shader: %s", filename.c_str());
 
     result = CompileSlangToSpirv(sourceCode, filename, options);
     
     if (!result.isValid)
     {
-        HS_LOG(error, "Failed to compile shader to SPIR-V: {}", filename);
+        HS_LOG(error, "Failed to compile shader to SPIR-V: %s", filename.c_str());
         return result;
     }
 
     if (!CrossCompileSpirv(result.spirvBytecode, options, result))
     {
-        HS_LOG(error, "Failed to cross-compile SPIR-V: {}", filename);
+        HS_LOG(error, "Failed to cross-compile SPIR-V: %s", filename.c_str());
         result.isValid = false;
         return result;
     }
@@ -91,7 +91,7 @@ CompiledShader ShaderCrossCompiler::CompileShader(
     ss << filename << "_" << static_cast<uint32>(options.stage) << "_" << static_cast<uint32>(options.targetLanguage);
     result.hash = HashString(ss.str() + sourceCode);
 
-    HS_LOG(info, "Successfully compiled shader: {}", filename);
+    HS_LOG(info, "Successfully compiled shader: %s", filename.c_str());
     return result;
 }
 
@@ -104,7 +104,7 @@ CompiledShader ShaderCrossCompiler::CompileFromFile(
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to open shader file: {}", filepath);
+        HS_LOG(error, "Failed to open shader file: %s", filepath.c_str());
         return result;
     }
 
@@ -144,13 +144,13 @@ CompiledShader ShaderCrossCompiler::CompileSlangToSpirv(
     
     if (!slangResult.success)
     {
-        HS_LOG(error, "Slang compilation failed: {}", slangResult.diagnostics);
+        HS_LOG(error, "Slang compilation failed: %s", slangResult.diagnostics.c_str());
         return result;
     }
 
     if (!slangResult.diagnostics.empty())
     {
-        HS_LOG(warning, "Slang compilation warnings: {}", slangResult.diagnostics);
+        HS_LOG(warning, "Slang compilation warnings: %s", slangResult.diagnostics.c_str());
     }
 
     result.spirvBytecode = std::move(slangResult.spirvBytecode);
@@ -187,7 +187,7 @@ bool ShaderCrossCompiler::CrossCompileSpirv(
         break;
         
     default:
-        HS_LOG(error, "Unsupported target shader language: {}", static_cast<uint32>(options.targetLanguage));
+        HS_LOG(error, "Unsupported target shader language: %u", static_cast<uint32>(options.targetLanguage));
         return false;
     }
 

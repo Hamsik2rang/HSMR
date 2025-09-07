@@ -1,4 +1,4 @@
-﻿//
+//
 //  Precompile.h
 //  HSMR
 //
@@ -241,7 +241,7 @@ template <typename Tp>
 using Scoped = std::unique_ptr<Tp>;
 
 template <typename Tp, typename... Args>
-constexpr Scoped<Tp> hs_make_scoped(Args&&... args)
+constexpr Scoped<Tp> MakeScoped(Args&&... args)
 {
     return std::make_unique<Tp>(std::forward<Args>(args)...);
 }

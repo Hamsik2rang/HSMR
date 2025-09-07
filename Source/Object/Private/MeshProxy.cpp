@@ -184,7 +184,7 @@ void MeshProxy::CreateRHIResources(const Mesh* mesh)
 
     CreateVertexInputLayout();
 
-    HS_LOG(info, "MeshProxy: Created RHI resources for mesh with {} vertices, {} indices", 
+    HS_LOG(info, "MeshProxy: Created RHI resources for mesh with %u vertices, %u indices", 
            _vertexCount, _indexCount);
 }
 

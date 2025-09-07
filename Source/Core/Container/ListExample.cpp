@@ -36,10 +36,10 @@ namespace ListExample
         double speedup = stdResult.timeMs / customResult.timeMs;
         double memoryRatio = static_cast<double>(stdResult.memoryUsage) / customResult.memoryUsage;
         
-        HS_LOG(info, "=== {} ===", customResult.testName);
-        HS_LOG(info, "Custom List: {:.2f}ms, {}KB", customResult.timeMs, customResult.memoryUsage / 1024);
-        HS_LOG(info, "std::vector: {:.2f}ms, {}KB", stdResult.timeMs, stdResult.memoryUsage / 1024);
-        HS_LOG(info, "Speedup: {:.2f}x, Memory: {:.2f}x", speedup, memoryRatio);
+        HS_LOG(info, "=== %s ===", customResult.testName);
+        HS_LOG(info, "Custom List: %.2fms, %zuKB", customResult.timeMs, customResult.memoryUsage / 1024);
+        HS_LOG(info, "std::vector: %.2fms, %zuKB", stdResult.timeMs, stdResult.memoryUsage / 1024);
+        HS_LOG(info, "Speedup: %.2fx, Memory: %.2fx", speedup, memoryRatio);
         HS_LOG(info, "");
     }
 
@@ -242,14 +242,14 @@ namespace ListExample
         numbers.EmplaceBack(7);
         
         // Accessing elements
-        HS_LOG(info, "First: {}, Last: {}", numbers.Front(), numbers.Back());
-        HS_LOG(info, "Size: {}, Capacity: {}", numbers.Size(), numbers.Capacity());
+        HS_LOG(info, "First: %d, Last: %d", numbers.Front(), numbers.Back());
+        HS_LOG(info, "Size: %zu, Capacity: %zu", numbers.Size(), numbers.Capacity());
         
         // Iteration
         HS_LOG(info, "Elements:");
         for (const auto& num : numbers)
         {
-            HS_LOG(info, "  {}", num);
+            HS_LOG(info, "  %d", num);
         }
         
         // Find and erase
@@ -257,18 +257,18 @@ namespace ListExample
         if (it != numbers.End())
         {
             numbers.Erase(it);
-            HS_LOG(info, "Erased 4, new size: {}", numbers.Size());
+            HS_LOG(info, "Erased 4, new size: %zu", numbers.Size());
         }
         
         // Fast erase (swap with last)
         numbers.EraseSwap(0); // Remove first element
-        HS_LOG(info, "After fast erase, first element: {}", numbers.Front());
+        HS_LOG(info, "After fast erase, first element: %d", numbers.Front());
         
         // Batch operations
         std::vector<int> moreNumbers = {10, 11, 12};
         numbers.PushBackRange(moreNumbers.begin(), moreNumbers.end());
         
-        HS_LOG(info, "Final size: {}", numbers.Size());
+        HS_LOG(info, "Final size: %zu", numbers.Size());
         HS_LOG(info, "");
     }
 

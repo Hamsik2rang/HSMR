@@ -106,7 +106,7 @@ void ImageProxy::CreateRHIResources(const Image* image)
     // 
     // _rhiSampler = RHIContext::CreateSampler(samplerDesc);
 
-    HS_LOG(info, "ImageProxy: Created RHI resources for {}x{} image with {} channels", 
+    HS_LOG(info, "ImageProxy: Created RHI resources for %ux%u image with %u channels", 
            _width, _height, _channels);
 }
 

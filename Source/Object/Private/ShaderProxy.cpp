@@ -164,11 +164,11 @@ void ShaderProxy::UpdateVariants(const Shader* shader)
         if (renderVariant.isValid)
         {
             _compiledVariants[variantName] = renderVariant;
-            HS_LOG(info, "ShaderProxy: Created RHI resources for variant: {}", variantName);
+            HS_LOG(info, "ShaderProxy: Created RHI resources for variant: %s", variantName.c_str());
         }
         else
         {
-            HS_LOG(warning, "ShaderProxy: Failed to create RHI resources for variant: {}", variantName);
+            HS_LOG(warning, "ShaderProxy: Failed to create RHI resources for variant: %s", variantName.c_str());
         }
     }
 }
