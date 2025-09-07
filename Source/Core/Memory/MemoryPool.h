@@ -168,9 +168,9 @@ public:
         // Align the offset
         size_t alignedOffset = (_offset + alignment - 1) & ~(alignment - 1);
         
-        if (alignedOffset + size > _size) [[unlikely]]
+        if (alignedOffset + size > _size)
         {
-            HS_LOG(crash, "Linear allocator out of memory: requested {}, available {}", 
+            HS_LOG(crash, "Linear allocator out of memory: requested %zu, available %zu", 
                    size, _size - alignedOffset);
             return nullptr;
         }
@@ -230,13 +230,13 @@ public:
 
     void* Allocate(size_t size, size_t alignment = alignof(std::max_align_t))
     {
-        if (size > BlockSize) [[unlikely]]
+        if (size > BlockSize)
         {
-            HS_LOG(error, "Requested size {} exceeds block size {}", size, BlockSize);
+            HS_LOG(error, "Requested size %zu exceeds block size %zu", size, static_cast<size_t>(BlockSize));
             return nullptr;
         }
 
-        if (!_freeHead) [[unlikely]]
+        if (!_freeHead)
         {
             HS_LOG(error, "Pool allocator exhausted");
             return nullptr;
@@ -337,7 +337,7 @@ public:
     {
         size_t alignedOffset = (_offset + alignment - 1) & ~(alignment - 1);
         
-        if (alignedOffset + size > _size) [[unlikely]]
+        if (alignedOffset + size > _size)
         {
             return nullptr;
         }

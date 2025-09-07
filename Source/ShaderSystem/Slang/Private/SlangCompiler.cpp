@@ -1,7 +1,10 @@
-﻿#include "ShaderSystem/Slang/SlangCompiler.h"
+#include "ShaderSystem/Slang/SlangCompiler.h"
 #include "Core/Log.h"
 
+#ifdef HS_SLANG_AVAILABLE
 #include <slang/slang-com-helper.h>
+#endif
+
 #include <fstream>
 #include <sstream>
 
@@ -26,7 +29,7 @@ bool SlangCompiler::Initialize()
     SlangResult result = slang::createGlobalSession(_globalSession.writeRef());
     if (SLANG_FAILED(result))
     {
-        HS_LOG(crash, "Failed to create Slang global session: {}", result);
+        HS_LOG(crash, "Failed to create Slang global session: %d", static_cast<int>(result));
         return false;
     }
 
@@ -53,7 +56,7 @@ bool SlangCompiler::InitializeSession()
     SlangResult result = _globalSession->createSession(sessionDesc, _session.writeRef());
     if (SLANG_FAILED(result))
     {
-        HS_LOG(crash, "Failed to create Slang session: {}", result);
+        HS_LOG(crash, "Failed to create Slang session: %d", static_cast<int>(result));
         return false;
     }
 
@@ -70,11 +73,11 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
         return result;
     }
 
-    Slang::ComPtr<slang::IModule> module;
+    Slang::ComPtr<slang::IModule> slangModule;
     {
         Slang::ComPtr<slang::IBlob> diagnosticsBlob;
-        module = _session->loadModuleFromSourceString(
-            "", 
+        slangModule = _session->loadModuleFromSourceString(
+            "",
             request.filename.c_str(),
             request.sourceCode.c_str(),
             diagnosticsBlob.writeRef());
@@ -84,9 +87,9 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
             result.diagnostics = static_cast<const char*>(diagnosticsBlob->getBufferPointer());
         }
 
-        if (!module)
+        if (!slangModule)
         {
-            HS_LOG(error, "Failed to load Slang module from source: {}", result.diagnostics);
+            HS_LOG(error, "Failed to load Slang module from source: %s", result.diagnostics.c_str());
             return result;
         }
     }
@@ -94,7 +97,7 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
     Slang::ComPtr<slang::IEntryPoint> entryPoint;
     {
         Slang::ComPtr<slang::IBlob> diagnosticsBlob;
-        module->findEntryPointByName(request.entryPoint.c_str(), entryPoint.writeRef());
+        slangModule->findEntryPointByName(request.entryPoint.c_str(), entryPoint.writeRef());
         
         if (diagnosticsBlob)
         {
@@ -105,12 +108,12 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
 
         if (!entryPoint)
         {
-            HS_LOG(error, "Failed to find entry point '{}': {}", request.entryPoint, result.diagnostics);
+            HS_LOG(error, "Failed to find entry point '%s': %s", request.entryPoint.c_str(), result.diagnostics.c_str());
             return result;
         }
     }
 
-    slang::IComponentType* components[] = { module, entryPoint };
+    slang::IComponentType* components[] = { slangModule, entryPoint };
     Slang::ComPtr<slang::IComponentType> program;
     {
         Slang::ComPtr<slang::IBlob> diagnosticsBlob;
@@ -127,7 +130,7 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
 
         if (SLANG_FAILED(linkResult))
         {
-            HS_LOG(error, "Failed to link Slang program: {}", result.diagnostics);
+            HS_LOG(error, "Failed to link Slang program: %as", result.diagnostics.c_str());
             return result;
         }
     }
@@ -148,7 +151,7 @@ SlangCompileResult SlangCompiler::CompileToSpirv(const SlangCompileRequest& requ
 
         if (SLANG_FAILED(compileResult))
         {
-            HS_LOG(error, "Failed to compile Slang program to SPIR-V: {}", result.diagnostics);
+            HS_LOG(error, "Failed to compile Slang program to SPIR-V: %s", result.diagnostics.c_str());
             return result;
         }
     }

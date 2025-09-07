@@ -1,4 +1,4 @@
-﻿//
+//
 //  SystemContext.h
 //  HAL
 //
@@ -18,6 +18,8 @@ public:
     bool Initialize();
     void Finalize();
 
+    SystemContext();
+    ~SystemContext();
     static SystemContext* Get();
     
     std::string executablePath = "";
@@ -25,8 +27,6 @@ public:
     std::string resourceDirectory = "";
 
 private:
-    SystemContext();
-    ~SystemContext();
     
     static Scoped<SystemContext> s_instance;
 };

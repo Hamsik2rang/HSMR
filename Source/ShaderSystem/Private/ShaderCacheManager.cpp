@@ -1,4 +1,4 @@
-﻿#include "ShaderSystem/ShaderCacheManager.h"
+#include "ShaderSystem/ShaderCacheManager.h"
 #include "Core/Log.h"
 #include <filesystem>
 #include <fstream>
@@ -37,7 +37,7 @@ bool ShaderCacheManager::Initialize(const std::string& cacheDirectory)
     {
         if (ec)
         {
-            HS_LOG(crash, "Failed to create cache directory {}: {}", _cacheDirectory, ec.message());
+            HS_LOG(crash, "Failed to create cache directory %s: %s", _cacheDirectory.c_str(), ec.message().c_str());
             return false;
         }
     }
@@ -52,7 +52,7 @@ bool ShaderCacheManager::Initialize(const std::string& cacheDirectory)
     LoadCacheFromDisk();
 
     _initialized = true;
-    HS_LOG(info, "ShaderCacheManager initialized with cache directory: {}", _cacheDirectory);
+    HS_LOG(info, "ShaderCacheManager initialized with cache directory: %s", _cacheDirectory.c_str());
     return true;
 }
 
@@ -95,12 +95,12 @@ CompiledShader ShaderCacheManager::GetOrCompileShader(
     {
         if (IsShaderCacheValid(it->second, sourceCode))
         {
-            HS_LOG(info, "Using cached shader: {}", filename);
+            HS_LOG(info, "Using cached shader: %s", filename.c_str());
             return it->second.shader;
         }
         else
         {
-            HS_LOG(info, "Cache invalid, recompiling shader: {}", filename);
+            HS_LOG(info, "Cache invalid, recompiling shader: %s", filename.c_str());
             _cache.erase(it);
         }
     }
@@ -117,7 +117,7 @@ CompiledShader ShaderCacheManager::GetOrCompileShader(
         entry.options = options;
         
         _cache[hash] = entry;
-        HS_LOG(info, "Cached compiled shader: {}", filename);
+        HS_LOG(info, "Cached compiled shader: %s", filename.c_str());
     }
 
     return shader;
@@ -136,7 +136,7 @@ CompiledShader ShaderCacheManager::GetOrCompileShaderFromFile(
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to open shader file: {}", filepath);
+        HS_LOG(error, "Failed to open shader file: %s", filepath.c_str());
         return {};
     }
 
@@ -162,7 +162,7 @@ void ShaderCacheManager::InvalidateShader(const std::string& filename)
         if (it->second.sourceFilePath == filename)
         {
             it = _cache.erase(it);
-            HS_LOG(info, "Invalidated cached shader: {}", filename);
+            HS_LOG(info, "Invalidated cached shader: %s", filename.c_str());
         }
         else
         {
@@ -183,7 +183,7 @@ bool ShaderCacheManager::SaveCacheToDisk()
     std::ofstream file(cacheFilePath, std::ios::binary);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to open cache file for writing: {}", cacheFilePath);
+        HS_LOG(error, "Failed to open cache file for writing: %s", cacheFilePath.c_str());
         return false;
     }
 
@@ -191,7 +191,7 @@ bool ShaderCacheManager::SaveCacheToDisk()
     file.write(reinterpret_cast<const char*>(&cacheSize), sizeof(cacheSize));
     if (file.fail())
     {
-        HS_LOG(error, "Failed to write cache size to file: {}", cacheFilePath);
+        HS_LOG(error, "Failed to write cache size to file: %s", cacheFilePath.c_str());
         return false;
     }
 
@@ -217,7 +217,7 @@ bool ShaderCacheManager::SaveCacheToDisk()
     }
 
     file.close();
-    HS_LOG(info, "Saved {} cached shaders to disk", cacheSize);
+    HS_LOG(info, "Saved %llu cached shaders to disk", cacheSize);
     return true;
 }
 
@@ -234,7 +234,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
     std::ifstream file(cacheFilePath, std::ios::binary);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to open cache file for reading: {}", cacheFilePath);
+        HS_LOG(error, "Failed to open cache file for reading: %s", cacheFilePath.c_str());
         return false;
     }
 
@@ -242,7 +242,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
     file.read(reinterpret_cast<char*>(&cacheSize), sizeof(cacheSize));
     if (file.fail() || file.gcount() != sizeof(cacheSize))
     {
-        HS_LOG(error, "Failed to read cache size from file: {}", cacheFilePath);
+        HS_LOG(error, "Failed to read cache size from file: %s", cacheFilePath.c_str());
         _cache.clear();
         return false;
     }
@@ -255,7 +255,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
         file.read(reinterpret_cast<char*>(&hash), sizeof(hash));
         if (file.fail() || file.gcount() != sizeof(hash))
         {
-            HS_LOG(error, "Failed to read hash from cache file at entry {}", i);
+            HS_LOG(error, "Failed to read hash from cache file at entry %llu", i);
             _cache.clear();
             return false;
         }
@@ -264,7 +264,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
         file.read(reinterpret_cast<char*>(&entrySize), sizeof(entrySize));
         if (file.fail() || file.gcount() != sizeof(entrySize))
         {
-            HS_LOG(error, "Failed to read entry size from cache file at entry {}", i);
+            HS_LOG(error, "Failed to read entry size from cache file at entry %llu", i);
             _cache.clear();
             return false;
         }
@@ -273,7 +273,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
         file.read(serializedData.data(), entrySize);
         if (file.fail() || static_cast<uint64>(file.gcount()) != entrySize)
         {
-            HS_LOG(error, "Failed to read entry data from cache file at entry {}", i);
+            HS_LOG(error, "Failed to read entry data from cache file at entry %llu", i);
             _cache.clear();
             return false;
         }
@@ -283,7 +283,7 @@ bool ShaderCacheManager::LoadCacheFromDisk()
     }
 
     file.close();
-    HS_LOG(info, "Loaded {} cached shaders from disk", cacheSize);
+    HS_LOG(info, "Loaded %llu cached shaders from disk", cacheSize);
     return true;
 }
 

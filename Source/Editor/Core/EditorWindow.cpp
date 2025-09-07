@@ -1,4 +1,4 @@
-﻿#include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
 #include "RHI/Swapchain.h"
@@ -122,7 +122,7 @@ void EditorWindow::ProcessEvent()
 
 bool EditorWindow::onInitialize()
 {
-	_renderer = hs_make_scoped<ForwardRenderer>(_rhiContext);
+	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();
 
 	ImGuiExtension::InitializeBackend(_swapchain);
@@ -259,14 +259,14 @@ void EditorWindow::onRestore()
 
 void EditorWindow::setupPanels()
 {
-	_basePanel = hs_make_scoped<DockspacePanel>(this);
+	_basePanel = MakeScoped<DockspacePanel>(this);
 	_basePanel->Setup();
 
-	_menuPanel = hs_make_scoped<MenuPanel>(this);
+	_menuPanel = MakeScoped<MenuPanel>(this);
 	_menuPanel->Setup();
 	_basePanel->InsertPanel(_menuPanel.get());
 
-	_scenePanel = hs_make_scoped<ScenePanel>(this);
+	_scenePanel = MakeScoped<ScenePanel>(this);
 	_scenePanel->Setup();
 	_basePanel->InsertPanel(_scenePanel.get());
 }

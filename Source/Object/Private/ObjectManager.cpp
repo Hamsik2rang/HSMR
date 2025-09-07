@@ -235,7 +235,7 @@ std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::s
     for (uint32 i = 0; i < scene->mNumMaterials; ++i)
     {
         aiMaterial* aiMat         = scene->mMaterials[i];
-        Scoped<Material> material = hs_make_scoped<Material>();
+        Scoped<Material> material = MakeScoped<Material>();
 
         // Get material name
         aiString name;
@@ -310,7 +310,7 @@ std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::s
                         texturePath = modelDirectory + "/" + texturePath;
                     }
 
-                    HS_LOG(info, "Loading texture: %s for material %s", texturePath.c_str(), material->name);
+                    HS_LOG(info, "Loading texture: %s for material %s", texturePath.c_str(), material->name.c_str());
 
                     // Load the texture
                     Scoped<Image> texture = ObjectManager::LoadImageFromFile(texturePath, true);
@@ -337,7 +337,7 @@ std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::s
 // Process a single mesh
 Scoped<Mesh> ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<Scoped<Material>>& materials)
 {
-    Scoped<Mesh> hsMesh = hs_make_scoped<Mesh>();
+    Scoped<Mesh> hsMesh = MakeScoped<Mesh>();
 
     // Set mesh name
     if (mesh->mName.length > 0)
@@ -408,7 +408,7 @@ Scoped<Mesh> ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<Scoped<
 // Process a node and all its children
 Scoped<Mesh> ProcessNode(aiNode* node, const aiScene* scene, std::vector<Scoped<Material>>& materials)
 {
-    Scoped<Mesh> rootMesh = hs_make_scoped<Mesh>();
+    Scoped<Mesh> rootMesh = MakeScoped<Mesh>();
 
     // Process all meshes in this node
     for (uint32 i = 0; i < node->mNumMeshes; ++i)
@@ -469,7 +469,7 @@ Scoped<Image> ObjectManager::LoadImageFromFile(const std::string& path, bool isA
         return nullptr;
     }
 
-    Scoped<Image> pImage = hs_make_scoped<Image>(rawData, width, height, channel);
+    Scoped<Image> pImage = MakeScoped<Image>(rawData, width, height, channel);
 
     return pImage;
 }
@@ -579,11 +579,11 @@ Scoped<Shader> ObjectManager::LoadShaderFromFile(const std::string& vertexPath, 
         finalFragmentPath = s_resourcePath + fragmentPath;
     }
 
-    Scoped<Shader> shader = hs_make_scoped<Shader>();
+    Scoped<Shader> shader = MakeScoped<Shader>();
     
     if (!shader->LoadFromFile(finalVertexPath, finalFragmentPath))
     {
-        HS_LOG(error, "Failed to load shader from files: {} + {}", finalVertexPath, finalFragmentPath);
+        HS_LOG(error, "Failed to load shader from files: %s + %s", finalVertexPath.c_str(), finalFragmentPath.c_str());
         return nullptr;
     }
 
@@ -592,11 +592,11 @@ Scoped<Shader> ObjectManager::LoadShaderFromFile(const std::string& vertexPath, 
     
     if (!shader->CompileVariants())
     {
-        HS_LOG(error, "Failed to compile shader variants for: {} + {}", finalVertexPath, finalFragmentPath);
+        HS_LOG(error, "Failed to compile shader variants for: %s + %s", finalVertexPath.c_str(), finalFragmentPath.c_str());
         return nullptr;
     }
 
-    HS_LOG(info, "Successfully loaded and compiled shader: {} + {}", finalVertexPath, finalFragmentPath);
+    HS_LOG(info, "Successfully loaded and compiled shader: %s + %s", finalVertexPath.c_str(), finalFragmentPath.c_str());
     return shader;
 }
 
@@ -613,11 +613,11 @@ Scoped<Shader> ObjectManager::LoadComputeShaderFromFile(const std::string& compu
         finalComputePath = s_resourcePath + computePath;
     }
 
-    Scoped<Shader> shader = hs_make_scoped<Shader>();
+    Scoped<Shader> shader = MakeScoped<Shader>();
     
     if (!shader->LoadComputeFromFile(finalComputePath))
     {
-        HS_LOG(error, "Failed to load compute shader from file: {}", finalComputePath);
+        HS_LOG(error, "Failed to load compute shader from file: %s", finalComputePath.c_str());
         return nullptr;
     }
 
@@ -626,11 +626,11 @@ Scoped<Shader> ObjectManager::LoadComputeShaderFromFile(const std::string& compu
     
     if (!shader->CompileVariants())
     {
-        HS_LOG(error, "Failed to compile compute shader variants for: {}", finalComputePath);
+        HS_LOG(error, "Failed to compile compute shader variants for: %s", finalComputePath.c_str());
         return nullptr;
     }
 
-    HS_LOG(info, "Successfully loaded and compiled compute shader: {}", finalComputePath);
+    HS_LOG(info, "Successfully loaded and compiled compute shader: %s", finalComputePath.c_str());
     return shader;
 }
 

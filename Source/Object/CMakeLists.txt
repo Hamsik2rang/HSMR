@@ -47,7 +47,7 @@ list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL Core RHI)
+add_dependencies(${TARGET_NAME} HAL Core RHI ShaderSystem)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE

@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIDefinition
 //  HSMR
 //
@@ -123,7 +123,7 @@ protected:
 	// Pure virtual method for platform-specific resource cleanup
 	virtual void OnDestroy() = 0;
 
-	const EType _type;
+	EType _type;
 	int    _refs = 1;      // Start with 1 reference
 	uint32 _hash = 0;
 };

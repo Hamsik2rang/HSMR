@@ -99,7 +99,7 @@ void ShaderParameterCollection::SetParameter(const std::string& name, uint64 tex
             infoIt->second.type != ShaderParameterType::TextureCube &&
             infoIt->second.type != ShaderParameterType::Buffer)
         {
-            HS_LOG(warning, "Parameter '{}' type mismatch for texture/buffer handle", name);
+            HS_LOG(warning, "Parameter '%s' type mismatch for texture/buffer handle", name.c_str());
         }
     }
     
@@ -349,8 +349,8 @@ void ShaderParameterCollection::ValidateParameter(const std::string& name, Shade
     auto it = _parameterInfo.find(name);
     if (it != _parameterInfo.end() && it->second.type != expectedType)
     {
-        HS_LOG(warning, "Parameter '{}' type mismatch. Expected: {}, Got: {}", 
-               name, static_cast<uint32>(it->second.type), static_cast<uint32>(expectedType));
+        HS_LOG(warning, "Parameter '%s' type mismatch. Expected: %u, Got: %u", 
+               name.c_str(), static_cast<uint32>(it->second.type), static_cast<uint32>(expectedType));
     }
 }
 

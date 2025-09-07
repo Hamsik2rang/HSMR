@@ -4,8 +4,8 @@ option(USE_SHADERSYSTEM ON)
 
 if(USE_SHADERSYSTEM)
     if(APPLE)
-        set(SLANG "${HS_DEPS_DLL_DIR}/slang.dylib")
-        set(SLANG_LIB "${HS_DEPS_LIB_DIR}/slang.a")
+        set(SLANG "${HS_DEPS_DLL_DIR}/libslang.dylib")
+        set(SLANG_LIB "${SLANG}")
     else()
         set(SLANG "${HS_DEPS_DLL_DIR}/slang.dll")
         set(SLANG_LIB "${HS_DEPS_LIB_DIR}/slang.lib")
@@ -15,14 +15,14 @@ if(USE_SHADERSYSTEM)
 
     if(APPLE)
         # TODO: Vulkan SDK 1.3.296.0 기준으로 추가
-        set(SPIRV_CROSS_C "${HS_DEPS_LIB_DIR}/spirv-cross-c.a")
-        set(SPIRV_CROSS_CORE "${HS_DEPS_LIB_DIR}/spirv-cross-core.a")
-        set(SPIRV_CROSS_CPP "${HS_DEPS_LIB_DIR}/spirv-cross-cpp.a")
-        set(SPIRV_CROSS_GLSL "${HS_DEPS_LIB_DIR}/spirv-cross-glsl.a")
-        set(SPIRV_CROSS_HLSL "${HS_DEPS_LIB_DIR}/spirv-cross-hlsl.a")
-        set(SPIRV_CROSS_MSL "${HS_DEPS_LIB_DIR}/spirv-cross-msl.a")
-        set(SPIRV_CROSS_REFLECT "${HS_DEPS_LIB_DIR}/spirv-cross-reflect.a")
-        set(SPIRV_CROSS_UTIL "${HS_DEPS_LIB_DIR}/spirv-cross-util.a")
+        set(SPIRV_CROSS_C "${HS_DEPS_LIB_DIR}/libspirv-cross-c.a")
+        set(SPIRV_CROSS_CORE "${HS_DEPS_LIB_DIR}/libspirv-cross-core.a")
+        set(SPIRV_CROSS_CPP "${HS_DEPS_LIB_DIR}/libspirv-cross-cpp.a")
+        set(SPIRV_CROSS_GLSL "${HS_DEPS_LIB_DIR}/libspirv-cross-glsl.a")
+        set(SPIRV_CROSS_HLSL "${HS_DEPS_LIB_DIR}/libspirv-cross-hlsl.a")
+        set(SPIRV_CROSS_MSL "${HS_DEPS_LIB_DIR}/libspirv-cross-msl.a")
+        set(SPIRV_CROSS_REFLECT "${HS_DEPS_LIB_DIR}/libspirv-cross-reflect.a")
+        set(SPIRV_CROSS_UTIL "${HS_DEPS_LIB_DIR}/libspirv-cross-util.a")
     else()
         set(SPIRV_CROSS_C "${HS_DEPS_LIB_DIR}/spirv-cross-c.lib")
         set(SPIRV_CROSS_CORE "${HS_DEPS_LIB_DIR}/spirv-cross-core.lib")
@@ -99,6 +99,14 @@ if(USE_SHADERSYSTEM)
             "$<TARGET_FILE:${TARGET_NAME}>"
             "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
             COMMENT "Copying ${TARGET_NAME} library to install folder: ${INSTALL_FOLDER}"
+        )
+        
+        # Copy Slang dylib to install folder
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${SLANG}"
+            "${INSTALL_FOLDER}/libslang.dylib"
+            COMMENT "Copying libslang.dylib to install folder: ${INSTALL_FOLDER}"
         )
     else()
         # On Windows, copy both .dll and .lib files
