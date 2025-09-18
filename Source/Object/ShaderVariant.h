@@ -13,7 +13,7 @@ HS_NS_BEGIN
 struct HS_OBJECT_API ShaderVariant
 {
 	EShaderLanguage language;
-	std::unordered_map<std::string> macros;
+	std::unordered_map<std::string, std::string> macros;
 	std::vector<std::string> includePaths;
 };
 
@@ -24,11 +24,15 @@ struct Hasher<ShaderVariant>
 	{
 		uint32 hash = static_cast<uint32>(key.language);
 
-		std::sort(key.macros.begin(), key.macros.end());
-		for (const auto& macro : key.macros)
+		// Create sorted vector of macro pairs for consistent hashing
+		std::vector<std::pair<std::string, std::string>> sortedMacros(key.macros.begin(), key.macros.end());
+		std::sort(sortedMacros.begin(), sortedMacros.end());
+		
+		for (const auto& macro : sortedMacros)
 		{
 			hash = HashCombine(hash, StringHash(macro.first), StringHash(macro.second));
 		}
+		
 		for (const auto& path : key.includePaths)
 		{
 			hash = HashCombine(hash, StringHash(path));

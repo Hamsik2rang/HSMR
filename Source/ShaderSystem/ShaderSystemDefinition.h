@@ -91,6 +91,7 @@ struct ShaderCompileOutput
 
     std::string diagnostics;
 	ShaderReflectionData reflection;
+    bool isValid = false;
 };
 
 namespace ShaderSystemUtil
