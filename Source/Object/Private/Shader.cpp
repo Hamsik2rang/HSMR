@@ -1,4 +1,4 @@
-﻿#include "Object/Shader.h"
+#include "Object/Shader.h"
 #include "Object/ObjectManager.h"
 #include "ShaderSystem/ShaderCrossCompiler.h"
 #include "Core/Log.h"
@@ -9,215 +9,149 @@
 HS_NS_BEGIN
 
 Shader::Shader(const std::string& source, EShaderStage stage, const std::string& entryPointName)
-	: Object(Object::EType::SHADER)
+	: Object(Object::EType::SHADER), _source(source), _shaderType(stage), _entryPointName(entryPointName)
 {
-
+    // Initialize simple mode compilation options
+    _compileOptions.stage = stage;
+    _compileOptions.entryPoint = entryPointName;
+    _compileOptions.targetLanguage = EShaderLanguage::SPIRV; // Default to SPIRV
+    
+    // Default to simple mode for new shaders
+    _useSimpleMode = true;
 }
 
 Shader::~Shader()
 {
-
+    // Cleanup will be handled by destructors
 }
 
+// =======================
+// SIMPLIFIED INTERFACE IMPLEMENTATION
+// =======================
 
-void Shader::AddCache(const std::string& variantName, const std::vector<std::string>& defines)
+bool Shader::CompileSimple()
 {
-    ShaderVariant* variant = new ShaderVariant();
-    variant->macros = defines;
-
-    _variants[variant] = variant;
-    _isCompiled = false;
-
-    HS_LOG(info, "Added shader variant: %s with %zu defines", variantName.c_str(), defines.size());
-}
-
-void Shader::RemoveCache(const std::string& variantName)
-{
-    auto it = _variants.find(variantName);
-    if (it != _variants.end())
+    if (!_useSimpleMode)
     {
-        _variants.erase(it);
-        HS_LOG(info, "Removed shader variant: %s", variantName.c_str());
+        HS_LOG(error, "CompileSimple() called but simple mode is not enabled");
+        return false;
+    }
+
+    return compileSimpleShader();
+}
+
+const ShaderCompileOutput* Shader::GetCompiledData() const
+{
+    if (_useSimpleMode && _simpleCompiledData.isValid)
+    {
+        return &_simpleCompiledData;
+    }
+    return nullptr;
+}
+
+bool Shader::compileSimpleShader()
+{
+    ShaderCrossCompiler compiler;
+    
+    // Create compile input
+    ShaderCompileInput input;
+    input.option = _compileOptions;
+    input.shaderName = name ? name : "unnamed_shader";
+    input.sourceCode = _source;
+
+    // Compile shader
+    bool success = compiler.CompileShader(input, _simpleCompiledData);
+    
+    if (success && _simpleCompiledData.code && _simpleCompiledData.sourceCodeLen > 0)
+    {
+        _simpleCompiledData.isValid = true;
+        // Register parameter interface from reflection
+        RegisterParameterInterface(_simpleCompiledData.reflection);
+        HS_LOG(info, "Successfully compiled shader: %s", input.shaderName.c_str());
+        return true;
+    }
+    else
+    {
+        _simpleCompiledData.isValid = false;
+        HS_LOG(error, "Failed to compile shader: %s - %s", 
+               input.shaderName.c_str(), _simpleCompiledData.diagnostics.c_str());
+        return false;
     }
 }
 
-bool Shader::HasCache(const std::string& variantName) const
+// =======================
+// LEGACY VARIANT SYSTEM (temporary compatibility)
+// =======================
+
+bool Shader::HasCache(const ShaderVariant& variant) const
 {
-    return _variants.find(variantName) != _variants.end();
+    // For now, redirect to simple mode check
+    if (_useSimpleMode)
+    {
+        return _simpleCompiledData.isValid;
+    }
+    
+    // Legacy implementation would go here
+    return false;
 }
 
-const ShaderVariant* Shader::GetVariant(const std::string& variantName) const
+ShaderCache* Shader::GetCache(const ShaderVariant& variant) const
 {
-    auto it = _variants.find(variantName);
-    return (it != _variants.end()) ? &it->second : nullptr;
+    // Legacy implementation - not used in simple mode
+    return nullptr;
 }
 
 const ShaderVariant* Shader::GetDefaultVariant() const
 {
-    // Try to find "default" variant first
-    auto it = _variants.find("default");
-    if (it != _variants.end() && it->second.isValid)
-    {
-        return &it->second;
-    }
-
-    // Otherwise, return the first valid variant
-    for (const auto& pair : _variants)
-    {
-        if (pair.second.isValid)
-        {
-            return &pair.second;
-        }
-    }
-
+    // Not used in simple mode
     return nullptr;
-}
-
-void Shader::RegisterParameterInterface(const ShaderReflectionData& reflection)
-{
-    _parameterInterface.Clear();
-    ExtractParametersFromReflection(reflection);
 }
 
 bool Shader::CompileVariants()
 {
-    if (_variants.empty())
+    if (_useSimpleMode)
     {
-        // Create default variant if none exist
-        AddVariant("default", {});
+        // In simple mode, just compile the single shader
+        return CompileSimple();
     }
-
-    bool allSuccess = true;
-    for (auto& pair : _variants)
-    {
-        if (!CompileVariant(pair.first))
-        {
-            allSuccess = false;
-        }
-    }
-
-    _isCompiled = allSuccess;
-    return allSuccess;
+    
+    // Legacy variant compilation would go here
+    return false;
 }
 
 bool Shader::CompileVariant(const std::string& variantName)
 {
-    auto it = _variants.find(variantName);
-    if (it == _variants.end())
+    if (_useSimpleMode)
     {
-        HS_LOG(error, "Shader variant '%s' not found", variantName.c_str());
-        return false;
+        // In simple mode, ignore variant name and compile single shader
+        return CompileSimple();
     }
-
-    ShaderVariant& variant = it->second;
-
-    // Compile based on shader type
-    bool success = false;
     
-    if (_shaderType == EShaderStage::COMPUTE)
-    {
-        if (!_computeSource.empty())
-        {
-            success = CompileShaderVariant(variant, _computeSource, EShaderStage::COMPUTE);
-        }
-        else
-        {
-            HS_LOG(error, "No compute shader source for variant '%s'", variantName.c_str());
-            return false;
-        }
-    }
-    else
-    {
-        // For surface shaders, compile vertex first, then fragment
-        if (!_vertexSource.empty())
-        {
-            success = CompileShaderVariant(variant, _vertexSource, EShaderStage::VERTEX);
-        }
-        
-        if (success && !_fragmentSource.empty())
-        {
-            // For now, we compile vertex and fragment separately
-            // In a full implementation, you might want to link them together
-            ShaderVariant fragmentVariant = variant;
-            success = CompileShaderVariant(fragmentVariant, _fragmentSource, EShaderStage::FRAGMENT);
-            
-            if (success)
-            {
-                // You might want to combine reflection data here
-                // For now, we'll use the vertex shader reflection
-            }
-        }
-    }
-
-    if (success)
-    {
-        // Register parameter interface from reflection
-        RegisterParameterInterface(variant.compiledShader.reflection);
-        HS_LOG(info, "Successfully compiled shader variant: %s", variantName.c_str());
-    }
-    else
-    {
-        HS_LOG(error, "Failed to compile shader variant: %s", variantName.c_str());
-    }
-
-    return success;
+    // Legacy variant compilation would go here
+    return false;
 }
 
 bool Shader::IsCompiled() const
 {
-    if (_variants.empty())
+    if (_useSimpleMode)
     {
-        return false;
+        return _simpleCompiledData.isValid;
     }
-
-    // Check if at least one variant is compiled
-    for (const auto& pair : _variants)
-    {
-        if (pair.second.isValid)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool Shader::compileShaderVariant(ShaderVariant& variant, const std::string& source, EShaderStage stage)
-{
-    ShaderCrossCompiler compiler;
-    if (!compiler.Initialize())
-    {
-        return false;
-    }
-
-    // Setup compilation options
-    ShaderCompileOption options = _compileOptions;
-    options.stage = stage;
-    options.macros = variant.macros;
-
-    // Create source with defines prepended
-    std::string finalSource;
-    for (const std::string& define : variant.defines)
-    {
-        finalSource += "#define " + define + "\n";
-    }
-    finalSource += source;
-
-    // Compile shader
-    CompiledShader compiled = compiler.CompileShader(finalSource, name ? name : "unknown", options);
     
-    if (compiled.isValid)
-    {
-        variant.compiledShader = std::move(compiled);
-        variant.hash = GenerateVariantHash(source, variant.defines);
-        variant.isValid = true;
-        return true;
-    }
-
-    return false;
+    return _isCompiled;
 }
 
-void Shader::ExtractParametersFromReflection(const ShaderReflectionData& reflection)
+// =======================
+// COMMON FUNCTIONALITY
+// =======================
+
+void Shader::RegisterParameterInterface(const ShaderReflectionData& reflection)
+{
+    _parameterInterface.Clear();
+    extractParametersFromReflection(reflection);
+}
+
+void Shader::extractParametersFromReflection(const ShaderReflectionData& reflection)
 {
     uint32 offset = 0;
 
@@ -251,7 +185,6 @@ void Shader::ExtractParametersFromReflection(const ShaderReflectionData& reflect
     for (const auto& sampler : reflection.samplers)
     {
         // Samplers are typically combined with textures in modern APIs
-        // We'll register them as texture parameters for now
         _parameterInterface.RegisterParameter(
             sampler.name,
             ShaderParameterType::Texture2D,
@@ -261,58 +194,30 @@ void Shader::ExtractParametersFromReflection(const ShaderReflectionData& reflect
     }
 }
 
+// =======================
+// LEGACY VARIANT SYSTEM STUBS (will be removed)
+// =======================
+
+void Shader::addCache(const ShaderVariant& variant)
+{
+    // Legacy implementation stub
+}
+
+void Shader::removeCache(const ShaderVariant& variant)
+{
+    // Legacy implementation stub
+}
+
+bool Shader::compileShaderCache(ShaderVariant& variant, const std::string& source, EShaderStage stage)
+{
+    // Legacy implementation stub
+    return false;
+}
+
 uint32 Shader::calculateVariantScore(const ShaderVariant& variant, const std::vector<std::string>& requestedDefines) const
 {
-    uint32 score = 0;
-    
-    // Perfect match gets highest score
-    if (variant.defines.size() == requestedDefines.size())
-    {
-        bool perfectMatch = true;
-        for (const std::string& requested : requestedDefines)
-        {
-            bool found = false;
-            for (const std::string& variantDefine : variant.defines)
-            {
-                if (requested == variantDefine)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                perfectMatch = false;
-                break;
-            }
-        }
-        
-        if (perfectMatch)
-        {
-            return 1000; // Perfect match
-        }
-    }
-    
-    // Count matching defines
-    for (const std::string& requested : requestedDefines)
-    {
-        for (const std::string& variantDefine : variant.defines)
-        {
-            if (requested == variantDefine)
-            {
-                score += 10;
-                break;
-            }
-        }
-    }
-    
-    // Penalize extra defines in variant
-    if (variant.defines.size() > requestedDefines.size())
-    {
-        score -= static_cast<uint32>(variant.defines.size() - requestedDefines.size());
-    }
-    
-    return score;
+    // Legacy implementation stub
+    return 0;
 }
 
 HS_NS_END

@@ -28,21 +28,20 @@ namespace ShaderSystemUtil
 			return "Unknown";
 		}
 	}
-}
 
-
-std::string GetShaderStageLanguage(EShaderLanguage language)
-{
-	switch (language)
+	std::string GetShaderLanguageString(EShaderLanguage language)
 	{
-	case EShaderLanguage::SPIRV:
-		return "SPIR-V";
-	case EShaderLanguage::MSL:
-		return "MSL";
-	case EShaderLanguage::HLSL:
-		return "HLSL";
-	default:
-		return "Unknown";
+		switch (language)
+		{
+		case EShaderLanguage::SPIRV:
+			return "SPIR-V";
+		case EShaderLanguage::MSL:
+			return "MSL";
+		case EShaderLanguage::HLSL:
+			return "HLSL";
+		default:
+			return "Unknown";
+		}
 	}
 }
 

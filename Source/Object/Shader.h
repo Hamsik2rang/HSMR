@@ -25,13 +25,31 @@ public:
 
     EShaderStage GetShaderStage() const { return _shaderType; }
 
-    // Variant management
+    // =======================
+    // SIMPLIFIED INTERFACE (1:1 Shader-Cache mapping)
+    // =======================
+    
+    // Simple compilation interface - bypasses variant system
+    bool CompileSimple();
+    bool IsCompiledSimple() const { return _useSimpleMode && _simpleCompiledData.isValid; }
+    
+    // Get compiled shader data directly
+    const ShaderCompileOutput* GetCompiledData() const;
+    
+    // Enable simple mode (disables variant system)
+    void EnableSimpleMode() { _useSimpleMode = true; }
+    bool IsSimpleModeEnabled() const { return _useSimpleMode; }
+
+    // =======================
+    // LEGACY VARIANT SYSTEM (will be removed in future phases)
+    // =======================
 
     bool HasCache(const ShaderVariant& variant) const;
 	ShaderCache* GetCache(const ShaderVariant& variant) const;
     
-    HS_FORCEINLINE const ShaderVariant* GetVariant(uint32 variantHash) const { if (_variants.find(variantHash) != _variants.end()) return _variants[variantHash]; return nullptr; }
-    HS_FORCEINLINE const std::unordered_map<uint32, ShaderVariant*>& GetAllVariants() const { return _variants; }
+    // Legacy variant methods (not used in simple mode)
+    const ShaderVariant* GetVariant(uint32 variantHash) const { return nullptr; }
+    // const std::unordered_map<ShaderVariant, ShaderCache*>& GetAllVariants() const { return _variants; }  // Temporarily disabled
     
     // Get default variant (usually the one with no defines)
     const ShaderVariant* GetDefaultVariant() const;
@@ -50,26 +68,38 @@ public:
     const ShaderCompileOption& GetCompilationOptions() const { return _compileOptions; }
 
     // Utility
-    uint32 GetVariantCount() const { return static_cast<uint32>(_variants.size()); }
+    uint32 GetVariantCount() const { return 0; }  // Simplified: always 0 variants
 
 private:
+    // Simple mode compilation
+    bool compileSimpleShader();
+    void extractParametersFromReflection(const ShaderReflectionData& reflection);
+    
+    // Legacy variant system methods
     void addCache(const ShaderVariant& variant);
     void removeCache(const ShaderVariant& variant);
-
     bool compileShaderCache(ShaderVariant& variant, const std::string& source, EShaderStage stage);
-    void extractParametersFromReflection(const ShaderReflectionData& reflection);
     uint32 calculateVariantScore(const ShaderVariant& variant, const std::vector<std::string>& requestedDefines) const;
     
+    // Shader source storage
+    std::string _source;           // Original shader source
+    std::string _entryPointName;   // Entry point function name
+    EShaderStage _shaderType;      // Shader stage type
+    
+    // Simple mode data (1:1 mapping)
+    bool _useSimpleMode = false;
+    ShaderCompileOutput _simpleCompiledData;
+    
+    // Legacy variant system data (will be removed)
     std::string _vertexSource;
     std::string _fragmentSource;
     std::string _computeSource;
+    // std::unordered_map<ShaderVariant, ShaderCache*> _variants;  // Temporarily disabled
+    bool _isCompiled = false;
     
-    EShaderStage _shaderType;
-    std::unordered_map<ShaderVariant/*Hash of ShaderVariant*/, ShaderCache*> _variants;
+    // Common data
     ShaderParameterCollection _parameterInterface;
     ShaderCompileOption _compileOptions;
-    
-    bool _isCompiled = false;
 };
 
 HS_NS_END

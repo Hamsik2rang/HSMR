@@ -41,27 +41,28 @@ set(OBJECT_SOURCES
 source_group("Private" FILES ${OBJECT_SOURCES})
 list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 
-set(PROXY_HEADERS
-    Proxy/ImageProxy.h
-    Proxy/MaterialProxy.h
-    Proxy/MeshProxy.h
-    Proxy/ShaderProxy.h
-    Proxy/ObjectProxy.h
-)
-
-source_group("Proxy\\Public" FILES ${PROXY_HEADERS})
-list(APPEND TOTAL_FILES ${PROXY_HEADERS})
-
-set(PROXY_SOURCES
-    Proxy/Private/ImageProxy.cpp
-    Proxy/Private/MaterialProxy.cpp
-    Proxy/Private/MeshProxy.cpp
-    Proxy/Private/ShaderProxy.cpp
-    Proxy/Private/ObjectProxy.cpp
-    Proxy/Private/MaterialProxy.cpp
-)
-source_group("Proxy\\Private" FILES ${PROXY_SOURCES})
-list(APPEND TOTAL_FILES ${PROXY_SOURCES})
+# Proxy system temporarily disabled for shader simplification
+# set(PROXY_HEADERS
+#     Proxy/ImageProxy.h
+#     Proxy/MaterialProxy.h
+#     Proxy/MeshProxy.h
+#     Proxy/ShaderProxy.h
+#     Proxy/ObjectProxy.h
+# )
+# 
+# source_group("Proxy\\Public" FILES ${PROXY_HEADERS})
+# list(APPEND TOTAL_FILES ${PROXY_HEADERS})
+# 
+# set(PROXY_SOURCES
+#     Proxy/Private/ImageProxy.cpp
+#     Proxy/Private/MaterialProxy.cpp
+#     Proxy/Private/MeshProxy.cpp
+#     Proxy/Private/ShaderProxy.cpp
+#     Proxy/Private/ObjectProxy.cpp
+#     Proxy/Private/MaterialProxy.cpp
+# )
+# source_group("Proxy\\Private" FILES ${PROXY_SOURCES})
+# list(APPEND TOTAL_FILES ${PROXY_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
