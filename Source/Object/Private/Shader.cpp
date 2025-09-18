@@ -1,7 +1,6 @@
-#include "Object/Shader.h"
+﻿#include "Object/Shader.h"
 #include "Object/ObjectManager.h"
 #include "ShaderSystem/ShaderCrossCompiler.h"
-#include "ShaderSystem/ShaderCacheManager.h"
 #include "Core/Log.h"
 #include "HAL/FileSystem.h"
 #include <fstream>
@@ -9,94 +8,30 @@
 
 HS_NS_BEGIN
 
-Shader::Shader()
-    : Object(EType::SHADER)
-    , _shaderType(ShaderType::Surface)
+Shader::Shader(const std::string& source, EShaderStage stage, const std::string& entryPointName)
+	: Object(Object::EType::SHADER)
 {
-    // Setup default compilation options
-    _compileOptions = ShaderCrossCompiler::CreateDefaultOptions(ShaderStage::Vertex);
+
 }
 
 Shader::~Shader()
 {
+
 }
 
-void Shader::SetVertexShaderSource(const std::string& source)
+
+void Shader::AddCache(const std::string& variantName, const std::vector<std::string>& defines)
 {
-    _vertexSource = source;
-    _isCompiled = false;
-}
+    ShaderVariant* variant = new ShaderVariant();
+    variant->macros = defines;
 
-void Shader::SetFragmentShaderSource(const std::string& source)
-{
-    _fragmentSource = source;
-    _isCompiled = false;
-}
-
-void Shader::SetComputeShaderSource(const std::string& source)
-{
-    _computeSource = source;
-    _isCompiled = false;
-}
-
-bool Shader::LoadFromFile(const std::string& vertexPath, const std::string& fragmentPath)
-{
-    std::string vertexSource = LoadShaderSourceFromFile(vertexPath);
-    if (vertexSource.empty())
-    {
-        HS_LOG(error, "Failed to load vertex shader: %s", vertexPath.c_str());
-        return false;
-    }
-
-    std::string fragmentSource = LoadShaderSourceFromFile(fragmentPath);
-    if (fragmentSource.empty())
-    {
-        HS_LOG(error, "Failed to load fragment shader: %s", fragmentPath.c_str());
-        return false;
-    }
-
-    SetVertexShaderSource(vertexSource);
-    SetFragmentShaderSource(fragmentSource);
-
-    name = (vertexPath + "+" + fragmentPath).c_str();
-
-    HS_LOG(info, "Loaded shader from files: %s + %s", vertexPath.c_str(), fragmentPath.c_str());
-    return true;
-}
-
-bool Shader::LoadComputeFromFile(const std::string& computePath)
-{
-    std::string computeSource = LoadShaderSourceFromFile(computePath);
-    if (computeSource.empty())
-    {
-        HS_LOG(error, "Failed to load compute shader: %s", computePath.c_str());
-        return false;
-    }
-
-    SetComputeShaderSource(computeSource);
-    _shaderType = ShaderType::Compute;
-
-    name = computePath.c_str();
-
-    HS_LOG(info, "Loaded compute shader from file: %s", computePath.c_str());
-    return true;
-}
-
-void Shader::AddVariant(const std::string& variantName, const std::vector<std::string>& defines)
-{
-    ShaderVariant variant;
-    variant.name = variantName;
-    variant.defines = defines;
-    variant.isValid = false;
-    variant.hash = 0;
-
-    _variants[variantName] = variant;
+    _variants[variant] = variant;
     _isCompiled = false;
 
     HS_LOG(info, "Added shader variant: %s with %zu defines", variantName.c_str(), defines.size());
 }
 
-void Shader::RemoveVariant(const std::string& variantName)
+void Shader::RemoveCache(const std::string& variantName)
 {
     auto it = _variants.find(variantName);
     if (it != _variants.end())
@@ -106,7 +41,7 @@ void Shader::RemoveVariant(const std::string& variantName)
     }
 }
 
-bool Shader::HasVariant(const std::string& variantName) const
+bool Shader::HasCache(const std::string& variantName) const
 {
     return _variants.find(variantName) != _variants.end();
 }
@@ -179,11 +114,11 @@ bool Shader::CompileVariant(const std::string& variantName)
     // Compile based on shader type
     bool success = false;
     
-    if (_shaderType == ShaderType::Compute)
+    if (_shaderType == EShaderStage::COMPUTE)
     {
         if (!_computeSource.empty())
         {
-            success = CompileShaderVariant(variant, _computeSource, ShaderStage::Compute);
+            success = CompileShaderVariant(variant, _computeSource, EShaderStage::COMPUTE);
         }
         else
         {
@@ -196,7 +131,7 @@ bool Shader::CompileVariant(const std::string& variantName)
         // For surface shaders, compile vertex first, then fragment
         if (!_vertexSource.empty())
         {
-            success = CompileShaderVariant(variant, _vertexSource, ShaderStage::Vertex);
+            success = CompileShaderVariant(variant, _vertexSource, EShaderStage::VERTEX);
         }
         
         if (success && !_fragmentSource.empty())
@@ -204,7 +139,7 @@ bool Shader::CompileVariant(const std::string& variantName)
             // For now, we compile vertex and fragment separately
             // In a full implementation, you might want to link them together
             ShaderVariant fragmentVariant = variant;
-            success = CompileShaderVariant(fragmentVariant, _fragmentSource, ShaderStage::Fragment);
+            success = CompileShaderVariant(fragmentVariant, _fragmentSource, EShaderStage::FRAGMENT);
             
             if (success)
             {
@@ -247,89 +182,7 @@ bool Shader::IsCompiled() const
     return false;
 }
 
-const ShaderVariant* Shader::GetBestVariant(const std::vector<std::string>& requestedDefines) const
-{
-    if (_variants.empty())
-    {
-        return nullptr;
-    }
-
-    const ShaderVariant* bestVariant = nullptr;
-    uint32 bestScore = 0;
-
-    for (const auto& pair : _variants)
-    {
-        const ShaderVariant& variant = pair.second;
-        if (!variant.isValid)
-        {
-            continue;
-        }
-
-        uint32 score = CalculateVariantScore(variant, requestedDefines);
-        if (score > bestScore)
-        {
-            bestScore = score;
-            bestVariant = &variant;
-        }
-    }
-
-    return bestVariant ? bestVariant : GetDefaultVariant();
-}
-
-std::vector<std::string> Shader::GetVariantNames() const
-{
-    std::vector<std::string> names;
-    names.reserve(_variants.size());
-    
-    for (const auto& pair : _variants)
-    {
-        names.push_back(pair.first);
-    }
-    
-    return names;
-}
-
-std::string Shader::LoadShaderSourceFromFile(const std::string& filepath)
-{
-    std::ifstream file(filepath);
-    if (!file.is_open())
-    {
-        HS_LOG(error, "Cannot open shader file: %s", filepath.c_str());
-        return "";
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    file.close();
-
-    return buffer.str();
-}
-
-uint64 Shader::GenerateVariantHash(const std::string& source, const std::vector<std::string>& defines)
-{
-    uint64 hash = 14695981039346656037ULL; // FNV-1a offset basis
-    
-    // Hash source code
-    for (char c : source)
-    {
-        hash ^= static_cast<uint64>(c);
-        hash *= 1099511628211ULL; // FNV-1a prime
-    }
-    
-    // Hash defines
-    for (const std::string& define : defines)
-    {
-        for (char c : define)
-        {
-            hash ^= static_cast<uint64>(c);
-            hash *= 1099511628211ULL;
-        }
-    }
-    
-    return hash;
-}
-
-bool Shader::CompileShaderVariant(ShaderVariant& variant, const std::string& source, ShaderStage stage)
+bool Shader::compileShaderVariant(ShaderVariant& variant, const std::string& source, EShaderStage stage)
 {
     ShaderCrossCompiler compiler;
     if (!compiler.Initialize())
@@ -338,9 +191,9 @@ bool Shader::CompileShaderVariant(ShaderVariant& variant, const std::string& sou
     }
 
     // Setup compilation options
-    ShaderCompileOptions options = _compileOptions;
+    ShaderCompileOption options = _compileOptions;
     options.stage = stage;
-    options.defines = variant.defines;
+    options.macros = variant.macros;
 
     // Create source with defines prepended
     std::string finalSource;
@@ -408,7 +261,7 @@ void Shader::ExtractParametersFromReflection(const ShaderReflectionData& reflect
     }
 }
 
-uint32 Shader::CalculateVariantScore(const ShaderVariant& variant, const std::vector<std::string>& requestedDefines) const
+uint32 Shader::calculateVariantScore(const ShaderVariant& variant, const std::vector<std::string>& requestedDefines) const
 {
     uint32 score = 0;
     

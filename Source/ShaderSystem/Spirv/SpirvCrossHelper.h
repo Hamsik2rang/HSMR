@@ -1,7 +1,8 @@
-#ifndef __HS_SPIRV_CROSS_HELPER_H__
+﻿#ifndef __HS_SPIRV_CROSS_HELPER_H__
 #define __HS_SPIRV_CROSS_HELPER_H__
 
 #include "Precompile.h"
+
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_msl.hpp>
 #include <spirv_cross/spirv_reflect.hpp>
@@ -51,48 +52,29 @@ struct SpirvReflectionData
 class HS_SHADERSYSTEM_API SpirvCrossHelper
 {
 public:
-    SpirvCrossHelper();
-    ~SpirvCrossHelper();
+	static SpirvReflectionData ExtractReflection(const std::vector<uint32>& spirvBytecode);
 
-    bool Initialize();
-    void Shutdown();
+    static std::string CrossCompileToMSL(const std::vector<uint32>& spirvBytecode);
 
-    SpirvReflectionData ExtractReflection(const std::vector<uint32>& spirvBytecode);
+    static std::string CrossCompileToHLSL(const std::vector<uint32>& spirvBytecode);
 
-    std::string CrossCompileToMSL(
-        const std::vector<uint32>& spirvBytecode,
-        bool enableDebugInfo = false
-    );
-
-    std::string CrossCompileToHLSL(
-        const std::vector<uint32>& spirvBytecode,
-        bool enableDebugInfo = false
-    );
-
-    std::string CrossCompileToGLSL(
+    static std::string CrossCompileToGLSL(
         const std::vector<uint32>& spirvBytecode,
         uint32 version = 450,
         bool es = false
     );
 
-    bool IsInitialized() const { return _initialized; }
-
 private:
     bool _initialized = false;
 
-    void ProcessResource(
-        const spirv_cross::Compiler& compiler,
-        const spirv_cross::Resource& resource,
-        SpirvReflectionData& reflectionData
-    );
     
-    void ProcessBufferResource(
+    static void processBufferResource(
         const spirv_cross::Compiler& compiler,
         const spirv_cross::Resource& resource,
         std::vector<SpirvReflectionData::BufferResource>& buffers
     );
     
-    void ProcessImageResource(
+    static void processImageResource(
         const spirv_cross::Compiler& compiler,
         const spirv_cross::Resource& resource,
         std::vector<SpirvReflectionData::ImageResource>& images

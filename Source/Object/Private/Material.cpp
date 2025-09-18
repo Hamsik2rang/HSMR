@@ -1,7 +1,9 @@
 ﻿#include "Object/Material.h"
+
 #include "Object/Shader.h"
 #include "Object/Image.h"
 #include "Core/Log.h"
+
 #include <algorithm>
 
 HS_NS_BEGIN

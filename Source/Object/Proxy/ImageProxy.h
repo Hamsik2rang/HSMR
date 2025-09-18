@@ -1,4 +1,4 @@
-#ifndef __HS_IMAGE_PROXY_H__
+﻿#ifndef __HS_IMAGE_PROXY_H__
 #define __HS_IMAGE_PROXY_H__
 
 #include "Precompile.h"

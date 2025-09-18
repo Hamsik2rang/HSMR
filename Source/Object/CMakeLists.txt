@@ -15,13 +15,11 @@ set(OBJECT_HEADERS
     Material.h
     Mesh.h
     Shader.h
+    ShaderVariant.h
+    ShaderCache.h
     Object.h
     ObjectManager.h
-    ObjectProxy.h
-    ImageProxy.h
-    MeshProxy.h
-    MaterialProxy.h
-    ShaderProxy.h
+    Serializer.h
     ShaderParameterCollection.h
 )
 
@@ -29,21 +27,41 @@ source_group("Public" FILES ${OBJECT_HEADERS})
 list(APPEND TOTAL_FILES ${OBJECT_HEADERS})
 
 set(OBJECT_SOURCES
+    Private/ObjectManager.cpp
+    Private/Serializer.cpp
+    Private/ShaderParameterCollection.cpp
     Private/Image.cpp
     Private/Material.cpp
     Private/Mesh.cpp
     Private/Shader.cpp
+    Private/ShaderVariant.cpp
+    Private/ShaderCache.cpp
     Private/Object.cpp
-    Private/ObjectManager.cpp
-    Private/ObjectProxy.cpp
-    Private/ImageProxy.cpp
-    Private/MeshProxy.cpp
-    Private/MaterialProxy.cpp
-    Private/ShaderProxy.cpp
-    Private/ShaderParameterCollection.cpp
 )
 source_group("Private" FILES ${OBJECT_SOURCES})
 list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
+
+set(PROXY_HEADERS
+    Proxy/ImageProxy.h
+    Proxy/MaterialProxy.h
+    Proxy/MeshProxy.h
+    Proxy/ShaderProxy.h
+    Proxy/ObjectProxy.h
+)
+
+source_group("Proxy\\Public" FILES ${PROXY_HEADERS})
+list(APPEND TOTAL_FILES ${PROXY_HEADERS})
+
+set(PROXY_SOURCES
+    Proxy/Private/ImageProxy.cpp
+    Proxy/Private/MaterialProxy.cpp
+    Proxy/Private/MeshProxy.cpp
+    Proxy/Private/ShaderProxy.cpp
+    Proxy/Private/ObjectProxy.cpp
+    Proxy/Private/MaterialProxy.cpp
+)
+source_group("Proxy\\Private" FILES ${PROXY_SOURCES})
+list(APPEND TOTAL_FILES ${PROXY_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 

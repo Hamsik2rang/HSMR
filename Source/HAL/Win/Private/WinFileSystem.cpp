@@ -76,6 +76,21 @@ DWORD get_createion_disposition(EFileAccess access)
     }
 }
 
+bool FileSystem::Exist(const std::string& absolutePath)
+{
+    std::wstring pathW = FileSystem::Utf8ToUtf16(absolutePath);
+    if (pathW.empty())
+    {
+        //HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
+        return false;
+    }
+    DWORD attributes = GetFileAttributesW(pathW.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES)
+    {
+        return false; // File does not exist or error occurred
+    }
+    return true; // File exists
+}
 
 // 파일 복사 함수
 bool FileSystem::Copy(const std::string& src, const std::string& dst)

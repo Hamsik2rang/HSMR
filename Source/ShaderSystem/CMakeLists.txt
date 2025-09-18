@@ -1,4 +1,4 @@
-set(TARGET_NAME ShaderSystem)
+﻿set(TARGET_NAME ShaderSystem)
 
 option(USE_SHADERSYSTEM ON)
 
@@ -40,7 +40,7 @@ if(USE_SHADERSYSTEM)
 
     set(SHADERSYSTEM_HEADERS
         ShaderCrossCompiler.h
-        ShaderCacheManager.h
+        ShaderSystemDefinition.h
     )
 
     source_group("Public" FILES ${SHADERSYSTEM_HEADERS})
@@ -48,7 +48,7 @@ if(USE_SHADERSYSTEM)
 
     set(SHADERSYSTEM_SOURCES
         Private/ShaderCrossCompiler.cpp
-        Private/ShaderCacheManager.cpp
+        Private/ShaderSystemDefinition.cpp
     )
 
     source_group("Private" FILES ${SHADERSYSTEM_SOURCES})
@@ -100,7 +100,7 @@ if(USE_SHADERSYSTEM)
             "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
             COMMENT "Copying ${TARGET_NAME} library to install folder: ${INSTALL_FOLDER}"
         )
-        
+
         # Copy Slang dylib to install folder
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

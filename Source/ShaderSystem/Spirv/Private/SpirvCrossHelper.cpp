@@ -6,30 +6,6 @@
 
 HS_NS_BEGIN
 
-SpirvCrossHelper::SpirvCrossHelper()
-{}
-
-SpirvCrossHelper::~SpirvCrossHelper()
-{
-	Shutdown();
-}
-
-bool SpirvCrossHelper::Initialize()
-{
-	if (_initialized)
-	{
-		return true;
-	}
-
-	_initialized = true;
-	return true;
-}
-
-void SpirvCrossHelper::Shutdown()
-{
-	_initialized = false;
-}
-
 SpirvReflectionData SpirvCrossHelper::ExtractReflection(const std::vector<uint32>& spirvBytecode)
 {
 	SpirvReflectionData reflectionData;
@@ -39,22 +15,22 @@ SpirvReflectionData SpirvCrossHelper::ExtractReflection(const std::vector<uint32
 
 	for (const auto& resource : resources.uniform_buffers)
 	{
-		ProcessBufferResource(compiler, resource, reflectionData.uniformBuffers);
+		processBufferResource(compiler, resource, reflectionData.uniformBuffers);
 	}
 
 	for (const auto& resource : resources.storage_buffers)
 	{
-		ProcessBufferResource(compiler, resource, reflectionData.storageBuffers);
+		processBufferResource(compiler, resource, reflectionData.storageBuffers);
 	}
 
 	for (const auto& resource : resources.sampled_images)
 	{
-		ProcessImageResource(compiler, resource, reflectionData.sampledImages);
+		processImageResource(compiler, resource, reflectionData.sampledImages);
 	}
 
 	for (const auto& resource : resources.storage_images)
 	{
-		ProcessImageResource(compiler, resource, reflectionData.storageImages);
+		processImageResource(compiler, resource, reflectionData.storageImages);
 	}
 
 	for (const auto& resource : resources.separate_samplers)
@@ -84,7 +60,7 @@ SpirvReflectionData SpirvCrossHelper::ExtractReflection(const std::vector<uint32
 	return reflectionData;
 }
 
-std::string SpirvCrossHelper::CrossCompileToMSL(const std::vector<uint32>& spirvBytecode, bool enableDebugInfo)
+std::string SpirvCrossHelper::CrossCompileToMSL(const std::vector<uint32>& spirvBytecode)
 {
 	if (spirvBytecode.empty())
 	{
@@ -100,11 +76,7 @@ std::string SpirvCrossHelper::CrossCompileToMSL(const std::vector<uint32>& spirv
 	options.enable_frag_depth_builtin = true;
 	options.enable_frag_stencil_ref_builtin = true;
 	options.disable_rasterization = false;
-
-	if (enableDebugInfo)
-	{
-		options.enable_decoration_binding = true;
-	}
+	options.enable_decoration_binding = true;
 
 	compiler.set_msl_options(options);
 
@@ -114,11 +86,11 @@ std::string SpirvCrossHelper::CrossCompileToMSL(const std::vector<uint32>& spirv
 		HS_LOG(error, "Failed to cross-compile SPIR-V to MSL: compile() returned empty string");
 		return "";
 	}
-	
+
 	return mslSource;
 }
 
-std::string SpirvCrossHelper::CrossCompileToHLSL(const std::vector<uint32>& spirvBytecode, bool enableDebugInfo)
+std::string SpirvCrossHelper::CrossCompileToHLSL(const std::vector<uint32>& spirvBytecode)
 {
 	if (spirvBytecode.empty())
 	{
@@ -141,7 +113,7 @@ std::string SpirvCrossHelper::CrossCompileToHLSL(const std::vector<uint32>& spir
 		HS_LOG(error, "Failed to cross-compile SPIR-V to HLSL: compile() returned empty string");
 		return "";
 	}
-	
+
 	return hlslSource;
 }
 
@@ -169,11 +141,11 @@ std::string SpirvCrossHelper::CrossCompileToGLSL(const std::vector<uint32>& spir
 		HS_LOG(error, "Failed to cross-compile SPIR-V to GLSL: compile() returned empty string");
 		return "";
 	}
-	
+
 	return glslSource;
 }
 
-void SpirvCrossHelper::ProcessBufferResource(
+void SpirvCrossHelper::processBufferResource(
 	const spirv_cross::Compiler& compiler,
 	const spirv_cross::Resource& resource,
 	std::vector<SpirvReflectionData::BufferResource>& buffers)
@@ -190,7 +162,7 @@ void SpirvCrossHelper::ProcessBufferResource(
 	buffers.push_back(bufferRes);
 }
 
-void SpirvCrossHelper::ProcessImageResource(
+void SpirvCrossHelper::processImageResource(
 	const spirv_cross::Compiler& compiler,
 	const spirv_cross::Resource& resource,
 	std::vector<SpirvReflectionData::ImageResource>& images)

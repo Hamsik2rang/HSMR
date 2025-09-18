@@ -1,3 +1,9 @@
+﻿//
+//  ShaderParameterCollection.h
+//  HSMR
+//
+//  Created by Yongsik Im on 9/11/25.
+//
 #ifndef __HS_SHADER_PARAMETER_COLLECTION_H__
 #define __HS_SHADER_PARAMETER_COLLECTION_H__
 
