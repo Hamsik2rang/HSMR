@@ -1,4 +1,4 @@
-set(TARGET_NAME Core)
+﻿set(TARGET_NAME Core)
 
 set(TOTAL_FILES)
 

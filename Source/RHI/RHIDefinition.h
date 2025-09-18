@@ -1,4 +1,4 @@
-//
+﻿//
 //  RHIDefinition
 //  HSMR
 //
@@ -54,7 +54,7 @@ public:
 		// Only cleanup if we're the last reference
 		if (_refs == 1)
 		{
-			OnDestroy();  // Virtual method for platform-specific cleanup
+			delete this;
 		}
 	}
 
@@ -79,7 +79,7 @@ public:
 			// Release current resource
 			if (_refs == 1)
 			{
-				OnDestroy();
+				delete this;
 			}
 			
 			// Transfer from other
@@ -108,7 +108,7 @@ public:
 		
 		if (--_refs == 0)
 		{
-			OnDestroy();
+			delete this;
 			return 0;
 		}
 		return _refs;
@@ -121,7 +121,7 @@ public:
 
 protected:
 	// Pure virtual method for platform-specific resource cleanup
-	virtual void OnDestroy() = 0;
+	//virtual void OnDestroy() = 0;
 
 	EType _type;
 	int    _refs = 1;      // Start with 1 reference
@@ -524,10 +524,20 @@ struct VertexAttribute
 	uint32 location;
 };
 
+enum class EShaderLanguage
+{
+	INVALID = 0,
+	SPIRV,
+	MSL,
+	HLSL,
+	//GLSL,
+};;
+
 #ifdef DOMAIN
 #pragma push_macro("DOMAIN")
 #undef DOMAIN
 #endif
+
 enum class EShaderStage
 {
 	NONE = 0x00000000,

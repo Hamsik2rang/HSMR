@@ -2,7 +2,7 @@
 //  MemoryPool.cpp
 //  Core
 //
-//  Implementation of high-performance memory allocators
+//  Implementation of high-performance memory `locators
 //
 #include "Core/Memory/MemoryPool.h"
 #include "Core/Log.h"
@@ -20,21 +20,22 @@ thread_local std::unique_ptr<LinearAllocator> FrameAllocator::t_previousFrame = 
 // DefaultAllocator implementation
 LinearAllocator& DefaultAllocator::GetGlobalPool()
 {
-    static std::once_flag initFlag;
-    std::call_once(initFlag, []() {
-        if (!MemoryManager::Initialize())
-        {
-            HS_LOG(crash, "Failed to initialize global memory pool");
-        }
-    });
-    
-    LinearAllocator* pool = MemoryManager::GetGlobalPool();
-    if (!pool)
-    {
-        HS_LOG(crash, "Global memory pool not initialized");
-    }
-    
-    return *pool;
+	static bool isInitialized = false;
+	if (false == isInitialized)
+	{
+		if (!MemoryManager::Initialize())
+		{
+			HS_LOG(crash, "Failed to initialize global memory pool");
+		}
+	}
+
+	LinearAllocator* pool = MemoryManager::GetGlobalPool();
+	if (!pool)
+	{
+		HS_LOG(crash, "Global memory pool not initialized");
+	}
+
+	return *pool;
 }
 
 HS_NS_END

@@ -57,6 +57,11 @@ if(APPLE)
 else()
     add_compile_definitions(__WINDOWS__)
 
+    # Fix Unicode/UTF-8 encoding issues on Windows MSVC
+    if(MSVC)
+        add_compile_options(/utf-8)
+    endif()
+
     set(HS_DEPS_LIB_DIR "${HS_DEPS_DIR}/lib/win/$<CONFIG>")
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/win/$<CONFIG>")
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")

@@ -2,282 +2,130 @@
 
 #include "ShaderSystem/Slang/SlangCompiler.h"
 #include "ShaderSystem/Spirv/SpirvCrossHelper.h"
+
 #include "Core/Log.h"
+#include "RHI/RHIDefinition.h"
+
 #include <fstream>
 #include <sstream>
-
-namespace HS
-{
-    uint64 HashString(const std::string& str)
-    {
-        uint64 hash = 14695981039346656037ULL;
-        for (char c : str)
-        {
-            hash ^= static_cast<uint64>(c);
-            hash *= 1099511628211ULL;
-        }
-        return hash;
-    }
-}
 
 HS_NS_BEGIN
 
 ShaderCrossCompiler::ShaderCrossCompiler()
 {
+	_slangCompiler = MakeScoped<SlangCompiler>();
 }
 
 ShaderCrossCompiler::~ShaderCrossCompiler()
 {
-    Shutdown();
-}
-
-bool ShaderCrossCompiler::Initialize()
-{
-    if (_initialized)
-    {
-        return true;
-    }
-
-    HS_LOG(info, "Initializing ShaderCrossCompiler...");
-    
-    _initialized = true;
-    return true;
+	Shutdown();
 }
 
 void ShaderCrossCompiler::Shutdown()
 {
-    if (!_initialized)
-    {
-        return;
-    }
+	if (_slangCompiler)
+	{
 
-    HS_LOG(info, "Shutting down ShaderCrossCompiler...");
-    _initialized = false;
+	}
 }
 
-CompiledShader ShaderCrossCompiler::CompileShader(
-    const std::string& sourceCode,
-    const std::string& filename,
-    const ShaderCompileOptions& options)
+bool ShaderCrossCompiler::CompileShader(
+	const ShaderCompileInput& input,
+	ShaderCompileOutput& output)
 {
-    CompiledShader result;
-    
-    if (!_initialized)
-    {
-        HS_LOG(error, "ShaderCrossCompiler not initialized");
-        return result;
-    }
+	if (!_initialized)
+	{
+		HS_LOG(error, "ShaderCrossCompiler not initialized");
+		return false;
+	}
 
-    HS_LOG(info, "Compiling shader: %s", filename.c_str());
+	HS_LOG(info, "Compiling shader: %s", input.shaderName.c_str());
 
-    result = CompileSlangToSpirv(sourceCode, filename, options);
-    
-    if (!result.isValid)
-    {
-        HS_LOG(error, "Failed to compile shader to SPIR-V: %s", filename.c_str());
-        return result;
-    }
+	ShaderCompileOutput spvOutput{};
+	if (compileHLSLToSPV(input, spvOutput))
+	{
+		HS_LOG(crash, "Fail to compile HLSL to SPIR-V: %s", input.shaderName.c_str());
+		return false;
+	}
 
-    if (!CrossCompileSpirv(result.spirvBytecode, options, result))
-    {
-        HS_LOG(error, "Failed to cross-compile SPIR-V: %s", filename.c_str());
-        result.isValid = false;
-        return result;
-    }
+	std::stringstream ss;
+	ss << input.shaderName << "_" << static_cast<uint32>(input.option.stage) << "_" << static_cast<uint32>(input.option.targetLanguage);
 
-    result.reflection = ExtractReflection(result.spirvBytecode);
-
-    std::stringstream ss;
-    ss << filename << "_" << static_cast<uint32>(options.stage) << "_" << static_cast<uint32>(options.targetLanguage);
-    result.hash = HashString(ss.str() + sourceCode);
-
-    HS_LOG(info, "Successfully compiled shader: %s", filename.c_str());
-    return result;
+	HS_LOG(info, "Successfully compiled shader: %s", input.shaderName.c_str());
+	return true;
 }
 
-CompiledShader ShaderCrossCompiler::CompileFromFile(
-    const std::string& filepath,
-    const ShaderCompileOptions& options)
+bool ShaderCrossCompiler::compileHLSLToSPV(
+	const ShaderCompileInput& input,
+	ShaderCompileOutput& output)
 {
-    CompiledShader result;
-    
-    std::ifstream file(filepath);
-    if (!file.is_open())
-    {
-        HS_LOG(error, "Failed to open shader file: %s", filepath.c_str());
-        return result;
-    }
+	SlangCompiler slangCompiler;
+	if (!slangCompiler.Initialize())
+	{
+		HS_LOG(crash, "Failed to initialize Slang compiler");
+		return false;
+	}
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    file.close();
+	if (slangCompiler.CompileToSpirv(input, output))
+	{
+		HS_LOG(crash, "Slang compilation to SPIR-V failed: %s", input.shaderName.c_str());
+		return false;
+	}
 
-    std::string sourceCode = buffer.str();
-    return CompileShader(sourceCode, filepath, options);
+	return true;
 }
 
-CompiledShader ShaderCrossCompiler::CompileSlangToSpirv(
-    const std::string& sourceCode,
-    const std::string& filename,
-    const ShaderCompileOptions& options)
+bool ShaderCrossCompiler::crossCompileSpirv(const std::vector<uint32>& spirvBytecode, EShaderLanguage targetLanguage, ShaderCompileOutput& output)
 {
-    CompiledShader result;
-    
-    SlangCompiler slangCompiler;
-    if (!slangCompiler.Initialize())
-    {
-        HS_LOG(crash, "Failed to initialize Slang compiler");
-        return result;
-    }
+	if (targetLanguage == EShaderLanguage::SPIRV)
+	{
+		return true;
+	}
+	std::string outputCode{};
+	switch (targetLanguage)
+	{
+	case EShaderLanguage::MSL:
+		outputCode = SpirvCrossHelper::CrossCompileToMSL(spirvBytecode);
+		break;
 
-    SlangCompileRequest request;
-    request.sourceCode = sourceCode;
-    request.filename = filename;
-    request.entryPoint = options.entryPoint;
-    request.stage = static_cast<SlangStage>(static_cast<uint32>(options.stage));
-    request.defines = options.defines;
-    request.includePaths = options.includePaths;
-    request.enableDebugInfo = options.enableDebugInfo;
-    request.enableOptimization = options.enableOptimization;
 
-    SlangCompileResult slangResult = slangCompiler.CompileToSpirv(request);
-    
-    if (!slangResult.success)
-    {
-        HS_LOG(error, "Slang compilation failed: %s", slangResult.diagnostics.c_str());
-        return result;
-    }
+	default:
+		HS_LOG(error, "Unsupported target shader language: %s", ShaderSystemUtil::GetShaderLanguageString(targetLanguage).c_str());
+		return false;
+	}
 
-    if (!slangResult.diagnostics.empty())
-    {
-        HS_LOG(warning, "Slang compilation warnings: %s", slangResult.diagnostics.c_str());
-    }
+	if (0 == output.sourceCodeLen)
+	{
+		HS_LOG(error, "Cross-compilation resulted in empty source code");
+		return false;
+	}
 
-    result.spirvBytecode = std::move(slangResult.spirvBytecode);
-    result.isValid = true;
-    
-    return result;
+	return true;
 }
 
-bool ShaderCrossCompiler::CrossCompileSpirv(
-    const std::vector<uint32>& spirvBytecode,
-    const ShaderCompileOptions& options,
-    CompiledShader& outShader)
+ShaderCompileOption ShaderCrossCompiler::CreateDefaultOptions(EShaderStage stage)
 {
-    if (options.targetLanguage == ShaderLanguage::SPIRV)
-    {
-        return true;
-    }
-
-    SpirvCrossHelper helper;
-    if (!helper.Initialize())
-    {
-        HS_LOG(crash, "Failed to initialize SPIRV-Cross helper");
-        return false;
-    }
-
-    switch (options.targetLanguage)
-    {
-    case ShaderLanguage::MSL:
-        outShader.compiledSource = helper.CrossCompileToMSL(spirvBytecode, options.enableDebugInfo);
-        break;
-        
-    case ShaderLanguage::HLSL:
-        outShader.compiledSource = helper.CrossCompileToHLSL(spirvBytecode, options.enableDebugInfo);
-        break;
-        
-    default:
-        HS_LOG(error, "Unsupported target shader language: %u", static_cast<uint32>(options.targetLanguage));
-        return false;
-    }
-
-    if (outShader.compiledSource.empty())
-    {
-        HS_LOG(error, "Cross-compilation resulted in empty source code");
-        return false;
-    }
-
-    return true;
+	ShaderCompileOption options;
+	options.stage = stage;
+	options.targetLanguage = EShaderLanguage::SPIRV;
+	options.entryPoint = "main";
+	options.debugInfoLevel = ShaderDebugInfoLevel::NONE;
+	options.optimizationLevel = ShaderOptimizationLevel::MAXIMAL;
+	return options;
 }
 
-ShaderReflectionData ShaderCrossCompiler::ExtractReflection(const std::vector<uint32>& spirvBytecode)
+ShaderCompileOption ShaderCrossCompiler::CreateVulkanOptions(EShaderStage stage)
 {
-    ShaderReflectionData reflectionData;
-    
-    SpirvCrossHelper helper;
-    if (!helper.Initialize())
-    {
-        HS_LOG(error, "Failed to initialize SPIRV-Cross helper for reflection");
-        return reflectionData;
-    }
-
-    SpirvReflectionData spirvReflection = helper.ExtractReflection(spirvBytecode);
-    
-    for (const auto& buffer : spirvReflection.uniformBuffers)
-    {
-        ShaderReflectionData::BufferBinding binding;
-        binding.name = buffer.name;
-        binding.binding = buffer.binding;
-        binding.size = buffer.size;
-        binding.stage = ShaderStage::Vertex;
-        reflectionData.uniformBuffers.push_back(binding);
-    }
-    
-    for (const auto& buffer : spirvReflection.storageBuffers)
-    {
-        ShaderReflectionData::BufferBinding binding;
-        binding.name = buffer.name;
-        binding.binding = buffer.binding;
-        binding.size = buffer.size;
-        binding.stage = ShaderStage::Vertex;
-        reflectionData.storageBuffers.push_back(binding);
-    }
-    
-    for (const auto& image : spirvReflection.sampledImages)
-    {
-        ShaderReflectionData::TextureBinding binding;
-        binding.name = image.name;
-        binding.binding = image.binding;
-        binding.dimension = static_cast<uint32>(image.imageType.dim);
-        binding.stage = ShaderStage::Vertex;
-        reflectionData.textures.push_back(binding);
-    }
-    
-    for (const auto& sampler : spirvReflection.samplers)
-    {
-        ShaderReflectionData::SamplerBinding binding;
-        binding.name = sampler.name;
-        binding.binding = sampler.binding;
-        binding.stage = ShaderStage::Vertex;
-        reflectionData.samplers.push_back(binding);
-    }
-
-    return reflectionData;
+	ShaderCompileOption options = CreateDefaultOptions(stage);
+	options.targetLanguage = EShaderLanguage::SPIRV;
+	return options;
 }
 
-ShaderCompileOptions ShaderCrossCompiler::CreateDefaultOptions(ShaderStage stage)
+ShaderCompileOption ShaderCrossCompiler::CreateMetalOptions(EShaderStage stage)
 {
-    ShaderCompileOptions options;
-    options.stage = stage;
-    options.targetLanguage = ShaderLanguage::SPIRV;
-    options.entryPoint = "main";
-    options.enableDebugInfo = false;
-    options.enableOptimization = true;
-    return options;
-}
-
-ShaderCompileOptions ShaderCrossCompiler::CreateVulkanOptions(ShaderStage stage)
-{
-    ShaderCompileOptions options = CreateDefaultOptions(stage);
-    options.targetLanguage = ShaderLanguage::SPIRV;
-    return options;
-}
-
-ShaderCompileOptions ShaderCrossCompiler::CreateMetalOptions(ShaderStage stage)
-{
-    ShaderCompileOptions options = CreateDefaultOptions(stage);
-    options.targetLanguage = ShaderLanguage::MSL;
-    return options;
+	ShaderCompileOption options = CreateDefaultOptions(stage);
+	options.targetLanguage = EShaderLanguage::MSL;
+	return options;
 }
 
 HS_NS_END

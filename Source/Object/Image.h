@@ -35,7 +35,7 @@ public:
 
     ~Image() override;
 
-    HS_FORCEINLINE uint8* GetRawData() const { return _rawData.data(); }
+    HS_FORCEINLINE uint8* GetRawData() const { return const_cast<uint8*>(_rawData.data()); }
     HS_FORCEINLINE const std::vector<uint8>& GetRawDataVector() const { return _rawData; }
     HS_FORCEINLINE size_t GetRawDataSize() const { return _rawData.size(); }
     HS_FORCEINLINE uint16 GetWidth() const { return _width; }
@@ -45,7 +45,7 @@ public:
     HS_FORCEINLINE void SetType(ImageType type) { _type = type; }
 
 private:
-    std::vector<uint8> _rawData;  // RAII-safe container instead of raw pointer
+    std::vector<uint8> _rawData;
 
     ImageType _type;
     uint16 _width;
