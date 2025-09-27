@@ -1,4 +1,4 @@
-//
+﻿//
 //  SystemContext.h
 //  HAL
 //
@@ -24,7 +24,7 @@ public:
     
     std::string executablePath = "";
     std::string executableDirectory = "";
-    std::string resourceDirectory = "";
+    std::string assetDirectory = "";
 
 private:
     

@@ -23,10 +23,7 @@ ShaderCrossCompiler::~ShaderCrossCompiler()
 
 void ShaderCrossCompiler::Shutdown()
 {
-	if (_slangCompiler)
-	{
 
-	}
 }
 
 bool ShaderCrossCompiler::CompileShader(
@@ -87,7 +84,6 @@ bool ShaderCrossCompiler::crossCompileSpirv(const std::vector<uint32>& spirvByte
 	case EShaderLanguage::MSL:
 		outputCode = SpirvCrossHelper::CrossCompileToMSL(spirvBytecode);
 		break;
-
 
 	default:
 		HS_LOG(error, "Unsupported target shader language: %s", ShaderSystemUtil::GetShaderLanguageString(targetLanguage).c_str());

@@ -15,7 +15,7 @@ HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
 
 GUIContext::GUIContext(EngineContext* enginContext)
 	: _engineContext(enginContext)
-	, _defaultLayoutPath(SystemContext::Get()->resourceDirectory + "imgui.ini")
+	, _defaultLayoutPath(SystemContext::Get()->assetDirectory + "imgui.ini")
 	, _font{ nullptr }
 	, _context(nullptr)
 {}
@@ -49,7 +49,7 @@ void GUIContext::Initialize()
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-	std::string fontName = "Font/OpenSans-Regular.ttf";
+	std::string fontName = "Fonts/OpenSans-Regular.ttf";
 	SetFont(fontName, 18.0f);
 }
 void GUIContext::NextFrame()
@@ -157,7 +157,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->resourceDirectory + fontPath).c_str(), 18.0f);
+	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->assetDirectory + fontPath).c_str(), 18.0f);
 
 	io.Fonts->Build();
 }

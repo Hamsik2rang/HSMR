@@ -1,4 +1,4 @@
-//
+﻿//
 //  main.cpp
 //  HSMR
 //
@@ -23,7 +23,7 @@
 #define UNICODE
 #endif 
 
-#include "Core/Platform/Windows/PlatformApplicationWindows.h"
+//#include "HAL/Windows/Win.h"
 
 
 #endif

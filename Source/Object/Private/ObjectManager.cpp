@@ -42,7 +42,7 @@ bool ObjectManager::Initialize()
 	SystemContext* sysContext = SystemContext::Get();
 	if (sysContext)
 	{
-		s_resourcePath = sysContext->resourceDirectory;
+		s_resourcePath = sysContext->assetDirectory;
 		if (!s_resourcePath.empty() && s_resourcePath.back() != HS_DIR_SEPERATOR)
 		{
 			s_resourcePath += HS_DIR_SEPERATOR;

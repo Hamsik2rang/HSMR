@@ -20,10 +20,13 @@ message(STATUS "HS_PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 set(HS_SRC_DIR ${HS_ROOT_DIR}/Source)
 message(STATUS "HS_SRC_DIR: ${HS_SRC_DIR}")
 
-set(HS_RES_DIR ${HS_ROOT_DIR}/Resource)
-message(STATUS "HS_RES_DIR: ${HS_RES_DIR}")
+set(HS_ASSET_DIR ${HS_ROOT_DIR}/Assets)
+message(STATUS "HS_ASSET_DIR: ${HS_ASSET_DIR}")
 
-# set(HS_RES_SHADER_DIR ${HS_RES_DIR}/Shader)
+set(HS_SHADER_SRC_DIR ${HS_ASSET_DIR}/Shaders)
+message(STATUS "HS_SHADER_SRC_DIR: ${HS_SHADER_SRC_DIR}")
+
+# set(HS_RES_SHADER_DIR ${HS_ASSET_DIR}/Shader)
 # message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
 set(HS_DEPS_DIR ${HS_ROOT_DIR}/Dependency)
 message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
@@ -53,6 +56,7 @@ if(APPLE)
 
     set(HS_DEPS_LIB_DIR "${HS_DEPS_DIR}/lib/mac/$<CONFIG>")
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/mac/$<CONFIG>")
+    set(HS_DEPS_BIN_DIR "${HS_DEPS_DIR}/bin/mac/$<CONFIG>")
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 else()
     add_compile_definitions(__WINDOWS__)
@@ -64,6 +68,7 @@ else()
 
     set(HS_DEPS_LIB_DIR "${HS_DEPS_DIR}/lib/win/$<CONFIG>")
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/win/$<CONFIG>")
+    set(HS_DEPS_BIN_DIR "${HS_DEPS_DIR}/bin/win")
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 endif()
 
@@ -124,3 +129,35 @@ add_custom_target(
 )
 
 set_property(TARGET RegenerateCMake PROPERTY FOLDER "Commands")
+
+add_custom_target(CleanInstall
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning install directory..."
+    COMMAND ${CMAKE_COMMAND} -E echo "Path: ${INSTALL_FOLDER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}/Assets"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "Clean complete!"
+    COMMENT "[CLEAN] Removing all installed files"
+    VERBATIM
+)
+
+set_property(TARGET CleanInstall PROPERTY FOLDER "Commands")
+
+add_custom_target(CleanInstallShaders
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMAND ${CMAKE_COMMAND} -E echo "Clean reinstall of shaders..."
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}/Assets/Shaders"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}/bin"
+    COMMAND ${CMAKE_COMMAND} -E echo "Old files removed. Installing fresh..."
+    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component ShaderCompiler --config $<CONFIG>
+    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component Shaders --config $<CONFIG>
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMAND ${CMAKE_COMMAND} -E echo "Shaders reinstalled successfully!"
+    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
+    COMMENT "[CLEAN+INSTALL] Complete shader refresh"
+    VERBATIM
+)
+
+set_property(TARGET CleanInstallShaders PROPERTY FOLDER "Commands")

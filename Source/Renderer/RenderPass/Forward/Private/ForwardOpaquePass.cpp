@@ -7,6 +7,7 @@
 #include "RHI/CommandHandle.h"
 
 #include "Object/Material.h"
+#include "Object/Mesh.h"
 
 #include "Object/ObjectManager.h"
 
@@ -161,7 +162,7 @@ void ForwardOpaquePass::createResourceHandles()
 #ifdef __APPLE__
 	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
 #elif __WINDOWS__
-	std::string libPath = SystemContext::Get()->resourceDirectory + std::string("Shader\\HLSL\\Basic.vert.spv");
+	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.vert.spv");
 #endif
 	ShaderInfo vsInfo{};
 	vsInfo.entryName = "main";
@@ -172,7 +173,7 @@ void ForwardOpaquePass::createResourceHandles()
 		HS_LOG(crash, "Shader is nullptr");
 	}
 #ifdef __WINDOWS__
-	libPath = SystemContext::Get()->resourceDirectory + std::string("Shader\\HLSL\\Basic.frag.spv");
+	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.frag.spv");
 #endif
 	ShaderInfo fsInfo{};
 	fsInfo.entryName = "main";
