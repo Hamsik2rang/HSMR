@@ -1,4 +1,4 @@
-#include "HAL/NativeWindow.h"
+﻿#include "HAL/NativeWindow.h"
 
 #if defined(__WINDOWS__)
 #include "HAL/Win/WinWindow.h"
@@ -17,6 +17,10 @@ static std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_event
 bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow) 
 {
 	bool result = CreateNativeWindowInternal(name, width, height, flag, outNativeWindow);
+
+	assert(s_eventQueueTable.find(&outNativeWindow) == s_eventQueueTable.end());
+
+	s_eventQueueTable.insert(std::make_pair(&outNativeWindow, std::queue<EWindowEvent>()));
 
 	return result;
 }

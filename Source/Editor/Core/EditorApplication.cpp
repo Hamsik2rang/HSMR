@@ -20,6 +20,8 @@ EditorApplication::EditorApplication(const char* appName, EngineContext* engineC
     , _guiContext(nullptr)
     , _deltaTime(0.0f)
 {
+    
+
     _guiContext = new GUIContext(engineContext);
     _guiContext->Initialize();
 
