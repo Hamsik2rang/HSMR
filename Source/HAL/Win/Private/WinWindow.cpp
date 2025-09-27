@@ -182,7 +182,7 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
 
 	//static_assert(windowRect.right - windowRect.left == width, "Window width is not same with surface width.");
 	//static_assert(windowRect.bottom - windowRect.top == height, "Window height is not same with surface height.");
-	if (windowRect.right - windowRect.left == width || windowRect.bottom - windowRect.top == height)
+	if (!(windowRect.right - windowRect.left == width && windowRect.bottom - windowRect.top == height))
 	{
 		assert(false);
 	}
