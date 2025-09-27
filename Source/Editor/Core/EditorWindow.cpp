@@ -1,4 +1,4 @@
-#include "Editor/Core/EditorWindow.h"
+﻿#include "Editor/Core/EditorWindow.h"
 
 #include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
 #include "RHI/Swapchain.h"
@@ -127,7 +127,7 @@ bool EditorWindow::onInitialize()
 
 	ImGuiExtension::InitializeBackend(_swapchain);
 
-	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
+	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE));
 
 	_renderTargets.resize(_swapchain->GetMaxFrameCount());
 
@@ -172,7 +172,7 @@ void EditorWindow::onNextFrame()
 
 	_renderer->NextFrame(_swapchain);
 
-	Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
+	Resolution resolution = static_cast<ScenePanel*>(_scenePanel.get())->GetResolution();
 	uint32     width = static_cast<uint32>(resolution.width / _nativeWindow.scale);
 	uint32     height = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 

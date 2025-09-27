@@ -29,7 +29,7 @@ bool SystemContext::Initialize()
 	}
 
 	executableDirectory = FileSystem::GetDirectory(executablePath);
-	resourceDirectory = executableDirectory + "Resource" + HS_DIR_SEPERATOR;
+	assetDirectory = executableDirectory + "Assets" + HS_DIR_SEPERATOR;
 
 	return true;
 }
