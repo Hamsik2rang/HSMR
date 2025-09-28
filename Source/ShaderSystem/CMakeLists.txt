@@ -87,7 +87,7 @@ add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 add_dependencies(${TARGET_NAME} HAL Core)
 
-target_Link_libraries(${TARGET_NAME} PRIVATE Core ${SLANG_LIB} ${SPIRV_CROSS})
+target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core ${SLANG_LIB} ${SPIRV_CROSS})
 
 # if(APPLE)
 # # On macOS, copy the .dylib file
@@ -146,5 +146,4 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_SHADERSYSTEM
     HS_SHADERSYSTEM_API_EXPORT
-    HS_API_EXPORT
 )

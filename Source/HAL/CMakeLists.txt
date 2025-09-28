@@ -112,7 +112,6 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_HAL
-    HS_API_EXPORT
 )
 
 install(TARGETS ${TARGET_NAME}

@@ -50,7 +50,7 @@ HS_NS_BEGIN
     } while (0)
 
 
-class RHIUtilityVulkan
+class HS_RHI_API RHIUtilityVulkan
 {
 public:
 	static VkFormat ToPixelFormat(EPixelFormat format);

@@ -63,9 +63,9 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI Object Geometry Physics)
+add_dependencies(${TARGET_NAME} HAL Core RHI ShaderSystem Resource Geometry Physics)
 
-target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI Object Geometry Physics)
+target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ShaderSystem Resource Geometry Physics)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -77,16 +77,14 @@ target_compile_definitions(${TARGET_NAME}
 
     HS_RENDERER_API_EXPORT
 
-    HS_OBJECT_API_IMPORT
+    HS_HAL_API_IMPORT
+    HS_CORE_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_SHADERSYSTEM_API_IMPORT
+    HS_RESOURCE_API_IMPORT
     HS_GEOMETRY_API_IMPORT
     HS_PHYSICS_API_IMPORT
 )
-
-if(USE_SHADERSYSTEM)
-    add_dependencies(${TARGET_NAME} ShaderSystem)
-    target_link_libraries(${TARGET_NAME} PRIVATE ShaderSystem)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HS_SHADERSYSTEM_API_IMPORT)
-endif()
 
 if(APPLE)
     # On macOS, copy the .dylib file

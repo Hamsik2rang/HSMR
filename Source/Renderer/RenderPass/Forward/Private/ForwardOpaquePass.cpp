@@ -6,10 +6,10 @@
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 
-#include "Object/Material.h"
-#include "Object/Mesh.h"
+#include "Resource/Material.h"
+#include "Resource/Mesh.h"
 
-#include "Object/ObjectManager.h"
+#include "Resource/ObjectManager.h"
 
 HS_NS_BEGIN
 

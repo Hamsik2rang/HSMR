@@ -22,9 +22,9 @@ list(APPEND TOTAL_FILES ${ENGINE_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} Renderer Object ECS)
+add_dependencies(${TARGET_NAME} ShaderSystem Renderer Resource ECS)
 
-target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI Renderer Object ECS)
+target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI Renderer ShaderSystem Resource ECS)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -35,14 +35,15 @@ target_compile_definitions(${TARGET_NAME}
     HS_ENGINE
     HS_ENGINE_API_EXPORT
 
-    HS_RENDERER_API_IMPORT
+    HS_HAL_API_IMPORT
+    HS_CORE_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_SHADERSYSTEM_API_IMPORT
     HS_RESOURCE_API_IMPORT
+    HS_RENDERER_API_IMPORT
+    HS_ECS_API_IMPORT
+    HS_ANIMATION_API_IMPORT
 )
-
-if(USE_SHADERSYSTEM)
-    add_dependencies(${TARGET_NAME} ShaderSystem)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HS_SHADERSYSTEM_API_IMPORT)
-endif()
 
 if(APPLE)
     # On macOS, copy the .dylib file

@@ -17,7 +17,7 @@ namespace HS { class RHIFramebuffer; }
 
 HS_NS_BEGIN
 
-class Swapchain : public RHIHandle
+class HS_RHI_API Swapchain : public RHIHandle
 {
 public:
     Swapchain(const SwapchainInfo& info);
