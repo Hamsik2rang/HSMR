@@ -1,4 +1,4 @@
-set(TARGET_NAME RHI)
+﻿set(TARGET_NAME RHI)
 
 set(TOTAL_FILES)
 
@@ -86,7 +86,7 @@ else()
     list(APPEND TOTAL_FILES ${RHI_METAL_SOURCES})
 endif()
 
-add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
+add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
     set(VULKAN)
@@ -95,6 +95,10 @@ else()
     set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
     set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
 endif()
+
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+    HAL Core)
 
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
@@ -116,14 +120,10 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RHI
-    HS_API_EXPORT
-    HS_RESOURCE_API_IMPORT
+    HS_RHI_API_EXPORT
+    HS_HAL_API_IMPORT
+    HS_CORE_API_IMPORT
 )
-
-if(USE_SHADERSYSTEM)
-    add_dependencies(${TARGET_NAME} ShaderSystem)
-    target_compile_definitions(${TARGET_NAME} PRIVATE HS_SHADERSYSTEM_API_IMPORT)
-endif()
 
 install(TARGETS ${TARGET_NAME}
     ARCHIVE DESTINATION "${INSTALL_FOLDER}/dev/lib"

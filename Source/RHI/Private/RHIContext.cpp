@@ -1,4 +1,4 @@
-#include "RHI/RHIContext.h"
+﻿#include "RHI/RHIContext.h"
 
 #ifdef __WINDOWS__
 #include "RHI/Vulkan/VulkanContext.h"
@@ -8,7 +8,7 @@
 
 HS_NS_BEGIN
 
-RHIContext* g_pRHIContext = nullptr;
+HS_RHI_API RHIContext* g_pRHIContext = nullptr;
 
 RHIContext* RHIContext::Create(ERHIPlatform platform)
 {

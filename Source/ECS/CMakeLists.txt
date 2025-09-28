@@ -66,7 +66,7 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI Object Renderer)
+add_dependencies(${TARGET_NAME} HAL Core RHI Resource Renderer)
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
@@ -80,9 +80,8 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_ECS
-    HS_ECS_API_EXPORT
-
-    HS_OBJECT_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_RESOURCE_API_IMPORT
     HS_RENDERER_API_IMPORT
 )
 

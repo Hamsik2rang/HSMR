@@ -13,7 +13,7 @@
 
 HS_NS_BEGIN
 
-class RHITexture : public RHIHandle
+class HS_RHI_API RHITexture : public RHIHandle
 {
 public:
     ~RHITexture() override;
@@ -24,7 +24,7 @@ protected:
     RHITexture(const char* name, const TextureInfo& info);
 };
 
-class RHISampler : public RHIHandle
+class HS_RHI_API RHISampler : public RHIHandle
 {
 public:
     ~RHISampler() override;
@@ -35,7 +35,7 @@ protected:
     RHISampler(const char* name, const SamplerInfo& info);
 };
 
-class RHIBuffer : public RHIHandle
+class HS_RHI_API RHIBuffer : public RHIHandle
 {
 public:
     ~RHIBuffer() override;
@@ -49,7 +49,7 @@ protected:
     RHIBuffer(const char* name, const BufferInfo& info);
 };
 
-class RHIShader : public RHIHandle
+class HS_RHI_API RHIShader : public RHIHandle
 {
 public:
     ~RHIShader() override;
@@ -60,7 +60,7 @@ protected:
     RHIShader(const char* name, const ShaderInfo& info) noexcept;
 };
 
-class RHIResourceLayout : public RHIHandle
+class HS_RHI_API RHIResourceLayout : public RHIHandle
 {
 public:
     ~RHIResourceLayout() override;
@@ -71,7 +71,7 @@ protected:
     RHIResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount);
 };
 
-class RHIResourceSet : public RHIHandle
+class HS_RHI_API RHIResourceSet : public RHIHandle
 {
 public:
     ~RHIResourceSet() override;
@@ -82,7 +82,7 @@ protected:
     RHIResourceSet(const char* name);
 };
 
-class RHIResourceSetPool : public RHIHandle
+class HS_RHI_API RHIResourceSetPool : public RHIHandle
 {
 public:
     ~RHIResourceSetPool() override;

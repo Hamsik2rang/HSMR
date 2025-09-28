@@ -3,7 +3,7 @@
 #include "Core/Log.h"
 #include "HAL/SystemContext.h"
 #include "HAL/NativeWindow.h"
-#include "Object/ObjectManager.h"
+#include "Resource/ObjectManager.h"
 
 
 #include "Editor/GUI/GUIContext.h"
@@ -20,8 +20,6 @@ EditorApplication::EditorApplication(const char* appName, EngineContext* engineC
     , _guiContext(nullptr)
     , _deltaTime(0.0f)
 {
-    
-
     _guiContext = new GUIContext(engineContext);
     _guiContext->Initialize();
 

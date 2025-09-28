@@ -68,28 +68,53 @@ typedef uint64_t uint64;
 #endif
 
 #if defined(__APPLE__)
+    #if defined(HS_HAL_API_EXPORT)
+        #define HS_HAL_API __attribute__((__visibility__("default")))
+    #elif defined(HS_HAL_API_IMPORT)
+        #define HS_HAL_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_HAL_API  
+    #endif
+
+
+    #if defined(HS_CORE_API_EXPORT)
+        #define HS_CORE_API __attribute__((__visibility__("default")))
+    #elif defined(HS_CORE_API_IMPORT)
+        #define HS_CORE_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_CORE_API
+    #endif
+
+    #if defined(HS_RHI_API_EXPORT)
+        #define HS_RHI_API __attribute__((__visibility__("default")))
+    #elif defined(HS_RHI_API_IMPORT)
+        #define HS_RHI_API __attribute__((__visibility__("default")))
+    #else
+        #define HS_RHI_API
+    #endif
+
     #if defined(HS_SHADERSYSTEM_API_EXPORT)
         #define HS_SHADERSYSTEM_API __attribute__((__visibility__("default")))
     #else
         #define HS_SHADERSYSTEM_API
     #endif
 
-    #if defined(HS_OBJECT_API_EXPORT)
-        #define HS_OBJECT_API __attribute__((__visibility__("default")))
+    #if defined(HS_RESOURCE_API_EXPORT)
+        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
     #else    
-        #define HS_OBJECT_API 
+        #define HS_RESOURCE_API 
     #endif
 
     #if defined(HS_GEOMETRY_API_EXPORT)
-        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
+        #define HS_GEOMETRY_API __attribute__((__visibility__("default")))
     #else
-        #define HS_RESOURCE_API
+        #define HS_GEOMETRY_API
     #endif
 
     #if defined(HS_PHYSICS_API_EXPORT)
-        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
+        #define HS_PHYSICS_API __attribute__((__visibility__("default")))
     #else
-        #define HS_RESOURCE_API
+        #define HS_PHYSICS_API
     #endif
 
     #if defined(HS_RENDERER_API_EXPORT)
@@ -115,7 +140,32 @@ typedef uint64_t uint64;
     #else
         #define HS_EDITOR_API
     #endif
+
 #else
+    #if defined(HS_HAL_API_EXPORT)
+        #define HS_HAL_API __declspec(dllexport)
+    #elif defined(HS_HAL_API_IMPORT)
+        #define HS_HAL_API __declspec(dllimport)
+    #else
+        #define HS_HAL_API
+    #endif
+
+    #if defined(HS_CORE_API_EXPORT)
+        #define HS_CORE_API __declspec(dllexport)
+    #elif defined(HS_CORE_API_IMPORT)
+        #define HS_CORE_API __declspec(dllimport)
+    #else
+        #define HS_CORE_API
+    #endif
+
+    #if defined(HS_RHI_API_EXPORT)
+        #define HS_RHI_API __declspec(dllexport)
+    #elif defined(HS_RHI_API_IMPORT)
+        #define HS_RHI_API __declspec(dllimport)
+    #else
+        #define HS_RHI_API
+    #endif
+
     #if defined(HS_SHADERSYSTEM_API_EXPORT)
         #define HS_SHADERSYSTEM_API __declspec(dllexport)
     #elif defined (HS_SHADERSYSTEM_API_IMPORT)
@@ -124,12 +174,12 @@ typedef uint64_t uint64;
         #define HS_SHADERSYSTEM_API
     #endif
 
-    #if defined(HS_OBJECT_API_EXPORT)
-        #define HS_OBJECT_API __declspec(dllexport)
-    #elif defined(HS_OBJECT_API_IMPORT)
-        #define HS_OBJECT_API __declspec(dllimport)
+    #if defined(HS_RESOURCE_API_EXPORT)
+        #define HS_RESOURCE_API __declspec(dllexport)
+    #elif defined(HS_RESOURCE_API_IMPORT)
+        #define HS_RESOURCE_API __declspec(dllimport)
     #else
-        #define HS_OBJECT_API
+        #define HS_RESOURCE_API
     #endif
 
     #if defined(HS_GEOMETRY_API_EXPORT)

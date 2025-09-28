@@ -17,7 +17,7 @@ list(APPEND TOTAL_FILES ${PHYSICS_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL Core Object)
+add_dependencies(${TARGET_NAME} HAL Core Resource)
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
@@ -33,11 +33,11 @@ target_compile_definitions(${TARGET_NAME}
     HS_PHYSICS
 
     HS_PHYSICS_API_EXPORT
-
-    HS_OBJECT_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_RESOURCE_API_IMPORT
 )
 
-target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core Object)
+target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core Resource)
 
 if(APPLE)
     # On macOS, copy the .dylib file

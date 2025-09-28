@@ -18,7 +18,7 @@
 
 HS_NS_BEGIN
 
-class RHIContext
+class HS_RHI_API RHIContext
 {
 public:
 	RHIContext() = default;
@@ -83,6 +83,8 @@ public:
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();
 };
+
+extern HS_RHI_API RHIContext* g_pRHIContext;
 
 HS_NS_END
 

@@ -160,11 +160,14 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    HAL Core RHI Object Renderer Geometry Physics Engine ECS
+    HAL Core RHI Resource Renderer Geometry Physics Engine ECS ShaderSystem
 )
 
-if(USE_SHADERSYSTEM)
-    target_link_libraries(${TARGET_NAME} PRIVATE ShaderSystem)
+if(WIN32)
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        ${HS_DEPS_LIB_DIR}/vulkan-1.lib
+    )
 endif()
 
 target_include_directories(${TARGET_NAME}
@@ -177,11 +180,7 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI Object Renderer Geometry Physics ECS)
-
-if(USE_SHADERSYSTEM)
-    add_dependencies(${TARGET_NAME} ShaderSystem)
-endif()
+add_dependencies(${TARGET_NAME} HAL Core RHI Resource ShaderSystem Renderer Geometry Physics ECS)
 
 target_compile_definitions(${TARGET_NAME}
     PUBLIC
@@ -193,10 +192,13 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_EDITOR
     HS_EDITOR_API_EXPORT
-    HS_API_EXPORT
+    HS_HAL_API_IMPORT
+    HS_CORE_API_IMPORT
+    HS_RHI_API_IMPORT
     HS_RESOURCE_API_IMPORT
     HS_SHADERSYSTEM_API_IMPORT
     HS_RENDERER_API_IMPORT
+    HS_ENGINE_API_IMPORT
     HS_PHYSICS_API_IMPORT
     HS_ECS_API_IMPORT
 )

@@ -67,6 +67,8 @@ bool SlangCompiler::Initialize()
 		HS_LOG(crash, "Failed to create Slang global session: %d", static_cast<int>(result));
 		return false;
 	}
+
+	return true;
 }
 
 void SlangCompiler::Shutdown()

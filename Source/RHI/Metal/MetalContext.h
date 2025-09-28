@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class MetalContext : public RHIContext
+class HS_RHI_API MetalContext : public RHIContext
 {
 public:
     MetalContext() {}

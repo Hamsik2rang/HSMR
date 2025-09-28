@@ -17,7 +17,7 @@
 
 HS_NS_BEGIN
 
-class VulkanContext final : public RHIContext
+class HS_RHI_API VulkanContext final : public RHIContext
 {
 public:
 	VulkanContext() = default;
