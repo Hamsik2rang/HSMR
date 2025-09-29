@@ -29,14 +29,6 @@ public:
 	HS_FORCEINLINE RHIFramebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
 	HS_FORCEINLINE uint32		  GetCurrentImageIndex() const { return _curImageIndex; }
 
-	bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
-	void destroySwapchainVK();
-
-	void setFramebuffers();
-	void getSwapchainImages();
-
-	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-
 	VkSwapchainKHR handle = VK_NULL_HANDLE;
 
 	VkSurfaceKHR surface;
@@ -53,6 +45,15 @@ public:
 	}syncObjects;
 
 private:
+	bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
+	void destroySwapchainVK();
+
+	void setRenderPass();
+	void setFramebuffers();
+	void getSwapchainImages();
+
+	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+
 	uint8 _frameIndex = static_cast<uint8>(-1);
 	uint8 _maxFrameCount = 3;
 	uint32 _curImageIndex = static_cast<uint32>(-1);
