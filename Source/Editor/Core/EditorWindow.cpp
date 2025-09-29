@@ -127,8 +127,10 @@ bool EditorWindow::onInitialize()
 	scInfo.useDepth = false;
 	scInfo.useMSAA = false;
 	scInfo.useStencil = false;
+	
+	_rhiContext = RHIContext::Get();
 
-	_swapchain = RHIContext::Get()->CreateSwapchain(scInfo);
+	_swapchain = _rhiContext->CreateSwapchain(scInfo);
 
 	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();

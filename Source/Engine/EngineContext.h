@@ -22,7 +22,6 @@ public:
 	EngineContext(const char* name, ERHIPlatform rhiPlatform);
 	~EngineContext();
 
-
 	const char* const name;
 private:
 

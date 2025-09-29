@@ -172,13 +172,12 @@ void ForwardOpaquePass::createResourceHandles()
 	{
 		HS_LOG(crash, "Shader is nullptr");
 	}
-#ifdef __WINDOWS__
-	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.frag.spv");
-#endif
 	ShaderInfo fsInfo{};
 	fsInfo.entryName = "main";
 	fsInfo.stage = EShaderStage::FRAGMENT;
-
+#ifdef __WINDOWS__
+	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.frag.spv");
+#endif
 	_fragmentShader = rhiContext->CreateShader("Opaque Test Shader", fsInfo, libPath.c_str());
 	if (_fragmentShader == nullptr)
 	{

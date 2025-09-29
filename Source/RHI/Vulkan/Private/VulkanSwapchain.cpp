@@ -28,29 +28,29 @@ SwapchainVulkan::~SwapchainVulkan()
 	destroySwapchainVK();
 }
 
-//void SwapchainVulkan::setRenderPass()
-//{
-//	Attachment colorAttachment{};
-//	colorAttachment.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
-//	colorAttachment.clearValue = ClearValue(0.3, 0.3, 0.3, 1.0);
-//	colorAttachment.loadAction = ELoadAction::CLEAR;
-//	colorAttachment.storeAction = EStoreAction::STORE;
-//	colorAttachment.isDepthStencil = false;
-//
-//	Area renderArea{};
-//	renderArea.x = 0;
-//	renderArea.y = 0;
-//	renderArea.width = _info.nativeWindow->surfaceWidth;
-//	renderArea.height = _info.nativeWindow->surfaceHeight;
-//
-//	RenderPassInfo info{};
-//	info.isSwapchainRenderPass = true;
-//	info.colorAttachments = { colorAttachment };
-//	info.colorAttachmentCount = 1;
-//	info.useDepthStencilAttachment = false;
-//
-//	_renderPass = RHIContext::Get()->CreateRenderPass("Swapchain RenderPass", info);
-//}
+void SwapchainVulkan::setRenderPass()
+{
+	Attachment colorAttachment{};
+	colorAttachment.format = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
+	colorAttachment.clearValue = ClearValue(0.3, 0.3, 0.3, 1.0);
+	colorAttachment.loadAction = ELoadAction::CLEAR;
+	colorAttachment.storeAction = EStoreAction::STORE;
+	colorAttachment.isDepthStencil = false;
+
+	Area renderArea{};
+	renderArea.x = 0;
+	renderArea.y = 0;
+	renderArea.width = _info.nativeWindow->surfaceWidth;
+	renderArea.height = _info.nativeWindow->surfaceHeight;
+
+	RenderPassInfo info{};
+	info.isSwapchainRenderPass = true;
+	info.colorAttachments = { colorAttachment };
+	info.colorAttachmentCount = 1;
+	info.useDepthStencilAttachment = false;
+
+	_renderPass = RHIContext::Get()->CreateRenderPass("Swapchain RenderPass", info);
+}
 
 void SwapchainVulkan::setFramebuffers()
 {
@@ -262,6 +262,7 @@ bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
 		VK_CHECK_RESULT(vkCreateFence(_deviceVulkan->logicalDevice, &fenceInfo, nullptr, &(syncObjects.inFlightFences[i])));
 	}
 
+	setRenderPass();
 	setFramebuffers();
 
 	_isInitialized = true;
