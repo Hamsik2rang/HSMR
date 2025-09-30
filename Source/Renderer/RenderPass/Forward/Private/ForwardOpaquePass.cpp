@@ -160,9 +160,9 @@ void ForwardOpaquePass::createResourceHandles()
 	//_indexCount = indices.size();
 	_vertexBuffer[0] = rhiContext->CreateBuffer("Opaque Test VertexBuffer", vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 #ifdef __APPLE__
-	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/MSL/Basic.metal"));
+	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/Basic.metal"));
 #elif __WINDOWS__
-	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.vert.spv");
+	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.vert.spv");
 #endif
 	ShaderInfo vsInfo{};
 	vsInfo.entryName = "main";
@@ -176,7 +176,7 @@ void ForwardOpaquePass::createResourceHandles()
 	fsInfo.entryName = "main";
 	fsInfo.stage = EShaderStage::FRAGMENT;
 #ifdef __WINDOWS__
-	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\SPV\\Basic.frag.spv");
+	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.frag.spv");
 #endif
 	_fragmentShader = rhiContext->CreateShader("Opaque Test Shader", fsInfo, libPath.c_str());
 	if (_fragmentShader == nullptr)

@@ -11,8 +11,8 @@ project(${ENGINE_NAME} VERSION 0.1.0)
 set(HS_ROOT_DIR ${HSMR_SOURCE_DIR})
 message(STATUS "HS_ROOT_DIR: ${HS_ROOT_DIR}")
 
-set(HS_EXE_BIN_DIR "${HSMR_BINARY_DIR}$<CONFIG>")
-message(STATUS "HS_EXE_BIN_DIR: ${HS_EXE_BIN_DIR}")
+set(HS_EXECUTABLE_DIR "${HSMR_BINARY_DIR}$<CONFIG>")
+message(STATUS "HS_EXECUTABLE_DIR: ${HS_EXECUTABLE_DIR}")
 
 set(HS_PROJECT_BINARY_DIR ${PROJECT_BINARY_DIR})
 message(STATUS "HS_PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
@@ -22,9 +22,6 @@ message(STATUS "HS_SRC_DIR: ${HS_SRC_DIR}")
 
 set(HS_ASSET_DIR ${HS_ROOT_DIR}/Assets)
 message(STATUS "HS_ASSET_DIR: ${HS_ASSET_DIR}")
-
-set(HS_SHADER_SRC_DIR ${HS_ASSET_DIR}/Shaders)
-message(STATUS "HS_SHADER_SRC_DIR: ${HS_SHADER_SRC_DIR}")
 
 # set(HS_RES_SHADER_DIR ${HS_ASSET_DIR}/Shader)
 # message(STATUS "HS_RES_SHADER_DIR: ${HS_RES_SHADER_DIR}")
@@ -143,21 +140,3 @@ add_custom_target(CleanInstall
 )
 
 set_property(TARGET CleanInstall PROPERTY FOLDER "Commands")
-
-add_custom_target(CleanInstallShaders
-    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
-    COMMAND ${CMAKE_COMMAND} -E echo "Clean reinstall of shaders..."
-    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}/Assets/Shaders"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "${INSTALL_FOLDER}/bin"
-    COMMAND ${CMAKE_COMMAND} -E echo "Old files removed. Installing fresh..."
-    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component ShaderCompiler --config $<CONFIG>
-    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component Shaders --config $<CONFIG>
-    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
-    COMMAND ${CMAKE_COMMAND} -E echo "Shaders reinstalled successfully!"
-    COMMAND ${CMAKE_COMMAND} -E echo "========================================="
-    COMMENT "[CLEAN+INSTALL] Complete shader refresh"
-    VERBATIM
-)
-
-set_property(TARGET CleanInstallShaders PROPERTY FOLDER "Commands")

@@ -2,7 +2,7 @@
 
 
 [shader("vertex")]
-FSInput main(VSInput input)
+FSInput VertexMain(VSInput input)
 {
     FSInput output;
     output.positionCS = vector<float, 4>(input.positionOS, 1.0f);

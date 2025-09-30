@@ -24,6 +24,11 @@ EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindo
 EditorWindow::~EditorWindow()
 {}
 
+void EditorWindow::NextFrame()
+{
+	onNextFrame();
+}
+
 void EditorWindow::Render()
 {
 	onRender();

@@ -77,185 +77,260 @@ install(DIRECTORY "${HS_ASSET_DIR}/" DESTINATION "${INSTALL_FOLDER}/Assets")
 
 # Shader
 # install(FILES "${METALLIB_FILE}/" DESTINATION "${INSTALL_FOLDER}/Resource/Shader")
-if(WIN32)
-    set(SLANGC_EXE "slangc.exe")
-    set(SHADER_TARGET_API "spirv")
-    set(SHADER_OUTPUT_EXT ".spv")
-    set(SHADER_OUTPUT_SUBDIR "SPV")
+# if(WIN32)
+# set(SLANGC_EXE "slangc.exe")
+# set(SHADER_TARGET_API "spirv")
+# set(SHADER_OUTPUT_EXT ".spv")
+# set(SHADER_OUTPUT_SUBDIR "SPV")
 
-# Windows DLLs to copy
-# set(SLANG_RUNTIME_FILES
-# "${SLANG_BIN_DIR}/slang.dll"
-# "${SLANG_BIN_DIR}/slang-glslang.dll"
-# "${SLANG_BIN_DIR}/slang-glsl-module.dll"
-# "${SLANG_BIN_DIR}/slang-rt.dll"
-# )
-elseif(APPLE)
-    # if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-    # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-aarch64/release")
-    # else()
-    # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-x64/release")
-    # endif()
-    set(SLANGC_EXE "slangc")
+# # Windows DLLs to copy
+# # set(SLANG_RUNTIME_FILES
+# # "${SLANG_BIN_DIR}/slang.dll"
+# # "${SLANG_BIN_DIR}/slang-glslang.dll"
+# # "${SLANG_BIN_DIR}/slang-glsl-module.dll"
+# # "${SLANG_BIN_DIR}/slang-rt.dll"
+# # )
+# elseif(APPLE)
+# # if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-aarch64/release")
+# # else()
+# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-x64/release")
+# # endif()
+# set(SLANGC_EXE "slangc")
+# set(SHADER_TARGET_API "metal")
+# set(SHADER_OUTPUT_EXT ".metal")
+# set(SHADER_OUTPUT_SUBDIR "MSL")
+
+# # macOS dylibs to copy
+# # set(SLANG_RUNTIME_FILES
+# # "${SLANG_BIN_DIR}/libslang.dylib"
+# # "${SLANG_BIN_DIR}/libslang-glslang.dylib"
+# # "${SLANG_BIN_DIR}/libslang-glsl-module.dylib"
+# # "${SLANG_BIN_DIR}/libslang-rt.dylib"
+# # "${SLANG_BIN_DIR}/libslang-llvm.dylib"
+# # )
+# endif()
+set(HS_SHADER_SRC_DIR ${HS_ASSET_DIR}/Shaders)
+message(STATUS "HS_SHADER_SRC_DIR: ${HS_SHADER_SRC_DIR}")
+
+set(HS_SLANG_SHADER_SRC_DIR ${HS_SHADER_SRC_DIR}/Slang)
+
+if(APPLE)
+    set(SLANG_EXECUTABLE "${HS_DEPS_BIN_DIR}/slangc")
     set(SHADER_TARGET_API "metal")
-    set(SHADER_OUTPUT_EXT ".metal")
-    set(SHADER_OUTPUT_SUBDIR "MSL")
+    set(SHADER_OUTPUT_EXT "metal")
+    set(SHADER_CAPABILITY "metal_2_4")
 
-    # macOS dylibs to copy
-    # set(SLANG_RUNTIME_FILES
-    # "${SLANG_BIN_DIR}/libslang.dylib"
-    # "${SLANG_BIN_DIR}/libslang-glslang.dylib"
-    # "${SLANG_BIN_DIR}/libslang-glsl-module.dylib"
-    # "${SLANG_BIN_DIR}/libslang-rt.dylib"
-    # "${SLANG_BIN_DIR}/libslang-llvm.dylib"
-    # )
+else()
+    set(SLANG_EXECUTABLE "${HS_DEPS_BIN_DIR}/slangc.exe")
+    set(SHADER_TARGET_API "spirv")
+    set(SHADER_OUTPUT_EXT "spv")
+    set(SHADER_CAPABILITY "spirv_1_3")
 endif()
 
-set(SHADER_ENTRY "main")
+file(GLOB SLANG_SHADERS "${HS_SLANG_SHADER_SRC_DIR}/*.slang")
+set(SHADER_COMPILE_COMMANDS)
 
-# ---------- Shader compilation at install time ----------
-install(CODE "
-      # Setup paths
-      set(SLANGC_PATH \"\${HS_DEPS_BIN_DIR}/\${SLANGC_EXE}\")
-      set(SHADER_SOURCE_DIR \"\${INSTALL_FOLDER}/Slang\")
-      set(SHADER_OUTPUT_DIR \"\${INSTALL_FOLDER}/Assets/Shaders/\${SHADER_OUTPUT_SUBDIR}\")
-
-      # Create output directory
-      file(MAKE_DIRECTORY \"\${SHADER_OUTPUT_DIR}\")
-
-      # Log start
-      message(STATUS \"========================================\")
-      message(STATUS \"Starting shader compilation with slangc\")
-      message(STATUS \"Source: \${SHADER_SOURCE_DIR}\")
-      message(STATUS \"Output: \${SHADER_OUTPUT_DIR}\")
-      message(STATUS \"Target: \${SHADER_TARGET_API}\")
-      message(STATUS \"========================================\")
-
-      # Find all shader files
-      file(GLOB_RECURSE SLANG_SHADERS \"\${SHADER_SOURCE_DIR}/*.slang\")
-
-      # Shader stage detection function
-      function(get_shader_stage SHADER_FILE STAGE_VAR ENTRY_VAR)
-          get_filename_component(SHADER_NAME \"\${SHADER_FILE}\" NAME_WE)
-
-          # Detect stage from filename
-          if(SHADER_NAME MATCHES \"\.vert$\" OR SHADER_NAME MATCHES \"_vs$\" OR SHADER_NAME MATCHES \"Vertex\")
-              set(\${STAGE_VAR} \"vertex\" PARENT_SCOPE)
-              set(\${ENTRY_VAR} \"vertexMain\" PARENT_SCOPE)
-          elseif(SHADER_NAME MATCHES \"\.frag$\" OR SHADER_NAME MATCHES \"_ps$\" OR SHADER_NAME MATCHES \"_fs$\" OR
-  SHADER_NAME MATCHES \"Fragment\" OR SHADER_NAME MATCHES \"Pixel\")
-              set(\${STAGE_VAR} \"fragment\" PARENT_SCOPE)
-              set(\${ENTRY_VAR} \"fragmentMain\" PARENT_SCOPE)
-          elseif(SHADER_NAME MATCHES \"\.comp$\" OR SHADER_NAME MATCHES \"_cs$\" OR SHADER_NAME MATCHES \"Compute\")
-              set(\${STAGE_VAR} \"compute\" PARENT_SCOPE)
-              set(\${ENTRY_VAR} \"computeMain\" PARENT_SCOPE)
-          elseif(SHADER_NAME MATCHES \"\.geom$\" OR SHADER_NAME MATCHES \"_gs$\" OR SHADER_NAME MATCHES \"Geometry\")
-              set(\${STAGE_VAR} \"geometry\" PARENT_SCOPE)
-              set(\${ENTRY_VAR} \"geometryMain\" PARENT_SCOPE)
-          else()
-              # Default to vertex shader if uncertain
-              set(\${STAGE_VAR} \"vertex\" PARENT_SCOPE)
-              set(\${ENTRY_VAR} \"main\" PARENT_SCOPE)
-          endif()
-      endfunction()
-
-      # Statistics
-      set(COMPILE_SUCCESS_COUNT 0)
-      set(COMPILE_FAIL_COUNT 0)
-      list(LENGTH SLANG_SHADERS TOTAL_SHADER_COUNT)
-
-      # Compile each shader
-      foreach(SHADER_FILE \${SLANG_SHADERS})
-          # Get relative path for output structure
-          file(RELATIVE_PATH SHADER_REL_PATH \"\${SHADER_SOURCE_DIR}\" \"\${SHADER_FILE}\")
-          get_filename_component(SHADER_REL_DIR \"\${SHADER_REL_PATH}\" DIRECTORY)
-          get_filename_component(SHADER_NAME \"\${SHADER_FILE}\" NAME_WE)
-
-          # Detect shader stage
-          get_shader_stage(\"\${SHADER_FILE}\" SHADER_STAGE SHADER_ENTRY)
-
-          # Create output subdirectory if needed
-          if(NOT \"\${SHADER_REL_DIR}\" STREQUAL \"\")
-              file(MAKE_DIRECTORY \"\${SHADER_OUTPUT_DIR}/\${SHADER_REL_DIR}\")
-          endif()
-
-          # Build output path
-          set(OUTPUT_FILE \"\${SHADER_OUTPUT_DIR}/\${SHADER_REL_DIR}/\${SHADER_NAME}.\${SHADER_OUTPUT_EXT}\")
-
-          # Build slangc command
-          set(SLANGC_COMMAND
-              \"\${SLANGC_PATH}\"
-              -target \${SHADER_TARGET_API}
-              -profile sm_6_0
-              -stage \${SHADER_STAGE}
-              -entry \${SHADER_ENTRY}
-              -O3
-              -matrix-layout-column-major
-              \"\${SHADER_FILE}\"
-              -o \"\${OUTPUT_FILE}\"
-          )
-
-          # Platform-specific options
-          if(\"\${SHADER_TARGET_API}\" STREQUAL \"spirv\")
-              list(APPEND SLANGC_COMMAND
-                  -capability spirv_1_5
-                  -emit-spirv-directly)
-          elseif(\"\${SHADER_TARGET_API}\" STREQUAL \"metal\")
-              list(APPEND SLANGC_COMMAND
-                  -target-version 2.4)
-          endif()
-
-          # Execute compilation
-          message(STATUS \"Compiling: \${SHADER_NAME} (\${SHADER_STAGE} shader)\")
-
-          execute_process(
-              COMMAND \${SLANGC_COMMAND}
-              RESULT_VARIABLE COMPILE_RESULT
-              OUTPUT_VARIABLE COMPILE_OUTPUT
-              ERROR_VARIABLE COMPILE_ERROR
-              OUTPUT_STRIP_TRAILING_WHITESPACE
-              ERROR_STRIP_TRAILING_WHITESPACE
-          )
-
-          if(COMPILE_RESULT EQUAL 0)
-              message(STATUS \"  ✓ Success: \${OUTPUT_FILE}\")
-              math(EXPR COMPILE_SUCCESS_COUNT \"\${COMPILE_SUCCESS_COUNT} + 1\")
-
-              # Optionally show shader info
-              if(COMPILE_OUTPUT)
-                  message(STATUS \"  Info: \${COMPILE_OUTPUT}\")
-              endif()
-          else()
-              message(WARNING \"  ✗ Failed: \${SHADER_NAME}\")
-              message(WARNING \"  Error: \${COMPILE_ERROR}\")
-              math(EXPR COMPILE_FAIL_COUNT \"\${COMPILE_FAIL_COUNT} + 1\")
-          endif()
-      endforeach()
-
-      # Summary
-      message(STATUS \"========================================\")
-      message(STATUS \"Shader Compilation Complete\")
-      message(STATUS \"Total: \${TOTAL_SHADER_COUNT} shaders\")
-      message(STATUS \"Success: \${COMPILE_SUCCESS_COUNT}\")
-      message(STATUS \"Failed: \${COMPILE_FAIL_COUNT}\")
-      message(STATUS \"========================================\")
-
-      # Fail the install if any shaders failed to compile
-      if(COMPILE_FAIL_COUNT GREATER 0)
-          message(FATAL_ERROR \"Shader compilation failed for \${COMPILE_FAIL_COUNT} shader(s). Please fix the errors
-  above.\")
-      endif()
-  "
-    COMPONENT Shaders
+# Create directory command
+list(APPEND SHADER_COMPILE_COMMANDS
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/Assets/Shaders"
 )
 
-# ---------- Optional: Create a convenience target for shader compilation only ----------
+foreach(shader ${SLANG_SHADERS})
+    get_filename_component(SHADER_NAME ${shader} NAME_WE)
+
+    message(STATUS "Processing shader: ${SHADER_NAME}")
+
+    string(FIND "${shader}" ".vert" VERT_POS)
+    string(FIND "${shader}" ".frag" FRAG_POS)
+    string(FIND "${shader}" ".comp" COMP_POS)
+
+    if(NOT VERT_POS EQUAL -1)
+        set(SHADER_NAME_SIGNATURE "vert")
+        set(SHADER_STAGE "vertex")
+        set(ENTRY_NAME "VertexMain")
+    elseif(NOT FRAG_POS EQUAL -1)
+        set(SHADER_NAME_SIGNATURE "frag")
+        set(SHADER_STAGE "fragment")
+        set(ENTRY_NAME "FragmentMain")
+    elseif(NOT COMP_POS EQUAL -1)
+        set(SHADER_NAME_SIGNATURE "comp")
+        set(SHADER_STAGE "compute")
+        set(ENTRY_NAME "ComputeMain")
+    else()
+        message(FATAL_ERROR "Unknown shader type: ${shader}")
+        continue()
+    endif()
+
+    message(STATUS "Shader Type: ${SHADER_STAGE}, Entry: ${ENTRY_NAME}")
+
+    # Add compilation command to list
+    list(APPEND SHADER_COMPILE_COMMANDS
+        COMMAND ${SLANG_EXECUTABLE} ${shader}
+        -target ${SHADER_TARGET_API}
+        -profile sm_6_0
+        -stage ${SHADER_STAGE}
+        -entry ${ENTRY_NAME}
+        -capability ${SHADER_CAPABILITY}
+        -g3 -O0
+        -matrix-layout-column-major
+        -o "$<TARGET_FILE_DIR:${TARGET_NAME}>/Assets/Shaders/${SHADER_NAME}.${SHADER_NAME_SIGNATURE}.${SHADER_OUTPUT_EXT}"
+    )
+endforeach()
+
 add_custom_target(CompileShaders
-    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component Shaders --config $<CONFIG>
-    COMMENT "Compiling shaders with slangc"
+    ${SHADER_COMPILE_COMMANDS}
+    DEPENDS ${SLANG_SHADERS}
+    WORKING_DIRECTORY ${HS_DEPS_BIN_DIR}
+    COMMENT "Compiling all Slang shaders"
+    VERBATIM
 )
 
 set_property(TARGET CompileShaders PROPERTY FOLDER "Commands")
+
+# ---------- Shader compilation at install time ----------
+# install(CODE "
+# # Setup paths
+# set(SLANGC_PATH \"\${HS_DEPS_BIN_DIR}/\${SLANGC_EXE}\")
+# set(SHADER_SOURCE_DIR \"\${INSTALL_FOLDER}/Slang\")
+# set(SHADER_OUTPUT_DIR \"\${INSTALL_FOLDER}/Assets/Shaders/\${SHADER_OUTPUT_SUBDIR}\")
+
+# # Create output directory
+# file(MAKE_DIRECTORY \"\${SHADER_OUTPUT_DIR}\")
+
+# # Log start
+# message(STATUS \"========================================\")
+# message(STATUS \"Starting shader compilation with slangc\")
+# message(STATUS \"Source: \${SHADER_SOURCE_DIR}\")
+# message(STATUS \"Output: \${SHADER_OUTPUT_DIR}\")
+# message(STATUS \"Target: \${SHADER_TARGET_API}\")
+# message(STATUS \"========================================\")
+
+# # Find all shader files
+# file(GLOB_RECURSE SLANG_SHADERS \"\${SHADER_SOURCE_DIR}/*.slang\")
+
+# # Shader stage detection function
+# function(get_shader_stage SHADER_FILE STAGE_VAR ENTRY_VAR)
+# get_filename_component(SHADER_NAME \"\${SHADER_FILE}\" NAME_WE)
+
+# # Detect stage from filename
+# if(SHADER_NAME MATCHES \"\.vert$\" OR SHADER_NAME MATCHES \"_vs$\" OR SHADER_NAME MATCHES \"Vertex\")
+# set(\${STAGE_VAR} \"vertex\" PARENT_SCOPE)
+# set(\${ENTRY_VAR} \"vertexMain\" PARENT_SCOPE)
+# elseif(SHADER_NAME MATCHES \"\.frag$\" OR SHADER_NAME MATCHES \"_ps$\" OR SHADER_NAME MATCHES \"_fs$\" OR
+# SHADER_NAME MATCHES \"Fragment\" OR SHADER_NAME MATCHES \"Pixel\")
+# set(\${STAGE_VAR} \"fragment\" PARENT_SCOPE)
+# set(\${ENTRY_VAR} \"fragmentMain\" PARENT_SCOPE)
+# elseif(SHADER_NAME MATCHES \"\.comp$\" OR SHADER_NAME MATCHES \"_cs$\" OR SHADER_NAME MATCHES \"Compute\")
+# set(\${STAGE_VAR} \"compute\" PARENT_SCOPE)
+# set(\${ENTRY_VAR} \"computeMain\" PARENT_SCOPE)
+# elseif(SHADER_NAME MATCHES \"\.geom$\" OR SHADER_NAME MATCHES \"_gs$\" OR SHADER_NAME MATCHES \"Geometry\")
+# set(\${STAGE_VAR} \"geometry\" PARENT_SCOPE)
+# set(\${ENTRY_VAR} \"geometryMain\" PARENT_SCOPE)
+# else()
+# # Default to vertex shader if uncertain
+# set(\${STAGE_VAR} \"vertex\" PARENT_SCOPE)
+# set(\${ENTRY_VAR} \"main\" PARENT_SCOPE)
+# endif()
+# endfunction()
+
+# # Statistics
+# set(COMPILE_SUCCESS_COUNT 0)
+# set(COMPILE_FAIL_COUNT 0)
+# list(LENGTH SLANG_SHADERS TOTAL_SHADER_COUNT)
+
+# # Compile each shader
+# foreach(SHADER_FILE \${SLANG_SHADERS})
+# # Get relative path for output structure
+# file(RELATIVE_PATH SHADER_REL_PATH \"\${SHADER_SOURCE_DIR}\" \"\${SHADER_FILE}\")
+# get_filename_component(SHADER_REL_DIR \"\${SHADER_REL_PATH}\" DIRECTORY)
+# get_filename_component(SHADER_NAME \"\${SHADER_FILE}\" NAME_WE)
+
+# # Detect shader stage
+# get_shader_stage(\"\${SHADER_FILE}\" SHADER_STAGE SHADER_ENTRY)
+
+# # Create output subdirectory if needed
+# if(NOT \"\${SHADER_REL_DIR}\" STREQUAL \"\")
+# file(MAKE_DIRECTORY \"\${SHADER_OUTPUT_DIR}/\${SHADER_REL_DIR}\")
+# endif()
+
+# # Build output path
+# set(OUTPUT_FILE \"\${SHADER_OUTPUT_DIR}/\${SHADER_REL_DIR}/\${SHADER_NAME}.\${SHADER_OUTPUT_EXT}\")
+
+# # Build slangc command
+# set(SLANGC_COMMAND
+# \"\${SLANGC_PATH}\"
+# -target \${SHADER_TARGET_API}
+# -profile sm_6_0
+# -stage \${SHADER_STAGE}
+# -entry \${SHADER_ENTRY}
+# -O3
+# -matrix-layout-column-major
+# \"\${SHADER_FILE}\"
+# -o \"\${OUTPUT_FILE}\"
+# )
+
+# # Platform-specific options
+# if(\"\${SHADER_TARGET_API}\" STREQUAL \"spirv\")
+# list(APPEND SLANGC_COMMAND
+# -capability spirv_1_5
+# -emit-spirv-directly)
+# elseif(\"\${SHADER_TARGET_API}\" STREQUAL \"metal\")
+# list(APPEND SLANGC_COMMAND
+# -target-version 2.4)
+# endif()
+
+# # Execute compilation
+# message(STATUS \"Compiling: \${SHADER_NAME} (\${SHADER_STAGE} shader)\")
+
+# execute_process(
+# COMMAND \${SLANGC_COMMAND}
+# RESULT_VARIABLE COMPILE_RESULT
+# OUTPUT_VARIABLE COMPILE_OUTPUT
+# ERROR_VARIABLE COMPILE_ERROR
+# OUTPUT_STRIP_TRAILING_WHITESPACE
+# ERROR_STRIP_TRAILING_WHITESPACE
+# )
+
+# if(COMPILE_RESULT EQUAL 0)
+# message(STATUS \"  ✓ Success: \${OUTPUT_FILE}\")
+# math(EXPR COMPILE_SUCCESS_COUNT \"\${COMPILE_SUCCESS_COUNT} + 1\")
+
+# # Optionally show shader info
+# if(COMPILE_OUTPUT)
+# message(STATUS \"  Info: \${COMPILE_OUTPUT}\")
+# endif()
+# else()
+# message(WARNING \"  ✗ Failed: \${SHADER_NAME}\")
+# message(WARNING \"  Error: \${COMPILE_ERROR}\")
+# math(EXPR COMPILE_FAIL_COUNT \"\${COMPILE_FAIL_COUNT} + 1\")
+# endif()
+# endforeach()
+
+# # Summary
+# message(STATUS \"========================================\")
+# message(STATUS \"Shader Compilation Complete\")
+# message(STATUS \"Total: \${TOTAL_SHADER_COUNT} shaders\")
+# message(STATUS \"Success: \${COMPILE_SUCCESS_COUNT}\")
+# message(STATUS \"Failed: \${COMPILE_FAIL_COUNT}\")
+# message(STATUS \"========================================\")
+
+# # Fail the install if any shaders failed to compile
+# if(COMPILE_FAIL_COUNT GREATER 0)
+# message(FATAL_ERROR \"Shader compilation failed for \${COMPILE_FAIL_COUNT} shader(s). Please fix the errors
+# above.\")
+# endif()
+# "
+# COMPONENT Shaders
+# )
+
+# # ---------- Optional: Create a convenience target for shader compilation only ----------
+# add_custom_target(CompileShaders
+# COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --component Shaders --config $<CONFIG>
+# COMMENT "Compiling shaders with slangc"
+# )
+
+# set_property(TARGET CompileShaders PROPERTY FOLDER "Commands")
 
 # # ---------- Optional: Add shader compilation as dependency to main targets ----------
 # This ensures shaders are compiled when building the Client
