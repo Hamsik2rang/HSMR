@@ -51,11 +51,11 @@ public:
 	// RAII: Virtual destructor calls Release() automatically
 	virtual ~RHIHandle() 
 	{
-		// Only cleanup if we're the last reference
-		if (_refs == 1)
-		{
-			delete this;
-		}
+		//// Only cleanup if we're the last reference
+		//if (_refs == 1)
+		//{
+		//	delete this;
+		//}
 	}
 
 	// Copy constructor - increase reference count

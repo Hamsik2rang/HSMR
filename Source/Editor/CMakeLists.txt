@@ -176,8 +176,8 @@ target_include_directories(${TARGET_NAME}
 )
 
 set_target_properties(${TARGET_PATH} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
 add_dependencies(${TARGET_NAME} HAL Core RHI Resource ShaderSystem Renderer Geometry Physics ECS)

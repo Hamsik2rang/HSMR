@@ -29,6 +29,7 @@ public:
     EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~EditorWindow() override;
 
+    void NextFrame() override;
     void Render() override;
     void ProcessEvent() override;
 

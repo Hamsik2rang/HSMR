@@ -89,55 +89,56 @@ add_dependencies(${TARGET_NAME} HAL Core)
 
 target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core ${SLANG_LIB} ${SPIRV_CROSS})
 
-# if(APPLE)
-# # On macOS, copy the .dylib file
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_if_different
-# "$<TARGET_FILE:${TARGET_NAME}>"
-# "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
-# COMMENT "Copying ${TARGET_NAME} library to install folder: ${INSTALL_FOLDER}"
-# )
+if(APPLE)
+    # On macOS, copy the .dylib file
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:${TARGET_NAME}>"
+        "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+        COMMENT "Copying ${TARGET_NAME} library to install folder: ${INSTALL_FOLDER}"
+    )
 
-# # Copy Slang dylib to install folder
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_if_different
-# "${SLANG}"
-# "${INSTALL_FOLDER}/libslang.dylib"
-# COMMENT "Copying libslang.dylib to install folder: ${INSTALL_FOLDER}"
-# )
-# else()
-# # On Windows, copy both .dll and .lib files
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_if_different
-# "$<TARGET_FILE:${TARGET_NAME}>"
-# "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
-# COMMENT "Copying ${TARGET_NAME}.dll to install folder: ${INSTALL_FOLDER}"
-# )
+    # Copy Slang dylib to install folder
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SLANG}"
+        "${INSTALL_FOLDER}/libslang.dylib"
+        COMMENT "Copying libslang.dylib to install folder: ${INSTALL_FOLDER}"
+    )
+else()
+    # On Windows, copy both .dll and .lib files
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:${TARGET_NAME}>"
+        "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+        COMMENT "Copying ${TARGET_NAME}.dll to install folder: ${INSTALL_FOLDER}"
+    )
 
-# # Also copy the import library (.lib) if it exists
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_if_different
-# "$<TARGET_LINKER_FILE:${TARGET_NAME}>"
-# "${INSTALL_FOLDER}/dev/lib/$<TARGET_LINKER_FILE_NAME:${TARGET_NAME}>"
-# COMMENT "Copying ${TARGET_NAME}.lib to install folder: ${INSTALL_FOLDER}/dev/lib"
-# )
+    # Also copy the import library (.lib) if it exists
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_LINKER_FILE:${TARGET_NAME}>"
+        "${INSTALL_FOLDER}/dev/lib/$<TARGET_LINKER_FILE_NAME:${TARGET_NAME}>"
+        COMMENT "Copying ${TARGET_NAME}.lib to install folder: ${INSTALL_FOLDER}/dev/lib"
+    )
 
-# # Create dev/lib directory for .lib file
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}/dev/lib"
-# COMMENT "Creating dev/lib directory: ${INSTALL_FOLDER}/dev/lib"
-# )
-# endif()
+    # Create dev/lib directory for .lib file
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}/dev/lib"
+        COMMENT "Creating dev/lib directory: ${INSTALL_FOLDER}/dev/lib"
+    )
+endif()
 
-# # Optional: Copy PDB files for debugging on Windows
-# if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-# add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_if_different
-# "$<TARGET_PDB_FILE:${TARGET_NAME}>"
-# "${INSTALL_FOLDER}/$<TARGET_PDB_FILE_NAME:${TARGET_NAME}>"
-# COMMENT "Copying ${TARGET_NAME}.pdb to install folder: ${INSTALL_FOLDER}"
-# )
-# endif()
+# Optional: Copy PDB files for debugging on Windows
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_PDB_FILE:${TARGET_NAME}>"
+        "${INSTALL_FOLDER}/$<TARGET_PDB_FILE_NAME:${TARGET_NAME}>"
+        COMMENT "Copying ${TARGET_NAME}.pdb to install folder: ${INSTALL_FOLDER}"
+    )
+endif()
+
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>

@@ -1087,7 +1087,7 @@ bool VulkanContext::createInstance()
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 3, 0);
 	appInfo.pEngineName = "HSMR";
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 3, 0);
-	appInfo.apiVersion = VK_API_VERSION_1_0;
+	appInfo.apiVersion = VK_API_VERSION_1_3;
 
 	uint32 extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
