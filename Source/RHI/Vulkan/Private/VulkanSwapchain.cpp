@@ -16,7 +16,7 @@ SwapchainVulkan::SwapchainVulkan(const SwapchainInfo& info, VkSurfaceKHR surface
 	, handle(VK_NULL_HANDLE)
 	, _framebuffers(nullptr)
 	, _frameIndex(static_cast<uint8>(-1))
-	, _maxFrameCount(3)
+	, _maxFrameCount(2)
 	, _isSuspended(true)
 	, _isInitialized(false)
 {

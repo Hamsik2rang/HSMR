@@ -13,38 +13,33 @@
 
 #include <string>
 
-namespace HS
-{
-class EngineContext;
-class Window;
-} // namespace HS
+namespace HS { struct EngineContext; }
+namespace HS { class Window; }
 
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API GUIContext
 {
 public:
-    GUIContext(EngineContext* engineContext);
-    ~GUIContext();
+	GUIContext(struct EngineContext* engineContext);
+	~GUIContext();
 
-    void Initialize();
-    void Finalize();
-    void NextFrame();
-    void SetColorTheme(bool useWhite);
-    void SetFont(const std::string& fontPath, float fontSize = 18.0f);
+	void Initialize();
+	void Finalize();
+	void NextFrame();
+	void SetColorTheme(bool useWhite);
+	void SetFont(const std::string& fontPath, float fontSize = 18.0f);
 
-    void LoadLayout(const std::string& layoutPath);
-    void SaveLayout(const std::string& layoutPath);
+	void LoadLayout(const std::string& layoutPath);
+	void SaveLayout(const std::string& layoutPath);
 
 private:
-    ImGuiContext* _context; // 네임스페이스 없이 사용
-    ImFont* _font;
-    std::string _defaultLayoutPath;
+	ImGuiContext* _context; // 네임스페이스 없이 사용
+	ImFont* _font;
+	std::string _defaultLayoutPath;
 
 	EngineContext* _engineContext;
 };
-
-HS_EDITOR_API GUIContext* hs_editor_get_gui_context();
 
 HS_NS_EDITOR_END
 

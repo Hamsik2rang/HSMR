@@ -30,7 +30,7 @@ void DestroyNativeWindow(NativeWindow& nativeWindow)
 	DestroyNativeWindowInternal(nativeWindow);
 }
 
-void ShowNativeWindow(const NativeWindow& nativeWindow) 
+void ShowNativeWindow(const NativeWindow& nativeWindow)
 {
 	ShowNativeWindowInternal(nativeWindow);
 }

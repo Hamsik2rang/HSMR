@@ -1,4 +1,7 @@
 ﻿#include "Engine/Window.h"
+#include "Engine/Application.h"
+
+#include "HAL/NativeWindow.h"
 
 #include "Core/Log.h"
 
@@ -7,9 +10,11 @@
 HS_NS_BEGIN
 
 
-Window::Window(const char* name, uint16 width, uint16 height, EWindowFlags flags)
+Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 height, EWindowFlags flags)
     : _isClosed(false)
     , _shouldClose(false)
+	, _ownerApp(ownerApp)
+	, _preEventHandler(nullptr)
 {
     if (!CreateNativeWindow(name, width, height, flags, _nativeWindow))
     {
@@ -33,6 +38,117 @@ void Window::Shutdown()
     _isClosed = true;
 }
 
+void Window::ProcessEvent()
+{
+	EWindowEvent event;
+	while (PeekNativeEvent(&_nativeWindow, event))
+	{
+		event = PopNativeEvent(&_nativeWindow);
+		switch (event)
+		{
+		case EWindowEvent::OPEN:
+		{
+			_shouldClose = false;
+
+			break;
+		}
+		case EWindowEvent::CLOSE:
+		{
+			_shouldClose = true;
+			_shouldUpdate = false;
+			_shouldPresent = false;
+
+			break;
+		}
+		case EWindowEvent::MAXIMIZE:
+		{
+			_shouldUpdate = true;
+			_shouldPresent = true;
+			onRestore();
+
+			break;
+		}
+		case EWindowEvent::MINIMIZE:
+		{
+			_shouldUpdate = false;
+			_shouldPresent = false;
+
+			break;
+		}
+		case EWindowEvent::RESIZE:
+		{
+			onSuspend();
+			onRestore();
+			break;
+		}
+		case EWindowEvent::MOVE_ENTER:
+		{
+			_shouldUpdate = false;
+			_shouldPresent = false;
+			onSuspend();
+
+			break;
+		}
+		case EWindowEvent::MOVE_EXIT:
+		case EWindowEvent::RESTORE:
+		{
+			_shouldUpdate = true;
+			_shouldPresent = true;
+			onRestore();
+
+			break;
+		}
+		case EWindowEvent::MOVE:
+		{
+
+			break;
+		}
+		case EWindowEvent::FOCUS_IN:
+		{
+
+			break;
+		}
+		case EWindowEvent::FOCUS_OUT:
+		{
+
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
+	if (_shouldClose)
+	{
+		Flush();
+		return;
+	}
+
+	for (auto* child : _childs)
+	{
+		child->ProcessEvent();
+	}
+}
+
+void Window::NextFrame()
+{
+	onNextFrame();
+}
+
+void Window::Update()
+{
+	onUpdate();
+}
+
+void Window::Render()
+{
+	onRender();
+}
+
+void Window::Present()
+{
+	onPresent();
+}
 
 void Window::Flush()
 {
@@ -68,6 +184,17 @@ void Window::Flush()
     {
         delete delChild;
     }
+}
+
+Application* Window::GetApplication()
+{
+	return _ownerApp;
+}
+
+void Window::SetPreEventHandler(void* handler)
+{
+	_preEventHandler = handler;
+	SetNativePreEventHandler(handler);
 }
 
 HS_NS_END

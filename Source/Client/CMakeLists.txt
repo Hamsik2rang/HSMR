@@ -180,13 +180,24 @@ endforeach()
 
 add_custom_target(CompileShaders
     ${SHADER_COMPILE_COMMANDS}
+    COMMAND ${CMAKE_COMMAND} -E remove -f "${HS_DEPS_BIN_DIR}/slang-glsl-module.bin"
     DEPENDS ${SLANG_SHADERS}
     WORKING_DIRECTORY ${HS_DEPS_BIN_DIR}
-    COMMENT "Compiling all Slang shaders"
+    COMMENT "Compiling all Slang shaders and cleaning up temporary files"
     VERBATIM
 )
 
 set_property(TARGET CompileShaders PROPERTY FOLDER "Commands")
+
+# add_custom_command(
+# TARGET ${TARGET_NAME} # 이 타겟에 명령을 추가합니다.
+# POST_BUILD # 빌드가 완료된 직후에 실행됩니다.
+# COMMAND ${CMAKE_COMMAND} # CMake 실행 파일을 호출합니다.
+# ARGS --build ${CMAKE_BINARY_DIR} --target install
+
+# # 현재 빌드 디렉토리에서 INSTALL 타겟을 실행합니다.
+# COMMENT "Running automatic 'install' target after ${TARGET_NAME} build."
+# )
 
 # ---------- Shader compilation at install time ----------
 # install(CODE "

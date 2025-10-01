@@ -12,4 +12,9 @@ Application::Application(const char* name, EngineContext* engineContext) noexcep
 
 }
 
+EngineContext* Application::GetEngineContext()
+{
+    return _engineContext;
+}
+
 HS_NS_END

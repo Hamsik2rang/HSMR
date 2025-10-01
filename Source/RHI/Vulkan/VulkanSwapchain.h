@@ -59,7 +59,7 @@ private:
 	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
 	uint8 _frameIndex = static_cast<uint8>(-1);
-	uint8 _maxFrameCount = 3;
+	uint8 _maxFrameCount = 2;
 	uint32 _curImageIndex = static_cast<uint32>(-1);
 	VulkanDevice* _deviceVulkan;
 	CommandBufferVulkan** _commandBufferVKs;

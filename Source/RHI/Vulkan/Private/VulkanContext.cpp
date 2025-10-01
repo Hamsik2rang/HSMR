@@ -177,11 +177,12 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
 {
 	HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::AcquireNextImage");
 
+
 	// Acquire the next image from the swapchain
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	swapchainVK->_frameIndex = static_cast<uint8>(swapchainVK->_frameIndex + 1) % swapchainVK->_maxFrameCount;
-
-	const uint8 curframeIndex = swapchainVK->_frameIndex;
+	
+	const uint8 curframeIndex = swapchainVK->_frameIndex % swapchainVK->_maxFrameCount;
 
 	vkWaitForFences(_device, 1, &swapchainVK->syncObjects.inFlightFences[curframeIndex], VK_TRUE, UINT64_MAX);
 	vkResetFences(_device, 1, &swapchainVK->syncObjects.inFlightFences[curframeIndex]);
@@ -1014,7 +1015,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = &swapchainVK->syncObjects.imageAvailableSemaphores[swapchainVK->_frameIndex];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_frameIndex];
+	submitInfo.pSignalSemaphores = &swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_curImageIndex];
 
 	if (commandBufferVks.size() < bufferCount)
 	{
@@ -1046,7 +1047,7 @@ void VulkanContext::Present(Swapchain* swapchain)
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &(swapchainVK->handle);
 	presentInfo.pImageIndices = &(swapchainVK->_curImageIndex);
-	presentInfo.pWaitSemaphores = &(swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_frameIndex]);
+	presentInfo.pWaitSemaphores = &(swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_curImageIndex]);
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pResults = nullptr; // 스왑체인 하나만 쓸 땐 필요없다.
 

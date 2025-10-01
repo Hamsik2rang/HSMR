@@ -8,7 +8,7 @@ HS_NS_BEGIN
 
 EngineContext::EngineContext(const char* name, ERHIPlatform platform)
 	: name(name)
-	, _rhiContext(RHIContext::Create(platform))
+	, rhiContext(RHIContext::Create(platform))
 {
 	SystemContext::Get();
 }

@@ -12,23 +12,26 @@
 #include "Engine/Application.h"
 #include "Engine/Window.h"
 
+namespace HS { namespace Editor { class GUIContext; } }
+
 HS_NS_EDITOR_BEGIN
 
-class GUIContext;
 
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
-    EditorApplication(const char* appName, EngineContext* engineContext) noexcept;
-    ~EditorApplication() override ;
-    
-    void Run() override;
-    void Shutdown() override;
-    
-private:
-    GUIContext* _guiContext;
+	EditorApplication(const char* appName, struct EngineContext* engineContext) noexcept;
+	~EditorApplication() override;
 
-    float _deltaTime = 0.0f;
+	void Run() override;
+	void Shutdown() override;
+
+	GUIContext* GetGUIContext();
+
+private:
+	GUIContext* _guiContext;
+
+	float _deltaTime = 0.0f;
 };
 
 HS_NS_EDITOR_END

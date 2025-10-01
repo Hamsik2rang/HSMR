@@ -29,6 +29,8 @@ public:
 	static void EndRender();
 
 	static void FinalizeBackend();
+	
+	static void SetProcessEventHandler(void** fnHandler);
 
 private:
 	static void clearDeletedSwapchainData();

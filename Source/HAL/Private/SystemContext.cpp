@@ -1,4 +1,4 @@
-#include "HAL/SystemContext.h"
+﻿#include "HAL/SystemContext.h"
 
 HS_NS_BEGIN
 
@@ -24,7 +24,6 @@ SystemContext::~SystemContext()
     if (s_instance)
     {
         Finalize();
-        s_instance.reset();  // Automatic cleanup with Scoped<>
     }
 }
 

@@ -14,7 +14,6 @@ HS_NS_BEGIN
 
 void SetNativePreEventHandler(void* fnHandler);
 
-
 bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
 void DestroyNativeWindowInternal(NativeWindow& nativeWindow);
 void ShowNativeWindowInternal(const NativeWindow& nativeWindow);
