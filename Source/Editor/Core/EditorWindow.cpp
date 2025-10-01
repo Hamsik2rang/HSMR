@@ -15,115 +15,14 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags)
-	: Window(name, width, height, flags)
+EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
+	: Window(ownerApp, name, width, height, flags)
 {
 	onInitialize();
 }
 
 EditorWindow::~EditorWindow()
 {}
-
-void EditorWindow::NextFrame()
-{
-	onNextFrame();
-}
-
-void EditorWindow::Render()
-{
-	onRender();
-}
-
-void EditorWindow::ProcessEvent()
-{
-	EWindowEvent event;
-	while (PeekNativeEvent(&_nativeWindow, event))
-	{
-		switch (event)
-		{
-		case EWindowEvent::OPEN:
-		{
-			_shouldClose = false;
-
-			break;
-		}
-		case EWindowEvent::CLOSE:
-		{
-			_shouldClose = true;
-			_shouldUpdate = false;
-			_shouldPresent = false;
-
-			break;
-		}
-		case EWindowEvent::MAXIMIZE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-			onRestore();
-			
-			break;
-		}
-		case EWindowEvent::MINIMIZE:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-			
-			break;
-		}
-		case EWindowEvent::RESIZE:
-		{
-			onSuspend();
-			onRestore();
-			break;
-		}
-		case EWindowEvent::MOVE_ENTER:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-			onSuspend();
-
-			break;
-		}
-		case EWindowEvent::MOVE_EXIT:
-		case EWindowEvent::RESTORE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-			onRestore();
-			
-			break;
-		}
-		case EWindowEvent::MOVE:
-		{
-
-			break;
-		}
-		case EWindowEvent::FOCUS_IN:
-		{
-
-			break;
-		}
-		case EWindowEvent::FOCUS_OUT:
-		{
-
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
-	if (_shouldClose)
-	{
-		Flush();
-		return;
-	}
-
-	for (auto* child : _childs)
-	{
-		child->ProcessEvent();
-	}
-}
 
 bool EditorWindow::onInitialize()
 {
@@ -174,6 +73,10 @@ bool EditorWindow::onInitialize()
 	}
 
 	setupPanels();
+
+	void* handler = nullptr;
+	ImGuiExtension::SetProcessEventHandler(&handler);
+	SetPreEventHandler(handler);
 
 	return true;
 }

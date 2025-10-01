@@ -5,7 +5,6 @@
 #include "HAL/NativeWindow.h"
 #include "Resource/ObjectManager.h"
 
-
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
@@ -21,7 +20,6 @@ EditorApplication::EditorApplication(const char* appName, EngineContext* engineC
     , _deltaTime(0.0f)
 {
     _guiContext = new GUIContext(engineContext);
-    _guiContext->Initialize();
 
     ObjectManager::Initialize();
 
@@ -30,7 +28,7 @@ EditorApplication::EditorApplication(const char* appName, EngineContext* engineC
     windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
     windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 1280, 720, windowFlags);
+    _window = new EditorWindow(this, "EditorApp BaseWindow", 1280, 720, windowFlags);
     if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");
@@ -92,6 +90,11 @@ void EditorApplication::Run()
     }
 
     Shutdown();
+}
+
+GUIContext* EditorApplication::GetGUIContext()
+{
+    return _guiContext;
 }
 
 HS_NS_EDITOR_END

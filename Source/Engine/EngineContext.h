@@ -15,7 +15,7 @@ namespace HS { class RHIContext; }
 
 HS_NS_BEGIN
 
-class HS_ENGINE_API EngineContext
+struct HS_ENGINE_API EngineContext
 {
 public:
 	EngineContext() = delete;
@@ -23,10 +23,7 @@ public:
 	~EngineContext();
 
 	const char* const name;
-private:
-
-	RHIContext* _rhiContext = nullptr;
-
+	RHIContext* rhiContext = nullptr;
 };
 
 HS_NS_END

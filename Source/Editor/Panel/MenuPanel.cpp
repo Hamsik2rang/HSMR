@@ -1,8 +1,11 @@
 ﻿#include "Editor/Panel/MenuPanel.h"
 
 #include "Engine/Window.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Editor/GUI/GUIContext.h"
+
+#include "Editor/Core/EditorApplication.h"
 
 #include "ImGui/imgui.h"
 
@@ -41,7 +44,8 @@ void MenuPanel::Draw()
             }
             if (ImGui::MenuItem("Change Theme", nullptr, false))
             {
-                hs_editor_get_gui_context()->SetColorTheme(useWhite);
+                auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
+                guiContext->SetColorTheme(useWhite);
                 useWhite = !useWhite;
             }
             ImGui::Separator();

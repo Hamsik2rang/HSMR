@@ -135,9 +135,11 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	}
 
 	ImGui_ImplVulkan_Init(&initInfo);
+}
 
-	// Is it work?
-	HS::SetNativePreEventHandler(ImGui_ImplWin32_WndProcHandler);
+void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
+{
+	*fnHandler = static_cast<void*>(ImGui_ImplWin32_WndProcHandler);
 }
 
 void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)

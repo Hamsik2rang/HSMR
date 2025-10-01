@@ -9,16 +9,14 @@
 
 HS_NS_EDITOR_BEGIN
 
-HS_EDITOR_API GUIContext* s_guiContext = nullptr;
-
-HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
-
 GUIContext::GUIContext(EngineContext* enginContext)
 	: _engineContext(enginContext)
 	, _defaultLayoutPath(SystemContext::Get()->assetDirectory + "imgui.ini")
 	, _font{ nullptr }
 	, _context(nullptr)
-{}
+{
+	Initialize();
+}
 
 GUIContext::~GUIContext()
 {}

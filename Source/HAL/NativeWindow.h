@@ -125,6 +125,8 @@ bool PeekNativeEvent(HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent);
 void PushNativeEvent(const HS::NativeWindow* pWindow, HS::EWindowEvent event);
 HS::EWindowEvent PopNativeEvent(const HS::NativeWindow* pWindow);
 
+void SetNativePreEventHandler(void* fnHandler);
+
 HS_NS_END
 
 #endif /*__HS_PLATFORM_WINDOW__*/

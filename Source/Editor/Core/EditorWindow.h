@@ -26,12 +26,10 @@ class Panel;
 class HS_EDITOR_API EditorWindow : public Window
 {
 public:
-    EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags);
+    EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~EditorWindow() override;
 
-    void NextFrame() override;
-    void Render() override;
-    void ProcessEvent() override;
+    GUIContext* GetGUIContext();
 
 private:
     void setupPanels();

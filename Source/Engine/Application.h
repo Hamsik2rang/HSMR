@@ -10,7 +10,7 @@
 #include "Precompile.h"
 
 #include "HAL/SystemContext.h"
-/*#include "Engine/EngineContext.h"*/ namespace HS { class EngineContext; }
+/*#include "Engine/EngineContext.h"*/ namespace HS { struct EngineContext; }
 /*#include "Renderer/RenderPath.h"*/ namespace HS { class RenderPath; }
 
 HS_NS_BEGIN
@@ -27,6 +27,8 @@ public:
 
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
+
+	EngineContext* GetEngineContext();
 
 protected:
 	const char* _name;

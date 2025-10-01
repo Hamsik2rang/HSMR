@@ -9,8 +9,6 @@
 static HS::NativeWindow* s_boundHsWindow = nullptr;
 LRESULT(*s_preEventHandler)(HWND, UINT, WPARAM, LPARAM) = nullptr;
 
-
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (s_preEventHandler && s_preEventHandler(hWnd, msg, wParam, lParam))
@@ -252,6 +250,10 @@ void SetNativePreEventHandler(void* fnHandler)
 {
 	LRESULT(*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT(*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
 	s_preEventHandler = func;
+	if (s_preEventHandler == nullptr)
+	{
+		HS_DEBUG_BREAK();
+	}
 }
 #pragma endregion
 
