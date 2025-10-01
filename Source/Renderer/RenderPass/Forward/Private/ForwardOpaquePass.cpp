@@ -133,19 +133,37 @@ void ForwardOpaquePass::createResourceHandles()
 		Vec4f color;    // float4 Color
 	};
 
+	// Plane with 2 triangles (6 vertices)
+	// CCW winding order for front face
+	// Triangle 1: bottom-left, top-right, bottom-right
+	// Triangle 2: bottom-left, top-left, top-right
 	VSINPUT_BASIC vertices[]{
-	{
-		{0.5f, -0.5f, 0.0f, 1.0f},
-		{1.0f, 0.0f, 0.0f, 1.0f},
-	},
-	{
-		{0.5f, 0.5f, 0.0f, 1.0f},
-		{0.0, 1.0f, 0.0f, 1.0f},
-	},
-	{
-		{-0.5f, 0.5f, 0.0f, 1.0f},
-		{0.0f, 0.0f, 1.0f, 1.0f},
-	},
+		// Triangle 1 (CCW when viewed from front)
+		{
+			{-0.5f, -0.5f, 0.0f, 1.0f}, // bottom-left
+			{1.0f, 0.0f, 0.0f, 1.0f},    // red
+		},
+		{
+			{0.5f, 0.5f, 0.0f, 1.0f},   // top-right
+			{0.0f, 0.0f, 1.0f, 1.0f},    // blue
+		},
+		{
+			{0.5f, -0.5f, 0.0f, 1.0f},  // bottom-right
+			{0.0f, 1.0f, 0.0f, 1.0f},    // green
+		},
+		// Triangle 2 (CCW when viewed from front)
+		{
+			{-0.5f, -0.5f, 0.0f, 1.0f}, // bottom-left
+			{1.0f, 0.0f, 0.0f, 1.0f},    // red
+		},
+		{
+			{-0.5f, 0.5f, 0.0f, 1.0f},  // top-left
+			{1.0f, 1.0f, 0.0f, 1.0f},    // yellow
+		},
+		{
+			{0.5f, 0.5f, 0.0f, 1.0f},   // top-right
+			{0.0f, 0.0f, 1.0f, 1.0f},    // blue
+		},
 	};
 
 	const Mesh* fallbackMesh = ObjectManager::GetFallbackMeshCube();
@@ -196,7 +214,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	VertexInputStateDescriptor  viDesc{};
 	VertexInputLayoutDescriptor viLayout{};
 	viLayout.binding = 0;
-	viLayout.stride = sizeof(float) * 4;
+	viLayout.stride = sizeof(float) * 8; // position (4 floats) + color (4 floats)
 	viLayout.stepRate = 1;
 	viLayout.useInstancing = false;
 
@@ -213,7 +231,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	viAttr.location = 1;
 	viAttr.binding = 0;
 	viAttr.format = EVertexFormat::FLOAT4; // float4 Color
-	viAttr.offset = 0;
+	viAttr.offset = sizeof(float) * 4; // offset after position
 
 	viDesc.attributes.push_back(viAttr);
 
