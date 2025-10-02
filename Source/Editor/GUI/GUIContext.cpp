@@ -39,7 +39,7 @@ void GUIContext::Initialize()
 	io.IniFilename = filePath;
 	ImGui::LoadIniSettingsFromDisk(io.IniFilename);
 	// Setup style
-	SetColorTheme(true);
+	SetColorTheme(false);
     
 	ImGuiStyle& style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

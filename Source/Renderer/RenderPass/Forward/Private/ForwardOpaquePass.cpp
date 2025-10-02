@@ -36,7 +36,7 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
 	_renderPassInfo.colorAttachmentCount = 1;
 	Attachment ca{};
 	ca.format = rtInfo.colorTextureInfos[0].format;
-	ca.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+	ca.clearValue = ClearValue(0.5f, 0.5f, 0.5f, 1.0f);
 	ca.isDepthStencil = false;
 	ca.loadAction = ELoadAction::CLEAR;
 	ca.storeAction = EStoreAction::STORE;
@@ -129,7 +129,7 @@ void ForwardOpaquePass::createResourceHandles()
 
 	struct VSINPUT_BASIC
 	{
-		Vec4f position; // float4 Pos
+		Vec3f position; // float4 Pos
 		Vec4f color;    // float4 Color
 	};
 
@@ -140,28 +140,28 @@ void ForwardOpaquePass::createResourceHandles()
 	VSINPUT_BASIC vertices[]{
 		// Triangle 1 (CCW when viewed from front)
 		{
-			{-0.5f, -0.5f, 0.0f, 1.0f}, // bottom-left
+			{-0.5f, -0.5f, 0.0f}, // bottom-left
 			{1.0f, 0.0f, 0.0f, 1.0f},    // red
 		},
 		{
-			{0.5f, 0.5f, 0.0f, 1.0f},   // top-right
+			{0.5f, 0.5f, 0.0f},   // top-right
 			{0.0f, 0.0f, 1.0f, 1.0f},    // blue
 		},
 		{
-			{0.5f, -0.5f, 0.0f, 1.0f},  // bottom-right
+			{0.5f, -0.5f,  0.0f},  // bottom-right
 			{0.0f, 1.0f, 0.0f, 1.0f},    // green
 		},
 		// Triangle 2 (CCW when viewed from front)
 		{
-			{-0.5f, -0.5f, 0.0f, 1.0f}, // bottom-left
+			{-0.5f, -0.5f, 0.0f}, // bottom-left
 			{1.0f, 0.0f, 0.0f, 1.0f},    // red
 		},
 		{
-			{-0.5f, 0.5f, 0.0f, 1.0f},  // top-left
+			{-0.5f, 0.5f, 0.0f},  // top-left
 			{1.0f, 1.0f, 0.0f, 1.0f},    // yellow
 		},
 		{
-			{0.5f, 0.5f, 0.0f, 1.0f},   // top-right
+			{0.5f, 0.5f, 0.0f},   // top-right
 			{0.0f, 0.0f, 1.0f, 1.0f},    // blue
 		},
 	};
@@ -214,7 +214,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	VertexInputStateDescriptor  viDesc{};
 	VertexInputLayoutDescriptor viLayout{};
 	viLayout.binding = 0;
-	viLayout.stride = sizeof(float) * 8; // position (4 floats) + color (4 floats)
+	viLayout.stride = sizeof(float) * 7; // position (4 floats) + color (4 floats)
 	viLayout.stepRate = 1;
 	viLayout.useInstancing = false;
 
@@ -223,7 +223,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	VertexInputAttributeDescriptor viAttr{};
 	viAttr.location = 0;
 	viAttr.binding = 0;
-	viAttr.format = EVertexFormat::FLOAT4; // float4 Pos
+	viAttr.format = EVertexFormat::FLOAT3; // float3 Pos
 	viAttr.offset = 0;
 
 	viDesc.attributes.push_back(viAttr);
@@ -231,7 +231,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	viAttr.location = 1;
 	viAttr.binding = 0;
 	viAttr.format = EVertexFormat::FLOAT4; // float4 Color
-	viAttr.offset = sizeof(float) * 4; // offset after position
+	viAttr.offset = sizeof(float) * 3; // offset after position
 
 	viDesc.attributes.push_back(viAttr);
 
@@ -244,7 +244,7 @@ void ForwardOpaquePass::createPipelineHandles(RHIRenderPass* renderPass)
 	}
 
 	RasterizerStateDescriptor rsDesc{};
-	rsDesc.cullMode = ECullMode::BACK;
+	rsDesc.cullMode = ECullMode::NONE;
 	rsDesc.depthBiasEnable = false;
 	rsDesc.frontFace = EFrontFace::CCW;
 	rsDesc.polygonMode = EPolygonMode::FILL;
