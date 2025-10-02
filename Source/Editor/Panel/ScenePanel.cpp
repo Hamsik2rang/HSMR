@@ -1,6 +1,6 @@
 ﻿#include "Editor/Panel/ScenePanel.h"
 
-#include "Engine/RHI/ResourceHandle.h"
+#include "RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 HS_NS_EDITOR_BEGIN
@@ -24,14 +24,14 @@ void ScenePanel::Draw()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar);
     
     ImGui::SetScrollY(0.0f);
     uint32 width = _currentRenderTarget->GetWidth();
     uint32 height = _currentRenderTarget->GetHeight();
     
     ImVec2 viewportSize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-    Texture* texture = _currentRenderTarget->GetColorTexture(0);
+    RHITexture* texture = _currentRenderTarget->GetColorTexture(0);
     
     ImGuiExtension::ImageOffscreen(texture, viewportSize);
 

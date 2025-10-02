@@ -1,0 +1,63 @@
+﻿#ifndef __HS_RHI_DEVICE_VULKAN_H__
+#define __HS_RHI_DEVICE_VULKAN_H__
+
+#include "Precompile.h"
+
+#include "RHI/Vulkan/VulkanUtility.h"
+
+#include <string>
+#include <vector>
+
+HS_NS_BEGIN
+
+
+class HS_RHI_API VulkanDevice final
+{
+public:
+	VulkanDevice() = default;
+	~VulkanDevice();
+	
+	bool Create(VkInstance instance);
+	void Destroy();
+	
+	struct QueueFamilyIndices
+	{
+		uint32 graphics;
+		uint32 compute;
+		uint32 transfer;
+	} queueFamilyIndices;
+
+	VkDevice logicalDevice = VK_NULL_HANDLE;
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+	VkPhysicalDeviceProperties properties;
+	VkPhysicalDeviceFeatures features;
+	VkPhysicalDeviceMemoryProperties memoryProperties;
+	VkSurfaceKHR surface;
+
+	VkQueue graphicsQueue = VK_NULL_HANDLE;
+	VkQueue computeQueue = VK_NULL_HANDLE;
+	VkQueue transferQueue = VK_NULL_HANDLE;
+
+	std::vector<const char*> supportedExtensions;
+	std::vector<const char*> deviceExtensions;
+
+	std::vector<VkQueueFamilyProperties> queueFamilyProperties;
+	VkCommandPool commandPool = VK_NULL_HANDLE;
+
+	HS_FORCEINLINE operator VkDevice() { return logicalDevice;  }
+
+private:
+	void getPhysicalDevice();
+	void createLogicalDevice();
+	void createSurface();
+	uint32 getPhysicalDeviceScore(VkPhysicalDevice device);
+
+	VkInstance _instanceVk;
+};
+
+HS_NS_END
+
+
+
+#endif
