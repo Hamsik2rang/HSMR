@@ -60,7 +60,7 @@ bool EditorWindow::onInitialize()
 			info.colorTextureInfos[j].byteSize = 4 * width * height * 1 /*depth*/;
 		}
 
-		info.useDepthStencilTexture = true;
+		info.useDepthStencilTexture = false;
 		info.depthStencilInfo.extent.width = width;
 		info.depthStencilInfo.extent.height = height;
 		info.depthStencilInfo.extent.depth = 1;
