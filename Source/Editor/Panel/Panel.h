@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Window.h"
+#include "Engine/Window.h"
 #include "Editor/GUI/GUIContext.h"
 
 #include <vector>

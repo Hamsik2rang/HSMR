@@ -1,17 +1,18 @@
 ﻿#include "Editor/GUI/ImGuiExtension.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/RHI/ResourceHandle.h"
-#include "Engine/RHI/Vulkan/SwapchainVulkan.h"
-#include "Engine/RHI/Vulkan/RHIContextVulkan.h"
-#include "Engine/RHI/Vulkan/RenderHandleVulkan.h"
-#include "Engine/RHI/Vulkan/CommandHandleVulkan.h"
-#include "Engine/RHI/Vulkan/ResourceHandleVulkan.h"
+#include "Core/Log.h"
+#include "RHI/ResourceHandle.h"
+#include "RHI/Vulkan/VulkanSwapchain.h"
+#include "RHI/Vulkan/VulkanContext.h"
+#include "RHI/Vulkan/VulkanRenderHandle.h"
+#include "RHI/Vulkan/VulkanCommandHandle.h"
+#include "RHI/Vulkan/VulkanResourceHandle.h"
 
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_vulkan.h"
 
-#include "Engine/Platform/Windows/PlatformWindowWindows.h"
+#include "Engine/Window.h"
+#include "HAL/Win/WinWindow.h"
 
 #include <unordered_map>
 
@@ -63,7 +64,7 @@ static void check_vk_result(VkResult result)
 	}
 }
 
-void ImGuiExtension::ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+void ImGuiExtension::ImageOffscreen(HS::RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
 	VkDescriptorSet dSet = ImGui_ImplVulkan_AddTexture(s_samplerVK->handle, textureVK->imageViewVk, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -84,8 +85,8 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 
 	ImGui_ImplWin32_Init(hWnd);
 
-	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
-	const RHIDeviceVulkan* rhiDeviceVK = rhiContextVK->GetDevice();
+	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
+	const VulkanDevice* rhiDeviceVK = rhiContextVK->GetDevice();
 	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(swapchainVK->GetRenderPass());
 	HS::SamplerInfo samplerInfo{};
 	samplerInfo.addressU = HS::EAddressMode::CLAMP_TO_BORDER;
@@ -134,14 +135,16 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	}
 
 	ImGui_ImplVulkan_Init(&initInfo);
+}
 
-	// Is it work?
-	HS::hs_platform_window_set_pre_event_handler(ImGui_ImplWin32_WndProcHandler);
+void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
+{
+	*fnHandler = static_cast<void*>(ImGui_ImplWin32_WndProcHandler);
 }
 
 void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)
 {
-	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
+	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 
 	if (swapchain != s_currentSwapchain)
 	{
@@ -180,8 +183,8 @@ void ImGuiExtension::EndRender()
 	// Begin render pass for swapchain
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(s_currentSwapchain);
 	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
-	RenderPass* renderPass = swapchainVK->GetRenderPass();
-	Framebuffer* framebuffer = swapchainVK->GetFramebufferForCurrentFrame();
+	RHIRenderPass* renderPass = swapchainVK->GetRenderPass();
+	RHIFramebuffer* framebuffer = swapchainVK->GetFramebufferForCurrentFrame();
 
 	Area area{ 0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight() };
 
@@ -194,7 +197,7 @@ void ImGuiExtension::EndRender()
 
 void ImGuiExtension::FinalizeBackend()
 {
-	RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
+	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 	rhiContextVK->WaitForIdle();
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -202,7 +205,7 @@ void ImGuiExtension::FinalizeBackend()
 	// Destroy the pipeline cache
 	if (s_pipelineCacheVk != VK_NULL_HANDLE)
 	{
-		RHIContextVulkan* rhiContextVK = static_cast<RHIContextVulkan*>(hs_engine_get_rhi_context());
+		VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 		vkDestroyPipelineCache(rhiContextVK->GetDevice()->logicalDevice, s_pipelineCacheVk, nullptr);
 		s_pipelineCacheVk = VK_NULL_HANDLE;
 	}
