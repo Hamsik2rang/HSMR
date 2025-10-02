@@ -741,7 +741,7 @@ struct ColorBlendAttachmentDescriptor
 	EBlendFactor dstAlphaFactor;
 	EBlendOp     alphaBlendOp;
 
-	uint32 writeMask; // 0x FF(R) FF(G) FF(B) FF(A)
+	uint32 writeMask = 0x0000'000F;
 };
 
 struct ColorBlendStateDescriptor
