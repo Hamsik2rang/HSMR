@@ -9,6 +9,7 @@ set(HAL_HEADERS
     Simd.h
     SystemContext.h
     Timer.h
+    Input.h
 )
 source_group("Public" FILES ${HAL_HEADERS})
 list(APPEND TOTAL_FILES ${HAL_HEADERS})
@@ -18,6 +19,7 @@ set(HAL_SOURCES
     Private/FileSystem.cpp
     Private/NativeWindow.cpp
     Private/SystemContext.cpp
+    Private/Input.cpp
 )
 source_group("Private" FILES ${HAL_SOURCES})
 list(APPEND TOTAL_FILES ${HAL_SOURCES})
@@ -27,6 +29,7 @@ if(WIN32)
         Win/WinFileSystem.h
         Win/WinSystemContext.h
         Win/WinWindow.h
+        Win/WinInput.h
     )
     source_group("Win\\Public" FILES ${HAL_WIN_HEADERS})
     list(APPEND TOTAL_FILES ${HAL_WIN_HEADERS})
@@ -35,6 +38,7 @@ if(WIN32)
         Win/Private/WinFileSystem.cpp
         Win/Private/WinSystemContext.cpp
         Win/Private/WinWindow.cpp
+        Win/Private/WinInput.cpp
     )
     source_group("Win\\Private" FILES ${HAL_WIN_SOURCES})
     list(APPEND TOTAL_FILES ${HAL_WIN_SOURCES})
@@ -44,6 +48,7 @@ else() # MAC
         Mac/MacFileSystem.h
         Mac/MacSystemContext.h
         Mac/MacWindow.h
+        Mac/MacInput.h
     )
     source_group("Mac\\Public" FILES ${HAL_MAC_HEADERS})
     list(APPEND TOTAL_FILES ${HAL_MAC_HEADERS})
@@ -53,6 +58,7 @@ else() # MAC
         Mac/Private/MacFileSystem.mm
         Mac/Private/MacSystemContext.mm
         Mac/Private/MacWindow.mm
+        Mac/Private/MacInput.mm
     )
     source_group("Mac\\Private" FILES ${HAL_MAC_HEADERS})
     list(APPEND TOTAL_FILES ${HAL_MAC_HEADERS})

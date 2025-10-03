@@ -12,6 +12,7 @@
 #include "Editor/Panel/DockspacePanel.h"
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
+#include "Editor/Panel/ProfilerPanel.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -187,6 +188,11 @@ void EditorWindow::setupPanels()
 	_scenePanel = MakeScoped<ScenePanel>(this);
 	_scenePanel->Setup();
 	_basePanel->InsertPanel(_scenePanel.get());
+
+	_profilerPanel = MakeScoped<ProfilerPanel>(this);
+	_profilerPanel->Setup();
+	_basePanel->InsertPanel(_profilerPanel.get());
+
 }
 
 
