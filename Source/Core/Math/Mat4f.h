@@ -1,4 +1,4 @@
-#ifndef __HS_MAT_4F_H__
+﻿#ifndef __HS_MAT_4F_H__
 #define __HS_MAT_4F_H__
 
 #include "Precompile.h"
@@ -6,7 +6,7 @@
 
 HS_NS_BEGIN
 
-using Mat4f = glm::mat4x4;
+using Mat44f = glm::mat4x4;
 
 HS_NS_END
 

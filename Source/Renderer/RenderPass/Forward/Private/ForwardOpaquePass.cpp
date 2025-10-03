@@ -83,39 +83,9 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
 	commandBuffer->DrawArrays(0, 6, 1);
 
-	//commandBuffer->BindIndexBuffer(_indexBuffer);
-
-	//commandBuffer->DrawIndexed(0, 36, 1, 0);
-
 	commandBuffer->EndRenderPass();
 
 	commandBuffer->PopDebugMark();
-
-	//    id<MTLRenderCommandEncoder> encoder = (__bridge id<MTLRenderCommandEncoder>)cmdEncoder;
-	//
-	//    if (nil == _rhiRes->pipelineState)
-	//    {
-	//        createPipelineHandles(renderPass);
-	//    }
-	//
-	//    MTLRenderPassDescriptor* rpDesc = (__bridge MTLRenderPassDescriptor*)renderPass->handle;
-	//    HS_ASSERT(rpDesc != nil, "RenderPass is null");
-	//
-	//    [encoder pushDebugGroup:@"Forward - Opaque"];
-	//
-	//    MTLViewport vp = {0.0, 0.0, static_cast<double>(_currentFramebuffer->info.width), static_cast<double>(_currentFramebuffer->info.height), 0.0, 1.0};
-	//
-	//    [encoder setViewport:vp];
-	//
-	//    [encoder setRenderPipelineState:_rhiRes->pipelineState];
-	//
-	//    [encoder setVertexBuffer:_rhiRes->vertexBuffer offset:0 atIndex:0];
-	//
-	//    [encoder drawPrimitives:MTLPrimitiveTypeTriangle
-	//                vertexStart:0
-	//                vertexCount:3];
-	//
-	//    [encoder popDebugGroup];
 }
 
 void ForwardOpaquePass::OnAfterRendering()
@@ -133,10 +103,6 @@ void ForwardOpaquePass::createResourceHandles()
 		Vec4f color;    // float4 Color
 	};
 
-	// Plane with 2 triangles (6 vertices)
-	// CCW winding order for front face
-	// Triangle 1: bottom-left, top-right, bottom-right
-	// Triangle 2: bottom-left, top-left, top-right
 	VSINPUT_BASIC vertices[]{
 		// Triangle 1 (CCW when viewed from front)
 		{
@@ -170,18 +136,14 @@ void ForwardOpaquePass::createResourceHandles()
 	const auto& pos = fallbackMesh->GetPosition();
 	const auto& color = fallbackMesh->GetColor();
 
-	//_vertexBuffer[0] = rhiContext->CreateBuffer(static_cast<const void*>(pos.data()), pos.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
-	//_vertexBuffer[1] = rhiContext->CreateBuffer(static_cast<const void*>(color.data()), color.size() * sizeof(float), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
-
-	//const auto& indices = fallbackMesh.GetIndices();
-	//_indexBuffer = rhiContext->CreateBuffer(static_cast<const void*>(indices.data()), indices.size() * sizeof(decltype(indices)), EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
-	//_indexCount = indices.size();
 	_vertexBuffer[0] = rhiContext->CreateBuffer("Opaque Test VertexBuffer", vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+
 #ifdef __APPLE__
 	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/Basic.metal"));
 #elif __WINDOWS__
 	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.vert.spv");
 #endif
+
 	ShaderInfo vsInfo{};
 	vsInfo.entryName = "main";
 	vsInfo.stage = EShaderStage::VERTEX;
@@ -193,9 +155,11 @@ void ForwardOpaquePass::createResourceHandles()
 	ShaderInfo fsInfo{};
 	fsInfo.entryName = "main";
 	fsInfo.stage = EShaderStage::FRAGMENT;
+
 #ifdef __WINDOWS__
 	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.frag.spv");
 #endif
+
 	_fragmentShader = rhiContext->CreateShader("Opaque Test Shader", fsInfo, libPath.c_str());
 	if (_fragmentShader == nullptr)
 	{

@@ -1,8 +1,8 @@
-//
-//  Camera.cpp
+﻿//
+//  EditorCamera.cpp
 //  HSMR
 //
-//  Created on 3/22/25.
+//  Created on 10/03/25.
 //
 #include "Core/Log.h"
 #include <cmath>

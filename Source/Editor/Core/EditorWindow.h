@@ -55,6 +55,7 @@ private:
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;
+    Scoped<Panel> _profilerPanel;
 };
 
 HS_NS_EDITOR_END
