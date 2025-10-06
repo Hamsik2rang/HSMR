@@ -9,27 +9,27 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/Renderer.h"
+#include "Renderer/RenderPath.h"
 
 
 HS_NS_EDITOR_BEGIN
 
-class HS_EDITOR_API GUIRenderer final : public Renderer
+class HS_EDITOR_API GUIRenderer final : public RenderPath
 {
 public:
 	GUIRenderer(RHIContext* rhiContext)
-		: Renderer(rhiContext)
+		: RenderPath(rhiContext)
 	{
 	}
 
 	~GUIRenderer() final = default;
 
-	virtual void AddPass(RenderPass* pass) final
+	virtual void AddPass(RHIRenderPass* pass) final
 	{
 		return;
 	}
 
-	// Inherited via Renderer
+	// Inherited via RenderPath
 	RenderTargetInfo GetBareboneRenderTargetInfo() final;
 };
 

@@ -1,22 +1,22 @@
 ﻿#include "Editor/GUI/GUIContext.h"
 
-#include "Engine/Core/EngineContext.h"
-#include "Engine/Core/Log.h"
-#include "Engine/Core/FileSystem.h"
+#include "Engine/EngineContext.h"
+#include "Core/Log.h"
+#include "HAL/FileSystem.h"
+#include "HAL/SystemContext.h"
 
 #include <string>
 
 HS_NS_EDITOR_BEGIN
 
-HS_EDITOR_API GUIContext* s_guiContext = nullptr;
-
-HS_EDITOR_API GUIContext* hs_editor_get_gui_context() { return s_guiContext; }
-
-GUIContext::GUIContext()
-	: _defaultLayoutPath(FileSystem::GetDefaultResourcePath("imgui.ini"))
+GUIContext::GUIContext(EngineContext* enginContext)
+	: _engineContext(enginContext)
+	, _defaultLayoutPath(SystemContext::Get()->assetDirectory + "imgui.ini")
 	, _font{ nullptr }
 	, _context(nullptr)
-{}
+{
+	Initialize();
+}
 
 GUIContext::~GUIContext()
 {}
@@ -31,7 +31,7 @@ void GUIContext::Initialize()
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-#if defined(__WIN32__)
+#if defined(__WINDOWS__)
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport 
 #endif
 	const char* filePath = _defaultLayoutPath.c_str();
@@ -39,7 +39,7 @@ void GUIContext::Initialize()
 	io.IniFilename = filePath;
 	ImGui::LoadIniSettingsFromDisk(io.IniFilename);
 	// Setup style
-	SetColorTheme(true);
+	SetColorTheme(false);
     
 	ImGuiStyle& style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -47,7 +47,7 @@ void GUIContext::Initialize()
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-	std::string fontName = "Font/OpenSans-Regular.ttf";
+	std::string fontName = "Fonts/OpenSans-Regular.ttf";
 	SetFont(fontName, 18.0f);
 }
 void GUIContext::NextFrame()
@@ -155,7 +155,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF(FileSystem::GetDefaultResourcePath(fontPath).c_str(), 18.0f);
+	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->assetDirectory + fontPath).c_str(), 18.0f);
 
 	io.Fonts->Build();
 }

@@ -1,17 +1,17 @@
-﻿//
-//  Camera.h
-//  HSMR
-//
-//  Created on 3/22/25.
-//
-#ifndef __HS_EDITOR_CAMERA_H__
+﻿#ifndef __HS_EDITOR_CAMERA_H__
 #define __HS_EDITOR_CAMERA_H__
 
 #include "Precompile.h"
-#include "Engine/Object/Object.h"
-#include "Engine/Core/Flag.h"
+#include "Resource/Object.h"
+#include "Core/Flag.h"
 
-#include "glm/glm.hpp"
+#include "Core/Math/Common.h"
+
+#include "Core/Math/Vec2f.h"
+#include "Core/Math/Vec3f.h"
+#include "Core/Math/Vec4f.h"
+
+#include "Core/Math/Mat4f.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -38,23 +38,23 @@ public:
 	~EditorCamera();
 
 	// 기본 변환 설정
-	void SetPosition(const glm::vec3& position);
-	void SetRotation(const glm::vec3& rotation); // 오일러 각
-	void SetScale(const glm::vec3& scale);
+	void SetPosition(const Vec3f& position);
+	void SetRotation(const Vec3f& rotation); // 오일러 각
+	void SetScale(const Vec3f& scale);
 
-	glm::vec3 GetPosition() const { return _position; }
-	glm::vec3 GetRotation() const { return _rotation; }
-	glm::vec3 GetScale() const { return _scale; }
+	Vec3f GetPosition() const { return _position; }
+	Vec3f GetRotation() const { return _rotation; }
+	Vec3f GetScale() const { return _scale; }
 
 	// 카메라 방향 벡터 얻기
-	glm::vec3 GetForward() const;
-	glm::vec3 GetRight() const;
-	glm::vec3 GetUp() const;
+	Vec3f GetForward() const;
+	Vec3f GetRight() const;
+	Vec3f GetUp() const;
 
 	// 카메라 조작 편의 함수들
-	void LookAt(const glm::vec3& target, const glm::vec3& up = { 0.0f, 1.0f, 0.0f });
-	void Move(const glm::vec3& offset);
-	void Rotate(const glm::vec3& eulerAngles);
+	void LookAt(const Vec3f& target, const Vec3f& up = { 0.0f, 1.0f, 0.0f });
+	void Move(const Vec3f& offset);
+	void Rotate(const Vec3f& eulerAngles);
 
 	// 투영 타입과 파라미터 설정
 	void SetProjectionType(EProjectionType type)
@@ -99,22 +99,22 @@ public:
 	// 컬링 기능
 	void SetFrustumCulling(bool enable) { _enableFrustumCulling = enable; }
 	bool IsFrustumCulling() const { return _enableFrustumCulling; }
-	bool IsInFrustum(const glm::vec3& point, float radius = 0.0f) const;
+	bool IsInFrustum(const Vec3f& point, float radius = 0.0f) const;
 
 	// 행렬 계산과 접근
-	const glm::mat4& GetViewMatrix();
-	const glm::mat4& GetProjectionMatrix();
-	const glm::mat4& GetViewProjectionMatrix();
+	const Mat44f& GetViewMatrix();
+	const Mat44f& GetProjectionMatrix();
+	const Mat44f& GetViewProjectionMatrix();
 
 	// 인버스 행렬
-	const glm::mat4& GetInverseViewMatrix();
-	const glm::mat4& GetInverseProjectionMatrix();
-	const glm::mat4& GetInverseViewProjectionMatrix();
+	const Mat44f& GetInverseViewMatrix();
+	const Mat44f& GetInverseProjectionMatrix();
+	const Mat44f& GetInverseViewProjectionMatrix();
 
 	// 레이 캐스팅 기능
-	glm::vec3 ScreenToWorldPoint(const glm::vec2& screenPos, float depth) const;
-	glm::vec3 ScreenToWorldDirection(const glm::vec2& screenPos) const;
-	glm::vec2 WorldToScreenPoint(const glm::vec3& worldPos) const;
+	Vec3f ScreenToWorldPoint(const Vec2f& screenPos, float depth) const;
+	Vec3f ScreenToWorldDirection(const Vec2f& screenPos) const;
+	Vec2f WorldToScreenPoint(const Vec3f& worldPos) const;
 
 private:
 	// 변환 업데이트
@@ -125,9 +125,9 @@ private:
 	void updateFrustumPlanes();
 
 	// 트랜스폼 데이터
-	glm::vec3 _position;
-	glm::vec3 _rotation; // 오일러 각 (라디안)
-	glm::vec3 _scale;
+	Vec3f _position;
+	Vec3f _rotation; // 오일러 각 (라디안)
+	Vec3f _scale;
 
 	// 투영 파라미터
 	EProjectionType _projectionType;
@@ -147,13 +147,13 @@ private:
 	float _farZ;
 
 	// 행렬 캐싱
-	glm::mat4 _viewMatrix;
-	glm::mat4 _projectionMatrix;
-	glm::mat4 _viewProjectionMatrix;
+	Mat44f _viewMatrix;
+	Mat44f _projectionMatrix;
+	Mat44f _viewProjectionMatrix;
 
-	glm::mat4 _inverseViewMatrix;
-	glm::mat4 _inverseProjectionMatrix;
-	glm::mat4 _inverseViewProjectionMatrix;
+	Mat44f _inverseViewMatrix;
+	Mat44f _inverseProjectionMatrix;
+	Mat44f _inverseViewProjectionMatrix;
 
 	// 프러스텀 컬링 데이터
 	bool    _enableFrustumCulling;

@@ -1,9 +1,9 @@
 ﻿#include "Editor/Core/EditorWindow.h"
 
-#include "Engine/RendererPass/Forward/ForwardOpaquePass.h"
-#include "Engine/RHI/Swapchain.h"
-#include "Engine/RHI/RenderHandle.h"
-#include "Engine/Renderer/ForwardRenderer.h"
+#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
+#include "RHI/Swapchain.h"
+#include "RHI/RenderHandle.h"
+#include "Renderer/ForwardPath.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -12,11 +12,12 @@
 #include "Editor/Panel/DockspacePanel.h"
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
+#include "Editor/Panel/ProfilerPanel.h"
 
 HS_NS_EDITOR_BEGIN
 
-EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags)
-	: Window(name, width, height, flags)
+EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
+	: Window(ownerApp, name, width, height, flags)
 {
 	onInitialize();
 }
@@ -24,110 +25,24 @@ EditorWindow::EditorWindow(const char* name, uint32 width, uint32 height, EWindo
 EditorWindow::~EditorWindow()
 {}
 
-void EditorWindow::Render()
-{
-	onRender();
-}
-
-void EditorWindow::ProcessEvent()
-{
-	EWindowEvent event;
-	while (hs_window_peek_event(&_nativeWindow, event, true))
-	{
-		switch (event)
-		{
-		case EWindowEvent::OPEN:
-		{
-			_shouldClose = false;
-
-			break;
-		}
-		case EWindowEvent::CLOSE:
-		{
-			_shouldClose = true;
-			_shouldUpdate = false;
-			_shouldPresent = false;
-
-			break;
-		}
-		case EWindowEvent::MAXIMIZE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-			onRestore();
-			
-			break;
-		}
-		case EWindowEvent::MINIMIZE:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-			
-			break;
-		}
-		case EWindowEvent::RESIZE:
-		{
-			onSuspend();
-			onRestore();
-			break;
-		}
-		case EWindowEvent::MOVE_ENTER:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-			onSuspend();
-
-			break;
-		}
-		case EWindowEvent::MOVE_EXIT:
-		case EWindowEvent::RESTORE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-			onRestore();
-			
-			break;
-		}
-		case EWindowEvent::MOVE:
-		{
-
-			break;
-		}
-		case EWindowEvent::FOCUS_IN:
-		{
-
-			break;
-		}
-		case EWindowEvent::FOCUS_OUT:
-		{
-
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
-	if (_shouldClose)
-	{
-		Flush();
-		return;
-	}
-
-	for (auto* child : _childs)
-	{
-		child->ProcessEvent();
-	}
-}
-
 bool EditorWindow::onInitialize()
 {
-	_renderer = new ForwardRenderer(_rhiContext);
+	SwapchainInfo scInfo{};
+	scInfo.nativeWindow = &_nativeWindow;
+	scInfo.useDepth = false;
+	scInfo.useMSAA = false;
+	scInfo.useStencil = false;
+	
+	_rhiContext = RHIContext::Get();
+
+	_swapchain = _rhiContext->CreateSwapchain(scInfo);
+
+	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();
 
 	ImGuiExtension::InitializeBackend(_swapchain);
 
-	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer, ERenderingOrder::OPAQUE));
+	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE));
 
 	_renderTargets.resize(_swapchain->GetMaxFrameCount());
 
@@ -146,7 +61,7 @@ bool EditorWindow::onInitialize()
 			info.colorTextureInfos[j].byteSize = 4 * width * height * 1 /*depth*/;
 		}
 
-		info.useDepthStencilTexture = true;
+		info.useDepthStencilTexture = false;
 		info.depthStencilInfo.extent.width = width;
 		info.depthStencilInfo.extent.height = height;
 		info.depthStencilInfo.extent.depth = 1;
@@ -160,6 +75,10 @@ bool EditorWindow::onInitialize()
 
 	setupPanels();
 
+	void* handler = nullptr;
+	ImGuiExtension::SetProcessEventHandler(&handler);
+	SetPreEventHandler(handler);
+
 	return true;
 }
 
@@ -172,7 +91,7 @@ void EditorWindow::onNextFrame()
 
 	_renderer->NextFrame(_swapchain);
 
-	Resolution resolution = static_cast<ScenePanel*>(_scenePanel)->GetResolution();
+	Resolution resolution = static_cast<ScenePanel*>(_scenePanel.get())->GetResolution();
 	uint32     width = static_cast<uint32>(resolution.width / _nativeWindow.scale);
 	uint32     height = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 
@@ -198,7 +117,7 @@ void EditorWindow::onRender()
 	{
 		return;
 	}
-	CommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
+	RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
 	cmdBuffer->Begin();
 
 	uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
@@ -207,7 +126,7 @@ void EditorWindow::onRender()
 	//     1. Render Scene to Scene Panel
 	_renderer->Render({}, curRT);
 
-	static_cast<ScenePanel*>(_scenePanel)->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[frameIndex]);
 
 	// 2. Render GUI
 	onRenderGUI();
@@ -223,18 +142,17 @@ void EditorWindow::onPresent()
 	{
 		return;
 	}
-	hs_engine_get_rhi_context()->Present(_swapchain);
+	RHIContext::Get()->Present(_swapchain);
 }
 
 void EditorWindow::onShutdown()
 {
 	ImGuiExtension::FinalizeBackend();
 
-	if (nullptr != _renderer)
+	if (_renderer)
 	{
 		_renderer->Shutdown();
-		delete _renderer;
-		_renderer = nullptr;
+		_renderer.reset();  // Automatic cleanup with Scoped<>
 	}
 }
 
@@ -260,16 +178,21 @@ void EditorWindow::onRestore()
 
 void EditorWindow::setupPanels()
 {
-	_basePanel = new DockspacePanel(this);
+	_basePanel = MakeScoped<DockspacePanel>(this);
 	_basePanel->Setup();
 
-	_menuPanel = new MenuPanel(this);
+	_menuPanel = MakeScoped<MenuPanel>(this);
 	_menuPanel->Setup();
-	_basePanel->InsertPanel(_menuPanel);
+	_basePanel->InsertPanel(_menuPanel.get());
 
-	_scenePanel = new ScenePanel(this);
+	_scenePanel = MakeScoped<ScenePanel>(this);
 	_scenePanel->Setup();
-	_basePanel->InsertPanel(_scenePanel);
+	_basePanel->InsertPanel(_scenePanel.get());
+
+	_profilerPanel = MakeScoped<ProfilerPanel>(this);
+	_profilerPanel->Setup();
+	_basePanel->InsertPanel(_profilerPanel.get());
+
 }
 
 

@@ -8,14 +8,14 @@
 #define __HS_GUI_RENDERER_PASS_H__
 #include "Precompile.h"
 
-#include "Engine/RendererPass/RendererPass.h"
+#include "Core/RendererPass/RendererPass.h"
 
 HS_NS_EDITOR_BEGIN
 
 
 
 
-class HS_EDITOR_API GUIRendererPass : public RendererPass
+class HS_EDITOR_API GUIRendererPass : public RenderPass
 {
 
 

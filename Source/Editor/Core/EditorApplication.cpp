@@ -1,75 +1,49 @@
 ﻿#include "Editor/Core/EditorApplication.h"
 
-#include "Engine/Core/Log.h"
-#include "Engine/Platform/PlatformApplication.h"
-#include "Engine/Platform/PlatformWindow.h"
-#include "Engine/Utility/ResourceManager.h"
-
+#include "Core/Log.h"
+#include "HAL/SystemContext.h"
+#include "HAL/NativeWindow.h"
+#include "Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
 #if defined(__APPLE__)
-#include "Engine/Platform/Mac/AutoReleasePool.h"
+#include "Core/Platform/Mac/AutoReleasePool.h"
 #endif
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const char* appName) noexcept
-    : Application(appName)
-	, _isInitialized(false)
+EditorApplication::EditorApplication(const char* appName, EngineContext* engineContext) noexcept
+    : Application(appName, engineContext)
     , _guiContext(nullptr)
     , _deltaTime(0.0f)
 {
-}
+    _guiContext = new GUIContext(engineContext);
 
-EditorApplication::~EditorApplication()
-{
-    Finalize();
-}
-
-bool EditorApplication::Initialize(EngineContext* engineContext)
-{
-    if (_isInitialized)
-    {
-        HS_LOG(error, "Application is already initialized");
-        return true;
-    }
-    _engineContext = engineContext;
-    hs_engine_set_context(engineContext);
-    
-    _guiContext = new GUIContext();
-    _guiContext->Initialize();
-    
-    ResourceManager::Initialize();
+    ObjectManager::Initialize();
 
     EWindowFlags windowFlags = EWindowFlags::NONE;
     windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
     windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
     windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow("EditorApp BaseWindow", 1280, 720, windowFlags);
+    _window = new EditorWindow(this, "EditorApp BaseWindow", 1280, 720, windowFlags);
     if (nullptr == _window->GetNativeWindow().handle)
     {
         HS_LOG(error, "Fail to initialize base window");
-        return false;
     }
 
-    hs_platform_window_show(_window->GetNativeWindow());
-    
-
-    _isInitialized = true;
-
-    return _isInitialized;
+    ShowNativeWindow(_window->GetNativeWindow());
 }
 
-void EditorApplication::Finalize()
+EditorApplication::~EditorApplication()
 {
-    if(false == _isInitialized)
-    {
-        return;
-    }
-    
+    Shutdown();
+}
+
+void EditorApplication::Shutdown()
+{
     if (_window && _window->IsOpened())
     {
         _window->Shutdown();
@@ -85,15 +59,11 @@ void EditorApplication::Finalize()
     }
     //...
 
-    ResourceManager::Finalize();
-
-    hs_platform_shutdown(this);
+    ObjectManager::Finalize();
 }
 
 void EditorApplication::Run()
 {
-    HS_ASSERT(_isInitialized, "Application isn't initialized");
-
     // TODO: Elapse Timer
 
     while (true)
@@ -119,7 +89,12 @@ void EditorApplication::Run()
         _window->Flush();
     }
 
-    Finalize();
+    Shutdown();
+}
+
+GUIContext* EditorApplication::GetGUIContext()
+{
+    return _guiContext;
 }
 
 HS_NS_EDITOR_END

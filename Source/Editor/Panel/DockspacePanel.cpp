@@ -1,4 +1,4 @@
-#include "Editor/Panel/DockspacePanel.h"
+﻿#include "Editor/Panel/DockspacePanel.h"
 
 #include "ImGui/imgui.h"
 
@@ -25,7 +25,7 @@ void DockspacePanel::Draw()
     windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-    dockspaceFlags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+    dockspaceFlags &= (~ImGuiDockNodeFlags_PassthruCentralNode) ;
     
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     
@@ -46,6 +46,7 @@ void DockspacePanel::Draw()
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
+        dockspaceFlags |= ImGuiDockNodeFlags_AutoHideTabBar;
         ImGuiID dockspaceID = ImGui::GetID("Dockspace Panel");
         
         ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);

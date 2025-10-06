@@ -10,22 +10,14 @@
 
 #include "Precompile.h"
 
-#include "Engine/Core/Window.h"
-#include "Engine/Renderer/RenderDefinition.h"
+#include "Engine/Window.h"
+#include "Renderer/RendererDefinition.h"
+#include "Renderer/RenderTarget.h"
 
-namespace HS
-{
-class RenderTarget;
-class Renderer;
-} // namespace HS
-
-namespace HS
-{
-namespace Editor
-{
-class GUIContext;
-}
-} // namespace HS
+/*#include "Renderer/RenderTarget.h"*/namespace HS { class RenderTarget; } // namespace HS
+/*#include "Renderer/RenderPath.h"*/ namespace HS { class RenderPath; }
+/*#include "RHI/RHIContext.h"*/ namespace HS { class RHIContext; }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class GUIContext; } }
 
 HS_NS_EDITOR_BEGIN
 
@@ -34,11 +26,10 @@ class Panel;
 class HS_EDITOR_API EditorWindow : public Window
 {
 public:
-    EditorWindow(const char* name, uint32 width, uint32 height, EWindowFlags flags);
+    EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~EditorWindow() override;
 
-    void Render() override;
-    void ProcessEvent() override;
+    GUIContext* GetGUIContext();
 
 private:
     void setupPanels();
@@ -57,10 +48,14 @@ private:
     void onRenderGUI();
 
     std::vector<RenderTarget> _renderTargets;
+
+    RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
+    Scoped<RenderPath> _renderer;
     
-    Panel* _basePanel;
-    Panel* _menuPanel;
-    Panel* _scenePanel;
+    Scoped<Panel> _basePanel;
+    Scoped<Panel> _menuPanel;
+    Scoped<Panel> _scenePanel;
+    Scoped<Panel> _profilerPanel;
 };
 
 HS_NS_EDITOR_END
