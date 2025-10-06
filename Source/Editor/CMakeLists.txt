@@ -89,6 +89,8 @@ set(PANEL_HEADERS
     Panel/ScenePanel.h
     Panel/InspectorPanel.h
     Panel/MenuPanel.h
+    Panel/ResourcePanel.h
+    Panel/ProfilerPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -101,6 +103,8 @@ set(PANEL_SOURCES
     Panel/ScenePanel.cpp
     Panel/InspectorPanel.cpp
     Panel/MenuPanel.cpp
+    Panel/ResourcePanel.cpp
+    Panel/ProfilerPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})
@@ -160,11 +164,14 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    Engine
+    HAL Core RHI Resource Renderer Geometry Physics Engine ECS ShaderSystem
 )
 
-if(USE_SHADERSYSTEM)
-    target_link_libraries(${TARGET_NAME} PRIVATE ${SLANG})
+if(WIN32)
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        ${HS_DEPS_LIB_DIR}/vulkan-1.lib
+    )
 endif()
 
 target_include_directories(${TARGET_NAME}
@@ -173,11 +180,11 @@ target_include_directories(${TARGET_NAME}
 )
 
 set_target_properties(${TARGET_PATH} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${HS_EXE_BIN_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Engine)
+add_dependencies(${TARGET_NAME} HAL Core RHI Resource ShaderSystem Renderer Geometry Physics ECS)
 
 target_compile_definitions(${TARGET_NAME}
     PUBLIC
@@ -189,7 +196,15 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_EDITOR
     HS_EDITOR_API_EXPORT
-    HS_API_EXPORT
+    HS_HAL_API_IMPORT
+    HS_CORE_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_RESOURCE_API_IMPORT
+    HS_SHADERSYSTEM_API_IMPORT
+    HS_RENDERER_API_IMPORT
+    HS_ENGINE_API_IMPORT
+    HS_PHYSICS_API_IMPORT
+    HS_ECS_API_IMPORT
 )
 
 if(APPLE)
@@ -234,4 +249,7 @@ if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 endif()
 
-install(TARGETS ${TARGET_NAME} ARCHIVE DESTINATION "${INSTALL_FOLDER}/dev/lib" LIBRARY DESTINATION "${INSTALL_FOLDER}" RUNTIME DESTINATION "${INSTALL_FOLDER}")
+install(TARGETS ${TARGET_NAME}
+    ARCHIVE DESTINATION "${INSTALL_FOLDER}/dev/lib"
+    LIBRARY DESTINATION "${INSTALL_FOLDER}"
+    RUNTIME DESTINATION "${INSTALL_FOLDER}")

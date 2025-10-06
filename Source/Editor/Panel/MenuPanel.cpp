@@ -1,8 +1,11 @@
-#include "Editor/Panel/MenuPanel.h"
+﻿#include "Editor/Panel/MenuPanel.h"
 
-#include "Engine/Core/Window.h"
+#include "Engine/Window.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Editor/GUI/GUIContext.h"
+
+#include "Editor/Core/EditorApplication.h"
 
 #include "ImGui/imgui.h"
 
@@ -23,7 +26,7 @@ void MenuPanel::Cleanup()
 
 void MenuPanel::Draw()
 {
-    static bool useWhite = true;
+    static bool useWhite = false;
     static bool showDemo = true;
     if (ImGui::BeginMenuBar())
     {
@@ -41,7 +44,8 @@ void MenuPanel::Draw()
             }
             if (ImGui::MenuItem("Change Theme", nullptr, false))
             {
-                hs_editor_get_gui_context()->SetColorTheme(useWhite);
+                auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
+                guiContext->SetColorTheme(useWhite);
                 useWhite = !useWhite;
             }
             ImGui::Separator();
