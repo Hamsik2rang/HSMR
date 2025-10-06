@@ -42,7 +42,7 @@ EPixelFormat hs_rhi_from_pixel_format(MTLPixelFormat format)
     return EPixelFormat::INVALID;
 }
 
-MTLVertexFormat hs_rhi_from_pixel_format(EVertexFormat format)
+MTLVertexFormat hs_rhi_to_vertex_format(EVertexFormat format)
 {
     switch (format)
     {
