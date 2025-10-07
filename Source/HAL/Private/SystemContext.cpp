@@ -1,4 +1,4 @@
-﻿#include "HAL/SystemContext.h"
+#include "HAL/SystemContext.h"
 
 HS_NS_BEGIN
 
@@ -6,11 +6,11 @@ Scoped<SystemContext> SystemContext::s_instance;
 
 SystemContext* SystemContext::Get()
 {
-    if(!s_instance)
+    if (!s_instance)
     {
         s_instance = MakeScoped<SystemContext>();
     }
-    
+
     return s_instance.get();
 }
 
@@ -27,6 +27,4 @@ SystemContext::~SystemContext()
     }
 }
 
-
 HS_NS_END
-

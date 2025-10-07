@@ -6,7 +6,7 @@
 
 HS_NS_BEGIN
 
-MTLPixelFormat hs_rhi_to_pixel_format(EPixelFormat format)
+MTLPixelFormat MetalUtility::ToPixelFormat(EPixelFormat format)
 {
     switch (format)
     {
@@ -26,7 +26,7 @@ MTLPixelFormat hs_rhi_to_pixel_format(EPixelFormat format)
     return MTLPixelFormatInvalid;
 }
 
-EPixelFormat hs_rhi_from_pixel_format(MTLPixelFormat format)
+EPixelFormat MetalUtility::FromPixelFormat(MTLPixelFormat format)
 {
     switch (format)
     {
@@ -42,7 +42,7 @@ EPixelFormat hs_rhi_from_pixel_format(MTLPixelFormat format)
     return EPixelFormat::INVALID;
 }
 
-MTLVertexFormat hs_rhi_to_vertex_format(EVertexFormat format)
+MTLVertexFormat MetalUtility::ToVertexFormat(EVertexFormat format)
 {
     switch (format)
     {
@@ -63,7 +63,7 @@ MTLVertexFormat hs_rhi_to_vertex_format(EVertexFormat format)
     return MTLVertexFormatInvalid;
 }
 
-EVertexFormat hs_rhi_from_vertex_format(MTLVertexFormat format)
+EVertexFormat MetalUtility::FromVertexFormat(MTLVertexFormat format)
 {
     switch (format)
     {
@@ -84,7 +84,7 @@ EVertexFormat hs_rhi_from_vertex_format(MTLVertexFormat format)
     return EVertexFormat::INVALID;
 }
  
-MTLLoadAction hs_rhi_to_load_action(ELoadAction action)
+MTLLoadAction MetalUtility::ToLoadAction(ELoadAction action)
 {
     switch (action)
     {
@@ -98,7 +98,7 @@ MTLLoadAction hs_rhi_to_load_action(ELoadAction action)
     return MTLLoadActionDontCare;
 }
 
-ELoadAction hs_rhi_from_load_action(MTLLoadAction action)
+ELoadAction MetalUtility::FromLoadAction(MTLLoadAction action)
 {
     switch (action)
     {
@@ -112,7 +112,7 @@ ELoadAction hs_rhi_from_load_action(MTLLoadAction action)
     return ELoadAction::INVALID;
 }
 
-MTLStoreAction hs_rhi_to_store_action(EStoreAction action)
+MTLStoreAction MetalUtility::ToStoreAction(EStoreAction action)
 {
     switch (action)
     {
@@ -125,7 +125,7 @@ MTLStoreAction hs_rhi_to_store_action(EStoreAction action)
     return MTLStoreActionUnknown;
 }
 
-EStoreAction hs_rhi_from_store_action(MTLStoreAction action)
+EStoreAction MetalUtility::FromStoreAction(MTLStoreAction action)
 {
     switch (action)
     {
@@ -138,12 +138,12 @@ EStoreAction hs_rhi_from_store_action(MTLStoreAction action)
     return EStoreAction::INVALID;
 }
 
-MTLViewport hs_rhi_to_viewport(Viewport vp)
+MTLViewport MetalUtility::ToViewport(Viewport vp)
 {
     return (MTLViewport){vp.x, vp.y, vp.width, vp.height, vp.zNear, vp.zFar};
 }
 
-Viewport hs_rhi_from_viewport(MTLViewport vp)
+Viewport MetalUtility::FromViewport(MTLViewport vp)
 {
     return Viewport{
         static_cast<float>(vp.originX),
@@ -155,7 +155,7 @@ Viewport hs_rhi_from_viewport(MTLViewport vp)
     };
 }
 
-MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
+MTLTextureUsage MetalUtility::ToTextureUsage(ETextureUsage usage)
 {
     MTLTextureUsage result = 0;
     if ((usage & ETextureUsage::SAMPLED) != 0) result |= MTLTextureUsageShaderRead;
@@ -166,7 +166,7 @@ MTLTextureUsage hs_rhi_to_texture_usage(ETextureUsage usage)
     return result;
 }
 
-ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage)
+ETextureUsage MetalUtility::FromTextureUsage(MTLTextureUsage usage)
 {
     ETextureUsage result = ETextureUsage::UNKNOWN;
     if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SAMPLED;
@@ -176,7 +176,7 @@ ETextureUsage hs_rhi_from_texture_usage(MTLTextureUsage usage)
     return result;
 }
 
-MTLTextureType hs_rhi_to_texture_type(ETextureType type)
+MTLTextureType MetalUtility::ToTextureType(ETextureType type)
 {
     switch (type)
     {
@@ -192,7 +192,7 @@ MTLTextureType hs_rhi_to_texture_type(ETextureType type)
     return MTLTextureType2D;
 }
 
-ETextureType hs_rhi_from_texture_type(MTLTextureType type)
+ETextureType MetalUtility::FromTextureType(MTLTextureType type)
 {
     switch (type)
     {
@@ -208,12 +208,12 @@ ETextureType hs_rhi_from_texture_type(MTLTextureType type)
     return ETextureType::INVALID;
 }
 
-size_t hs_rhi_get_bytes_per_pixel(EPixelFormat format)
+size_t MetalUtility::GetBytesPerPixel(EPixelFormat format)
 {
-    return hs_rhi_get_bytes_per_pixel(hs_rhi_to_pixel_format(format));
+    return GetBytesPerPixel(ToPixelFormat(format));
 }
 
-size_t hs_rhi_get_bytes_per_pixel(MTLPixelFormat format)
+size_t MetalUtility::GetBytesPerPixel(MTLPixelFormat format)
 {
     switch (format)
     {
@@ -231,7 +231,7 @@ size_t hs_rhi_get_bytes_per_pixel(MTLPixelFormat format)
     return 0;
 }
 
-MTLBlendFactor hs_rhi_to_blend_factor(EBlendFactor factor)
+MTLBlendFactor MetalUtility::ToBlendFactor(EBlendFactor factor)
 {
     switch (factor)
     {
@@ -259,7 +259,7 @@ MTLBlendFactor hs_rhi_to_blend_factor(EBlendFactor factor)
     return MTLBlendFactorZero;
 }
 
-EBlendFactor hs_rhi_from_blend_factor(MTLBlendFactor factor)
+EBlendFactor MetalUtility::FromBlendFactor(MTLBlendFactor factor)
 {
     switch (factor)
     {
@@ -287,7 +287,7 @@ EBlendFactor hs_rhi_from_blend_factor(MTLBlendFactor factor)
     return EBlendFactor::INVALID;
 }
 
-MTLBlendOperation hs_rhi_to_blend_operation(EBlendOp operation)
+MTLBlendOperation MetalUtility::ToBlendOperation(EBlendOp operation)
 {
     switch (operation)
     {
@@ -304,7 +304,7 @@ MTLBlendOperation hs_rhi_to_blend_operation(EBlendOp operation)
     return MTLBlendOperationAdd;
 }
 
-EBlendOp hs_rhi_from_blend_operation(MTLBlendOperation operation)
+EBlendOp MetalUtility::FromBlendOperation(MTLBlendOperation operation)
 {
     switch (operation)
     {
@@ -321,7 +321,7 @@ EBlendOp hs_rhi_from_blend_operation(MTLBlendOperation operation)
     return EBlendOp::INVALID;
 }
 
-MTLCompareFunction hs_rhi_to_compare_function(ECompareOp compare)
+MTLCompareFunction MetalUtility::ToCompareFunction(ECompareOp compare)
 {
     switch (compare)
     {
@@ -341,7 +341,7 @@ MTLCompareFunction hs_rhi_to_compare_function(ECompareOp compare)
     return MTLCompareFunctionNever;
 }
 
-ECompareOp hs_rhi_from_compare_function(MTLCompareFunction compare)
+ECompareOp MetalUtility::FromCompareFunction(MTLCompareFunction compare)
 {
     switch (compare)
     {
@@ -361,7 +361,7 @@ ECompareOp hs_rhi_from_compare_function(MTLCompareFunction compare)
     return ECompareOp::NEVER;
 }
 
-MTLWinding hs_rhi_to_front_face(EFrontFace frontFace)
+MTLWinding MetalUtility::ToWinding(EFrontFace frontFace)
 {
     switch (frontFace)
     {
@@ -375,7 +375,7 @@ MTLWinding hs_rhi_to_front_face(EFrontFace frontFace)
     return MTLWindingClockwise;
 }
 
-EFrontFace hs_rhi_from_front_face(MTLWinding frontFace)
+EFrontFace MetalUtility::FromWinding(MTLWinding frontFace)
 {
     switch (frontFace)
     {
@@ -388,7 +388,7 @@ EFrontFace hs_rhi_from_front_face(MTLWinding frontFace)
     return EFrontFace::CLOCKWISE;
 }
 
-MTLCullMode hs_rhi_to_cull_mode(ECullMode cullMode)
+MTLCullMode MetalUtility::ToCullMode(ECullMode cullMode)
 {
     switch (cullMode)
     {
@@ -402,7 +402,7 @@ MTLCullMode hs_rhi_to_cull_mode(ECullMode cullMode)
     return MTLCullModeNone;
 }
 
-ECullMode hs_rhi_from_cull_mode(MTLCullMode cullMode)
+ECullMode MetalUtility::FromCullMode(MTLCullMode cullMode)
 {
     switch (cullMode)
     {
@@ -416,7 +416,7 @@ ECullMode hs_rhi_from_cull_mode(MTLCullMode cullMode)
     return ECullMode::NONE;
 }
 
-MTLTriangleFillMode hs_rhi_to_polygon_mode(EPolygonMode polygonMode)
+MTLTriangleFillMode MetalUtility::ToPolygonMode(EPolygonMode polygonMode)
 {
     switch (polygonMode)
     {
@@ -429,7 +429,7 @@ MTLTriangleFillMode hs_rhi_to_polygon_mode(EPolygonMode polygonMode)
     return MTLTriangleFillModeFill;
 }
 
-EPolygonMode hs_rhi_from_polygon_mode(MTLTriangleFillMode polygonMode)
+EPolygonMode MetalUtility::FromPolygonMode(MTLTriangleFillMode polygonMode)
 {
     switch (polygonMode)
     {
@@ -442,7 +442,7 @@ EPolygonMode hs_rhi_from_polygon_mode(MTLTriangleFillMode polygonMode)
     return EPolygonMode::FILL;
 }
 
-MTLPrimitiveType hs_rhi_to_primitive_topology(EPrimitiveTopology topology)
+MTLPrimitiveType MetalUtility::ToPrimitiveTopology(EPrimitiveTopology topology)
 {
     switch (topology)
     {
@@ -458,7 +458,7 @@ MTLPrimitiveType hs_rhi_to_primitive_topology(EPrimitiveTopology topology)
     return MTLPrimitiveTypeTriangle;
 }
 
-EPrimitiveTopology hs_rhi_from_primitive_topology(MTLPrimitiveType topology)
+EPrimitiveTopology MetalUtility::FromPrimitiveTopology(MTLPrimitiveType topology)
 {
     switch (topology)
     {
@@ -474,7 +474,7 @@ EPrimitiveTopology hs_rhi_from_primitive_topology(MTLPrimitiveType topology)
     return EPrimitiveTopology::TRIANGLE_LIST;
 }
 
-MTLVertexFormat hs_rhi_get_vertex_format_from_size(size_t size)
+MTLVertexFormat MetalUtility::GetVertexFormatFromSize(size_t size)
 {
     switch (size)
     {
@@ -489,7 +489,7 @@ MTLVertexFormat hs_rhi_get_vertex_format_from_size(size_t size)
     HS_LOG(crash, "Unsupported VertexFormat size");
     return MTLVertexFormatInvalid;
 }
-size_t hs_rhi_get_size_from_vertex_format(MTLVertexFormat format)
+size_t MetalUtility::GetSizeFromVertexFormat(MTLVertexFormat format)
 {
     switch (format)
     {
@@ -505,7 +505,7 @@ size_t hs_rhi_get_size_from_vertex_format(MTLVertexFormat format)
     return 0;
 }
 
-MTLResourceOptions hs_rhi_to_buffer_option(EBufferMemoryOption option)
+MTLResourceOptions MetalUtility::ToBufferOption(EBufferMemoryOption option)
 {
     switch (option)
     {
@@ -519,7 +519,7 @@ MTLResourceOptions hs_rhi_to_buffer_option(EBufferMemoryOption option)
     HS_LOG(crash, "Unsupported MTLResourceOption");
     return MTLStorageModeManaged;
 }
-EBufferMemoryOption hs_rhi_from_buffer_option(MTLResourceOptions option)
+EBufferMemoryOption MetalUtility::FromBufferOption(MTLResourceOptions option)
 {
     switch (option)
     {
@@ -534,7 +534,7 @@ EBufferMemoryOption hs_rhi_from_buffer_option(MTLResourceOptions option)
     return EBufferMemoryOption::INVALID;
 }
 
-MTLClearColor hs_rhi_to_clear_color(const float* color)
+MTLClearColor MetalUtility::ToClearColor(const float* color)
 {
     double r = static_cast<double>(color[0]);
     double g = static_cast<double>(color[1]);
@@ -544,7 +544,7 @@ MTLClearColor hs_rhi_to_clear_color(const float* color)
     return MTLClearColorMake(r, g, b, a);
 }
 
-void hs_rhi_from_clear_color(MTLClearColor color, float* outColor)
+void MetalUtility::FromClearColor(MTLClearColor color, float* outColor)
 {
     outColor[0] = static_cast<float>(color.red);
     outColor[1] = static_cast<float>(color.green);

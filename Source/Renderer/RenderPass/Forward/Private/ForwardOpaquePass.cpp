@@ -139,13 +139,13 @@ void ForwardOpaquePass::createResourceHandles()
 	_vertexBuffer[0] = rhiContext->CreateBuffer("Opaque Test VertexBuffer", vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 
 #ifdef __APPLE__
-	std::string libPath = SystemContext::Get()->assetDirectory  + std::string("Shader/Basic.metal");
+	std::string libPath = SystemContext::Get()->assetDirectory  + std::string("Shaders/Basic.vert.metal");
 #elif __WINDOWS__
 	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.vert.spv");
 #endif
 
 	ShaderInfo vsInfo{};
-	vsInfo.entryName = "main";
+	vsInfo.entryName = "VertexMain";
 	vsInfo.stage = EShaderStage::VERTEX;
 	_vertexShader = rhiContext->CreateShader("Opaque Test Shader", vsInfo, libPath.c_str());
 	if (_vertexShader == nullptr)
@@ -153,10 +153,12 @@ void ForwardOpaquePass::createResourceHandles()
 		HS_LOG(crash, "Shader is nullptr");
 	}
 	ShaderInfo fsInfo{};
-	fsInfo.entryName = "main";
+	fsInfo.entryName = "FragmentMain";
 	fsInfo.stage = EShaderStage::FRAGMENT;
 
-#ifdef __WINDOWS__
+#ifdef __APPLE__
+    libPath =  SystemContext::Get()->assetDirectory  + std::string("Shaders/Basic.frag.metal");
+#elif __WINDOWS__
 	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.frag.spv");
 #endif
 

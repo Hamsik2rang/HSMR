@@ -5,19 +5,6 @@
 #include <queue>
 #include <utility>
 
-#import <Cocoa/Cocoa.h>
-#import <MetalKit/MetalKit.h>
-#import <QuartzCore/CAMetalLayer.h>
-
-@interface HSViewController : NSViewController<NSWindowDelegate>
-
-@property (nonatomic, strong) NSWindow* window;
-
-- (instancetype)initWithWindow:(NSWindow*)window;
-- (CGSize)getBackingViewSize;
-
-@end
-
 @implementation HSViewController
 {
     CGSize _curDrawableSize;
@@ -157,8 +144,15 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.title     = name;
     outNativeWindow.width     = width;
     outNativeWindow.height    = height;
+    outNativeWindow.shouldRender = true;
+    outNativeWindow.shouldUpdate = true;
+    
+    outNativeWindow.surfaceWidth = width;
+    outNativeWindow.surfaceHeight = height;
 
     [vc setHSWindow:&outNativeWindow];
+    
+    return true;
 }
 
 void DestroyNativeWindowInternal(NativeWindow& window)
@@ -178,7 +172,7 @@ void ShowNativeWindowInternal(const NativeWindow& nativeWindow)
     [window becomeKeyWindow];
 }
 
-void PollNativeEventInternal()
+void PollNativeEventInternal(NativeWindow& window)
 {
     @autoreleasepool
     {
@@ -206,6 +200,11 @@ void SetNativeWindowSizeInternal(uint16 width, uint16 height)
 void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight)
 {
     
+}
+
+void SetNativePreEventHandler(void* fnHandler)
+{
+    // empty.
 }
 
 HS_NS_END

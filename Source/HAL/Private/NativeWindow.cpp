@@ -1,16 +1,22 @@
-﻿#include "HAL/NativeWindow.h"
+#include "HAL/NativeWindow.h"
 
 #if defined(__WINDOWS__)
 #include "HAL/Win/WinWindow.h"
 #elif defined(__APPLE__)
-#include "HAL/Mac/MacWindow.h"
+//#include "HAL/Mac/MacWindow.h"
 #endif
-
 
 #include <queue>
 #include <cassert>
 
 HS_NS_BEGIN
+
+bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
+void DestroyNativeWindowInternal(NativeWindow& nativeWindow);
+void ShowNativeWindowInternal(const NativeWindow& nativeWindow);
+void PollNativeEventInternal(NativeWindow& nativeWindow);
+void SetNativeWindowSizeInternal(uint16 width, uint16 height);
+void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
 
 static std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_eventQueueTable;
 

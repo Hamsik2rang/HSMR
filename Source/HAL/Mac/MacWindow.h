@@ -11,9 +11,20 @@
 
 #include "HAL/NativeWindow.h"
 
+#import <Cocoa/Cocoa.h>
+#import <MetalKit/MetalKit.h>
+#import <QuartzCore/CAMetalLayer.h>
+
+@interface HSViewController : NSViewController<NSWindowDelegate>
+
+@property (nonatomic, strong) NSWindow* window;
+
+- (instancetype)initWithWindow:(NSWindow*)window;
+- (CGSize)getBackingViewSize;
+
+@end
 
 HS_NS_BEGIN
-
 
 bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
 void DestroyNativeWindowInternal(NativeWindow& nativeWindow);

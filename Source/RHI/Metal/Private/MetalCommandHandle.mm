@@ -101,17 +101,17 @@ void MetalCommandBuffer::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuff
             const Attachment& curAttachment = renderPass->info.colorAttachments[i];
 
             curRenderPassDesc.colorAttachments[i].texture     = static_cast<MetalTexture*>(framebuffer->info.colorBuffers[i])->handle;
-            curRenderPassDesc.colorAttachments[i].loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
-            curRenderPassDesc.colorAttachments[i].storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
-            curRenderPassDesc.colorAttachments[i].clearColor  = hs_rhi_to_clear_color(curAttachment.clearValue.color);
+            curRenderPassDesc.colorAttachments[i].loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
+            curRenderPassDesc.colorAttachments[i].storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
+            curRenderPassDesc.colorAttachments[i].clearColor  = MetalUtility::ToClearColor(curAttachment.clearValue.color);
         }
 
         if (useDepthStencil)
         {
             const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
             curRenderPassDesc.depthAttachment.texture     = static_cast<MetalTexture*>(framebuffer->info.depthStencilBuffer)->handle;
-            curRenderPassDesc.depthAttachment.loadAction  = hs_rhi_to_load_action(curAttachment.loadAction);
-            curRenderPassDesc.depthAttachment.storeAction = hs_rhi_to_store_action(curAttachment.storeAction);
+            curRenderPassDesc.depthAttachment.loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
+            curRenderPassDesc.depthAttachment.storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
             curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depthStencil.depth);
         }
     }
@@ -140,9 +140,9 @@ void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
     {
         [curRenderEncoder setDepthStencilState:curBindPipeline->depthStencilState];
     }
-    [curRenderEncoder setFrontFacingWinding:hs_rhi_to_front_face(pipeline->info.rasterizerDesc.frontFace)];
-    [curRenderEncoder setCullMode:hs_rhi_to_cull_mode(pipeline->info.rasterizerDesc.cullMode)];
-    [curRenderEncoder setTriangleFillMode:hs_rhi_to_polygon_mode(pipeline->info.rasterizerDesc.polygonMode)];
+    [curRenderEncoder setFrontFacingWinding:MetalUtility::ToWinding(pipeline->info.rasterizerDesc.frontFace)];
+    [curRenderEncoder setCullMode:MetalUtility::ToCullMode(pipeline->info.rasterizerDesc.cullMode)];
+    [curRenderEncoder setTriangleFillMode:MetalUtility::ToPolygonMode(pipeline->info.rasterizerDesc.polygonMode)];
 
     curBindPipeline = static_cast<MetalGraphicsPipeline*>(pipeline);
 }
@@ -186,7 +186,7 @@ void MetalCommandBuffer::BindResourceSet(RHIResourceSet* rSet)
 
 void MetalCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    [curRenderEncoder setViewport:hs_rhi_to_viewport(viewport)];
+    [curRenderEncoder setViewport:MetalUtility::ToViewport(viewport)];
 }
 
 void MetalCommandBuffer::SetScissor(const uint32 x, const uint32 y, const uint32 width, const uint32 height)
@@ -212,7 +212,7 @@ void MetalCommandBuffer::BindVertexBuffers(const RHIBuffer* const* vertexBuffers
 
 void MetalCommandBuffer::DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount)
 {
-    MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
+    MTLPrimitiveType primType = MetalUtility::ToPrimitiveTopology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
     [curRenderEncoder drawPrimitives:primType
                          vertexStart:firstVertex
@@ -222,7 +222,7 @@ void MetalCommandBuffer::DrawArrays(const uint32 firstVertex, const uint32 verte
 }
 void MetalCommandBuffer::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
-    MTLPrimitiveType primType = hs_rhi_to_primitive_topology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
+    MTLPrimitiveType primType = MetalUtility::ToPrimitiveTopology(curBindPipeline->info.inputAssemblyDesc.primitiveTopology);
 
     [curRenderEncoder drawIndexedPrimitives:primType
                                  indexCount:indexCount

@@ -1,4 +1,4 @@
-﻿#include "Engine/EngineContext.h"
+#include "Engine/EngineContext.h"
 
 #include "HAL/SystemContext.h"
 
@@ -15,10 +15,6 @@ EngineContext::EngineContext(const char* name, ERHIPlatform platform)
 
 EngineContext::~EngineContext()
 {
-
-
-
-	SystemContext::Get()->Finalize();
 }
 
 

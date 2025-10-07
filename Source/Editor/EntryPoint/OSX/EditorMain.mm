@@ -1,7 +1,7 @@
 #include "Editor/EntryPoint/EditorMain.h"
 
-#include "Core/EngineContext.h"
-#include "Core/Renderer/Renderer.h"
+#include "Engine/EngineContext.h"
+#include "Renderer/RenderPath.h"
 
 #include "Editor/Core/EditorApplication.h"
 
@@ -15,24 +15,21 @@ using namespace HS::Editor;
 
 int hs_editor_main(int argc, char* argv[])
 {
+    EngineContext* engineContext = new EngineContext("HSMR", ERHIPlatform::METAL);
     // TODO: Parse command arguments
     @autoreleasepool
     {
-        EditorApplication* hsApp = new EditorApplication("HSMR");
-
-        hs_platform_init(hsApp);
-
-        EngineContext* engineContext = hs_engine_create_context("HSMR", ERHIPlatform::METAL);
+        EditorApplication* hsApp = new EditorApplication("HSMR", engineContext);
 
         if ([NSApp delegate] == nil)
         {
             auto bp = true;
         }
 
-        hsApp->Initialize(engineContext);
-
         hsApp->Run();
     }
+    
+    delete engineContext;
     
     return 0;
 }
