@@ -13,6 +13,14 @@
 #include <mach-o/dyld.h>
 
 HS_NS_BEGIN
+
+bool FileSystem::Exist(const std::string &absolutePath)
+{
+    
+    
+    return true;
+}
+
 // 파일 복사 함수
 bool FileSystem::Copy(const std::string& src, const std::string& dst)
 {

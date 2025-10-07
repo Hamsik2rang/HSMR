@@ -87,7 +87,7 @@ bool SystemContext::Initialize()
         realpath(path, executablePath.data());
         executableDirectory = FileSystem::GetDirectory(executablePath);
 
-        resourceDirectory = executableDirectory + "Resource" + HS_DIR_SEPERATOR;
+        assetDirectory = executableDirectory + "Resource" + HS_DIR_SEPERATOR;
     }
 
     return true;

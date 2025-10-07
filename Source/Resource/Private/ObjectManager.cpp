@@ -1,4 +1,4 @@
-﻿#include "Resource/ObjectManager.h"
+#include "Resource/ObjectManager.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -145,9 +145,9 @@ void ObjectManager::Finalize()
 }
 
 // Forward declarations
-Scoped<Mesh> ProcessNode(aiNode* node, const aiScene* scene, std::vector<Scoped<Material>>& materials);
-Scoped<Mesh> ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<Scoped<Material>>& materials);
-std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::string& modelDirectory);
+static Scoped<Mesh> ProcessNode(aiNode* node, const aiScene* scene, std::vector<Scoped<Material>>& materials);
+static Scoped<Mesh> ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<Scoped<Material>>& materials);
+static std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const std::string& modelDirectory);
 
 // Helper function to convert aiVector3D to float vector
 static std::vector<float> ConvertToFloatVector(const aiVector3D* data, uint32 count, uint32 components = 3)

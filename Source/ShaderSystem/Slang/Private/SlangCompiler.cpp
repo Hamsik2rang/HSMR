@@ -1,4 +1,4 @@
-﻿#include "ShaderSystem/Slang/SlangCompiler.h"
+#include "ShaderSystem/Slang/SlangCompiler.h"
 #include "Core/Log.h"
 
 #ifdef HS_SLANG_AVAILABLE
@@ -183,7 +183,7 @@ bool SlangCompiler::CompileToSpirv(const ShaderCompileInput& input, ShaderCompil
 
 		if (!slangModule)
 		{
-			HS_LOG(error, "Failed to load Slang module from source: %s", output.diagnostics);
+			HS_LOG(error, "Failed to load Slang module from source: %s", output.diagnostics.c_str());
 			return false;
 		}
 	}

@@ -255,7 +255,7 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
 
 RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize)
 {
-    const static std::string metalLibPath = SystemContext::Get()->resourceDirectory + std::string("Shader") + HS_DIR_SEPERATOR + "default.metallib";
+    const static std::string metalLibPath = SystemContext::Get()->assetDirectory + std::string("Shaders") + HS_DIR_SEPERATOR + "default.metallib";
 
     MetalShader* MetalShader = new struct MetalShader(name, info);
 
