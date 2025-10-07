@@ -48,20 +48,6 @@ HS_NS_BEGIN
 
 static SystemContext* g_context;
 
-SystemContext* SystemContext::Get()
-{
-    if (nullptr == g_context)
-    {
-        g_context = new SystemContext();
-    }
-
-    return g_context;
-}
-
-SystemContext::SystemContext()
-{
-}
-
 bool SystemContext::Initialize()
 {
     // https://developer.apple.com/forums/thread/765445
@@ -87,7 +73,7 @@ bool SystemContext::Initialize()
         realpath(path, executablePath.data());
         executableDirectory = FileSystem::GetDirectory(executablePath);
 
-        assetDirectory = executableDirectory + "Resource" + HS_DIR_SEPERATOR;
+        assetDirectory = executableDirectory + "Assets" + HS_DIR_SEPERATOR;
     }
 
     return true;

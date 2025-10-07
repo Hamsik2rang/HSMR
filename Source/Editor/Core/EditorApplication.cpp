@@ -1,4 +1,4 @@
-﻿#include "Editor/Core/EditorApplication.h"
+#include "Editor/Core/EditorApplication.h"
 
 #include "Core/Log.h"
 #include "HAL/SystemContext.h"
@@ -9,7 +9,7 @@
 #include "Editor/Core/EditorWindow.h"
 
 #if defined(__APPLE__)
-#include "Core/Platform/Mac/AutoReleasePool.h"
+#include "Hal/Mac/AutoReleasePool.h"
 #endif
 
 HS_NS_EDITOR_BEGIN

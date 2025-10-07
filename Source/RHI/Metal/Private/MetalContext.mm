@@ -129,11 +129,14 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         switch (shader->info.stage)
         {
             case EShaderStage::VERTEX:
-                pipelineDesc.vertexFunction = static_cast<MetalShader*>(shader)->handle;
+                [pipelineDesc setVertexFunction:static_cast<MetalShader*>(shader)->handle];
+                break;
             case EShaderStage::FRAGMENT:
-                pipelineDesc.fragmentFunction = static_cast<MetalShader*>(shader)->handle;
+                [pipelineDesc setFragmentFunction:static_cast<MetalShader*>(shader)->handle];
+                break;
             default:
                 HS_LOG(crash, "Not supported yet");
+                break;
         }
     }
 
@@ -145,7 +148,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
         vertexDesc.attributes[i].bufferIndex = curAttribute.binding;
-        vertexDesc.attributes[i].format      = hs_rhi_to_vertex_format(curAttribute.format);
+        vertexDesc.attributes[i].format      = MetalUtility::ToVertexFormat(curAttribute.format);
     }
 
     for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
@@ -165,20 +168,20 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
 
         MTLRenderPipelineColorAttachmentDescriptor* colorDesc = pipelineDesc.colorAttachments[i];
 
-        colorDesc.pixelFormat                 = hs_rhi_to_pixel_format(attachment.format);
+        colorDesc.pixelFormat                 = MetalUtility::ToPixelFormat(attachment.format);
         colorDesc.blendingEnabled             = info.colorBlendDesc.attachments[i].blendEnable;
-        colorDesc.sourceRGBBlendFactor        = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcColorFactor);
-        colorDesc.destinationRGBBlendFactor   = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstColorFactor);
-        colorDesc.rgbBlendOperation           = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].colorBlendOp);
-        colorDesc.sourceAlphaBlendFactor      = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].srcAlphaFactor);
-        colorDesc.destinationAlphaBlendFactor = hs_rhi_to_blend_factor(info.colorBlendDesc.attachments[i].dstAlphaFactor);
-        colorDesc.alphaBlendOperation         = hs_rhi_to_blend_operation(info.colorBlendDesc.attachments[i].alphaBlendOp);
+        colorDesc.sourceRGBBlendFactor        = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].srcColorFactor);
+        colorDesc.destinationRGBBlendFactor   = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].dstColorFactor);
+        colorDesc.rgbBlendOperation           = MetalUtility::ToBlendOperation(info.colorBlendDesc.attachments[i].colorBlendOp);
+        colorDesc.sourceAlphaBlendFactor      = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].srcAlphaFactor);
+        colorDesc.destinationAlphaBlendFactor = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].dstAlphaFactor);
+        colorDesc.alphaBlendOperation         = MetalUtility::ToBlendOperation(info.colorBlendDesc.attachments[i].alphaBlendOp);
     }
 
     if (info.depthStencilDesc.depthTestEnable)
     {
         const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
-        MTLPixelFormat depthStencilFormat        = hs_rhi_to_pixel_format(depthStencilAttachment.format);
+        MTLPixelFormat depthStencilFormat        = MetalUtility::ToPixelFormat(depthStencilAttachment.format);
         // TODO: 스텐실 처리 추가
     }
 
@@ -201,7 +204,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         }
         else
         {
-            depthStencilDesc.depthCompareFunction = hs_rhi_to_compare_function(info.depthStencilDesc.depthCompareOp);
+            depthStencilDesc.depthCompareFunction = MetalUtility::ToCompareFunction(info.depthStencilDesc.depthCompareOp);
             depthStencilDesc.depthWriteEnabled    = info.depthStencilDesc.depthWriteEnable;
         }
 
@@ -253,20 +256,23 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     return shader;
 }
 
-RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize)
+RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize)
 {
-    const static std::string metalLibPath = SystemContext::Get()->assetDirectory + std::string("Shaders") + HS_DIR_SEPERATOR + "default.metallib";
+    //    const static std::string metalLibPath = SystemContext::Get()->assetDirectory + std::string("Shaders") + HS_DIR_SEPERATOR + "default.metallib";
+    //
+    //    MetalShader* MetalShader = new struct MetalShader(name, info);
+    //
+    NSError* error            = nil;
+    //    NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
+    //
+    NSString* source          = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
+    MTLCompileOptions* option = [MTLCompileOptions new];
+    //
+    //    //        id<MTLLibrary> library = [s_device newLibraryWithSource:source options:option error:&error];
+    //    id<MTLLibrary> library = [s_device newLibraryWithURL:url error:&error];
 
-    MetalShader* MetalShader = new struct MetalShader(name, info);
+    id<MTLLibrary> library = [s_device newLibraryWithSource:source options:nil error:&error];
 
-    NSError* error = nil;
-    NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
-
-    //        NSString*          source = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
-    //        MTLCompileOptions* option = [MTLCompileOptions new];
-
-    //        id<MTLLibrary> library = [s_device newLibraryWithSource:source options:option error:&error];
-    id<MTLLibrary> library = [s_device newLibraryWithURL:url error:&error];
     if (nil == library)
     {
         HS_LOG(crash, "Fail to cretae MTLLibrary");
@@ -306,9 +312,10 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
         return nullptr;
     }
 
-    MetalShader->handle = func;
+    MetalShader* mtlShader = new MetalShader(name, info);
+    mtlShader->handle      = func;
 
-    return MetalShader;
+    return static_cast<RHIShader*>(mtlShader);
 }
 
 void MetalContext::DestroyShader(RHIShader* shader)
@@ -333,7 +340,7 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
 {
     MetalBuffer* MetalBuffer = new struct MetalBuffer(name, info);
 
-    id<MTLBuffer> mtlBuffer = [s_device newBufferWithBytes:data length:dataSize options:hs_rhi_to_buffer_option(info.memoryOption)];
+    id<MTLBuffer> mtlBuffer = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
 
     if (nil == mtlBuffer)
     {
@@ -360,13 +367,13 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
     desc.width                 = info.extent.width;
     desc.height                = info.extent.height;
     desc.depth                 = info.extent.depth;
-    desc.arrayLength           = info.arrayLength;
+    desc.arrayLength           = info.arrayLength == 0 ? 1 : info.arrayLength;
     desc.mipmapLevelCount      = info.mipLevel;
-    desc.usage                 = hs_rhi_to_texture_usage(info.usage);
+    desc.usage                 = MetalUtility::ToTextureUsage(info.usage);
     desc.sampleCount           = 1;
     desc.storageMode           = MTLStorageModeManaged;
-    desc.pixelFormat           = hs_rhi_to_pixel_format(info.format);
-    desc.textureType           = hs_rhi_to_texture_type(info.type);
+    desc.pixelFormat           = MetalUtility::ToPixelFormat(info.format);
+    desc.textureType           = MetalUtility::ToTextureType(info.type);
 
     MetalTexture->handle = [s_device newTextureWithDescriptor:desc];
 
@@ -488,7 +495,7 @@ void MetalContext::Submit(Swapchain* swapchain, RHICommandBuffer** cmdBuffers, s
 
 void MetalContext::Present(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal  = static_cast<SwapchainMetal*>(swapchain);
+    SwapchainMetal* swMetal     = static_cast<SwapchainMetal*>(swapchain);
     RHICommandBuffer* cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
 
     MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(cmdBuffer);

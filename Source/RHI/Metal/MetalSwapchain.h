@@ -31,11 +31,11 @@ public:
 
     HS_FORCEINLINE uint8 GetMaxFrameCount() const override { return _maxFrameCount; }
     HS_FORCEINLINE uint8 GetCurrentFrameIndex() const override { return _frameIndex; }
-    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBufferMTLs[_frameIndex]; }
+    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[_frameIndex]; }
     HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
         HS_ASSERT(index < _maxFrameCount, "Count of commandbuffer is less than index");
-        return _commandBufferMTLs[index];
+        return _commandBuffers[index];
     }
     HS_FORCEINLINE RHIFramebuffer* GetFramebufferForCurrentFrame() const override { return _framebuffers[_frameIndex]; }
 
@@ -45,9 +45,10 @@ private:
 
     void setRenderTargets();
     void setRenderPass();
-
+    void setFramebuffers();
+    
     id<CAMetalDrawable> _drawable;
-    RHICommandBuffer** _commandBufferMTLs;
+    RHICommandBuffer** _commandBuffers;
     RHIFramebuffer** _framebuffers;
     
     bool _isSuspended;

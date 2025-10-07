@@ -53,7 +53,7 @@ if(APPLE)
 
     set(HS_DEPS_LIB_DIR "${HS_DEPS_DIR}/lib/mac/$<CONFIG>")
     set(HS_DEPS_DLL_DIR "${HS_DEPS_DIR}/dll/mac/$<CONFIG>")
-    set(HS_DEPS_BIN_DIR "${HS_DEPS_DIR}/bin/mac/$<CONFIG>")
+    set(HS_DEPS_BIN_DIR "${HS_DEPS_DIR}/bin/mac/")
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 else()
     add_compile_definitions(__WINDOWS__)

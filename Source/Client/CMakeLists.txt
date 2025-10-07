@@ -119,7 +119,7 @@ if(APPLE)
     set(SLANG_EXECUTABLE "${HS_DEPS_BIN_DIR}/slangc")
     set(SHADER_TARGET_API "metal")
     set(SHADER_OUTPUT_EXT "metal")
-    set(SHADER_CAPABILITY "metal_2_4")
+    set(SHADER_CAPABILITY "METAL_2_4")
 
 else()
     set(SLANG_EXECUTABLE "${HS_DEPS_BIN_DIR}/slangc.exe")

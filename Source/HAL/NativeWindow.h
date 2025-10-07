@@ -1,4 +1,4 @@
-﻿//
+//
 //  NativeWindow.h
 //  Engine
 //
@@ -108,7 +108,7 @@ struct NativeWindow
 	bool resizable : 1;
 	bool useHDR : 1;
 
-	bool shuoldUpdate : 1;
+	bool shouldUpdate : 1;
 	bool shouldRender : 1;
 	bool shouldClose : 1;
 	bool futureUse : 1; // padding.

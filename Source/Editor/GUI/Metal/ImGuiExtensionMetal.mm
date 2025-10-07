@@ -1,7 +1,7 @@
 #include "Editor/GUI/ImGuiExtension.h"
 
-#include "Core/EngineContext.h"
-#include "Core/Window.h"
+#include "Engine/EngineContext.h"
+#include "Engine/Window.h"
 
 #include "RHI/Metal/MetalContext.h"
 #include "RHI/Metal/MetalUtility.h"
@@ -10,23 +10,28 @@
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalSwapchain.h"
 
-#include "Core/Platform/Mac/PlatformWindowMac.h"
+#include "HAL/Mac/MacWindow.h"
 
 #include "ImGui/imgui_impl_metal.h"
 #include "ImGui/imgui_impl_osx.h"
 
 using namespace HS;
 
-namespace ImGuiExt
-{
-void ImageOffscreen(HS::Texture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+HS_NS_EDITOR_BEGIN
+
+Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
+uint8 ImGuiExtension::s_currentFrameIndex = 0;
+
+
+
+void ImGuiExtension::ImageOffscreen(RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
     MetalTexture* texMetal = static_cast<MetalTexture*>(use_texture);
 
     ImGui::Image(reinterpret_cast<ImTextureID>(texMetal->handle), image_size, uv0, uv1);
 }
 
-void InitializeBackend(Swapchain* swapchain)
+void ImGuiExtension::InitializeBackend(Swapchain* swapchain)
 {
     const auto& nativeWindow = swapchain->GetInfo().nativeWindow;
     NSWindow* window         = (__bridge NSWindow*)(nativeWindow->handle);
@@ -39,8 +44,10 @@ void InitializeBackend(Swapchain* swapchain)
     ImGui_ImplOSX_Init(view);
 }
 
-void BeginRender(Swapchain* swapchain)
+void ImGuiExtension::BeginRender(Swapchain* swapchain)
 {
+    s_currentSwapchain = swapchain;
+    
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
     NSWindow* window        = (__bridge NSWindow*)swMetal->nativeHandle;
     HSViewController* vc = (HSViewController*)[window delegate];
@@ -63,19 +70,27 @@ void BeginRender(Swapchain* swapchain)
     ImGui::NewFrame();
 }
 
-void EndRender(Swapchain* swapchain)
+void ImGuiExtension::EndRender()
 {
-    MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(swapchain->GetCommandBufferForCurrentFrame());
-    cmdMetalBuffer->BeginRenderPass(swapchain->GetRenderPass(), nullptr);
+    MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
+    RHIFramebuffer* framebuffer = s_currentSwapchain->GetFramebufferForCurrentFrame();
+    Area area{ 0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight() };
+    cmdMetalBuffer->BeginRenderPass(s_currentSwapchain->GetRenderPass(), framebuffer, area);
 
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
 }
 
-void FinalizeBackend()
+void ImGuiExtension::FinalizeBackend()
 {
     ImGui_ImplMetal_Shutdown();
     ImGui_ImplOSX_Shutdown();
 }
 
-}; // namespace ImGuiExt
+void ImGuiExtension::SetProcessEventHandler(void **fnHandler)
+{
+    // empty.
+    // SetNativePreEventHandler(fnHandler);
+}
+
+HS_NS_EDITOR_END
