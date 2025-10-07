@@ -19,6 +19,11 @@ HS_NS_BEGIN
 // MetalGraphicsPipeline*      curBindPipeline;
 // MetalBuffer*                curBindIndexBuffer;
 
+MetalCommandPool::MetalCommandPool(const char* name)
+    : RHICommandPool(name)
+{
+}
+
 MetalCommandBuffer::MetalCommandBuffer(const char* name, id<MTLDevice> device, id<MTLCommandQueue> commandQueue)
     : RHICommandBuffer(name)
     , device(device)
@@ -57,7 +62,7 @@ void MetalCommandBuffer::Begin()
 void MetalCommandBuffer::End()
 {
     HS_ASSERT(_isBegan, "Commandbuffer isn't began yet");
-    
+
     Reset();
 }
 

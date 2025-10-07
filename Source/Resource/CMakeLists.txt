@@ -3,7 +3,7 @@
 set(TOTAL_FILES)
 
 if(APPLE)
-    set(ASSIMP ${HS_DEPS_LIB_DIR}/libassimp.a)
+    set(ASSIMP ${HS_DEPS_DLL_DIR}/libassimp.dylib)
     set(STB_INCLUDE ${HS_DEPS_INCLUDE_DIR}/stb)
 else()
     set(ASSIMP ${HS_DEPS_LIB_DIR}/assimp-vc143-mt.lib)

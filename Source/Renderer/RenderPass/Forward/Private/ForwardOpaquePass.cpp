@@ -1,4 +1,4 @@
-﻿#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
+#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
 
 #include "HAL/FileSystem.h"
 
@@ -139,7 +139,7 @@ void ForwardOpaquePass::createResourceHandles()
 	_vertexBuffer[0] = rhiContext->CreateBuffer("Opaque Test VertexBuffer", vertices, sizeof(vertices), EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
 
 #ifdef __APPLE__
-	std::string libPath = FileSystem::GetDefaultResourcePath(std::string("Shader/Basic.metal"));
+	std::string libPath = SystemContext::Get()->assetDirectory  + std::string("Shader/Basic.metal");
 #elif __WINDOWS__
 	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.vert.spv");
 #endif
