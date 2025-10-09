@@ -13,7 +13,18 @@
 
 class Scene
 {
-    
+public:
+
+
+
+
+
+
+
+protected:
+
+
+
 };
 
 

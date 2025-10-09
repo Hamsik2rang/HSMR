@@ -77,9 +77,8 @@ public:
 	static void GetMousePosition(double& x, double& y);
 	static void SetMousePosition(double x, double y);
 
-private:
-	static uint64 _keyState[8];
-	static uint64 _mouseState[2];
+	static uint64 s_keyState[8];
+	static uint64 s_mouseState[2];
 };
 
 HS_NS_END

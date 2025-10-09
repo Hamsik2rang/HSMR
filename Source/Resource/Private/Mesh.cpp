@@ -8,7 +8,7 @@
 #include <limits>
 #include <algorithm>
 
-#include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 
 HS_NS_BEGIN
 
@@ -62,11 +62,11 @@ void Mesh::CalculateNormal()
         uint32 i1 = _indices[i + 1];
         uint32 i2 = _indices[i + 2];
 
-        Vec3f v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
-        Vec3f v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
-        Vec3f v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
+        glm::vec3 v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
+        glm::vec3 v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
+        glm::vec3 v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
         
-        Vec3f faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+        glm::vec3 faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
         // 각 정점에 면 법선 누적
         _normal[i0 * 3] += faceNormal.x;
@@ -85,7 +85,7 @@ void Mesh::CalculateNormal()
     // 정점 법선 정규화
     for (size_t i = 0; i < _normal.size(); i += 3)
     {
-        Vec3f normal(_normal[i], _normal[i + 1], _normal[i + 2]);
+        glm::vec3 normal(_normal[i], _normal[i + 1], _normal[i + 2]);
         normal         = glm::normalize(normal);
         _normal[i]     = normal.x;
         _normal[i + 1] = normal.y;
@@ -111,23 +111,23 @@ void Mesh::CalculateTangent()
         uint32 i1 = _indices[i + 1];
         uint32 i2 = _indices[i + 2];
         
-        Vec3f v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
-        Vec3f v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
-        Vec3f v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
+        glm::vec3 v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
+        glm::vec3 v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
+        glm::vec3 v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
         
-        Vec2f uv0(_texcoord[0][i0 * 2], _texcoord[0][i0 * 2 + 1]);
-        Vec2f uv1(_texcoord[0][i1 * 2], _texcoord[0][i1 * 2 + 1]);
-        Vec2f uv2(_texcoord[0][i2 * 2], _texcoord[0][i2 * 2 + 1]);
+        glm::vec2 uv0(_texcoord[0][i0 * 2], _texcoord[0][i0 * 2 + 1]);
+        glm::vec2 uv1(_texcoord[0][i1 * 2], _texcoord[0][i1 * 2 + 1]);
+        glm::vec2 uv2(_texcoord[0][i2 * 2], _texcoord[0][i2 * 2 + 1]);
         
-        Vec3f deltaPos1 = v1 - v0;
-        Vec3f deltaPos2 = v2 - v0;
+        glm::vec3 deltaPos1 = v1 - v0;
+        glm::vec3 deltaPos2 = v2 - v0;
         
-        Vec2f deltaUV1 = uv1 - uv0;
-        Vec2f deltaUV2 = uv2 - uv0;
+        glm::vec2 deltaUV1 = uv1 - uv0;
+        glm::vec2 deltaUV2 = uv2 - uv0;
         
         float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-        Vec3f tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-        Vec3f bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
         
         // 각 정점에 누적
         for (int j = 0; j < 3; ++j)
@@ -146,8 +146,8 @@ void Mesh::CalculateTangent()
     // 정규화 및 직교화
     for (size_t i = 0; i < vertexCount; ++i)
     {
-        Vec3f n(_normal[i * 3], _normal[i * 3 + 1], _normal[i * 3 + 2]);
-        Vec3f t(_tangent[i * 3], _tangent[i * 3 + 1], _tangent[i * 3 + 2]);
+        glm::vec3 n(_normal[i * 3], _normal[i * 3 + 1], _normal[i * 3 + 2]);
+        glm::vec3 t(_tangent[i * 3], _tangent[i * 3 + 1], _tangent[i * 3 + 2]);
         
         // Gram-Schmidt 직교화
         t = glm::normalize(t - n * glm::dot(n, t));
@@ -157,7 +157,7 @@ void Mesh::CalculateTangent()
         _tangent[i * 3 + 2] = t.z;
         
         // 바이탄젠트는 법선과 탄젠트의 외적으로 재계산
-        Vec3f b = glm::cross(n, t);
+        glm::vec3 b = glm::cross(n, t);
         _bitangent[i * 3] = b.x;
         _bitangent[i * 3 + 1] = b.y;
         _bitangent[i * 3 + 2] = b.z;

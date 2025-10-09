@@ -5,10 +5,7 @@
 
 HS_NS_EDITOR_BEGIN
 
-ScenePanel::~ScenePanel()
-{
-    
-}
+
 
 bool ScenePanel::Setup()
 {

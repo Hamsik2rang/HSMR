@@ -31,23 +31,14 @@ source_group("Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
 
 set(CORE_MATH_HEADERS
-    Math/Mat4f.h
     Math/Common.h
-    Math/Vec2f.h
-    Math/Vec3f.h
-    Math/Vec4f.h
-    Math/Math.h
 )
 
 source_group("Math\\Public" FILES ${CORE_MATH_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_MATH_HEADERS})
 
 set(CORE_MATH_SOURCES
-    Math/Private/Mat4f.cpp
     Math/Private/Common.cpp
-    Math/Private/Vec2f.cpp
-    Math/Private/Vec3f.cpp
-    Math/Private/Vec4f.cpp
 )
 
 source_group("Math\\Private" FILES ${CORE_MATH_SOURCES})

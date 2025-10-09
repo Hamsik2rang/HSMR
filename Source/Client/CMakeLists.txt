@@ -75,41 +75,6 @@ install(DIRECTORY "${HS_DEPS_LIB_DIR}/" DESTINATION "${INSTALL_FOLDER}")
 # install(DIRECTORY "${HS_DEPS_BIN_DIR}/" DESTINATION "${INSTALL_FOLDER}")
 install(DIRECTORY "${HS_ASSET_DIR}/" DESTINATION "${INSTALL_FOLDER}/Assets")
 
-# Shader
-# install(FILES "${METALLIB_FILE}/" DESTINATION "${INSTALL_FOLDER}/Resource/Shader")
-# if(WIN32)
-# set(SLANGC_EXE "slangc.exe")
-# set(SHADER_TARGET_API "spirv")
-# set(SHADER_OUTPUT_EXT ".spv")
-# set(SHADER_OUTPUT_SUBDIR "SPV")
-
-# # Windows DLLs to copy
-# # set(SLANG_RUNTIME_FILES
-# # "${SLANG_BIN_DIR}/slang.dll"
-# # "${SLANG_BIN_DIR}/slang-glslang.dll"
-# # "${SLANG_BIN_DIR}/slang-glsl-module.dll"
-# # "${SLANG_BIN_DIR}/slang-rt.dll"
-# # )
-# elseif(APPLE)
-# # if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-aarch64/release")
-# # else()
-# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-x64/release")
-# # endif()
-# set(SLANGC_EXE "slangc")
-# set(SHADER_TARGET_API "metal")
-# set(SHADER_OUTPUT_EXT ".metal")
-# set(SHADER_OUTPUT_SUBDIR "MSL")
-
-# # macOS dylibs to copy
-# # set(SLANG_RUNTIME_FILES
-# # "${SLANG_BIN_DIR}/libslang.dylib"
-# # "${SLANG_BIN_DIR}/libslang-glslang.dylib"
-# # "${SLANG_BIN_DIR}/libslang-glsl-module.dylib"
-# # "${SLANG_BIN_DIR}/libslang-rt.dylib"
-# # "${SLANG_BIN_DIR}/libslang-llvm.dylib"
-# # )
-# endif()
 set(HS_SHADER_SRC_DIR ${HS_ASSET_DIR}/Shaders)
 message(STATUS "HS_SHADER_SRC_DIR: ${HS_SHADER_SRC_DIR}")
 
@@ -189,6 +154,41 @@ add_custom_target(CompileShaders
 
 set_property(TARGET CompileShaders PROPERTY FOLDER "Commands")
 
+# Shader
+# install(FILES "${METALLIB_FILE}/" DESTINATION "${INSTALL_FOLDER}/Resource/Shader")
+# if(WIN32)
+# set(SLANGC_EXE "slangc.exe")
+# set(SHADER_TARGET_API "spirv")
+# set(SHADER_OUTPUT_EXT ".spv")
+# set(SHADER_OUTPUT_SUBDIR "SPV")
+
+# # Windows DLLs to copy
+# # set(SLANG_RUNTIME_FILES
+# # "${SLANG_BIN_DIR}/slang.dll"
+# # "${SLANG_BIN_DIR}/slang-glslang.dll"
+# # "${SLANG_BIN_DIR}/slang-glsl-module.dll"
+# # "${SLANG_BIN_DIR}/slang-rt.dll"
+# # )
+# elseif(APPLE)
+# # if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-aarch64/release")
+# # else()
+# # set(SLANG_BIN_DIR "${SLANG_DEPENDENCY_DIR}/bin/macosx-x64/release")
+# # endif()
+# set(SLANGC_EXE "slangc")
+# set(SHADER_TARGET_API "metal")
+# set(SHADER_OUTPUT_EXT ".metal")
+# set(SHADER_OUTPUT_SUBDIR "MSL")
+
+# # macOS dylibs to copy
+# # set(SLANG_RUNTIME_FILES
+# # "${SLANG_BIN_DIR}/libslang.dylib"
+# # "${SLANG_BIN_DIR}/libslang-glslang.dylib"
+# # "${SLANG_BIN_DIR}/libslang-glsl-module.dylib"
+# # "${SLANG_BIN_DIR}/libslang-rt.dylib"
+# # "${SLANG_BIN_DIR}/libslang-llvm.dylib"
+# # )
+# endif()
 # add_custom_command(
 # TARGET ${TARGET_NAME} # 이 타겟에 명령을 추가합니다.
 # POST_BUILD # 빌드가 완료된 직후에 실행됩니다.

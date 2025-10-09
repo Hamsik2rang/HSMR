@@ -12,7 +12,7 @@
 #include "Resource/Object.h"
 #include "Resource/ShaderParameterCollection.h"
 
-#include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 #include <unordered_map>
 #include <string>
 

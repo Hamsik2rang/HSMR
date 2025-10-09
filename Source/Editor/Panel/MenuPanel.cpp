@@ -11,10 +11,6 @@
 
 HS_NS_EDITOR_BEGIN
 
-MenuPanel::~MenuPanel()
-{
-}
-
 bool MenuPanel::Setup()
 {
     return true;

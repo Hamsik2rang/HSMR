@@ -11,7 +11,7 @@
 
 #include "Resource/Object.h"
 
-#include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 
 HS_NS_BEGIN
 
@@ -93,8 +93,8 @@ private:
     std::vector<uint32> _indices;
     
     struct Bound{
-        Vec4f min;
-        Vec4f max;
+        glm::vec4 min;
+        glm::vec4 max;
     } _bound;
     int32 _materialIndex = -1; // Index to material in the material array
 };

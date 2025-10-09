@@ -47,7 +47,7 @@ void GUIContext::Initialize()
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-	std::string fontName = "Fonts/OpenSans-Regular.ttf";
+	std::string fontName = "Fonts/Malgun-Gothic.ttf";
 	SetFont(fontName, 18.0f);
 }
 void GUIContext::NextFrame()
@@ -67,6 +67,10 @@ void GUIContext::SetColorTheme(bool useWhite)
 	auto& styles = ImGui::GetStyle();
 
 	styles.WindowRounding = 5.0f;
+	styles.TabRounding = 0.0f;
+	styles.FrameRounding = 5.0f;
+	styles.PopupRounding = 5.0f;
+	styles.WindowBorderSize = 0.0f;
 
 	auto& colors = styles.Colors;
 	if (useWhite)
@@ -155,7 +159,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->assetDirectory + fontPath).c_str(), 18.0f);
+	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->assetDirectory + fontPath).c_str(), fontSize);
 
 	io.Fonts->Build();
 }

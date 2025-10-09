@@ -1,4 +1,4 @@
-#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
+﻿#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
 
 #include "HAL/FileSystem.h"
 
@@ -97,13 +97,13 @@ void ForwardOpaquePass::createResourceHandles()
 {
 	RHIContext* rhiContext = _renderer->GetRHIContext();
 
-	struct VSINPUT_BASIC
+	struct FallbackVertex
 	{
-		Vec3f position; // float4 Pos
-		Vec4f color;    // float4 Color
+		glm::vec3 position; // float4 Pos
+		glm::vec4 color;    // float4 Color
 	};
 
-	VSINPUT_BASIC vertices[]{
+	FallbackVertex vertices[]{
 		// Triangle 1 (CCW when viewed from front)
 		{
 			{-0.5f, -0.5f, 0.0f}, // bottom-left
@@ -140,27 +140,31 @@ void ForwardOpaquePass::createResourceHandles()
 
 #ifdef __APPLE__
 	std::string libPath = SystemContext::Get()->assetDirectory  + std::string("Shaders/Basic.vert.metal");
+	const char* entryName = "VertexMain";
 #elif __WINDOWS__
 	std::string libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.vert.spv");
+	const char* entryName = "main";
 #endif
 
 	ShaderInfo vsInfo{};
-	vsInfo.entryName = "VertexMain";
+	vsInfo.entryName = entryName;
 	vsInfo.stage = EShaderStage::VERTEX;
 	_vertexShader = rhiContext->CreateShader("Opaque Test Shader", vsInfo, libPath.c_str());
 	if (_vertexShader == nullptr)
 	{
 		HS_LOG(crash, "Shader is nullptr");
 	}
-	ShaderInfo fsInfo{};
-	fsInfo.entryName = "FragmentMain";
-	fsInfo.stage = EShaderStage::FRAGMENT;
 
 #ifdef __APPLE__
     libPath =  SystemContext::Get()->assetDirectory  + std::string("Shaders/Basic.frag.metal");
+	entryName = "FragmentMain";
+
 #elif __WINDOWS__
 	libPath = SystemContext::Get()->assetDirectory + std::string("Shaders\\Basic.frag.spv");
 #endif
+	ShaderInfo fsInfo{};
+	fsInfo.entryName = entryName;
+	fsInfo.stage = EShaderStage::FRAGMENT;
 
 	_fragmentShader = rhiContext->CreateShader("Opaque Test Shader", fsInfo, libPath.c_str());
 	if (_fragmentShader == nullptr)

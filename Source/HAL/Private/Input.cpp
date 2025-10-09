@@ -9,8 +9,8 @@
 
 HS_NS_BEGIN
 
-uint64 Input::_keyState[8] = {};
-uint64 Input::_mouseState[2] = {};
+uint64 Input::s_keyState[8] = {};
+uint64 Input::s_mouseState[2] = {};
 
 
 bool Input::IsKeyPressed(Key key)
@@ -18,7 +18,7 @@ bool Input::IsKeyPressed(Key key)
 	if (key < Key::UNKNOWN || key > Key::RIGHT_BRACKET)
 		return false;
 	uint64 mask = 1ULL << (static_cast<int>(key) % 64);
-	return (_keyState[static_cast<int>(key) / 64] & mask) != 0;
+	return (s_keyState[static_cast<int>(key) / 64] & mask) != 0;
 }
 
 bool Input::IsMousePressed(Mouse button)
@@ -26,7 +26,7 @@ bool Input::IsMousePressed(Mouse button)
 	if (button < Mouse::LEFT || button > Mouse::X2)
 		return false;
 	uint64 mask = 1ULL << (static_cast<int>(button) % 64);
-	return (_mouseState[static_cast<int>(button) / 64] & mask) != 0;
+	return (s_mouseState[static_cast<int>(button) / 64] & mask) != 0;
 }
 
 void Input::GetMousePosition(double& x, double& y)

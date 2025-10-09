@@ -1,4 +1,4 @@
-//
+﻿//
 //  Common.h
 //  Core
 //
@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Core/ThirdParty/glm/glm.hpp"
+#include "Core/ThirdParty/glm/ext.hpp"
 
 #ifdef __cplusplus
     #include <cmath>
@@ -32,5 +33,30 @@ struct Math
 };
 
 HS_NS_END
+
+// TODO: 시간 남으면 별도로 구현
+namespace glm
+{
+
+extern const glm::vec2 zero2;
+extern const glm::vec2 up2;
+extern const glm::vec2 right2;
+
+extern const glm::vec3 zero3;
+extern const glm::vec3 up3;
+extern const glm::vec3 right3;
+extern const glm::vec3 front3;
+
+extern const glm::vec4 zero4;
+extern const glm::vec4 up4;
+extern const glm::vec4 right4;
+extern const glm::vec4 front4;
+
+extern const glm::mat4 identity4;
+extern const glm::mat3 identity3;
+extern const glm::mat2 identity2;
+
+}
+
 
 #endif /*__HS_MATH_H__*/

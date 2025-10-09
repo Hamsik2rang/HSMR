@@ -18,10 +18,10 @@
 /*#include "Renderer/RenderPath.h"*/ namespace HS { class RenderPath; }
 /*#include "RHI/RHIContext.h"*/ namespace HS { class RHIContext; }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class GUIContext; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class Panel; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class EditorCamera; } }
 
 HS_NS_EDITOR_BEGIN
-
-class Panel;
 
 class HS_EDITOR_API EditorWindow : public Window
 {
@@ -47,6 +47,8 @@ private:
 
     void onRenderGUI();
 
+    void updateEditorCamera();
+
     std::vector<RenderTarget> _renderTargets;
 
     RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
@@ -56,6 +58,9 @@ private:
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;
     Scoped<Panel> _profilerPanel;
+    Scoped<Panel> _hierarchyPanel;
+
+	Scoped<EditorCamera> _editorCamera;
 };
 
 HS_NS_EDITOR_END

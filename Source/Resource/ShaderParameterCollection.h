@@ -8,7 +8,7 @@
 #define __HS_SHADER_PARAMETER_COLLECTION_H__
 
 #include "Precompile.h"
-#include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 #include "Core/Hash.h"
 #include <unordered_map>
 #include <string>
