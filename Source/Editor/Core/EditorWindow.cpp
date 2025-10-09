@@ -13,6 +13,9 @@
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Panel/ProfilerPanel.h"
+#include "Editor/Panel/HierarchyPanel.h"
+
+#include "Editor/Core/EditorCamera.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -32,7 +35,7 @@ bool EditorWindow::onInitialize()
 	scInfo.useDepth = false;
 	scInfo.useMSAA = false;
 	scInfo.useStencil = false;
-	
+
 	_rhiContext = RHIContext::Get();
 
 	_swapchain = _rhiContext->CreateSwapchain(scInfo);
@@ -79,6 +82,8 @@ bool EditorWindow::onInitialize()
 	ImGuiExtension::SetProcessEventHandler(&handler);
 	SetPreEventHandler(handler);
 
+	_editorCamera = MakeScoped<EditorCamera>();
+
 	return true;
 }
 
@@ -103,7 +108,7 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate()
 {
-
+	updateEditorCamera();
 }
 
 void EditorWindow::onResize()
@@ -193,6 +198,18 @@ void EditorWindow::setupPanels()
 	_profilerPanel->Setup();
 	_basePanel->InsertPanel(_profilerPanel.get());
 
+	_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
+	_hierarchyPanel->Setup();
+	_basePanel->InsertPanel(_hierarchyPanel.get());
+
+}
+
+void EditorWindow::updateEditorCamera()
+{
+	if (_editorCamera)
+	{
+
+	}
 }
 
 

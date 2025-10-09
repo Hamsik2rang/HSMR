@@ -7,11 +7,6 @@
 
 #include "Core/Math/Common.h"
 
-#include "Core/Math/Vec2f.h"
-#include "Core/Math/Vec3f.h"
-#include "Core/Math/Vec4f.h"
-
-#include "Core/Math/Mat4f.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -35,86 +30,83 @@ public:
 	};
 
 	EditorCamera();
-	~EditorCamera();
+	~EditorCamera() = default;
 
 	// 기본 변환 설정
-	void SetPosition(const Vec3f& position);
-	void SetRotation(const Vec3f& rotation); // 오일러 각
-	void SetScale(const Vec3f& scale);
+	HS_FORCEINLINE void SetPosition(const glm::vec3& position) { _position = position; }
+	HS_FORCEINLINE void SetRotation(const glm::vec3& rotation) { _rotation = rotation; }
 
-	Vec3f GetPosition() const { return _position; }
-	Vec3f GetRotation() const { return _rotation; }
-	Vec3f GetScale() const { return _scale; }
+	HS_FORCEINLINE glm::vec3 GetPosition() const { return _position; }
+	HS_FORCEINLINE glm::vec3 GetRotation() const { return _rotation; }
 
 	// 카메라 방향 벡터 얻기
-	Vec3f GetForward() const;
-	Vec3f GetRight() const;
-	Vec3f GetUp() const;
+	HS_FORCEINLINE glm::vec3 GetForward() const { return _front; }
+	HS_FORCEINLINE glm::vec3 GetRight() const { return glm::normalize(glm::cross(_front, GetUp())); }
+	HS_FORCEINLINE glm::vec3 GetUp() const { return glm::normalize(glm::cross(GetRight(), _front)); }
 
 	// 카메라 조작 편의 함수들
-	void LookAt(const Vec3f& target, const Vec3f& up = { 0.0f, 1.0f, 0.0f });
-	void Move(const Vec3f& offset);
-	void Rotate(const Vec3f& eulerAngles);
+	HS_FORCEINLINE void Move(const glm::vec3& offset) { _position += offset; }
+	HS_FORCEINLINE void Rotate(const glm::vec3& eulerAngles) { _rotation += eulerAngles; }
 
 	// 투영 타입과 파라미터 설정
-	void SetProjectionType(EProjectionType type)
+	HS_FORCEINLINE void SetProjectionType(EProjectionType type)
 	{
 		_projectionType = type;
 		_projectionDirty = true;
 	}
-	EProjectionType GetProjectionType() const { return _projectionType; }
+	HS_FORCEINLINE EProjectionType GetProjectionType() const { return _projectionType; }
 
 	// 원근 투영 파라미터
-	void  SetPerspective(float fovY, float aspectRatio, float nearZ, float farZ);
-	float GetFov() const { return _fovY; }
-	void  SetFov(float fovY)
-	{
-		_fovY = fovY;
-		_projectionDirty = true;
-	}
-	float GetAspectRatio() const { return _aspectRatio; }
-	void  SetAspectRatio(float aspectRatio)
-	{
-		_aspectRatio = aspectRatio;
-		_projectionDirty = true;
-	}
+	void SetPerspective(float fovY, float aspectRatio, float nearZ, float farZ);
 
 	// 직교 투영 파라미터
 	void SetOrthographic(float left, float right, float bottom, float top, float nearZ, float farZ);
 
+	HS_FORCEINLINE float GetFov() const { return _fovY; }
+	HS_FORCEINLINE void  SetFov(float fovY)
+	{
+		_fovY = fovY;
+		_projectionDirty = true;
+	}
+	HS_FORCEINLINE float GetAspectRatio() const { return _aspectRatio; }
+	HS_FORCEINLINE void SetAspectRatio(float aspectRatio)
+	{
+		_aspectRatio = aspectRatio;
+		_projectionDirty = true;
+	}
 	// 공통 파라미터
-	float GetNearZ() const { return _nearZ; }
-	void  SetNearZ(float nearZ)
+	HS_FORCEINLINE float GetNearZ() const { return _nearZ; }
+	HS_FORCEINLINE void SetNearZ(float nearZ)
 	{
 		_nearZ = nearZ;
 		_projectionDirty = true;
 	}
-	float GetFarZ() const { return _farZ; }
-	void  SetFarZ(float farZ)
+	HS_FORCEINLINE float GetFarZ() const { return _farZ; }
+	HS_FORCEINLINE void SetFarZ(float farZ)
 	{
 		_farZ = farZ;
 		_projectionDirty = true;
 	}
 
-	// 컬링 기능
-	void SetFrustumCulling(bool enable) { _enableFrustumCulling = enable; }
-	bool IsFrustumCulling() const { return _enableFrustumCulling; }
-	bool IsInFrustum(const Vec3f& point, float radius = 0.0f) const;
+	// TODO: 컬링 기능
+	//HS_FORCEINLINE void SetFrustumCulling(bool enable) { _enableFrustumCulling = enable; }
+	//HS_FORCEINLINE bool IsFrustumCulling() const { return _enableFrustumCulling; }
+	//HS_FORCEINLINE bool IsInFrustum(const glm::vec3& point, float radius = 0.0f) const;
 
 	// 행렬 계산과 접근
-	const Mat44f& GetViewMatrix();
-	const Mat44f& GetProjectionMatrix();
-	const Mat44f& GetViewProjectionMatrix();
+	HS_FORCEINLINE const glm::mat4& GetViewMatrix() { return _viewMatrix; }
+	HS_FORCEINLINE const glm::mat4& GetProjectionMatrix() { return _projectionMatrix; }
+	HS_FORCEINLINE const glm::mat4& GetViewProjectionMatrix() { return _viewProjectionMatrix; }
 
 	// 인버스 행렬
-	const Mat44f& GetInverseViewMatrix();
-	const Mat44f& GetInverseProjectionMatrix();
-	const Mat44f& GetInverseViewProjectionMatrix();
+	HS_FORCEINLINE const glm::mat4& GetInverseViewMatrix() { return _inverseViewMatrix; }
+	HS_FORCEINLINE const glm::mat4& GetInverseProjectionMatrix() { return _inverseProjectionMatrix; }
+	HS_FORCEINLINE const glm::mat4& GetInverseViewProjectionMatrix() { return _inverseViewProjectionMatrix; }
 
 	// 레이 캐스팅 기능
-	Vec3f ScreenToWorldPoint(const Vec2f& screenPos, float depth) const;
-	Vec3f ScreenToWorldDirection(const Vec2f& screenPos) const;
-	Vec2f WorldToScreenPoint(const Vec3f& worldPos) const;
+	HS_FORCEINLINE glm::vec3 ScreenToWorldPoint(const glm::vec2& screenPos, float depth) const;
+	HS_FORCEINLINE glm::vec3 ScreenToWorldDirection(const glm::vec2& screenPos) const;
+	HS_FORCEINLINE glm::vec2 WorldToScreenPoint(const glm::vec3& worldPos) const;
 
 private:
 	// 변환 업데이트
@@ -122,19 +114,19 @@ private:
 	void updateProjectionMatrix();
 	void updateViewProjectionMatrix();
 	void updateInverseMatrices();
-	void updateFrustumPlanes();
+	//void updateFrustumPlanes();
 
 	// 트랜스폼 데이터
-	Vec3f _position;
-	Vec3f _rotation; // 오일러 각 (라디안)
-	Vec3f _scale;
+	glm::vec3 _position;
+	glm::vec3 _rotation; // 오일러 각 (라디안)
+	glm::vec3 _front;
 
 	// 투영 파라미터
 	EProjectionType _projectionType;
 
 	// 원근 투영 파라미터
-	float _fovY;        // 라디안 단위
-	float _aspectRatio; // 가로 / 세로
+	float _fovY;
+	float _aspectRatio;
 
 	// 직교 투영 파라미터
 	float _left;
@@ -147,17 +139,17 @@ private:
 	float _farZ;
 
 	// 행렬 캐싱
-	Mat44f _viewMatrix;
-	Mat44f _projectionMatrix;
-	Mat44f _viewProjectionMatrix;
+	glm::mat4 _viewMatrix;
+	glm::mat4 _projectionMatrix;
+	glm::mat4 _viewProjectionMatrix;
 
-	Mat44f _inverseViewMatrix;
-	Mat44f _inverseProjectionMatrix;
-	Mat44f _inverseViewProjectionMatrix;
+	glm::mat4 _inverseViewMatrix;
+	glm::mat4 _inverseProjectionMatrix;
+	glm::mat4 _inverseViewProjectionMatrix;
 
-	// 프러스텀 컬링 데이터
-	bool    _enableFrustumCulling;
-	glm::vec4 _frustumPlanes[6]; // 왼쪽, 오른쪽, 위, 아래, 가까운면, 먼면
+	// TODO: 프러스텀 컬링 데이터
+	//bool _enableFrustumCulling;
+	//glm::vec4 _frustumPlanes[6]; // 왼쪽, 오른쪽, 위, 아래, 가까운면, 먼면
 
 	// 캐시 상태 플래그
 	bool _viewDirty;

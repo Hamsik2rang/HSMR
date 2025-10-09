@@ -1,6 +1,6 @@
 ﻿//
 //  Panel.h
-//  HSMR
+//  Editor
 //
 //  Created by Yongsik Im on 2/8/25.
 //

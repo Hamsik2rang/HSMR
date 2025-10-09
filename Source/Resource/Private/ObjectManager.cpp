@@ -10,7 +10,7 @@
 #include "HAL/FileSystem.h"
 
 #include "Core/Log.h"
-#include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 
 #include "ShaderSystem/ShaderCrossCompiler.h"
 

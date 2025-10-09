@@ -1,4 +1,10 @@
-﻿#ifndef __HS_PROFILER_PANEL_H__
+﻿//
+//  ProfilerPanel.h
+//  Editor
+//
+//  Created by Yongsik Im on 10/06/25.
+//
+#ifndef __HS_PROFILER_PANEL_H__
 #define __HS_PROFILER_PANEL_H_H
 
 #include "Precompile.h"

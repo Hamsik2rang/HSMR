@@ -91,6 +91,7 @@ set(PANEL_HEADERS
     Panel/MenuPanel.h
     Panel/ResourcePanel.h
     Panel/ProfilerPanel.h
+    Panel/HierarchyPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -105,6 +106,7 @@ set(PANEL_SOURCES
     Panel/MenuPanel.cpp
     Panel/ResourcePanel.cpp
     Panel/ProfilerPanel.cpp
+    Panel/HierarchyPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

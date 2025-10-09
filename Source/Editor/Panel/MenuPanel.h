@@ -18,7 +18,7 @@ class HS_EDITOR_API MenuPanel : public Panel
 {
 public:
     MenuPanel(Window* window) : Panel(window) {}
-    ~MenuPanel() override;
+    ~MenuPanel() override = default;
     
     bool Setup() override;
     void Cleanup() override;

@@ -30,7 +30,7 @@ public:
         : Panel(window)
         , _resolution(800, 600)
     {}
-    ~ScenePanel() override;
+	~ScenePanel() override = default;
 
     bool Setup() override;
     void Cleanup() override;

@@ -99,6 +99,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		break;
 	}
+	case WM_KEYDOWN:
+	{
+		uint32 key = wParam;
+		)
+		break;
+	}
+	case WM_KEYUP:
+	{
+
+
+
+		break;
+	}
 	case WM_DESTROY:
 	case WM_CLOSE:
 	{
@@ -197,7 +210,7 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
 	outNativeWindow.resizable = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
 	outNativeWindow.useHDR = (flag & EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY) != EWindowFlags::NONE;
 	outNativeWindow.shouldRender = false;
-	outNativeWindow.shuoldUpdate = true;
+	outNativeWindow.shouldUpdate = true;
 	outNativeWindow.shouldClose = false;
 
 	// TODO: DISPLAY_DEVICEW, DEVMODEW 사용해서 추가 caps가져오기.
