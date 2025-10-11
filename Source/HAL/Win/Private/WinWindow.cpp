@@ -102,7 +102,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYDOWN:
 	{
 		uint32 key = wParam;
-		)
+
 		break;
 	}
 	case WM_KEYUP:
