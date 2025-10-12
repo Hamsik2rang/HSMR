@@ -1,4 +1,4 @@
-﻿//
+//
 //  Precompile.h
 //  HSMR
 //

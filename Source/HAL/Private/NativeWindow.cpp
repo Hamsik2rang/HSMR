@@ -1,4 +1,4 @@
-﻿#include "HAL/NativeWindow.h"
+#include "HAL/NativeWindow.h"
 
 #if defined(__WINDOWS__)
 #include "HAL/Win/WinWindow.h"
@@ -18,7 +18,7 @@ void PollNativeEventInternal(NativeWindow& nativeWindow);
 void SetNativeWindowSizeInternal(uint16 width, uint16 height);
 void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
 
-static std::unordered_map<const NativeWindow*, std::queue<EWindowEvent>> s_eventQueueTable;
+static std::unordered_map<const NativeWindow*, std::queue<NativeEvent>> s_eventQueueTable;
 
 bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow) 
 {
@@ -26,7 +26,7 @@ bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFl
 
 	assert(s_eventQueueTable.find(&outNativeWindow) == s_eventQueueTable.end());
 
-	s_eventQueueTable.insert(std::make_pair(&outNativeWindow, std::queue<EWindowEvent>()));
+	s_eventQueueTable.insert(std::make_pair(&outNativeWindow, std::queue<NativeEvent>()));
 
 	return result;
 }
@@ -56,7 +56,7 @@ void GetNativeWindowSize(uint16& outWidth, uint16& outHeight)
 	GetNativeWindowSizeInternal(outWidth, outHeight);
 }
 
-bool PeekNativeEvent(NativeWindow* pWindow, EWindowEvent& outEvent)
+bool PeekNativeEvent(NativeWindow* pWindow, NativeEvent& outEvent)
 {
 	if (pWindow == nullptr || s_eventQueueTable.find(pWindow) == s_eventQueueTable.end())
 	{
@@ -65,7 +65,7 @@ bool PeekNativeEvent(NativeWindow* pWindow, EWindowEvent& outEvent)
 
 	PollNativeEvent(*pWindow);
 
-	outEvent = EWindowEvent::NONE;
+	outEvent = NativeEvent::Type::NONE;
 
 	auto& eventQueue = s_eventQueueTable[pWindow];
 	if (eventQueue.empty())
@@ -78,7 +78,7 @@ bool PeekNativeEvent(NativeWindow* pWindow, EWindowEvent& outEvent)
 	return true;
 }
 
-void PushNativeEvent(const NativeWindow* pWindow, EWindowEvent event)
+void PushNativeEvent(const NativeWindow* pWindow, NativeEvent event)
 {
 	assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
 
@@ -87,13 +87,13 @@ void PushNativeEvent(const NativeWindow* pWindow, EWindowEvent event)
 	eventQueue.push(event);
 }
 
-EWindowEvent PopNativeEvent(const NativeWindow* pWindow)
+NativeEvent PopNativeEvent(const NativeWindow* pWindow)
 {
 	assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
 
 	auto& eventQueue = s_eventQueueTable[pWindow];
 
-	EWindowEvent event = eventQueue.front();
+	NativeEvent event = eventQueue.front();
 
 	eventQueue.pop();
 

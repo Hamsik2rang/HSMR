@@ -1,4 +1,4 @@
-﻿//
+//
 //  NativeWindow.h
 //  HAL
 //
@@ -10,26 +10,9 @@
 
 #include "Precompile.h"
 
-#include <string>
-
+#include "HAL/NativeEvent.h"
 
 HS_NS_BEGIN
-
-enum class EWindowEvent : uint8
-{
-	NONE = 0,
-	OPEN = 1,
-	CLOSE = 2,
-	RESIZE = 3,
-	MOVE_ENTER = 4,
-	MOVE_EXIT = 5,
-	MOVE = 6,
-	MINIMIZE = 7,
-	MAXIMIZE = 8,
-	FOCUS_IN = 9,
-	FOCUS_OUT = 10,
-	RESTORE = 11,
-};
 
 // Same with SDL_WindowFlags.
 enum class EWindowFlags : uint64
@@ -121,9 +104,9 @@ void PollNativeEvent(NativeWindow& nativeWindow);
 void SetNativeWindowSize(uint16 width, uint16 height);
 void GetNativeWindowSize(uint16& outWidth, uint16& outHeight);
 
-bool PeekNativeEvent(HS::NativeWindow* pWindow, HS::EWindowEvent& outEvent);
-void PushNativeEvent(const HS::NativeWindow* pWindow, HS::EWindowEvent event);
-HS::EWindowEvent PopNativeEvent(const HS::NativeWindow* pWindow);
+bool PeekNativeEvent(HS::NativeWindow* pWindow, NativeEvent& outEvent);
+void PushNativeEvent(const HS::NativeWindow* pWindow, NativeEvent event);
+NativeEvent PopNativeEvent(const HS::NativeWindow* pWindow);
 
 void SetNativePreEventHandler(void* fnHandler);
 

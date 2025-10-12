@@ -1,4 +1,4 @@
-﻿set(TARGET_NAME HAL)
+set(TARGET_NAME HAL)
 
 set(TOTAL_FILES)
 
@@ -6,6 +6,7 @@ set(HAL_HEADERS
     HALDefinition.h
     FileSystem.h
     NativeWindow.h
+    NativeEvent.h
     Simd.h
     SystemContext.h
     Timer.h
@@ -18,6 +19,7 @@ set(HAL_SOURCES
     Private/Timer.cpp
     Private/FileSystem.cpp
     Private/NativeWindow.cpp
+    Private/NativeEvent.cpp
     Private/SystemContext.cpp
     Private/Input.cpp
 )

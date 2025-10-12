@@ -84,7 +84,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    PushNativeEvent(_pHsNativeWindow, HS::EWindowEvent::CLOSE);
+    PushNativeEvent(_pHsNativeWindow, HS::NativeEvent::Type::WINDOW_CLOSE);
 
     [_window setDelegate:nil];
     [_window setContentViewController:nil];
