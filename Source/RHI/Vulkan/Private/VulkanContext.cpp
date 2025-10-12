@@ -196,14 +196,13 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		// Swapchain is out of date, need to recreate it
 		HS_LOG(warning, "Swapchain is out of date at frame %d, acquired image index would be %d", curframeIndex, swapchainVK->_curImageIndex);
-		return UINT32_MAX; // Indicate that the swapchain needs to be recreated
+		return UINT32_MAX;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 	{
 		HS_LOG(crash, "Failed to acquire next image from swapchain: %d", result);
-		return UINT32_MAX; // Indicate an error
+		return UINT32_MAX;
 	}
 
 	CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(swapchainVK->GetCommandBufferForCurrentFrame());

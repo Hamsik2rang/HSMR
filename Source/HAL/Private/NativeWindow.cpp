@@ -1,4 +1,4 @@
-#include "HAL/NativeWindow.h"
+﻿#include "HAL/NativeWindow.h"
 
 #if defined(__WINDOWS__)
 #include "HAL/Win/WinWindow.h"
