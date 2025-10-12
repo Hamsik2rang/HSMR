@@ -103,17 +103,15 @@ public:
 	HS_FORCEINLINE const glm::mat4& GetInverseProjectionMatrix() { return _inverseProjectionMatrix; }
 	HS_FORCEINLINE const glm::mat4& GetInverseViewProjectionMatrix() { return _inverseViewProjectionMatrix; }
 
-	// 레이 캐스팅 기능
-	HS_FORCEINLINE glm::vec3 ScreenToWorldPoint(const glm::vec2& screenPos, float depth) const;
-	HS_FORCEINLINE glm::vec3 ScreenToWorldDirection(const glm::vec2& screenPos) const;
-	HS_FORCEINLINE glm::vec2 WorldToScreenPoint(const glm::vec3& worldPos) const;
+	glm::vec3 ScreenToWorldPoint(const glm::vec3& screenPos) const;
+	glm::vec3 ScreenToWorldDirection(const glm::vec3& screenDir) const;
+	glm::vec2 WorldToScreenPoint(const glm::vec3& worldPos) const;
 
 private:
 	// 변환 업데이트
 	void updateViewMatrix();
 	void updateProjectionMatrix();
 	void updateViewProjectionMatrix();
-	void updateInverseMatrices();
 	//void updateFrustumPlanes();
 
 	// 트랜스폼 데이터
@@ -154,9 +152,6 @@ private:
 	// 캐시 상태 플래그
 	bool _viewDirty;
 	bool _projectionDirty;
-	bool _viewProjectionDirty;
-	bool _inverseDirty;
-	bool _frustumDirty;
 };
 
 HS_NS_EDITOR_END

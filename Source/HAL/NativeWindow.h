@@ -1,12 +1,12 @@
-//
+﻿//
 //  NativeWindow.h
-//  Engine
+//  HAL
 //
 //  Created by Yongsik Im on 5/16/2025
 //
 
-#ifndef __HS_PLATFORM_WINDOW_H__
-#define __HS_PLATFORM_WINDOW_H__
+#ifndef __HS_NATIVE_WINDOW_H__
+#define __HS_NATIVE_WINDOW_H__
 
 #include "Precompile.h"
 
