@@ -2,22 +2,6 @@ set(TARGET_NAME Platform)
 
 set(TOTAL_FILES)
 
-set(PLATFORM_HEADERS
-    NativeWindow.h
-    NativeEvent.h
-    SystemContext.h
-)
-source_group("Public" FILES ${PLATFORM_HEADERS})
-list(APPEND TOTAL_FILES ${PLATFORM_HEADERS})
-
-set(PLATFORM_SOURCES
-    Private/NativeWindow.cpp
-    Private/NativeEvent.cpp
-    Private/SystemContext.cpp
-)
-source_group("Private" FILES ${PLATFORM_SOURCES})
-list(APPEND TOTAL_FILES ${PLATFORM_SOURCES})
-
 if(WIN32)
     set(PLATFORM_WIN_HEADERS
         Win/WinFileSystem.h
@@ -74,17 +58,17 @@ if(HS_ARCH_X64)
     list(APPEND TOTAL_FILES ${PLATFORM_X64_SOURCES})
 else()
     set(PLATFORM_ARM64_HEADERS
-        arm64/NeonSimd.h
+        Arm64/NeonSimd.h
     )
 
-    source_group("arm64\\Public" FILES ${PLATFORM_ARM64_HEADERS})
+    source_group("Arm64\\Public" FILES ${PLATFORM_ARM64_HEADERS})
     list(APPEND TOTAL_FILES ${PLATFORM_ARM64_HEADERS})
 
     set(PLATFORM_ARM64_SOURCES
-        arm64/Private/NeonSimd.cpp
+        Arm64/Private/NeonSimd.cpp
     )
 
-    source_group("x64\\Private" FILES ${PLATFORM_ARM64_SOURCES})
+    source_group("Arm64\\Private" FILES ${PLATFORM_ARM64_SOURCES})
     list(APPEND TOTAL_FILES ${PLATFORM_ARM64_SOURCES})
 endif()
 

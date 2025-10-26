@@ -8,7 +8,7 @@
 #define __HS_PLATFORM_WINDOW_WINDOWS_H__
 
 #include "Precompile.h"
-#include "Platform/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 
 HS_NS_BEGIN
 

@@ -1,6 +1,6 @@
 ﻿#include "Platform/Win/WinSystemContext.h"
 
-#include "Platform/FileSystem.h"
+#include "Core/Native/FileSystem.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>

@@ -9,9 +9,7 @@
 
 #include "Precompile.h"
 
-#include "HAL/SystemContext.h"
-/*#include "Engine/EngineContext.h"*/ namespace HS { struct EngineContext; }
-/*#include "Renderer/RenderPath.h"*/ namespace HS { class RenderPath; }
+#include "Core/EngineContext.h"
 
 HS_NS_BEGIN
 
