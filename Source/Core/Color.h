@@ -1,4 +1,4 @@
-//
+﻿//
 //  Color.h
 //  Core
 //
@@ -20,7 +20,7 @@ public:
     Color(glm::vec4 v) : _data{v} {}
     
     Color(const Color& o) : _data{o._data} {}
-    Color(Color&& o) : _data(o._data) {};
+    Color(Color&& o) noexcept : _data(o._data) {};
     
     
     float& R() noexcept { return _data.r; }

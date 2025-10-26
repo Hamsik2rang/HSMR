@@ -1,4 +1,4 @@
-//
+﻿//
 //  NativeWindow.h
 //  Platform
 //
@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Platform/NativeEvent.h"
+#include "Core/Native/NativeEvent.h"
 
 HS_NS_BEGIN
 

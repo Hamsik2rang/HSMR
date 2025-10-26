@@ -3,32 +3,46 @@
 set(TOTAL_FILES)
 
 set(CORE_HEADERS
-
-    # Application.h
+    Application.h
     Color.h
     Event.h
     Exception.h
     Flag.h
     Hash.h
     Log.h
+    EngineContext.h
 )
 
 source_group("Public" FILES ${CORE_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
-
-    # Private/Application.cpp
+    Private/Application.cpp
     Private/Color.cpp
     Private/Event.cpp
     Private/Exception.cpp
     Private/Flag.cpp
     Private/Hash.cpp
     Private/Log.cpp
+    Private/EngineContext.cpp
 )
 
 source_group("Private" FILES ${CORE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_SOURCES})
+
+set(CORE_NATIVE_HEADERS
+    Native/NativeWindow.h
+    Native/NativeEvent.h
+)
+source_group("Native\\Public" FILES ${CORE_NATIVE_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_NATIVE_HEADERS})
+
+set(CORE_NATIVE_SOURCES
+    Native/Private/NativeWindow.cpp
+    Native/Private/NativeEvent.cpp
+)
+source_group("Native\\Private" FILES ${CORE_NATIVE_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_NATIVE_SOURCES})
 
 set(CORE_MATH_HEADERS
     Math/Common.h
@@ -73,19 +87,6 @@ set(CORE_MEMORY_SOURCES
 source_group("Memory\\Private" FILES ${CORE_MEMORY_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
 
-# # Container library
-# set(CORE_CONTAINER_HEADERS
-# Container/List.h
-# )
-# source_group("Container\\Public" FILES ${CORE_CONTAINER_HEADERS})
-# list(APPEND TOTAL_FILES ${CORE_CONTAINER_HEADERS})
-
-# set(CORE_CONTAINER_SOURCES
-# Container/ListExample.cpp
-# )
-
-# source_group("Container\\Private" FILES ${CORE_CONTAINER_SOURCES})
-# list(APPEND TOTAL_FILES ${CORE_CONTAINER_SOURCES})
 add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
 
 target_include_directories(${TARGET_NAME}

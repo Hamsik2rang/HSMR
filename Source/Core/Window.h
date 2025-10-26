@@ -1,4 +1,4 @@
-//
+﻿//
 //  Window.h
 //  Engine
 //
@@ -9,6 +9,7 @@
 
 #include "Precompile.h"
 
+#include "Core/Native/NativeWindow.h"
 #include "Core/Window.h"
 
 #include <list>

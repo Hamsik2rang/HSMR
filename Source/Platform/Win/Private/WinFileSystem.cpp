@@ -1,7 +1,5 @@
 ﻿#include "Platform/Win/WinFileSystem.h"
 
-#include "Platform/SystemContext.h"
-
 #include <cstddef>
 #include <string>
 #include <algorithm>

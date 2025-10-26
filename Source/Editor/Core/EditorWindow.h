@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Window.h"
+#include "Core/Window.h"
 #include "Renderer/RendererDefinition.h"
 #include "Renderer/RenderTarget.h"
 

@@ -9,7 +9,5 @@
 
 #include "Precompile.h"
 
-#include "Platform/SystemContext.h"
-
 
 #endif
