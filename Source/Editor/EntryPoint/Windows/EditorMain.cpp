@@ -1,12 +1,11 @@
 ﻿#include "Editor/EntryPoint/EditorMain.h"
 
 #include "Editor/Core/EditorApplication.h"
-#include "Engine/EngineContext.h"
 #include "Engine/Window.h"
 
 #include "Core/Log.h"
 
-using namespace HS;
+using namespace hs;
 
 int hs_editor_main(int argc, char* argv[])
 {
@@ -14,9 +13,9 @@ int hs_editor_main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	EngineContext* context = new EngineContext("HSMR", ERHIPlatform::VULKAN);
+	SystemContext::Init();
 
-	HS::Application* app = new HS::Editor::EditorApplication("HSMR", context);
+	hs::Application* app = new hs::Editor::EditorApplication("HSMR");
 
 	app->Run();
 

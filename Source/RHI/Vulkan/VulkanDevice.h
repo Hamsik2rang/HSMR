@@ -11,7 +11,7 @@
 HS_NS_BEGIN
 
 
-class HS_RHI_API VulkanDevice final
+class HS_API VulkanDevice final
 {
 public:
 	VulkanDevice() = default;

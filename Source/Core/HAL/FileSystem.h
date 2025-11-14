@@ -1,6 +1,6 @@
 ﻿//
 //  FileSystem.h
-//  Platform
+//  Core
 //
 //  Created by Yongsik Im on 2/7/2025
 //
@@ -31,7 +31,7 @@ public:
         READ_WRITE
     };
 
-	static bool Exist(const std::string& absolutePath);
+    static bool Exist(const std::string& absolutePath);
     static bool Copy(const std::string& src, const std::string& dst);
     static bool Open(const std::string& absolutePath, EFileAccess access, FileHandle& outFileHandle);
     static bool Close(FileHandle fileHandle);

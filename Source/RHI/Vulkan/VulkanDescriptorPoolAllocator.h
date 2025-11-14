@@ -11,7 +11,7 @@ HS_NS_BEGIN
 
 class VulkanDevice;
 
-class HS_RHI_API DescriptorPoolAllocatorVulkan
+class HS_API DescriptorPoolAllocatorVulkan
 {
 public:
 	struct PoolSizeRatio

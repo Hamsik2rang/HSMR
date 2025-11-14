@@ -18,7 +18,7 @@ class RHIFramebuffer;
 class RHIGraphicsPipeline;
 class RHIResourceSet;
 
-class HS_RHI_API RHICommandQueue : public RHIHandle
+class HS_API RHICommandQueue : public RHIHandle
 {
 public:
     ~RHICommandQueue() override;
@@ -27,7 +27,7 @@ protected:
     RHICommandQueue(const char* name);
 };
 
-class HS_RHI_API RHICommandPool : public RHIHandle
+class HS_API RHICommandPool : public RHIHandle
 {
 public:
     ~RHICommandPool() override;
@@ -36,7 +36,7 @@ protected:
     RHICommandPool(const char* name);
 };
 
-class HS_RHI_API RHICommandBuffer : public RHIHandle
+class HS_API RHICommandBuffer : public RHIHandle
 {
 public:
     ~RHICommandBuffer() override;

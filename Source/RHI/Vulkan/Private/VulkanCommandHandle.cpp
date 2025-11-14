@@ -218,7 +218,7 @@ void CommandBufferVulkan::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset
 
 void CommandBufferVulkan::PushDebugMark(const char* label, float color[4])
 {
-
+	
 }
 
 void CommandBufferVulkan::PopDebugMark()

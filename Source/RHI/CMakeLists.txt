@@ -86,7 +86,7 @@ else()
     list(APPEND TOTAL_FILES ${RHI_METAL_SOURCES})
 endif()
 
-add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
+add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
 
 if(APPLE)
     set(VULKAN)
@@ -111,7 +111,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Platform Core)
+add_dependencies(${TARGET_NAME} Core Platform)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -120,10 +120,6 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RHI
-    HS_RHI_API_EXPORT
-
-    HS_PLATFORM_API_IMPORT
-    HS_CORE_API_IMPORT
 )
 
 install(TARGETS ${TARGET_NAME}

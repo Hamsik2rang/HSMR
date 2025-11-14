@@ -1,17 +1,15 @@
 #include "Editor/GUI/GUIContext.h"
 
-#include "Engine/EngineContext.h"
 #include "Core/Log.h"
 #include "Core/HAL/FileSystem.h"
-#include "Platform/SystemContext.h"
+#include "Core/SystemContext.h"
 
 #include <string>
 
 HS_NS_EDITOR_BEGIN
 
-GUIContext::GUIContext(EngineContext* enginContext)
-	: _engineContext(enginContext)
-	, _defaultLayoutPath(SystemContext::Get()->assetDirectory + "imgui.ini")
+GUIContext::GUIContext()
+	: _assetDirectory(SystemContext::Get()->assetDirectory)
 	, _font{ nullptr }
 	, _context(nullptr)
 {
@@ -34,7 +32,8 @@ void GUIContext::Initialize()
 #if defined(__WINDOWS__)
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport 
 #endif
-	const char* filePath = _defaultLayoutPath.c_str();
+	std::string layoutPath = _assetDirectory + "imgui.ini";
+	const char* filePath = layoutPath.c_str();
 
 	io.IniFilename = filePath;
 	ImGui::LoadIniSettingsFromDisk(io.IniFilename);
@@ -57,8 +56,8 @@ void GUIContext::NextFrame()
 
 void GUIContext::Finalize()
 {
-	const char* filePath = _defaultLayoutPath.c_str();
-	ImGui::SaveIniSettingsToDisk(filePath);
+	std::string filePath = std::string(_assetDirectory + "imgui.ini");
+	ImGui::SaveIniSettingsToDisk(filePath.c_str());
 	ImGui::DestroyContext();
 }
 
@@ -159,7 +158,7 @@ void GUIContext::SetColorTheme(bool useWhite)
 void GUIContext::SetFont(const std::string& fontPath, float fontSize)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	_font = io.Fonts->AddFontFromFileTTF((SystemContext::Get()->assetDirectory + fontPath).c_str(), fontSize);
+	_font = io.Fonts->AddFontFromFileTTF((_assetDirectory + fontPath).c_str(), fontSize);
 
 	io.Fonts->Build();
 }

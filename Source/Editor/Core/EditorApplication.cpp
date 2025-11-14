@@ -1,9 +1,10 @@
 #include "Editor/Core/EditorApplication.h"
 
 #include "Core/Log.h"
-#include "Platform/SystemContext.h"
-#include "Platform/NativeWindow.h"
-#include "Resource/ObjectManager.h"
+#include "Core/SystemContext.h"
+#include "Core/Native/NativeWindow.h"
+
+#include "Engine/Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
@@ -14,12 +15,12 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const char* appName, EngineContext* engineContext) noexcept
-    : Application(appName, engineContext)
+EditorApplication::EditorApplication(const char* appName) noexcept
+    : Application(appName)
     , _guiContext(nullptr)
     , _deltaTime(0.0f)
 {
-    _guiContext = new GUIContext(engineContext);
+    _guiContext = new GUIContext();
 
     ObjectManager::Initialize();
 

@@ -30,7 +30,7 @@ private:
     static double getTimeSinceInit();
     static std::stack<double> _laps;
 
-    static double _initTime ;
+    static double _initTime;
 };
 
 HS_NS_END

@@ -1,13 +1,14 @@
 ﻿#include "Platform/Win/WinSystemContext.h"
 
-#include "Core/Native/FileSystem.h"
+#include "Core/SystemContext.h"
+#include "Core/HAL/FileSystem.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 HS_NS_BEGIN
 
-bool SystemContext::Initialize()
+bool SystemContext::initializePlatform()
 {
 	char path[MAX_PATH] = { 0 };
 	DWORD length = GetModuleFileNameA(nullptr, path, MAX_PATH);
@@ -34,7 +35,7 @@ bool SystemContext::Initialize()
 	return true;
 }
 
-void SystemContext::Finalize()
+void SystemContext::finalizePlatform()
 {
 	//...
 }

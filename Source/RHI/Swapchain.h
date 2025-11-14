@@ -9,15 +9,15 @@
 
 #include "Precompile.h"
 
-#include "Platform/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 #include "RHI/RHIDefinition.h"
 
-namespace HS { class RHICommandBuffer; }
-namespace HS { class RHIFramebuffer; }
+namespace hs { class RHICommandBuffer; }
+namespace hs { class RHIFramebuffer; }
 
 HS_NS_BEGIN
 
-class HS_RHI_API Swapchain : public RHIHandle
+class HS_API Swapchain : public RHIHandle
 {
 public:
     Swapchain(const SwapchainInfo& info);

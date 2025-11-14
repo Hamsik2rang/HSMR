@@ -15,12 +15,12 @@
 #include <vector>
 #include <string>
 
-namespace HS { struct NativeWindow; }
-namespace HS { class Swapchain; }
+namespace hs { struct NativeWindow; }
+namespace hs { class Swapchain; }
 
 HS_NS_BEGIN
 
-class HS_RHI_API RHIHandle
+class HS_API RHIHandle
 {
 public:
 	enum class EType
@@ -872,7 +872,7 @@ struct ComputePipelineInfo
 };
 
 template <>
-struct HS::Hasher<Attachment>
+struct hs::Hasher<Attachment>
 {
 	static uint32 Get(const Attachment& key)
 	{
@@ -884,7 +884,7 @@ struct HS::Hasher<Attachment>
 };
 
 template <>
-struct HS::Hasher<RenderPassInfo>
+struct hs::Hasher<RenderPassInfo>
 {
 	static uint32 Get(const RenderPassInfo& key)
 	{
