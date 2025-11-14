@@ -9,8 +9,8 @@
 
 #include "Core/Utility/StringUtility.h"
 
-#include "Platform/NativeWindow.h"
-#include "Platform/FileSystem.h"
+#include "Core/Native/NativeWindow.h"
+#include "Core/HAL/FileSystem.h"
 
 
 static const std::vector<const char*> s_validationLayers =
@@ -51,7 +51,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
 			break;
 		}
 		newMessage.append(oldMessage.substr(ptr, nextPtr - ptr));
-		newMessage.append(HS::StringUtil::Format("[%s]", name));
+		newMessage.append(hs::StringUtil::Format("[%s]", name));
 		ptr = nextPtr + 2 /*strlen("[]")*/;
 	}
 

@@ -30,10 +30,8 @@ message(STATUS "HS_DEPS_DIR: ${HS_DEPS_DIR}")
 
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
     set(HS_ARCH "arm64")
-    set(HS_ARCH_ARM64)
 else()
     set(HS_ARCH "x64")
-    set(HS_ARCH_X64)
 endif()
 
 message(STATUS "Processor Architecture is ${HS_ARCH}")
@@ -86,20 +84,18 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(HS_CORE_DIR "Source/Core")
 set(HS_PLATFORM_DIR "Source/Platform")
-set(HS_RESOURCE_DIR "Source/Resource")
 set(HS_RHI_DIR "Source/RHI")
+set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
-set(HS_RENDERER_DIR "Source/Renderer")
 set(HS_CLIENT_DIR "Source/Client")
 
 add_subdirectory(${HS_PLATFORM_DIR})
 add_subdirectory(${HS_CORE_DIR})
-add_subdirectory(${HS_RESOURCE_DIR})
 add_subdirectory(${HS_RHI_DIR})
-add_subdirectory(${HS_RENDERER_DIR})
-
+add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
+
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}

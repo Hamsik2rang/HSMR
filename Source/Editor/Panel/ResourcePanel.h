@@ -3,9 +3,9 @@
 
 #include "Precompile.h"
 
-#include "Editor/Panel/Panel.h"
+#include "Engine/Resource/ObjectManager.h"
 
-#include "Resource/ObjectManager.h"
+#include "Editor/Panel/Panel.h"
 
 
 HS_NS_EDITOR_BEGIN

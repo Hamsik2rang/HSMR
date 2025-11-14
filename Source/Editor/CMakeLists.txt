@@ -166,7 +166,7 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    Platform Core RHI Resource Renderer ShaderSystem
+    Engine
 )
 
 if(WIN32)
@@ -186,21 +186,22 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Platform Core RHI Resource Renderer)
+add_dependencies(${TARGET_NAME} Engine)
 
 target_compile_definitions(${TARGET_NAME}
     PUBLIC
     HS_EDITOR_MODE
+
     PRIVATE
     $<$<CONFIG:Debug>:_DEBUG>
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
+
     HS_EDITOR
     HS_EDITOR_API_EXPORT
 
-    HS_RHI_API_IMPORT
-    HS_RESOURCE_API_IMPORT
+    HS_API_IMPORT
 )
 
 if(APPLE)

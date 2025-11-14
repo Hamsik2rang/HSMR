@@ -4,7 +4,7 @@
 //
 //  Created on 10/03/25.
 //
-#include "Platform/Input.h"
+#include "Core/HAL/Input.h"
 
 
 HS_NS_BEGIN

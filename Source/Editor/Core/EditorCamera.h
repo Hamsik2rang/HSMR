@@ -2,10 +2,11 @@
 #define __HS_EDITOR_CAMERA_H__
 
 #include "Precompile.h"
-#include "Resource/Object.h"
-#include "Core/Flag.h"
 
+#include "Core/Flag.h"
 #include "Core/Math/Common.h"
+
+#include "Engine/Resource/Object.h"
 
 
 HS_NS_EDITOR_BEGIN

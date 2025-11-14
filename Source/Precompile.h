@@ -67,46 +67,11 @@ typedef uint64_t uint64;
 #endif
 
 #if defined(__APPLE__)
-#if defined(HS_PLATFORM_API_EXPORT)
-#define HS_PLATFORM_API __attribute__((__visibility__("default")))
-#elif defined(HS_PLATFORM_API_IMPORT)
-#define HS_PLATFORM_API __attribute__((__visibility__("default")))
-#else
-#define HS_PLATFORM_API
-#endif
 
-#if defined(HS_CORE_API_EXPORT)
-#define HS_CORE_API __attribute__((__visibility__("default")))
-#elif defined(HS_CORE_API_IMPORT)
-#define HS_CORE_API __attribute__((__visibility__("default")))
+#if defined(HS_API_EXPORT)
+#define HS_API __attribute__((__visibility__("default")))
 #else
-#define HS_CORE_API
-#endif
-
-#if defined(HS_RHI_API_EXPORT)
-#define HS_RHI_API __attribute__((__visibility__("default")))
-#elif defined(HS_RHI_API_IMPORT)
-#define HS_RHI_API __attribute__((__visibility__("default")))
-#else
-#define HS_RHI_API
-#endif
-
-#if defined(HS_RESOURCE_API_EXPORT)
-#define HS_RESOURCE_API __attribute__((__visibility__("default")))
-#else
-#define HS_RESOURCE_API
-#endif
-
-#if defined(HS_RENDERER_API_EXPORT)
-#define HS_RENDERER_API __attribute__((__visibility__("default")))
-#else
-#define HS_RENDERER_API
-#endif
-
-#if defined(HS_ENGINE_API_EXPORT)
-#define HS_ENGINE_API __attribute__((__visibility__("default")))
-#else
-#define HS_ENGINE_API
+#define HS_API
 #endif
 
 #if defined(HS_EDITOR_API_EXPORT)
@@ -116,52 +81,13 @@ typedef uint64_t uint64;
 #endif
 
 #else
-#if defined(HS_PLATFORM_API_EXPORT)
-#define HS_PLATFORM_API __declspec(dllexport)
-#elif defined(HS_PLATFORM_API_IMPORT)
-#define HS_PLATFORM_API __declspec(dllimport)
-#else
-#define HS_PLATFORM_API
-#endif
 
-#if defined(HS_CORE_API_EXPORT)
-#define HS_CORE_API __declspec(dllexport)
-#elif defined(HS_CORE_API_IMPORT)
-#define HS_CORE_API __declspec(dllimport)
+#if defined(HS_API_EXPORT)
+#define HS_API __declspec(dllexport)
+#elif defined(HS_API_IMPORT)
+#define HS_API __declspec(dllimport)
 #else
-#define HS_CORE_API
-#endif
-
-#if defined(HS_RHI_API_EXPORT)
-#define HS_RHI_API __declspec(dllexport)
-#elif defined(HS_RHI_API_IMPORT)
-#define HS_RHI_API __declspec(dllimport)
-#else
-#define HS_RHI_API
-#endif
-
-#if defined(HS_RESOURCE_API_EXPORT)
-#define HS_RESOURCE_API __declspec(dllexport)
-#elif defined(HS_RESOURCE_API_IMPORT)
-#define HS_RESOURCE_API __declspec(dllimport)
-#else
-#define HS_RESOURCE_API
-#endif
-
-#if defined(HS_RENDERER_API_EXPORT)
-#define HS_RENDERER_API __declspec(dllexport)
-#elif defined(HS_RENDERER_API_IMPORT)
-#define HS_RENDERER_API __declspec(dllimport)
-#else
-#define HS_RENDERER_API
-#endif
-
-#if defined(HS_ENGINE_API_EXPORT)
-#define HS_ENGINE_API __declspec(dllexport)
-#elif defined(HS_ENGINE_API_IMPORT)
-#define HS_ENGINE_API __declspec(dllimport)
-#else
-#define HS_ENGINE_API
+#define HS_API
 #endif
 
 #if defined(HS_EDITOR_API_EXPORT)
@@ -209,13 +135,13 @@ typedef uint64_t uint64;
 #endif
 
 #define HS_NS_BEGIN \
-    namespace HS    \
+    namespace hs    \
     {
 
 #define HS_NS_END }
 
 #define HS_NS_EDITOR_BEGIN \
-    namespace HS           \
+    namespace hs           \
     {                      \
     namespace Editor       \
     {
@@ -228,7 +154,7 @@ typedef uint64_t uint64;
 
 #include <memory>
 
-namespace HS
+namespace hs
 {
 template <typename Tp>
 using Scoped = std::unique_ptr<Tp>;

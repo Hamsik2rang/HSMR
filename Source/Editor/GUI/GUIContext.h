@@ -11,17 +11,19 @@
 
 #include "ImGui/imgui.h"
 
+#include "Core/SystemContext.h"
+
 #include <string>
 
-namespace HS { struct EngineContext; }
-namespace HS { class Window; }
+
+namespace hs { class Window; }
 
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API GUIContext
 {
 public:
-	GUIContext(struct EngineContext* engineContext);
+	GUIContext();
 	~GUIContext();
 
 	void Initialize();
@@ -36,9 +38,7 @@ public:
 private:
 	ImGuiContext* _context; // 네임스페이스 없이 사용
 	ImFont* _font;
-	std::string _defaultLayoutPath;
-
-	EngineContext* _engineContext;
+	std::string _assetDirectory;
 };
 
 HS_NS_EDITOR_END

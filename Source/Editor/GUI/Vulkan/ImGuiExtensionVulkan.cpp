@@ -1,6 +1,8 @@
 ﻿#include "Editor/GUI/ImGuiExtension.h"
 
 #include "Core/Log.h"
+#include "Engine/Window.h"
+
 #include "RHI/ResourceHandle.h"
 #include "RHI/Vulkan/VulkanSwapchain.h"
 #include "RHI/Vulkan/VulkanContext.h"
@@ -11,12 +13,11 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_vulkan.h"
 
-#include "Engine/Window.h"
 #include "Platform/Win/WinWindow.h"
 
 #include <unordered_map>
 
-using namespace HS;
+using namespace hs;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -64,7 +65,7 @@ static void check_vk_result(VkResult result)
 	}
 }
 
-void ImGuiExtension::ImageOffscreen(HS::RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+void ImGuiExtension::ImageOffscreen(hs::RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
 	VkDescriptorSet dSet = ImGui_ImplVulkan_AddTexture(s_samplerVK->handle, textureVK->imageViewVk, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -73,7 +74,7 @@ void ImGuiExtension::ImageOffscreen(HS::RHITexture* use_texture, const ImVec2& i
 	ImGui::Image(reinterpret_cast<ImTextureID>(dSet), image_size, uv0, uv1, tint_col, border_col);
 }
 
-void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
+void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 {
 	s_currentSwapchain = swapchain;
 	s_currentFrameIndex = 0;
@@ -88,15 +89,15 @@ void ImGuiExtension::InitializeBackend(HS::Swapchain* swapchain)
 	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 	const VulkanDevice* rhiDeviceVK = rhiContextVK->GetDevice();
 	RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(swapchainVK->GetRenderPass());
-	HS::SamplerInfo samplerInfo{};
-	samplerInfo.addressU = HS::EAddressMode::CLAMP_TO_BORDER;
-	samplerInfo.addressV = HS::EAddressMode::CLAMP_TO_BORDER;
-	samplerInfo.addressW = HS::EAddressMode::CLAMP_TO_BORDER;
+	hs::SamplerInfo samplerInfo{};
+	samplerInfo.addressU = hs::EAddressMode::CLAMP_TO_BORDER;
+	samplerInfo.addressV = hs::EAddressMode::CLAMP_TO_BORDER;
+	samplerInfo.addressW = hs::EAddressMode::CLAMP_TO_BORDER;
 	samplerInfo.isPixelCoordinate = false;
-	samplerInfo.type = HS::ETextureType::TEX_2D;
-	samplerInfo.magFilter = HS::EFilterMode::NEAREST;
-	samplerInfo.minFilter = HS::EFilterMode::NEAREST;
-	samplerInfo.mipmapMode = HS::EFilterMode::NEAREST;
+	samplerInfo.type = hs::ETextureType::TEX_2D;
+	samplerInfo.magFilter = hs::EFilterMode::NEAREST;
+	samplerInfo.minFilter = hs::EFilterMode::NEAREST;
+	samplerInfo.mipmapMode = hs::EFilterMode::NEAREST;
 	s_samplerVK = static_cast<SamplerVulkan*>(rhiContextVK->CreateSampler("ImGui Default Sampler", samplerInfo));
 
 	ImGui_ImplVulkan_InitInfo initInfo{};
@@ -142,7 +143,7 @@ void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
 	*fnHandler = static_cast<void*>(ImGui_ImplWin32_WndProcHandler);
 }
 
-void ImGuiExtension::BeginRender(HS::Swapchain* swapchain)
+void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
 {
 	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 

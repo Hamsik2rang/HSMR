@@ -48,8 +48,8 @@ namespace LogSymbol
 #define HS_LOG(symbol, fmt, ...)                                                       \
     do                                                                                 \
     {                                                                                  \
-        HS::Log::Print(__FILE__, __LINE__, HS::LogSymbol::symbol, fmt, ##__VA_ARGS__); \
-        if (HS::LogSymbol::symbol == HS::Log::EType::LOG_CRASH)                             \
+        hs::Log::Print(__FILE__, __LINE__, hs::LogSymbol::symbol, fmt, ##__VA_ARGS__); \
+        if (hs::LogSymbol::symbol == hs::Log::EType::LOG_CRASH)                             \
         {                                                                              \
             HS_DEBUG_BREAK();                                                          \
         }                                                                              \
@@ -57,14 +57,14 @@ namespace LogSymbol
 
 #ifdef _DEBUG
 
-#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = !!(x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::LOG_ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
-#define HS_CHECK(x, msg) do { const volatile bool b = !!(x); if (!b) { HS::Log::Print(__FILE__, __LINE__, HS::Log::EType::LOG_CRASH, msg); } } while(0)
+#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::LOG_ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
+#define HS_CHECK(x, msg) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::LOG_CRASH, msg); } } while(0)
 
 #define HS_THROW(fmt, ...) \
     do { \
-        HS::Log::Print(__FILE__, __LINE__, HS::LogSymbol::crash, fmt, ##__VA_ARGS__); \
+        hs::Log::Print(__FILE__, __LINE__, hs::LogSymbol::crash, fmt, ##__VA_ARGS__); \
         HS_DEBUG_BREAK(); \
-        throw HS::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+        throw hs::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
     } while (false)
 
 
@@ -75,8 +75,8 @@ namespace LogSymbol
 
 #define HS_THROW(fmt, ...) \
     do { \
-        HS::Log::Print( __FILE__, __LINE__, HS::LogSymbol::crash, fmt, ##__VA_ARGS__); \
-        throw HS::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
+        hs::Log::Print( __FILE__, __LINE__, hs::LogSymbol::crash, fmt, ##__VA_ARGS__); \
+        throw hs::Exception(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
     } while (false)
 
 #endif

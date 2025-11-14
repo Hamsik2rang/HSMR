@@ -1,6 +1,8 @@
 {
     "files.associations": {
+        "*.lvs": "shaderlab",
         "__locale": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "xstring": "cpp"
     }
 }

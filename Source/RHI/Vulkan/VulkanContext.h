@@ -17,7 +17,7 @@
 
 HS_NS_BEGIN
 
-class HS_RHI_API VulkanContext final : public RHIContext
+class HS_API VulkanContext final : public RHIContext
 {
 public:
 	VulkanContext() = default;
@@ -44,7 +44,7 @@ public:
 	void DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) final;
 
 	RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* path) final;
-	RHIShader* CreateShader(const char* name, const ShaderInfo& info,  const char* byteCode, size_t byteCodeSize) final;
+	RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) final;
 	void DestroyShader(RHIShader* shader) final;
 
 	RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) final;
@@ -84,7 +84,7 @@ public:
 
 	// TODO: ImGui 백엔드 변경되면 없애야합니다.
 	const VkInstance GetInstance() const { return _instanceVk; }
-	const VulkanDevice* GetDevice() const  { return &(_device); }
+	const VulkanDevice* GetDevice() const { return &(_device); }
 
 private:
 	bool createInstance();

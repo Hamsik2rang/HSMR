@@ -3,28 +3,26 @@
 set(TOTAL_FILES)
 
 set(CORE_HEADERS
-    Application.h
     Color.h
     Event.h
     Exception.h
     Flag.h
     Hash.h
     Log.h
-    EngineContext.h
+    SystemContext.h
 )
 
 source_group("Public" FILES ${CORE_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
-    Private/Application.cpp
     Private/Color.cpp
     Private/Event.cpp
     Private/Exception.cpp
     Private/Flag.cpp
     Private/Hash.cpp
     Private/Log.cpp
-    Private/EngineContext.cpp
+    Private/SystemContext.cpp
 )
 
 source_group("Private" FILES ${CORE_SOURCES})
@@ -43,6 +41,24 @@ set(CORE_NATIVE_SOURCES
 )
 source_group("Native\\Private" FILES ${CORE_NATIVE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_NATIVE_SOURCES})
+
+set(CORE_HAL_HEADERS
+    HAL/FileSystem.h
+    HAL/Input.h
+    HAL/Timer.h
+)
+
+source_group("HAL\\Public" FILES ${CORE_HAL_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_HAL_HEADERS})
+
+set(CORE_HAL_SOURCES
+    HAL/Private/FileSystem.cpp
+    HAL/Private/Input.cpp
+    HAL/Private/Timer.cpp
+)
+
+source_group("HAL\\Private" FILES ${CORE_HAL_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_HAL_SOURCES})
 
 set(CORE_MATH_HEADERS
     Math/Common.h

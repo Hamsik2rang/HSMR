@@ -15,7 +15,7 @@
 
 HS_NS_BEGIN
 
-struct HS_RHI_API TextureVulkan : public RHITexture
+struct HS_API TextureVulkan : public RHITexture
 {
 	TextureVulkan(const char* name, const TextureInfo& info) noexcept : RHITexture(name, info) {}
 	~TextureVulkan() final = default;
@@ -26,7 +26,7 @@ struct HS_RHI_API TextureVulkan : public RHITexture
 	VkImageLayout layoutVk = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
-struct HS_RHI_API SamplerVulkan : public RHISampler
+struct HS_API SamplerVulkan : public RHISampler
 {
 	SamplerVulkan(const char* name,  const SamplerInfo& info) noexcept : RHISampler(name, info) {}
 	~SamplerVulkan() final = default;
@@ -34,7 +34,7 @@ struct HS_RHI_API SamplerVulkan : public RHISampler
 	VkSampler handle = VK_NULL_HANDLE;
 };
 
-struct HS_RHI_API BufferVulkan : public RHIBuffer
+struct HS_API BufferVulkan : public RHIBuffer
 {
 	BufferVulkan(const char* name, const BufferInfo& info) noexcept : RHIBuffer(name, info) {}
 	~BufferVulkan() final = default;
@@ -46,7 +46,7 @@ struct HS_RHI_API BufferVulkan : public RHIBuffer
 	VkDeviceMemory memory = VK_NULL_HANDLE;
 };
 
-struct HS_RHI_API ShaderVulkan : public RHIShader
+struct HS_API ShaderVulkan : public RHIShader
 {
 	ShaderVulkan(const char* name, const ShaderInfo& info) noexcept : RHIShader(name, info) {}
 	~ShaderVulkan() final = default;
@@ -55,7 +55,7 @@ struct HS_RHI_API ShaderVulkan : public RHIShader
 	VkPipelineShaderStageCreateInfo stageInfo = {};
 };
 
-struct HS_RHI_API ResourceLayoutVulkan : public RHIResourceLayout
+struct HS_API ResourceLayoutVulkan : public RHIResourceLayout
 {
 	ResourceLayoutVulkan(const char* name, ResourceBinding* bindings, size_t bindingCount) noexcept : RHIResourceLayout(name, bindings, bindingCount) {}
 	~ResourceLayoutVulkan() final = default;
@@ -64,7 +64,7 @@ struct HS_RHI_API ResourceLayoutVulkan : public RHIResourceLayout
 	std::vector<VkDescriptorSetLayoutBinding> bindingVks;
 };
 
-struct HS_RHI_API ResourceSetVulkan : public RHIResourceSet
+struct HS_API ResourceSetVulkan : public RHIResourceSet
 {
 	ResourceSetVulkan(const char* name) noexcept : RHIResourceSet(name) {}
 	~ResourceSetVulkan() final = default;
@@ -73,7 +73,7 @@ struct HS_RHI_API ResourceSetVulkan : public RHIResourceSet
 	ResourceLayoutVulkan* layoutVK = nullptr;
 };
 
-struct HS_RHI_API ResourceSetPoolVulkan : public RHIResourceSetPool
+struct HS_API ResourceSetPoolVulkan : public RHIResourceSetPool
 {
 	ResourceSetPoolVulkan(const char* name) noexcept : RHIResourceSetPool(name) {}
 	~ResourceSetPoolVulkan() final = default;

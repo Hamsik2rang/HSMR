@@ -8,6 +8,10 @@
 #define __HS_WIN_SYSTEM_CONTEXT_H__
 
 #include "Precompile.h"
+#include "Core/SystemContext.h"
 
+HS_NS_BEGIN
+
+HS_NS_END
 
 #endif

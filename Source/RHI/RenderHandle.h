@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class HS_RHI_API RHIRenderPass : public RHIHandle
+class HS_API RHIRenderPass : public RHIHandle
 {
 public:
 
@@ -26,7 +26,7 @@ protected:
     RHIRenderPass(const char* name, const RenderPassInfo& info);
 };
 
-class HS_RHI_API RHIFramebuffer : public RHIHandle
+class HS_API RHIFramebuffer : public RHIHandle
 {
 public:
     ~RHIFramebuffer() override;
@@ -37,7 +37,7 @@ protected:
     RHIFramebuffer(const char* name, const FramebufferInfo& info);
 };
 
-class HS_RHI_API RHIGraphicsPipeline : public RHIHandle
+class HS_API RHIGraphicsPipeline : public RHIHandle
 {
 public:
     ~RHIGraphicsPipeline() override;
@@ -47,7 +47,7 @@ protected:
     RHIGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
 };
 
-class HS_RHI_API RHIComputePipeline : public RHIHandle
+class HS_API RHIComputePipeline : public RHIHandle
 {
 public:
     ~RHIComputePipeline() override;

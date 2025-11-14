@@ -10,16 +10,16 @@
 
 #include "Precompile.h"
 
-#include "Core/Window.h"
-#include "Renderer/RendererDefinition.h"
-#include "Renderer/RenderTarget.h"
+#include "Engine/Window.h"
+#include "Engine/Renderer/RendererDefinition.h"
+#include "Engine/Renderer/RenderTarget.h"
 
-/*#include "Renderer/RenderTarget.h"*/namespace HS { class RenderTarget; } // namespace HS
-/*#include "Renderer/RenderPath.h"*/ namespace HS { class RenderPath; }
-/*#include "RHI/RHIContext.h"*/ namespace HS { class RHIContext; }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class GUIContext; } }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class Panel; } }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace HS { namespace Editor { class EditorCamera; } }
+/*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
+/*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }
+/*#include "RHI/RHIContext.h"*/ namespace hs { class RHIContext; }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class GUIContext; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class Panel; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class EditorCamera; } }
 
 HS_NS_EDITOR_BEGIN
 

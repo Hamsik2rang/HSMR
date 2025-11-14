@@ -14,6 +14,7 @@
 // Link required libraries
 #pragma comment(lib, "shlwapi.lib")
 
+#include "Core/SystemContext.h"
 
 HS_NS_BEGIN
 
@@ -79,7 +80,7 @@ bool FileSystem::Exist(const std::string& absolutePath)
     std::wstring pathW = FileSystem::Utf8ToUtf16(absolutePath);
     if (pathW.empty())
     {
-        //HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
+        // HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
         return false;
     }
     DWORD attributes = GetFileAttributesW(pathW.c_str());
@@ -98,7 +99,7 @@ bool FileSystem::Copy(const std::string& src, const std::string& dst)
 
     if (srcW.empty() || dstW.empty())
     {
-        //HS_LOG(error, "Failed to convert file paths to UTF-16");
+        // HS_LOG(error, "Failed to convert file paths to UTF-16");
         return false;
     }
 
@@ -107,7 +108,7 @@ bool FileSystem::Copy(const std::string& src, const std::string& dst)
     if (!success)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to copy file from %s to %s. Error: %lu", src.c_str(), dst.c_str(), error);
+        // HS_LOG(error, "Failed to copy file from %s to %s. Error: %lu", src.c_str(), dst.c_str(), error);
         return false;
     }
 
@@ -120,14 +121,14 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
     std::wstring pathW = FileSystem::Utf8ToUtf16(absolutePath);
     if (pathW.empty())
     {
-        //HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
+        // HS_LOG(error, "Failed to convert file path to UTF-16: %s", absolutePath.c_str());
         return false;
     }
 
-    DWORD accessFlags = get_access_flag(access);
-    DWORD shareMode = FILE_SHARE_READ; // Allow other processes to read
+    DWORD accessFlags         = get_access_flag(access);
+    DWORD shareMode           = FILE_SHARE_READ; // Allow other processes to read
     DWORD creationDisposition = get_createion_disposition(access);
-    DWORD flagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
+    DWORD flagsAndAttributes  = FILE_ATTRIBUTE_NORMAL;
 
     HANDLE handle = CreateFileW(
         pathW.c_str(),
@@ -136,13 +137,13 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
         nullptr, // Security attributes
         creationDisposition,
         flagsAndAttributes,
-        nullptr  // Template file
+        nullptr // Template file
     );
 
     if (handle == INVALID_HANDLE_VALUE)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to open file: %s. Error: %lu", absolutePath.c_str(), error);
+        // HS_LOG(error, "Failed to open file: %s. Error: %lu", absolutePath.c_str(), error);
         return false;
     }
 
@@ -159,12 +160,12 @@ bool FileSystem::Close(FileHandle fileHandle)
     }
 
     HANDLE handle = static_cast<HANDLE>(fileHandle);
-    BOOL success = CloseHandle(handle);
+    BOOL success  = CloseHandle(handle);
 
     if (!success)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to close file handle. Error: %lu", error);
+        // HS_LOG(error, "Failed to close file handle. Error: %lu", error);
         return false;
     }
 
@@ -179,7 +180,7 @@ size_t FileSystem::Read(FileHandle fileHandle, void* buffer, size_t byteSize)
         return 0;
     }
 
-    HANDLE handle = static_cast<HANDLE>(fileHandle);
+    HANDLE handle   = static_cast<HANDLE>(fileHandle);
     DWORD bytesRead = 0;
 
     BOOL success = ReadFile(handle, buffer, static_cast<DWORD>(byteSize), &bytesRead, nullptr);
@@ -188,7 +189,7 @@ size_t FileSystem::Read(FileHandle fileHandle, void* buffer, size_t byteSize)
         DWORD error = GetLastError();
         if (error != ERROR_HANDLE_EOF) // EOF is not an error
         {
-            //HS_LOG(error, "Failed to read from file. Error: %lu", error);
+            // HS_LOG(error, "Failed to read from file. Error: %lu", error);
         }
         return 0;
     }
@@ -204,14 +205,14 @@ size_t FileSystem::Write(FileHandle fileHandle, void* buffer, size_t byteSize)
         return 0;
     }
 
-    HANDLE handle = static_cast<HANDLE>(fileHandle);
+    HANDLE handle      = static_cast<HANDLE>(fileHandle);
     DWORD bytesWritten = 0;
 
     BOOL success = WriteFile(handle, buffer, static_cast<DWORD>(byteSize), &bytesWritten, nullptr);
     if (!success)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to write to file. Error: %lu", error);
+        // HS_LOG(error, "Failed to write to file. Error: %lu", error);
         return 0;
     }
 
@@ -234,7 +235,7 @@ bool FileSystem::SetPos(FileHandle fileHandle, const int64 pos)
     if (!success)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to set file position. Error: %lu", error);
+        // HS_LOG(error, "Failed to set file position. Error: %lu", error);
         return false;
     }
 
@@ -250,12 +251,12 @@ bool FileSystem::Flush(FileHandle fileHandle)
     }
 
     HANDLE handle = static_cast<HANDLE>(fileHandle);
-    BOOL success = FlushFileBuffers(handle);
+    BOOL success  = FlushFileBuffers(handle);
 
     if (!success)
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to flush file buffers. Error: %lu", error);
+        // HS_LOG(error, "Failed to flush file buffers. Error: %lu", error);
         return false;
     }
 
@@ -305,7 +306,7 @@ size_t FileSystem::GetSize(FileHandle fileHandle)
     if (!GetFileSizeEx(handle, &fileSize))
     {
         DWORD error = GetLastError();
-        //HS_LOG(error, "Failed to get file size. Error: %lu", error);
+        // HS_LOG(error, "Failed to get file size. Error: %lu", error);
         return 0;
     }
 
@@ -396,20 +397,20 @@ bool FileSystem::IsAbsolutePath(const std::string& path)
 std::string FileSystem::GetRelativePath(const std::string& absolutePath)
 {
     std::string baseDir = SystemContext::Get()->executableDirectory;
-if(baseDir.empty())
+    if (baseDir.empty())
     {
         return absolutePath; // If base directory is empty, return the absolute path
-}
+    }
     // Convert to lowercase for case-insensitive comparison (Windows is case-insensitive)
     std::string lowerAbsolute = absolutePath;
-    std::string lowerBase = baseDir;
+    std::string lowerBase     = baseDir;
     std::transform(lowerAbsolute.begin(), lowerAbsolute.end(), lowerAbsolute.begin(), ::tolower);
     std::transform(lowerBase.begin(), lowerBase.end(), lowerBase.begin(), ::tolower);
 
     if (lowerAbsolute.find(lowerBase) == 0)
     {
         std::string relative = absolutePath.substr(baseDir.length());
-		if (!relative.empty() && (relative[0] == HS_DIR_SEPERATOR))
+        if (!relative.empty() && (relative[0] == HS_DIR_SEPERATOR))
         {
             relative = relative.substr(1);
         }
@@ -428,10 +429,10 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
     }
 
     std::string baseDir = SystemContext::Get()->executableDirectory;
-    if(baseDir.empty())
+    if (baseDir.empty())
     {
         return relativePath;
-	}
+    }
     return baseDir + relativePath;
 }
 

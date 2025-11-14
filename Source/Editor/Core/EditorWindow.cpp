@@ -1,9 +1,9 @@
 ﻿#include "Editor/Core/EditorWindow.h"
 
-#include "Renderer/RenderPass/Forward/ForwardOpaquePass.h"
+#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
-#include "Renderer/ForwardPath.h"
+#include "Engine/Renderer/ForwardPath.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
@@ -36,7 +36,11 @@ bool EditorWindow::onInitialize()
 	scInfo.useMSAA = false;
 	scInfo.useStencil = false;
 
-	_rhiContext = RHIContext::Get();
+#if __WINDOWS__
+	_rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
+#else
+	_rhiContext = RHICOntext::Create(ERHIPlatform::METAL);
+#endif
 
 	_swapchain = _rhiContext->CreateSwapchain(scInfo);
 

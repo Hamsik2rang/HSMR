@@ -104,9 +104,9 @@ void PollNativeEvent(NativeWindow& nativeWindow);
 void SetNativeWindowSize(uint16 width, uint16 height);
 void GetNativeWindowSize(uint16& outWidth, uint16& outHeight);
 
-bool PeekNativeEvent(HS::NativeWindow* pWindow, NativeEvent& outEvent);
-void PushNativeEvent(const HS::NativeWindow* pWindow, NativeEvent event);
-NativeEvent PopNativeEvent(const HS::NativeWindow* pWindow);
+bool PeekNativeEvent(hs::NativeWindow* pWindow, NativeEvent& outEvent);
+void PushNativeEvent(const hs::NativeWindow* pWindow, NativeEvent event);
+NativeEvent PopNativeEvent(const hs::NativeWindow* pWindow);
 
 void SetNativePreEventHandler(void* fnHandler);
 

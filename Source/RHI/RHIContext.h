@@ -18,7 +18,7 @@
 
 HS_NS_BEGIN
 
-class HS_RHI_API RHIContext
+class HS_API RHIContext
 {
 public:
 	RHIContext() = default;
@@ -84,7 +84,7 @@ public:
 	static RHIContext* Get();
 };
 
-extern HS_RHI_API RHIContext* g_pRHIContext;
+extern HS_API RHIContext* g_pRHIContext;
 
 HS_NS_END
 

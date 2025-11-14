@@ -11,12 +11,12 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
-#include "Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 
-#include "Geometry/GeometryDefinition.h"
+#include "Engine/Geometry/GeometryDefinition.h"
 
-namespace HS
+namespace hs
 {
 class RHIFramebuffer;
 }

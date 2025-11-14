@@ -25,7 +25,7 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
         }                                                                                   \
     } while (0)
 
@@ -34,7 +34,7 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
             return result;                                                                  \
         }                                                                                   \
     } while (0)
@@ -44,13 +44,13 @@ HS_NS_BEGIN
     {                                                                                       \
         if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
         {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, HS::RHIUtilityVulkan::ToString(result));    \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
             throw Exception(__FILE__, __LINE__, result)                                     \
         }                                                                                   \
     } while (0)
 
 
-class HS_RHI_API RHIUtilityVulkan
+class HS_API RHIUtilityVulkan
 {
 public:
 	static VkFormat ToPixelFormat(EPixelFormat format);

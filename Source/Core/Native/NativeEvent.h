@@ -47,10 +47,20 @@ struct NativeEvent
     Type type;
     uint64 value;
 
-    HS_FORCEINLINE bool operator=(NativeEvent::Type type)
+    HS_FORCEINLINE NativeEvent& operator=(const NativeEvent& event)
     {
-        this->type = type;
+        this->type = event.type;
+        value      = event.value;
+
+        return *this;
+    }
+
+    HS_FORCEINLINE NativeEvent& operator=(const NativeEvent::Type& eventType)
+    {
+        this->type = eventType;
         value      = 0;
+
+        return *this;
     }
 
     HS_FORCEINLINE bool operator==(const NativeEvent& rhs)

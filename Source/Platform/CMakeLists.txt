@@ -42,7 +42,7 @@ else() # MAC
     list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})
 endif()
 
-if(HS_ARCH_X64)
+if(HS_ARCH STREQUAL "x64")
     set(PLATFORM_X64_HEADERS
         x64/SSESimd.h
     )
