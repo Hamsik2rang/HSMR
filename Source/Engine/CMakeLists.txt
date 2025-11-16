@@ -106,9 +106,16 @@ list(APPEND TOTAL_FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-target_link_libraries(${TARGET_NAME} PRIVATE
-    Core RHI Platform ${ASSIMP}
-    ${ASSIMP}
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+    Core Platform RHI ${ASSIMP}
+)
+
+target_link_options(${TARGET_NAME}
+    PRIVATE
+    "/WHOLEARCHIVE:Core"
+    "/WHOLEARCHIVE:Platform"
+    "/WHOLEARCHIVE:RHI"
 )
 
 target_include_directories(${TARGET_NAME}
@@ -122,6 +129,7 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:MinSizeRel>:_RELEASE>
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
+    HS_ENGINE
 
     HS_API_EXPORT
 )

@@ -12,7 +12,7 @@
 #include "Engine/Application.h"
 #include "Engine/Window.h"
 
-namespace hs { namespace Editor { class GUIContext; } }
+namespace hs { namespace editor { class GUIContext; } }
 
 HS_NS_EDITOR_BEGIN
 

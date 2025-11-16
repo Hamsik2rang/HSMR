@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class Timer
+class HS_API Timer
 {
 public:
     static bool Initialize();

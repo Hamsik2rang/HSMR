@@ -5,17 +5,15 @@
 //  Created by Yongsik Im on 10/06/25.
 //
 #ifndef __HS_PROFILER_PANEL_H__
-#define __HS_PROFILER_PANEL_H_H
+#define __HS_PROFILER_PANEL_H__
 
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
 
-#include "Core/HAL/Timer.h"
-
 HS_NS_EDITOR_BEGIN
 
-class ProfilerPanel : public Panel
+class HS_EDITOR_API ProfilerPanel : public Panel
 {
 public:
 	ProfilerPanel(Window* window);
@@ -34,4 +32,4 @@ private:
 
 HS_NS_EDITOR_END
 
-#endif
+#endif /* __HS_PROFILER_PANEL_H__ */

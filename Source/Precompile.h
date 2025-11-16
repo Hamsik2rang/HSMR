@@ -143,7 +143,7 @@ typedef uint64_t uint64;
 #define HS_NS_EDITOR_BEGIN \
     namespace hs           \
     {                      \
-    namespace Editor       \
+    namespace editor       \
     {
 
 #define HS_NS_EDITOR_END \

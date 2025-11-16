@@ -17,9 +17,9 @@
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }
 /*#include "RHI/RHIContext.h"*/ namespace hs { class RHIContext; }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class GUIContext; } }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class Panel; } }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace Editor { class EditorCamera; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class EditorCamera; } }
 
 HS_NS_EDITOR_BEGIN
 

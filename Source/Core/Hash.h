@@ -35,7 +35,7 @@ HS_NS_BEGIN
 \
 // 해당 탬플릿 구조체를 컴파일 타임 정의함으로써 객체에 대한 해시 값을 획득하는 방법을 정의합니다.
 template <typename T>
-struct Hasher
+struct HS_API Hasher
 {
 	template <typename U = T, typename std::enable_if<!std::is_enum<U>::value>::type* = nullptr>
 	static uint32 Get(const U& key);
@@ -50,7 +50,7 @@ struct Hasher
 // 위의 Hashable Interface가 더 나은 것 같은데..
 // ref from https://gist.github.com/badboy/6267743.
 template <>
-struct Hasher<uint64>
+struct HS_API Hasher<uint64>
 {
 	static uint32 Get(const uint64& key)
 	{
@@ -67,7 +67,7 @@ struct Hasher<uint64>
 };
 
 template <>
-struct Hasher<unsigned long>
+struct HS_API Hasher<unsigned long>
 {
 	static uint32 Get(const unsigned long& key)
 	{
@@ -84,7 +84,7 @@ struct Hasher<unsigned long>
 };
 
 template <>
-struct Hasher<bool>
+struct HS_API Hasher<bool>
 {
 	static uint32 Get(const bool& key)
 	{
@@ -93,7 +93,7 @@ struct Hasher<bool>
 };
 
 template<>
-struct Hasher<char>
+struct HS_API Hasher<char>
 {
 	static uint32 Get(const char& key)
 	{
@@ -102,7 +102,7 @@ struct Hasher<char>
 };
 
 template<>
-struct Hasher<unsigned char>
+struct HS_API Hasher<unsigned char>
 {
 	static uint32 Get(const unsigned char& key)
 	{
@@ -111,7 +111,7 @@ struct Hasher<unsigned char>
 };
 
 template<>
-struct Hasher<int16>
+struct HS_API Hasher<int16>
 {
 	static uint32 Get(const int16& key)
 	{
@@ -120,7 +120,7 @@ struct Hasher<int16>
 };
 
 template<>
-struct Hasher<uint16>
+struct HS_API Hasher<uint16>
 {
 	static uint32 Get(const uint16& key)
 	{
@@ -128,7 +128,7 @@ struct Hasher<uint16>
 	}
 };
 
-HS_FORCEINLINE uint64 HashCombine64(uint64 a, uint64 b, uint64 c)
+HS_FORCEINLINE HS_API uint64 HashCombine64(uint64 a, uint64 b, uint64 c)
 {
 	a += b; a -= b; a -= c; a ^= (c >> 13); b -= c; b -= a; b ^= (a << 8);
 	c -= a; c -= b; c ^= (b >> 13); a -= b; a -= c; a ^= (c >> 12); b -= c;
@@ -138,13 +138,13 @@ HS_FORCEINLINE uint64 HashCombine64(uint64 a, uint64 b, uint64 c)
 	return c;
 }
 
-HS_FORCEINLINE uint64 HashCombine64(uint64 a, uint64 c)
+HS_FORCEINLINE HS_API uint64 HashCombine64(uint64 a, uint64 c)
 {
 	uint64 b = 0x9e3779b97f4a7c55;
 	return HashCombine64(a, b, c);
 }
 
-HS_FORCEINLINE uint32 HashCombine(uint32 a, uint32 b, uint32 c)
+HS_FORCEINLINE HS_API uint32 HashCombine(uint32 a, uint32 b, uint32 c)
 {
 	a += b; a -= b; a -= c; a ^= (c >> 13); b -= c; b -= a; b ^= (a << 8);
 	c -= a; c -= b; c ^= (b >> 13); a -= b; a -= c; a ^= (c >> 12); b -= c;
@@ -154,26 +154,26 @@ HS_FORCEINLINE uint32 HashCombine(uint32 a, uint32 b, uint32 c)
 	return c;
 }
 
-HS_FORCEINLINE uint32 HashCombine(uint32 a, uint32 c)
+HS_FORCEINLINE HS_API uint32 HashCombine(uint32 a, uint32 c)
 {
 	uint32 b = 0x9e3779b9;
 	return HashCombine(a, b, c);
 }
 
-HS_FORCEINLINE uint32 PointerHash(const void* p, uint32 a)
+HS_FORCEINLINE HS_API uint32 PointerHash(const void* p, uint32 a)
 {
 	uint32 key = Hasher<uint64>::Get(reinterpret_cast<uint64>(p));
 	return HashCombine(a, key);
 }
 
-HS_FORCEINLINE uint32 PointerHash(const void* p)
+HS_FORCEINLINE HS_API uint32 PointerHash(const void* p)
 {
 	uint32 hash = Hasher<uint64>::Get(reinterpret_cast<uint64>(p));
 	return hash;
 }
 
 // 64bit FNV-1a hash function
-HS_FORCEINLINE uint64 StringHash64(const std::string& str)
+HS_FORCEINLINE HS_API uint64 StringHash64(const std::string& str)
 {
 	uint64 hash = 14695981039346656037ULL;
 	for (char c : str)
@@ -185,7 +185,7 @@ HS_FORCEINLINE uint64 StringHash64(const std::string& str)
 }
 
 // 32bit FNV-1a hash function
-HS_FORCEINLINE uint32 StringHash(const std::string& str)
+HS_FORCEINLINE HS_API uint32 StringHash(const std::string& str)
 {
 	uint32 hash = 2166136261U;
 	for (char c : str)

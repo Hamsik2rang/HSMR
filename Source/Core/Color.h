@@ -13,7 +13,7 @@
 #include "ThirdParty/glm/glm.hpp"
 // #include <simd/simd.h>
 
-class Color
+class HS_API Color
 {
 public:
     Color() : _data{0.0f} {}

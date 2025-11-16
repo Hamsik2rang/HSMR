@@ -12,7 +12,7 @@
 
 HS_NS_BEGIN
 
-enum class EFileAccess
+enum class HS_API EFileAccess
 {
     READ_ONLY,
     WRITE_ONLY,
@@ -21,7 +21,7 @@ enum class EFileAccess
 
 typedef void* FileHandle;
 
-class FileSystem
+class HS_API FileSystem
 {
 public:
     enum class EAccessFlag

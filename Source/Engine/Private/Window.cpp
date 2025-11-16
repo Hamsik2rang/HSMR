@@ -1,4 +1,4 @@
-#include "Engine/Window.h"
+ï»¿#include "Engine/Window.h"
 
 #include "Engine/Application.h"
 #include "Core/Native/NativeEvent.h"
@@ -155,7 +155,7 @@ void Window::Flush()
 		Shutdown();
 	}
 
-	// Æ®¸® ¼øÈ¸ÇÏ¸é¼­ ÀÚ½Äµé Áß¿¡ closeµÈ ¾Öµé ÇØÁ¦ ÈÄ ¸®½ºÆ®¿¡¼­ »èÁ¦
+	// íŠ¸ë¦¬ ìˆœíšŒí•˜ë©´ì„œ ìì‹ë“¤ ì¤‘ì— closeëœ ì• ë“¤ í•´ì œ í›„ ë¦¬ìŠ¤íŠ¸ì—ì„œ ì‚­ì œ
 	std::list<Window*> deletedChilds(_childs.size());
 	for (auto* child : _childs)
 	{

@@ -5,8 +5,6 @@
 
 HS_NS_EDITOR_BEGIN
 
-
-
 bool ScenePanel::Setup()
 {
     return true;

@@ -17,7 +17,7 @@
 
 HS_NS_BEGIN
 
-class Log
+class HS_API Log
 {
 public:
     enum class EType

@@ -71,7 +71,7 @@ public:
 	// void DestroyCommandQueue(RHICommandQueue* cmdQueue) final;
 
 	RHICommandPool* CreateCommandPool(const char* name, uint32 queueFamilyIndex = 0) final;
-	void         DestroyCommandPool(RHICommandPool* cmdPool) final;
+	void DestroyCommandPool(RHICommandPool* cmdPool) final;
 
 	RHICommandBuffer* CreateCommandBuffer(const char* name) final;
 	void DestroyCommandBuffer(RHICommandBuffer* commandBuffer) final;
