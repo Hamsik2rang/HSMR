@@ -9,11 +9,9 @@
 
 #include "Precompile.h"
 
-#include <typeinfo>
-
-#include "Engine/Renderer/RendererDefinition.h"
 #include "RHI/RenderHandle.h"
-#include "Renderer/RenderTarget.h"
+#include "Engine/Renderer/RendererDefinition.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 HS_NS_BEGIN
 

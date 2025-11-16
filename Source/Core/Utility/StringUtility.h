@@ -15,7 +15,7 @@ HS_NS_BEGIN
 namespace StringUtil
 {
 
-std::string Format(const char* fmt, ...);
+std::string HS_API Format(const char* fmt, ...);
 
 }
 

@@ -2,7 +2,7 @@
 
 HS_NS_BEGIN
 
-HS_API SystemContext* SystemContext::s_instance = nullptr;
+SystemContext* SystemContext::s_instance = nullptr;
 
 SystemContext::SystemContext()
 {

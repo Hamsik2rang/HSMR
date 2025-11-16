@@ -14,7 +14,8 @@ HS_NS_EDITOR_BEGIN
 EditorCamera::EditorCamera()
 	: _position(0.0f, 1.5f, 5.0f)
 	, _rotation(0.0f, 0.0f, 0.0f)
-	, _front(0.0f, 0.0f, -1.0f)
+	, _frontDir(0.0f, 0.0f, -1.0f)
+	, _upDir(0.0f, 1.0f, 0.0f)
 	, _projectionType(EProjectionType::PERSPECTIVE)
 	, _fovY(glm::radians(60.0f))
 	, _aspectRatio(16.0f / 9.0f)
@@ -84,7 +85,7 @@ void EditorCamera::updateViewMatrix()
 {
 	if (_viewDirty)
 	{
-		_viewMatrix = glm::lookAt(_position, _position + _front, GetUp());
+		_viewMatrix = glm::lookAt(_position, _position + _frontDir, GetUp());
 		_inverseViewMatrix = glm::inverse(_viewMatrix);
 	}
 }

@@ -15,7 +15,7 @@ int hs_editor_main(int argc, char* argv[])
 
 	SystemContext::Init();
 
-	hs::Application* app = new hs::Editor::EditorApplication("HSMR");
+	hs::Application* app = new hs::editor::EditorApplication("HSMR");
 
 	app->Run();
 

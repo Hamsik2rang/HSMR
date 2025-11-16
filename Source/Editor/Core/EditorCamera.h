@@ -41,9 +41,9 @@ public:
 	HS_FORCEINLINE glm::vec3 GetRotation() const { return _rotation; }
 
 	// 카메라 방향 벡터 얻기
-	HS_FORCEINLINE glm::vec3 GetForward() const { return _front; }
-	HS_FORCEINLINE glm::vec3 GetRight() const { return glm::normalize(glm::cross(_front, GetUp())); }
-	HS_FORCEINLINE glm::vec3 GetUp() const { return glm::normalize(glm::cross(GetRight(), _front)); }
+	HS_FORCEINLINE glm::vec3 GetForward() const { return _frontDir; }
+	HS_FORCEINLINE glm::vec3 GetUp() const { return  _upDir; }
+	HS_FORCEINLINE glm::vec3 GetRight() const { return glm::normalize(glm::cross(_frontDir, _upDir)); }
 
 	// 카메라 조작 편의 함수들
 	HS_FORCEINLINE void Move(const glm::vec3& offset) { _position += offset; }
@@ -118,7 +118,8 @@ private:
 	// 트랜스폼 데이터
 	glm::vec3 _position;
 	glm::vec3 _rotation; // 오일러 각 (라디안)
-	glm::vec3 _front;
+	glm::vec3 _frontDir;
+	glm::vec3 _upDir;
 
 	// 투영 파라미터
 	EProjectionType _projectionType;

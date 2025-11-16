@@ -12,14 +12,14 @@
 
 HS_NS_BEGIN
 
-void SetNativePreEventHandler(void* fnHandler);
+void HS_API SetNativePreEventHandler(void* fnHandler);
 
-bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
-void DestroyNativeWindowInternal(NativeWindow& nativeWindow);
-void ShowNativeWindowInternal(const NativeWindow& nativeWindow);
-void PollNativeEventInternal(NativeWindow& nativeWindow);
-void SetNativeWindowSizeInternal(uint16 width, uint16 height);
-void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
+bool HS_API CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
+void HS_API DestroyNativeWindowInternal(NativeWindow& nativeWindow);
+void HS_API ShowNativeWindowInternal(const NativeWindow& nativeWindow);
+void HS_API PollNativeEventInternal(NativeWindow& nativeWindow);
+void HS_API SetNativeWindowSizeInternal(uint16 width, uint16 height);
+void HS_API GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
 
 HS_NS_END
 

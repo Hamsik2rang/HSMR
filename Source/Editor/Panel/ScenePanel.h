@@ -11,15 +11,9 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
+
 #include "Engine/Renderer/RenderTarget.h"
-
-
 #include "Engine/Geometry/GeometryDefinition.h"
-
-namespace hs
-{
-class RHIFramebuffer;
-}
 
 HS_NS_EDITOR_BEGIN
 
