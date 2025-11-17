@@ -1,4 +1,4 @@
-﻿#include "Core/SystemContext.h"
+#include "Core/SystemContext.h"
 
 HS_NS_BEGIN
 

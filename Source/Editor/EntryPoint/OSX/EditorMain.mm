@@ -1,7 +1,7 @@
 #include "Editor/EntryPoint/EditorMain.h"
 
 #include "Engine/EngineContext.h"
-#include "Renderer/RenderPath.h"
+#include "Engine/Renderer/RenderPath.h"
 
 #include "Editor/Core/EditorApplication.h"
 
@@ -10,12 +10,13 @@
 
 #import <Cocoa/Cocoa.h>
 
-using namespace HS;
-using namespace HS::Editor;
+using namespace hs;
+using namespace hs::editor;
 
 int hs_editor_main(int argc, char* argv[])
 {
-    EngineContext* engineContext = new EngineContext("HSMR", ERHIPlatform::METAL);
+    SystemContext::Init();
+    EngineContext* engineContext = CreateEngineContext("HSMR", ERHIPlatform::METAL);
     // TODO: Parse command arguments
     @autoreleasepool
     {

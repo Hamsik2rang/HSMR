@@ -1,4 +1,4 @@
-﻿set(TARGET_NAME Editor)
+set(TARGET_NAME Editor)
 
 set(TOTAL_FILES)
 
@@ -164,16 +164,26 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-    Engine
-)
+
+
+
 
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
+        Engine
         ${HS_DEPS_LIB_DIR}/vulkan-1.lib
     )
+else()
+    
+list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+    "-Wl, -all_load" Engine
+    ${OSX_FRAMEWORK}
+)
+    
 endif()
 
 target_include_directories(${TARGET_NAME}

@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-class HS_RHI_API MetalContext : public RHIContext
+class HS_API MetalContext : public RHIContext
 {
 public:
     MetalContext() {}
@@ -77,6 +77,8 @@ public:
     void WaitForIdle() const override;
 
     HS_FORCEINLINE void* GetDevice() const { return _device; }
+    
+    HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const { return ERHIPlatform::METAL; }
 
 private:
     void* _device = nullptr;

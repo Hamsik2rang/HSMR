@@ -6,9 +6,9 @@
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalResourceHandle.h"
 
-#include "Platform/SystemContext.h"
+#include "Core/SystemContext.h"
 #include "Core/HAL/FileSystem.h"
-#include "Platform/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 
 #include <Metal/Metal.h>
 
@@ -239,7 +239,7 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     }
     size_t byteCodeSize = FileSystem::GetSize(handle);
 
-    char* buffer    = new char[byteCodeSize];
+    char* buffer    = new char[byteCodeSize + 1]{'\0'};
     size_t readSize = FileSystem::Read(handle, buffer, byteCodeSize);
     if (readSize != byteCodeSize)
     {

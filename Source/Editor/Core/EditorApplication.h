@@ -1,4 +1,4 @@
-﻿//
+//
 //  EditorApplication.h
 //  HSMR
 //
@@ -13,13 +13,14 @@
 #include "Engine/Window.h"
 
 namespace hs { namespace editor { class GUIContext; } }
+namespace hs { struct EngineContext; }
 
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
-	EditorApplication(const char* appName) noexcept;
+	EditorApplication(const char* appName, EngineContext* engineContext) noexcept;
 	~EditorApplication() override;
 
 	void Run() override;

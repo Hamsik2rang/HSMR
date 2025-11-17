@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIContext.h
 //  Engine
 //
@@ -79,6 +79,8 @@ public:
 	virtual void Present(Swapchain* swapchain) = 0;
 
 	virtual void WaitForIdle() const = 0;
+    
+    virtual ERHIPlatform GetCurrentPlatform() const = 0;
 
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();
