@@ -88,14 +88,10 @@ list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
 # list(APPEND TOTAL_FILES ${CORE_CONTAINER_SOURCES})
 add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL)
-
 target_include_directories(${TARGET_NAME}
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-target_link_libraries(${TARGET_NAME} PRIVATE HAL)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE

@@ -98,7 +98,7 @@ endif()
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    HAL Core)
+    Platform Core)
 
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
@@ -111,7 +111,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core)
+add_dependencies(${TARGET_NAME} Platform Core)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -121,7 +121,8 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RHI
     HS_RHI_API_EXPORT
-    HS_HAL_API_IMPORT
+
+    HS_PLATFORM_API_IMPORT
     HS_CORE_API_IMPORT
 )
 

@@ -45,7 +45,7 @@ cmake --build Build --target RegenerateCMake
 The engine follows a layered architecture with clear dependency flow:
 
 ```
-Foundation Layer:    HAL → Core
+Foundation Layer:    Platform → Core
 Resource Layer:      Object → ShaderSystem  
 Graphics Pipeline:   RHI → Renderer → Engine
 Development Tools:   Editor (ImGui) → Client
@@ -53,7 +53,7 @@ Specialized Systems: ECS, Physics, Geometry, Animation
 ```
 
 ### Core Modules (13 total)
-- **HAL**: Hardware Abstraction Layer (SystemContext, platform detection)
+- **Platform**: Hardware Abstraction Layer (SystemContext, platform detection)
 - **Core**: Foundation utilities (math, memory, containers, logging)
 - **Object**: Resource management (Image, Mesh, Material, Shader with proxy pattern)
 - **ShaderSystem**: Slang/SPIRV-Cross integration for cross-platform shader compilation
@@ -68,7 +68,7 @@ Specialized Systems: ECS, Physics, Geometry, Animation
 - **Animation**: Animation system (currently disabled in CMake)
 
 ### Key Patterns
-- **Platform Abstraction**: HAL layer isolates platform-specific code
+- **Platform Abstraction**: Platform layer isolates platform-specific code
 - **Proxy Pattern**: ObjectManager uses proxy objects for resource management
 - **Factory Pattern**: Platform-specific RHI object creation
 - **Singleton Pattern**: SystemContext, ObjectManager (appropriate usage)
@@ -132,7 +132,7 @@ Currently no formal testing framework is configured. Manual testing through Clie
 - Individual `CMakeLists.txt`: Per-module build configuration
 
 ### Core Systems
-- `Source/HAL/SystemContext.h`: Application context and resource paths
+- `Source/Platform/SystemContext.h`: Application context and resource paths
 - `Source/Object/ObjectManager.h`: Central resource management system
 - `Source/RHI/RHIDefinition.h`: Cross-platform graphics API abstraction definitions
 

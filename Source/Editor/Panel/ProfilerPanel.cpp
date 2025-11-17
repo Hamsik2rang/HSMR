@@ -6,7 +6,7 @@
 //
 #include "Editor/Panel/ProfilerPanel.h"
 
-#include "HAL/Timer.h"
+#include "Platform/Timer.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 HS_NS_EDITOR_BEGIN

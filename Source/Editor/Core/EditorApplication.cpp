@@ -1,15 +1,15 @@
 #include "Editor/Core/EditorApplication.h"
 
 #include "Core/Log.h"
-#include "HAL/SystemContext.h"
-#include "HAL/NativeWindow.h"
+#include "Platform/SystemContext.h"
+#include "Platform/NativeWindow.h"
 #include "Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"
 
 #if defined(__APPLE__)
-#include "Hal/Mac/AutoReleasePool.h"
+#include "Platform/Mac/AutoReleasePool.h"
 #endif
 
 HS_NS_EDITOR_BEGIN

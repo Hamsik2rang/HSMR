@@ -1,4 +1,4 @@
-﻿//
+//
 //  Material.h
 //  HSMR
 //
@@ -10,7 +10,7 @@
 #include "Precompile.h"
 
 #include "Resource/Object.h"
-#include "Resource/ShaderParameterCollection.h"
+#include "Resource/ResourceDefinition.h"
 
 #include "Core/Math/Common.h"
 #include <unordered_map>
@@ -91,10 +91,6 @@ public:
     bool GetShaderParameter(const std::string& name, T& outValue) const;
     bool HasShaderParameter(const std::string& name) const;
     
-    // Get all shader parameters
-    const ShaderParameterCollection& GetShaderParameters() const { return _shaderParameters; }
-    ShaderParameterCollection& GetShaderParameters() { return _shaderParameters; }
-    
     // Two-sided rendering
     void SetTwoSided(bool twoSided) { _isTwoSided = twoSided; }
     HS_FORCEINLINE bool IsTwoSided() const { return _isTwoSided; }
@@ -125,16 +121,10 @@ private:
     bool _isTwoSided = false;
     
     // Dynamic shader parameters
-    ShaderParameterCollection _shaderParameters;
+    
     std::vector<std::string> _shaderDefines;
 };
 
-// Template implementation for GetShaderParameter
-template<typename T>
-bool Material::GetShaderParameter(const std::string& name, T& outValue) const
-{
-    return _shaderParameters.GetParameter(name, outValue);
-}
 
 HS_NS_END
 

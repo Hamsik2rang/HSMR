@@ -1,4 +1,4 @@
-﻿//
+//
 //  ObjectManager.h
 //  Object
 //
@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "HAL/SystemContext.h"
-#include "HAL/FileSystem.h"
+#include "Platform/SystemContext.h"
+#include "Core/HAL/FileSystem.h"
 
 #include "RHI/RHIDefinition.h"
 

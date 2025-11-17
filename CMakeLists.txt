@@ -84,40 +84,21 @@ include_directories(SYSTEM ${HS_DEPS_INCLUDE_DIR})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(HS_HAL_DIR "Source/HAL")
 set(HS_CORE_DIR "Source/Core")
+set(HS_PLATFORM_DIR "Source/Platform")
 set(HS_RESOURCE_DIR "Source/Resource")
-set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 set(HS_RHI_DIR "Source/RHI")
-set(HS_PHYSICS_DIR "Source/Physics")
-set(HS_RENDERER_DIR "Source/Renderer")
-set(HS_ANIMATION_DIR "Source/Animation")
-set(HS_GEOMETRY_DIR "Source/Geometry")
-set(HS_ECS_DIR "Source/ECS")
-set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
+set(HS_RENDERER_DIR "Source/Renderer")
 set(HS_CLIENT_DIR "Source/Client")
-set(HS_SHADERSYSTEM_DIR "Source/ShaderSystem")
 
-add_subdirectory(${HS_HAL_DIR})
+add_subdirectory(${HS_PLATFORM_DIR})
 add_subdirectory(${HS_CORE_DIR})
-
 add_subdirectory(${HS_RESOURCE_DIR})
-add_subdirectory(${HS_SHADERSYSTEM_DIR})
-
 add_subdirectory(${HS_RHI_DIR})
-add_subdirectory(${HS_GEOMETRY_DIR})
-add_subdirectory(${HS_PHYSICS_DIR})
-
 add_subdirectory(${HS_RENDERER_DIR})
 
-# add_subdirectory(${HS_ANIMATION_DIR})
-add_subdirectory(${HS_ECS_DIR})
-
-add_subdirectory(${HS_ENGINE_DIR})
-
 add_subdirectory(${HS_EDITOR_DIR})
-
 add_subdirectory(${HS_CLIENT_DIR})
 add_custom_target(
     RegenerateCMake

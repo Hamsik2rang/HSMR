@@ -8,28 +8,27 @@
 #define __HS_PRECOMPILE_H__
 
 #ifdef __cplusplus
-    #include <cstdio>
-    #include <cstring>
-    #include <cstdint>
-    #include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cstdint>
+#include <cstdlib>
 
-    #include <vector>
-    #include <stack>
-    #include <queue>
-    #include <map>
-    #include <string>
-    #include <utility>
-    #include <functional>
-    #include <type_traits>
-    #include <cassert>
+#include <vector>
+#include <stack>
+#include <queue>
+#include <map>
+#include <string>
+#include <utility>
+#include <functional>
+#include <type_traits>
+#include <cassert>
 #else
-    #include <stdio.h>
-    #include <string.h>
-    #include <stdint.h>
-    #include <stdlib.h>
-    #include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <assert.h>
 #endif
-
 
 typedef int8_t int8;
 typedef uint8_t uint8;
@@ -41,200 +40,143 @@ typedef int64_t int64;
 typedef uint64_t uint64;
 
 #ifndef HS_DEBUG_BREAK
-    #if defined(__APPLE__)
-        #define HS_DEBUG_BREAK() __builtin_trap()
-    #else
-        #define HS_DEBUG_BREAK() __debugbreak()
-    #endif
+#if defined(__APPLE__)
+#define HS_DEBUG_BREAK() __builtin_trap()
+#else
+#define HS_DEBUG_BREAK() __debugbreak()
+#endif
 #endif
 
 #ifdef _WIN32
-    #pragma warning(disable : 4819)
+#pragma warning(disable : 4819)
 #endif
 
-typedef int8_t   int8;
-typedef uint8_t  uint8;
-typedef int16_t  int16;
+typedef int8_t int8;
+typedef uint8_t uint8;
+typedef int16_t int16;
 typedef uint16_t uint16;
-typedef int32_t  int32;
+typedef int32_t int32;
 typedef uint32_t uint32;
-typedef int64_t  int64;
+typedef int64_t int64;
 typedef uint64_t uint64;
 
 #if defined(__APPLE__)
-    #if __has_feature(objc_arc)
-        #define HS_OBJC_ARC
-    #endif
+#if __has_feature(objc_arc)
+#define HS_OBJC_ARC
+#endif
 #endif
 
 #if defined(__APPLE__)
-    #if defined(HS_HAL_API_EXPORT)
-        #define HS_HAL_API __attribute__((__visibility__("default")))
-    #elif defined(HS_HAL_API_IMPORT)
-        #define HS_HAL_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_HAL_API  
-    #endif
+#if defined(HS_PLATFORM_API_EXPORT)
+#define HS_PLATFORM_API __attribute__((__visibility__("default")))
+#elif defined(HS_PLATFORM_API_IMPORT)
+#define HS_PLATFORM_API __attribute__((__visibility__("default")))
+#else
+#define HS_PLATFORM_API
+#endif
 
+#if defined(HS_CORE_API_EXPORT)
+#define HS_CORE_API __attribute__((__visibility__("default")))
+#elif defined(HS_CORE_API_IMPORT)
+#define HS_CORE_API __attribute__((__visibility__("default")))
+#else
+#define HS_CORE_API
+#endif
 
-    #if defined(HS_CORE_API_EXPORT)
-        #define HS_CORE_API __attribute__((__visibility__("default")))
-    #elif defined(HS_CORE_API_IMPORT)
-        #define HS_CORE_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_CORE_API
-    #endif
+#if defined(HS_RHI_API_EXPORT)
+#define HS_RHI_API __attribute__((__visibility__("default")))
+#elif defined(HS_RHI_API_IMPORT)
+#define HS_RHI_API __attribute__((__visibility__("default")))
+#else
+#define HS_RHI_API
+#endif
 
-    #if defined(HS_RHI_API_EXPORT)
-        #define HS_RHI_API __attribute__((__visibility__("default")))
-    #elif defined(HS_RHI_API_IMPORT)
-        #define HS_RHI_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_RHI_API
-    #endif
+#if defined(HS_RESOURCE_API_EXPORT)
+#define HS_RESOURCE_API __attribute__((__visibility__("default")))
+#else
+#define HS_RESOURCE_API
+#endif
 
-    #if defined(HS_SHADERSYSTEM_API_EXPORT)
-        #define HS_SHADERSYSTEM_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_SHADERSYSTEM_API
-    #endif
+#if defined(HS_RENDERER_API_EXPORT)
+#define HS_RENDERER_API __attribute__((__visibility__("default")))
+#else
+#define HS_RENDERER_API
+#endif
 
-    #if defined(HS_RESOURCE_API_EXPORT)
-        #define HS_RESOURCE_API __attribute__((__visibility__("default")))
-    #else    
-        #define HS_RESOURCE_API 
-    #endif
+#if defined(HS_ENGINE_API_EXPORT)
+#define HS_ENGINE_API __attribute__((__visibility__("default")))
+#else
+#define HS_ENGINE_API
+#endif
 
-    #if defined(HS_GEOMETRY_API_EXPORT)
-        #define HS_GEOMETRY_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_GEOMETRY_API
-    #endif
-
-    #if defined(HS_PHYSICS_API_EXPORT)
-        #define HS_PHYSICS_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_PHYSICS_API
-    #endif
-
-    #if defined(HS_RENDERER_API_EXPORT)
-        #define HS_RENDERER_API __attribute__((__visibility__("default")))
-    #else    
-        #define HS_RENDERER_API
-    #endif
-
-    #if defined(HS_ECS_API_EXPORT)
-        #define HS_ECS_API __attribute__((__visibility__("default")))
-    #else  
-        #define HS_ECS_API
-    #endif
-
-    #if defined(HS_ENGINE_API_EXPORT)
-        #define HS_ENGINE_API __attribute__((__visibility__("default")))
-    #else        
-        #define HS_ENGINE_API
-    #endif
-
-    #if defined(HS_EDITOR_API_EXPORT)
-        #define HS_EDITOR_API __attribute__((__visibility__("default")))
-    #else
-        #define HS_EDITOR_API
-    #endif
+#if defined(HS_EDITOR_API_EXPORT)
+#define HS_EDITOR_API __attribute__((__visibility__("default")))
+#else
+#define HS_EDITOR_API
+#endif
 
 #else
-    #if defined(HS_HAL_API_EXPORT)
-        #define HS_HAL_API __declspec(dllexport)
-    #elif defined(HS_HAL_API_IMPORT)
-        #define HS_HAL_API __declspec(dllimport)
-    #else
-        #define HS_HAL_API
-    #endif
+#if defined(HS_PLATFORM_API_EXPORT)
+#define HS_PLATFORM_API __declspec(dllexport)
+#elif defined(HS_PLATFORM_API_IMPORT)
+#define HS_PLATFORM_API __declspec(dllimport)
+#else
+#define HS_PLATFORM_API
+#endif
 
-    #if defined(HS_CORE_API_EXPORT)
-        #define HS_CORE_API __declspec(dllexport)
-    #elif defined(HS_CORE_API_IMPORT)
-        #define HS_CORE_API __declspec(dllimport)
-    #else
-        #define HS_CORE_API
-    #endif
+#if defined(HS_CORE_API_EXPORT)
+#define HS_CORE_API __declspec(dllexport)
+#elif defined(HS_CORE_API_IMPORT)
+#define HS_CORE_API __declspec(dllimport)
+#else
+#define HS_CORE_API
+#endif
 
-    #if defined(HS_RHI_API_EXPORT)
-        #define HS_RHI_API __declspec(dllexport)
-    #elif defined(HS_RHI_API_IMPORT)
-        #define HS_RHI_API __declspec(dllimport)
-    #else
-        #define HS_RHI_API
-    #endif
+#if defined(HS_RHI_API_EXPORT)
+#define HS_RHI_API __declspec(dllexport)
+#elif defined(HS_RHI_API_IMPORT)
+#define HS_RHI_API __declspec(dllimport)
+#else
+#define HS_RHI_API
+#endif
 
-    #if defined(HS_SHADERSYSTEM_API_EXPORT)
-        #define HS_SHADERSYSTEM_API __declspec(dllexport)
-    #elif defined (HS_SHADERSYSTEM_API_IMPORT)
-        #define HS_SHADERSYSTEM_API __declspec(dllimport)
-    #else
-        #define HS_SHADERSYSTEM_API
-    #endif
+#if defined(HS_RESOURCE_API_EXPORT)
+#define HS_RESOURCE_API __declspec(dllexport)
+#elif defined(HS_RESOURCE_API_IMPORT)
+#define HS_RESOURCE_API __declspec(dllimport)
+#else
+#define HS_RESOURCE_API
+#endif
 
-    #if defined(HS_RESOURCE_API_EXPORT)
-        #define HS_RESOURCE_API __declspec(dllexport)
-    #elif defined(HS_RESOURCE_API_IMPORT)
-        #define HS_RESOURCE_API __declspec(dllimport)
-    #else
-        #define HS_RESOURCE_API
-    #endif
+#if defined(HS_RENDERER_API_EXPORT)
+#define HS_RENDERER_API __declspec(dllexport)
+#elif defined(HS_RENDERER_API_IMPORT)
+#define HS_RENDERER_API __declspec(dllimport)
+#else
+#define HS_RENDERER_API
+#endif
 
-    #if defined(HS_GEOMETRY_API_EXPORT)
-        #define HS_GEOMETRY_API __declspec(dllexport)
-    #elif defined(HS_GEOMETRY_API_IMPORT)
-        #define HS_GEOMETRY_API __declspec(dllimport)
-    #else
-        #define HS_GEOMETRY_API
-    #endif
+#if defined(HS_ENGINE_API_EXPORT)
+#define HS_ENGINE_API __declspec(dllexport)
+#elif defined(HS_ENGINE_API_IMPORT)
+#define HS_ENGINE_API __declspec(dllimport)
+#else
+#define HS_ENGINE_API
+#endif
 
-    #if defined(HS_PHYSICS_API_EXPORT)
-        #define HS_PHYSICS_API __declspec(dllexport)
-    #elif defined(HS_PHYSICS_API_IMPORT)
-        #define HS_PHYSICS_API __declspec(dllimport)
-    #else
-        #define HS_PHYSICS_API 
-    #endif
-
-    #if defined(HS_RENDERER_API_EXPORT)
-        #define HS_RENDERER_API __declspec(dllexport)
-    #elif defined(HS_RENDERER_API_IMPORT)
-        #define HS_RENDERER_API __declspec(dllimport)
-    #else
-        #define HS_RENDERER_API
-    #endif
-
-    #if defined(HS_ECS_API_EXPORT)
-        #define HS_ECS_API __declspec(dllexport)
-    #elif defined(HS_ECS_API_IMPORT)
-        #define HS_ECS_API __declspec(dllimport)
-    #else
-        #define HS_ECS_API
-    #endif
-
-    #if defined(HS_ENGINE_API_EXPORT)
-        #define HS_ENGINE_API __declspec(dllexport)
-    #elif defined(HS_ENGINE_API_IMPORT)        
-        #define HS_ENGINE_API __declspec(dllimport)
-    #else
-        #define HS_ENGINE_API    
-    #endif
-
-    #if defined(HS_EDITOR_API_EXPORT)
-        #define HS_EDITOR_API __declspec(dllexport)
-    #elif defined(HS_EDITOR_API_IMPORT)
-        #define HS_EDITOR_API __declspec(dllimport)
-    #else
-        #define HS_EDITOR_API
-    #endif
+#if defined(HS_EDITOR_API_EXPORT)
+#define HS_EDITOR_API __declspec(dllexport)
+#elif defined(HS_EDITOR_API_IMPORT)
+#define HS_EDITOR_API __declspec(dllimport)
+#else
+#define HS_EDITOR_API
+#endif
 #endif
 
 #if defined(__APPLE__)
-    #define HS_DIR_SEPERATOR '/'
+#define HS_DIR_SEPERATOR '/'
 #else
-    #define HS_DIR_SEPERATOR '\\'
+#define HS_DIR_SEPERATOR '\\'
 #endif
 
 #define HS_CHAR_INIT_LENGTH       512
@@ -256,20 +198,21 @@ typedef uint64_t uint64;
 #define HS_UINT64_MAX (0xffffffffffffffff)
 
 #if defined(__APPLE__)
-    #define HS_FORCEINLINE      inline __attribute__((always_inline))
-    #define HS_FORCENOINLINE    __attribute__((noinline))
+#define HS_FORCEINLINE   inline __attribute__((always_inline))
+#define HS_FORCENOINLINE __attribute__((noinline))
 #elif defined(_MSC_VER)
-    #define HS_FORCEINLINE      __forceinline
-    #define HS_FORCENOINLINE    __declspec(noinline)
+#define HS_FORCEINLINE   __forceinline
+#define HS_FORCENOINLINE __declspec(noinline)
 #else
-    #define HS_FORCEINLINE      inline
-    #define HS_FORCENOINLINE    
+#define HS_FORCEINLINE inline
+#define HS_FORCENOINLINE
 #endif
 
-#define HS_NS_BEGIN namespace HS {
+#define HS_NS_BEGIN \
+    namespace HS    \
+    {
 
 #define HS_NS_END }
-
 
 #define HS_NS_EDITOR_BEGIN \
     namespace HS           \
@@ -283,7 +226,7 @@ typedef uint64_t uint64;
 
 #ifdef __cplusplus
 
-    #include <memory>
+#include <memory>
 
 namespace HS
 {
@@ -298,6 +241,5 @@ constexpr Scoped<Tp> MakeScoped(Args&&... args)
 } // namespace HS
 
 #endif
-
 
 #endif

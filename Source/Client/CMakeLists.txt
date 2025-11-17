@@ -19,7 +19,7 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        HAL Core RHI Renderer ShaderSystem Resource ECS
+        Platform Core RHI Renderer ShaderSystem Resource ECS
         Editor
         ${OSX_FRAMEWORK}
     )
@@ -33,7 +33,7 @@ else()
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        HAL Core RHI Renderer ShaderSystem Resource ECS
+        Platform Core RHI Renderer ShaderSystem Resource ECS
         Editor
     )
 endif()
@@ -46,15 +46,14 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CLIENT
-    HS_HAL_API_IMPORT
+    HS_PLATFORM_API_IMPORT
     HS_CORE_API_IMPORT
     HS_RHI_API_IMPORT
     HS_EDITOR_API_IMPORT
     HS_RESOURCE_API_IMPORT
-    HS_SHADERSYSTEM_API_IMPORT
+
     HS_RENDERER_API_IMPORT
-    HS_PHYSICS_API_IMPORT
-    HS_ECS_API_IMPORT
+
     HS_EXECUTABLE_NAME="${EXECUTABLE_NAME}"
 )
 

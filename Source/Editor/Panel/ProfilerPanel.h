@@ -11,7 +11,7 @@
 
 #include "Editor/Panel/Panel.h"
 
-#include "HAL/Timer.h"
+#include "Platform/Timer.h"
 
 HS_NS_EDITOR_BEGIN
 
