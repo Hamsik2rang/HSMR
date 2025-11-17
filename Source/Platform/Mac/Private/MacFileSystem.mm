@@ -1,7 +1,7 @@
 
 #include "Platform/Mac/MacFileSystem.h"
 
-#include "Platform/SystemContext.h"
+#include "Core/SystemContext.h"
 
 #include <cstddef>
 #include <string>

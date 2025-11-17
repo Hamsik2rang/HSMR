@@ -8,7 +8,7 @@
 @implementation HSViewController
 {
     CGSize _curDrawableSize;
-    HS::NativeWindow* _pHsNativeWindow;
+    hs::NativeWindow* _pHsNativeWindow;
 }
 - (void)loadView
 {
@@ -84,7 +84,7 @@
 
 - (void)windowWillClose:(NSNotification*)notification
 {
-    PushNativeEvent(_pHsNativeWindow, HS::NativeEvent::Type::WINDOW_CLOSE);
+    PushNativeEvent(_pHsNativeWindow, hs::NativeEvent::Type::WINDOW_CLOSE);
 
     [_window setDelegate:nil];
     [_window setContentViewController:nil];
@@ -116,7 +116,7 @@
     [layer setDrawableSize:_curDrawableSize];
 }
 
-- (void)setHSWindow:(HS::NativeWindow*)pHsNativeWindow
+- (void)setHSWindow:(hs::NativeWindow*)pHsNativeWindow
 {
     _pHsNativeWindow = pHsNativeWindow;
 }

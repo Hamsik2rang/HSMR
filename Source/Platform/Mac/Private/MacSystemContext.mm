@@ -13,7 +13,7 @@
 
 @implementation HSApplicationDelegate
 {
-    HS::SystemContext* _systemContext;
+    hs::SystemContext* _systemContext;
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
@@ -23,8 +23,7 @@
 
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
-    _systemContext->Finalize();
-    //    HS::hs_engine_destroy_context();
+    //    hs::hs_engine_destroy_context();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
@@ -32,7 +31,7 @@
     return YES;
 }
 
-- (instancetype)initWithSystemContext:(HS::SystemContext*)context
+- (instancetype)initWithSystemContext:(hs::SystemContext*)context
 {
     if (self)
     {
@@ -48,7 +47,7 @@ HS_NS_BEGIN
 
 static SystemContext* g_context;
 
-bool SystemContext::Initialize()
+bool SystemContext::initializePlatform()
 {
     // https://developer.apple.com/forums/thread/765445
     // to Prevent macOS bug. => apple is xxxx.
@@ -79,7 +78,7 @@ bool SystemContext::Initialize()
     return true;
 }
 
-void SystemContext::Finalize()
+void SystemContext::finalizePlatform()
 {
     
 }

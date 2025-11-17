@@ -1,4 +1,4 @@
-﻿//
+//
 //  Application.h
 //  Core
 //
@@ -11,11 +11,14 @@
 
 #include "Core/SystemContext.h"
 
+
+namespace hs { class RenderPath; }
+namespace hs { class Scene; }
+namespace hs { class Window; }
+namespace hs { class EngineContext; }
+
 HS_NS_BEGIN
 
-class RenderPath;
-class Scene;
-class Window;
 
 class HS_API Application
 {

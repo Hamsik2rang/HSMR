@@ -9,6 +9,6 @@
 
 #include "Precompile.h"
 
-#include "Platform/SystemContext.h"
+#include "Core/SystemContext.h"
 
 #endif

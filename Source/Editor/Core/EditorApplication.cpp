@@ -4,6 +4,7 @@
 #include "Core/SystemContext.h"
 #include "Core/Native/NativeWindow.h"
 
+#include "Engine/EngineContext.h"
 #include "Engine/Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
@@ -15,7 +16,7 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const char* appName) noexcept
+EditorApplication::EditorApplication(const char* appName, EngineContext* engineContext) noexcept
     : Application(appName)
     , _guiContext(nullptr)
     , _deltaTime(0.0f)

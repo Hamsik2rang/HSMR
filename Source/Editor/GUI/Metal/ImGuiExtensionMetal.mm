@@ -15,7 +15,7 @@
 #include "ImGui/imgui_impl_metal.h"
 #include "ImGui/imgui_impl_osx.h"
 
-using namespace HS;
+using namespace hs;
 
 HS_NS_EDITOR_BEGIN
 

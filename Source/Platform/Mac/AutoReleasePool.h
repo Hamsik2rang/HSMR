@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-struct AutoReleasePool
+struct HS_API AutoReleasePool
 {
     void* p;
     AutoReleasePool();

@@ -1,7 +1,7 @@
 #include "RHI/Metal/MetalSwapchain.h"
 
 #include "Core/Log.h"
-#include "Platform/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 
 #include "RHI/RHIContext.h"
 #include "RHI/RHIDefinition.h"

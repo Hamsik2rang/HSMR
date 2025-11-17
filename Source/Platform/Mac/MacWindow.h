@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Platform/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 
 #import <Cocoa/Cocoa.h>
 #import <MetalKit/MetalKit.h>

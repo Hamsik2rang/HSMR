@@ -1,4 +1,4 @@
-﻿#include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorWindow.h"
 
 #include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
 #include "RHI/Swapchain.h"
@@ -39,7 +39,7 @@ bool EditorWindow::onInitialize()
 #if __WINDOWS__
 	_rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
 #else
-	_rhiContext = RHICOntext::Create(ERHIPlatform::METAL);
+	_rhiContext = RHIContext::Create(ERHIPlatform::METAL);
 #endif
 
 	_swapchain = _rhiContext->CreateSwapchain(scInfo);

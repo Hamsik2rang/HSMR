@@ -106,17 +106,29 @@ list(APPEND TOTAL_FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-    Core Platform RHI ${ASSIMP}
-)
+if(APPLE)
+    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        "-Wl, -all_load" Core Platform RHI
+        "-Wl, -force_load" ""${ASSIMP} ${OSX_FRAMEWORK}
+    )
+else()
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+Core Platform RHI
+        ${ASSIMP}
+    )
+endif()
 
-target_link_options(${TARGET_NAME}
-    PRIVATE
-    "/WHOLEARCHIVE:Core"
-    "/WHOLEARCHIVE:Platform"
-    "/WHOLEARCHIVE:RHI"
-)
+if(WIN32)
+    target_link_options(${TARGET_NAME}
+        PRIVATE
+        "/WHOLEARCHIVE:Core"
+        "/WHOLEARCHIVE:Platform"
+        "/WHOLEARCHIVE:RHI"
+    )
+endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
