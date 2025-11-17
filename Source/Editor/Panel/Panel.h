@@ -1,4 +1,4 @@
-﻿//
+//
 //  Panel.h
 //  Editor
 //
@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Window.h"
+#include "Core/Window.h"
 #include "Editor/GUI/GUIContext.h"
 
 #include <vector>

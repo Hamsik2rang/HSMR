@@ -63,9 +63,9 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI ShaderSystem Resource Geometry Physics)
+add_dependencies(${TARGET_NAME} Platform Core RHI Resource)
 
-target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ShaderSystem Resource Geometry Physics)
+target_link_libraries(${TARGET_NAME} PRIVATE Platform Core RHI Resource)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -74,16 +74,13 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RENDERER
-
     HS_RENDERER_API_EXPORT
 
-    HS_HAL_API_IMPORT
+    HS_PLATFORM_API_IMPORT
     HS_CORE_API_IMPORT
     HS_RHI_API_IMPORT
-    HS_SHADERSYSTEM_API_IMPORT
+
     HS_RESOURCE_API_IMPORT
-    HS_GEOMETRY_API_IMPORT
-    HS_PHYSICS_API_IMPORT
 )
 
 if(APPLE)

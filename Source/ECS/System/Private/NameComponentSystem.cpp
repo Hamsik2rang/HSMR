@@ -1,1 +1,0 @@
-﻿#include "ECS/System/NameComponentSystem.h"

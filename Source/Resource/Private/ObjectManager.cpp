@@ -1,23 +1,23 @@
 #include "Resource/ObjectManager.h"
 
+#include "Resource/ResourceDefinition.h"
+
+#include "Core/HAL/FileSystem.h"
+
+#include "Core/Log.h"
+#include "Core/Math/Common.h"
+
+#include "Resource/Image.h"
+#include "Resource/Mesh.h"
+#include "Resource/Material.h"
+#include "Resource/Shader.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-#include "HAL/FileSystem.h"
-
-#include "Core/Log.h"
-#include "Core/Math/Common.h"
-
-#include "ShaderSystem/ShaderCrossCompiler.h"
-
-#include "Resource/Image.h"
-#include "Resource/Mesh.h"
-#include "Resource/Material.h"
-#include "Resource/Shader.h"
 
 #include <unordered_map>
 

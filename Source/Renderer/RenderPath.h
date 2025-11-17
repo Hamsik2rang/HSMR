@@ -20,7 +20,7 @@
 /*#include "Renderer/RenderPass/RenderPass.h"*/ namespace HS { class RenderPass; }
 /*#include "RHI/Swapchain.h"*/ namespace HS { class Swapchain; }
 /*#include "RHI/RenderHandle.h"*/ namespace HS { class RHIFramebuffer; }
-/*#include "HAL/NativeWindow.h"*/ namespace HS { struct NativeWindow; }
+/*#include "Platform/NativeWindow.h"*/ namespace HS { struct NativeWindow; }
 
 HS_NS_BEGIN
 

@@ -1,4 +1,4 @@
-﻿#include "Resource/Material.h"
+#include "Resource/Material.h"
 
 #include "Resource/Shader.h"
 #include "Resource/Image.h"
@@ -18,12 +18,6 @@ Material::~Material()
 void Material::SetShader(Shader* shader)
 {
     _shader = shader;
-    
-    // Update parameter interface when shader changes
-    if (_shader && _shader->IsCompiled())
-    {
-        _shaderParameters.CopyFrom(_shader->GetParameterInterface());
-    }
 }
 
 void Material::SetTexture(EMaterialTextureType type, Image* texture)
@@ -50,72 +44,6 @@ Image* Material::GetTexture(EMaterialTextureType type) const
 bool Material::HasTexture(EMaterialTextureType type) const
 {
     return _textures.find(type) != _textures.end() && _textures.at(type) != nullptr;
-}
-
-// Dynamic shader parameter setters
-void Material::SetShaderParameter(const std::string& name, float value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::vec2& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::vec3& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::vec4& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, int32 value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::ivec2& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::ivec3& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::ivec4& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::mat3& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, const glm::mat4& value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, bool value)
-{
-    _shaderParameters.SetParameter(name, value);
-}
-
-void Material::SetShaderParameter(const std::string& name, uint64 textureHandle)
-{
-    _shaderParameters.SetParameter(name, textureHandle);
-}
-
-bool Material::HasShaderParameter(const std::string& name) const
-{
-    return _shaderParameters.HasParameter(name);
 }
 
 // Shader variant support

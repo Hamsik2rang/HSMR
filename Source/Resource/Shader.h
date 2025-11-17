@@ -1,14 +1,11 @@
-﻿#ifndef __HS_SHADER_H__
+#ifndef __HS_SHADER_H__
 #define __HS_SHADER_H__
 
 #include "Precompile.h"
 #include "Resource/Object.h"
-#include "Resource/ShaderParameterCollection.h"
-#include "Resource/ShaderVariant.h"
+#include "Resource/ResourceDefinition.h"
 
 #include "RHI/RHIDefinition.h"
-
-#include "ShaderSystem/ShaderCrossCompiler.h"
 
 #include <unordered_map>
 #include <string>
@@ -30,7 +27,6 @@ public:
     // =======================
     
     // Simple compilation interface - bypasses variant system
-    bool CompileSimple();
     bool IsCompiledSimple() const { return _useSimpleMode && _simpleCompiledData.isValid; }
     
     // Get compiled shader data directly
@@ -39,24 +35,6 @@ public:
     // Enable simple mode (disables variant system)
     void EnableSimpleMode() { _useSimpleMode = true; }
     bool IsSimpleModeEnabled() const { return _useSimpleMode; }
-
-    // =======================
-    // LEGACY VARIANT SYSTEM (will be removed in future phases)
-    // =======================
-
-    bool HasCache(const ShaderVariant& variant) const;
-	ShaderCache* GetCache(const ShaderVariant& variant) const;
-    
-    // Legacy variant methods (not used in simple mode)
-    const ShaderVariant* GetVariant(uint32 variantHash) const { return nullptr; }
-    // const std::unordered_map<ShaderVariant, ShaderCache*>& GetAllVariants() const { return _variants; }  // Temporarily disabled
-    
-    // Get default variant (usually the one with no defines)
-    const ShaderVariant* GetDefaultVariant() const;
-
-    // Parameter interface registration (from reflection)
-    void RegisterParameterInterface(const ShaderReflectionData& reflection);
-    const ShaderParameterCollection& GetParameterInterface() const { return _parameterInterface; }
 
     // Compilation
     bool CompileVariants();
@@ -72,14 +50,8 @@ public:
 
 private:
     // Simple mode compilation
-    bool compileSimpleShader();
+ 
     void extractParametersFromReflection(const ShaderReflectionData& reflection);
-    
-    // Legacy variant system methods
-    void addCache(const ShaderVariant& variant);
-    void removeCache(const ShaderVariant& variant);
-    bool compileShaderCache(ShaderVariant& variant, const std::string& source, EShaderStage stage);
-    uint32 calculateVariantScore(const ShaderVariant& variant, const std::vector<std::string>& requestedDefines) const;
     
     // Shader source storage
     std::string _source;           // Original shader source
@@ -98,7 +70,6 @@ private:
     bool _isCompiled = false;
     
     // Common data
-    ShaderParameterCollection _parameterInterface;
     ShaderCompileOption _compileOptions;
 };
 

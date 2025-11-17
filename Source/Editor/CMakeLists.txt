@@ -166,7 +166,7 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     PRIVATE
-    HAL Core RHI Resource Renderer Geometry Physics Engine ECS ShaderSystem
+    Platform Core RHI Resource Renderer ShaderSystem
 )
 
 if(WIN32)
@@ -186,7 +186,7 @@ set_target_properties(${TARGET_PATH} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} HAL Core RHI Resource ShaderSystem Renderer Geometry Physics ECS)
+add_dependencies(${TARGET_NAME} Platform Core RHI Resource Renderer)
 
 target_compile_definitions(${TARGET_NAME}
     PUBLIC
@@ -198,15 +198,9 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_EDITOR
     HS_EDITOR_API_EXPORT
-    HS_HAL_API_IMPORT
-    HS_CORE_API_IMPORT
+
     HS_RHI_API_IMPORT
     HS_RESOURCE_API_IMPORT
-    HS_SHADERSYSTEM_API_IMPORT
-    HS_RENDERER_API_IMPORT
-    HS_ENGINE_API_IMPORT
-    HS_PHYSICS_API_IMPORT
-    HS_ECS_API_IMPORT
 )
 
 if(APPLE)

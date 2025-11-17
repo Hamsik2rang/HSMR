@@ -6,9 +6,9 @@
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalResourceHandle.h"
 
-#include "HAL/SystemContext.h"
-#include "HAL/FileSystem.h"
-#include "HAL/NativeWindow.h"
+#include "Platform/SystemContext.h"
+#include "Core/HAL/FileSystem.h"
+#include "Platform/NativeWindow.h"
 
 #include <Metal/Metal.h>
 

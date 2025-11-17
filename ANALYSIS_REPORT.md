@@ -16,7 +16,7 @@ HSMR (High-Speed Modular Renderer) 엔진 코드베이스에 대한 포괄적인
 
 ### 컴포넌트 아키텍처
 ```
-핵심 시스템:        HAL → Core → Object → ShaderSystem
+핵심 시스템:        Platform → Core → Object → ShaderSystem
 그래픽스 파이프라인:   RHI → Renderer → Engine
 개발 도구:          Editor (ImGui 기반) → Client
 전문화 모듈:        ECS, Physics, Geometry, Animation
@@ -31,7 +31,7 @@ HSMR (High-Speed Modular Renderer) 엔진 코드베이스에 대한 포괄적인
 ## 품질 평가
 
 ### 🟢 강점
-1. **깔끔한 아키텍처**: HAL 추상화로 관심사가 잘 분리됨
+1. **깔끔한 아키텍처**: Platform 추상화로 관심사가 잘 분리됨
 2. **크로스 플랫폼 지원**: 네이티브 Vulkan/Metal 구현
 3. **모던 C++**: C++17 기능과 스마트 포인터의 일관된 사용
 4. **참조 카운팅**: 스레드 안전한 객체 생명주기 관리
@@ -93,7 +93,7 @@ HSMR (High-Speed Modular Renderer) 엔진 코드베이스에 대한 포괄적인
 
 ### 아키텍처 강점
 1. **관심사 분리**: 그래픽스 API 간의 명확한 경계
-2. **플랫폼 추상화**: 멀티플랫폼 배포를 가능하게 하는 HAL 계층
+2. **플랫폼 추상화**: 멀티플랫폼 배포를 가능하게 하는 Platform 계층
 3. **모듈러 설계**: 최소한의 결합도를 가진 독립적 컴포넌트
 4. **확장성**: 렌더링 백엔드를 위한 플러그인 같은 아키텍처
 

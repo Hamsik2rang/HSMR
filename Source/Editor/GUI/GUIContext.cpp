@@ -1,9 +1,9 @@
-﻿#include "Editor/GUI/GUIContext.h"
+#include "Editor/GUI/GUIContext.h"
 
 #include "Engine/EngineContext.h"
 #include "Core/Log.h"
-#include "HAL/FileSystem.h"
-#include "HAL/SystemContext.h"
+#include "Core/HAL/FileSystem.h"
+#include "Platform/SystemContext.h"
 
 #include <string>
 

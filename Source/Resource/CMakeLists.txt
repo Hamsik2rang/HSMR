@@ -11,31 +11,26 @@ else()
 endif()
 
 set(OBJECT_HEADERS
+    ResourceDefinition.h
     Image.h
     Material.h
     Mesh.h
     Shader.h
-    ShaderVariant.h
-    ShaderCache.h
     Object.h
     ObjectManager.h
-    Serializer.h
-    ShaderParameterCollection.h
 )
 
 source_group("Public" FILES ${OBJECT_HEADERS})
 list(APPEND TOTAL_FILES ${OBJECT_HEADERS})
 
 set(OBJECT_SOURCES
+    Private/ResourceDefinition.cpp
     Private/ObjectManager.cpp
-    Private/Serializer.cpp
-    Private/ShaderParameterCollection.cpp
+
     Private/Image.cpp
     Private/Material.cpp
     Private/Mesh.cpp
     Private/Shader.cpp
-    Private/ShaderVariant.cpp
-    Private/ShaderCache.cpp
     Private/Object.cpp
 )
 source_group("Private" FILES ${OBJECT_SOURCES})
@@ -65,9 +60,9 @@ list(APPEND TOTAL_FILES ${OBJECT_SOURCES})
 # list(APPEND TOTAL_FILES ${PROXY_SOURCES})
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
-add_dependencies(${TARGET_NAME} HAL Core RHI ShaderSystem)
+add_dependencies(${TARGET_NAME} Platform Core RHI)
 
-target_link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ShaderSystem)
+target_link_libraries(${TARGET_NAME} PRIVATE Platform Core RHI)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -77,15 +72,14 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RESOURCE
 
-    HS_HAL_API_IMPORT
+    HS_PLATFORM_API_IMPORT
     HS_CORE_API_IMPORT
     HS_RHI_API_IMPORT
-    HS_SHADERSYSTEM_API_IMPORT
 
     HS_RESOURCE_API_EXPORT
 )
 
-target_Link_libraries(${TARGET_NAME} PRIVATE HAL Core RHI ShaderSystem ${ASSIMP})
+target_Link_libraries(${TARGET_NAME} PRIVATE Platform Core RHI ${ASSIMP})
 
 # Add STB include directory
 target_include_directories(${TARGET_NAME} PRIVATE ${STB_INCLUDE})

@@ -9,8 +9,8 @@
 
 #include "Core/Utility/StringUtility.h"
 
-#include "HAL/NativeWindow.h"
-#include "HAL/FileSystem.h"
+#include "Platform/NativeWindow.h"
+#include "Platform/FileSystem.h"
 
 
 static const std::vector<const char*> s_validationLayers =

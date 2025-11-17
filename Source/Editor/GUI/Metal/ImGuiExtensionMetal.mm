@@ -10,7 +10,7 @@
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalSwapchain.h"
 
-#include "HAL/Mac/MacWindow.h"
+#include "Platform/Mac/MacWindow.h"
 
 #include "ImGui/imgui_impl_metal.h"
 #include "ImGui/imgui_impl_osx.h"

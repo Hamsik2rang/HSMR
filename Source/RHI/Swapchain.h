@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "HAL/NativeWindow.h"
+#include "Platform/NativeWindow.h"
 #include "RHI/RHIDefinition.h"
 
 namespace HS { class RHICommandBuffer; }
