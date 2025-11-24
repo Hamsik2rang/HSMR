@@ -89,6 +89,33 @@ set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 
+# =========================================
+# 라이브러리 빌드 후 자동 설치 함수 (변경 시에만)
+# =========================================
+function(hs_auto_install TARGET_NAME)
+    get_target_property(TARGET_TYPE ${TARGET_NAME} TYPE)
+
+    if(TARGET_TYPE STREQUAL "STATIC_LIBRARY")
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}/dev/lib"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:${TARGET_NAME}>"
+                "${INSTALL_FOLDER}/dev/lib/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "[AUTO-INSTALL] ${TARGET_NAME} (if changed)"
+            VERBATIM
+        )
+    elseif(TARGET_TYPE STREQUAL "SHARED_LIBRARY")
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:${TARGET_NAME}>"
+                "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            COMMENT "[AUTO-INSTALL] ${TARGET_NAME} (if changed)"
+            VERBATIM
+        )
+    endif()
+endfunction()
+
 add_subdirectory(${HS_PLATFORM_DIR})
 add_subdirectory(${HS_CORE_DIR})
 add_subdirectory(${HS_RHI_DIR})

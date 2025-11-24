@@ -5,7 +5,6 @@
 #include "RHI/RenderHandle.h"
 #include "Engine/Renderer/ForwardPath.h"
 
-#include "Editor/GUI/GUIContext.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Editor/Panel/Panel.h"

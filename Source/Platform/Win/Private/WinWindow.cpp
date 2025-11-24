@@ -31,13 +31,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
+        s_boundHsWindow->shouldClose = false;
+        s_boundHsWindow->shouldUpdate = true;
+        s_boundHsWindow->shouldRender = true;
+        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_OPEN);
 
         break;
     }
     case WM_ACTIVATE:
     {
-        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_OPEN);
-        s_boundHsWindow->shouldRender = true;
+        // @NOTICE: WM_ACTIVATE는 활성화되어 있는 동안 계속 토글됨
         break;
     }
     case WM_COMMAND:
@@ -112,6 +115,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
     case WM_CLOSE:
     {
+        s_boundHsWindow->shouldClose  = true;
+        s_boundHsWindow->shouldUpdate = false;
+        s_boundHsWindow->shouldRender = false;
+
         PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_CLOSE);
         PostQuitMessage(0);
         break;
@@ -127,7 +134,7 @@ HS_NS_BEGIN
 
 bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
-    s_boundHsWindow = &outNativeWindow;
+    s_boundHsWindow     = &outNativeWindow;
 
     HINSTANCE hInstance = GetModuleHandleW(nullptr);
 
@@ -157,6 +164,10 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     wchar_t* wName = new wchar_t[wNameLen];
     MultiByteToWideChar(CP_UTF8, 0, name, -1, wName, wNameLen);
 
+    UINT dpi  = GetDpiForSystem(); // DPI 조회
+    RECT rect = {0, 0, width, height};
+    AdjustWindowRectExForDpi(&rect, WS_OVERLAPPEDWINDOW, FALSE, 0, dpi);
+
     HWND hWnd = CreateWindowEx(
         0,                   // Optional window styles.
         wcex.lpszClassName,  // Window class
@@ -164,7 +175,7 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
         WS_OVERLAPPEDWINDOW, // Window style
 
         // Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, (int)width, (int)height,
+        CW_USEDEFAULT, CW_USEDEFAULT, (int)(rect.right - rect.left), (int)(rect.bottom - rect.top),
 
         NULL,
         NULL,
@@ -181,16 +192,12 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     RECT surfaceRect;
     GetClientRect(hWnd, &surfaceRect);
 
-    // SetWindowPos(hWnd, HWND_TOP, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOZORDER);
-
-    surfaceRect;
-    GetClientRect(hWnd, &surfaceRect);
     RECT windowRect;
     GetWindowRect(hWnd, &windowRect);
 
     // static_assert(windowRect.right - windowRect.left == width, "Window width is not same with surface width.");
     // static_assert(windowRect.bottom - windowRect.top == height, "Window height is not same with surface height.");
-    if (!(windowRect.right - windowRect.left == width && windowRect.bottom - windowRect.top == height))
+    if (!(surfaceRect.right - surfaceRect.left == width && surfaceRect.bottom - surfaceRect.top == height))
     {
         assert(false);
     }
@@ -201,16 +208,19 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.surfaceHeight = surfaceRect.bottom - surfaceRect.top;
     outNativeWindow.flags         = flag;
     outNativeWindow.title         = name;
+    outNativeWindow.scale         = dpi / USER_DEFAULT_SCREEN_DPI;
     outNativeWindow.handle        = hWnd;
     outNativeWindow.isMaximized   = false;
     outNativeWindow.isMinimized   = false;
     outNativeWindow.resizable     = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
     outNativeWindow.useHDR        = (flag & EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY) != EWindowFlags::NONE;
-    outNativeWindow.shouldRender  = false;
+    outNativeWindow.shouldRender  = true;
     outNativeWindow.shouldUpdate  = true;
     outNativeWindow.shouldClose   = false;
 
     // TODO: DISPLAY_DEVICEW, DEVMODEW 사용해서 추가 caps가져오기.
+
+
 
     return true;
 }
@@ -254,7 +264,7 @@ void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight)
 #pragma region Platform-dependent functions
 void SetNativePreEventHandler(void* fnHandler)
 {
-    LRESULT (*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT(*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
+    LRESULT (*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT (*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
     s_preEventHandler                           = func;
     if (s_preEventHandler == nullptr)
     {

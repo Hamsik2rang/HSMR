@@ -41,13 +41,15 @@ void GUIContext::Initialize()
 	SetColorTheme(false);
     
 	ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(144.0f / 96.0f);
+
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
 	std::string fontName = "Fonts/Malgun-Gothic.ttf";
-	SetFont(fontName, 18.0f);
+    SetFont(fontName, 16.0f * (144.0f / 96.0f));
 }
 void GUIContext::NextFrame()
 {

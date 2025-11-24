@@ -95,6 +95,7 @@ struct HS_API NativeWindow
 	bool shouldRender : 1;
 	bool shouldClose : 1;
 	bool futureUse : 1; // padding.
+
 };
 
 bool HS_API CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
