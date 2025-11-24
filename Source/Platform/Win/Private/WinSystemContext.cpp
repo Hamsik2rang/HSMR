@@ -10,6 +10,8 @@ HS_NS_BEGIN
 
 bool SystemContext::initializePlatform()
 {
+	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
 	char path[MAX_PATH] = { 0 };
 	DWORD length = GetModuleFileNameA(nullptr, path, MAX_PATH);
 

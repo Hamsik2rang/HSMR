@@ -3,7 +3,7 @@
 #if defined(__WINDOWS__)
 #include "Platform/Win/WinWindow.h"
 #elif defined(__APPLE__)
-//#include "Platform/Mac/MacWindow.h"
+// #include "Platform/Mac/MacWindow.h"
 #endif
 
 #include <queue>
@@ -20,84 +20,88 @@ void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
 
 static std::unordered_map<const NativeWindow*, std::queue<NativeEvent>> s_eventQueueTable;
 
-bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow) 
+bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
-	bool result = CreateNativeWindowInternal(name, width, height, flag, outNativeWindow);
+    assert(s_eventQueueTable.find(&outNativeWindow) == s_eventQueueTable.end());
+    s_eventQueueTable.insert(std::make_pair(&outNativeWindow, std::queue<NativeEvent>()));
 
-	assert(s_eventQueueTable.find(&outNativeWindow) == s_eventQueueTable.end());
+    bool result = CreateNativeWindowInternal(name, width, height, flag, outNativeWindow);
 
-	s_eventQueueTable.insert(std::make_pair(&outNativeWindow, std::queue<NativeEvent>()));
+    if (!result)
+    {
+        s_eventQueueTable.erase(&outNativeWindow);
+    }
 
-	return result;
+    return result;
 }
 
-void DestroyNativeWindow(NativeWindow& nativeWindow) 
+void DestroyNativeWindow(NativeWindow& nativeWindow)
 {
-	DestroyNativeWindowInternal(nativeWindow);
+    DestroyNativeWindowInternal(nativeWindow);
 }
 
 void ShowNativeWindow(const NativeWindow& nativeWindow)
 {
-	ShowNativeWindowInternal(nativeWindow);
+    ShowNativeWindowInternal(nativeWindow);
 }
 
-void PollNativeEvent(NativeWindow& nativeWindow) 
+void PollNativeEvent(NativeWindow& nativeWindow)
 {
-	PollNativeEventInternal(nativeWindow);
+    PollNativeEventInternal(nativeWindow);
 }
 
-void SetNativeWindowSize(uint16 width, uint16 height) 
+void SetNativeWindowSize(uint16 width, uint16 height)
 {
-	SetNativeWindowSizeInternal(width, height);
+    SetNativeWindowSizeInternal(width, height);
 }
 
-void GetNativeWindowSize(uint16& outWidth, uint16& outHeight) 
+void GetNativeWindowSize(uint16& outWidth, uint16& outHeight)
 {
-	GetNativeWindowSizeInternal(outWidth, outHeight);
+    GetNativeWindowSizeInternal(outWidth, outHeight);
 }
 
 bool PeekNativeEvent(NativeWindow* pWindow, NativeEvent& outEvent)
 {
-	if (pWindow == nullptr || s_eventQueueTable.find(pWindow) == s_eventQueueTable.end())
-	{
-		return false;
-	}
+    if (pWindow == nullptr || s_eventQueueTable.find(pWindow) == s_eventQueueTable.end())
+    {
+        return false;
+    }
 
-	PollNativeEvent(*pWindow);
+    PollNativeEvent(*pWindow);
 
-	outEvent = NativeEvent::Type::NONE;
+    outEvent = NativeEvent::Type::NONE;
 
-	auto& eventQueue = s_eventQueueTable[pWindow];
-	if (eventQueue.empty())
-	{
-		return false;
-	}
+    auto& eventQueue = s_eventQueueTable[pWindow];
+    if (eventQueue.empty())
+    {
+        return false;
+    }
 
-	outEvent = eventQueue.front();
+    outEvent = eventQueue.front();
 
-	return true;
+    return true;
 }
 
 void PushNativeEvent(const NativeWindow* pWindow, NativeEvent event)
 {
-	assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
+    assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
 
-	auto& eventQueue = s_eventQueueTable[pWindow];
+    auto& eventQueue = s_eventQueueTable[pWindow];
 
-	eventQueue.push(event);
+    eventQueue.push(event);
 }
 
 NativeEvent PopNativeEvent(const NativeWindow* pWindow)
 {
-	assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
+    assert(pWindow && s_eventQueueTable.find(pWindow) != s_eventQueueTable.end());
 
-	auto& eventQueue = s_eventQueueTable[pWindow];
+    auto& eventQueue = s_eventQueueTable[pWindow];
 
-	NativeEvent event = eventQueue.front();
+    NativeEvent event = eventQueue.front();
 
-	eventQueue.pop();
+    eventQueue.pop();
 
-	return event;
+    return event;
 }
 
 HS_NS_END

@@ -11,6 +11,8 @@ HS_NS_BEGIN
 Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 height, EWindowFlags flags)
 	: _isClosed(false)
 	, _shouldClose(false)
+    , _shouldUpdate(true)
+    , _shouldPresent(true)
 	, _ownerApp(ownerApp)
 	, _preEventHandler(nullptr)
 {
@@ -29,6 +31,11 @@ Window::~Window()
 
 void Window::Shutdown()
 {
+	if (_isClosed)
+	{
+		return;
+	}
+
 	onShutdown();
 
 	DestroyNativeWindow(_nativeWindow);
@@ -47,6 +54,8 @@ void Window::ProcessEvent()
 		case NativeEvent::Type::WINDOW_OPEN:
 		{
 			_shouldClose = false;
+            _shouldPresent = true;
+            _shouldUpdate  = true;
 
 			break;
 		}

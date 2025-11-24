@@ -16,87 +16,87 @@
 
 HS_NS_EDITOR_BEGIN
 
-EditorApplication::EditorApplication(const char* appName, EngineContext* engineContext) noexcept
-    : Application(appName)
-    , _guiContext(nullptr)
-    , _deltaTime(0.0f)
+EditorApplication::EditorApplication(const char* appName) noexcept
+	: Application(appName)
+	, _guiContext(nullptr)
+	, _deltaTime(0.0f)
 {
-    _guiContext = new GUIContext();
+	_guiContext = new GUIContext();
 
-    ObjectManager::Initialize();
+	ObjectManager::Initialize();
 
-    EWindowFlags windowFlags = EWindowFlags::NONE;
-    windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
-    windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
-    windowFlags |= EWindowFlags::WINDOW_METAL;
+	EWindowFlags windowFlags = EWindowFlags::NONE;
+	windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
+	windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
+	windowFlags |= EWindowFlags::WINDOW_METAL;
 
-    _window = new EditorWindow(this, "EditorApp BaseWindow", 1280, 720, windowFlags);
-    if (nullptr == _window->GetNativeWindow().handle)
-    {
-        HS_LOG(error, "Fail to initialize base window");
-    }
+	_window = new EditorWindow(this, "EditorApp BaseWindow", 1920, 1080, windowFlags);
+	if (nullptr == _window->GetNativeWindow().handle)
+	{
+		HS_LOG(error, "Fail to initialize base window");
+	}
 
-    ShowNativeWindow(_window->GetNativeWindow());
+	ShowNativeWindow(_window->GetNativeWindow());
 }
 
 EditorApplication::~EditorApplication()
 {
-    Shutdown();
+	Shutdown();
 }
 
 void EditorApplication::Shutdown()
 {
-    if (_window && _window->IsOpened())
-    {
-        _window->Shutdown();
-        delete _window;
-        _window = nullptr;
-    }
+	if (_window && _window->IsOpened())
+	{
+		_window->Shutdown();
+		delete _window;
+		_window = nullptr;
+	}
 
-    if (_guiContext)
-    {
-        _guiContext->Finalize();
-        delete _guiContext;
-        _guiContext = nullptr;
-    }
-    //...
+	if (_guiContext)
+	{
+		_guiContext->Finalize();
+		delete _guiContext;
+		_guiContext = nullptr;
+	}
+	//...
 
-    ObjectManager::Finalize();
+	ObjectManager::Finalize();
 }
 
 void EditorApplication::Run()
 {
-    // TODO: Elapse Timer
+	// TODO: Elapse Timer
 
-    while (true)
-    {
+	while (true)
+	{
 #if defined(__APPLE__)
-        AutoReleasePool pool;
+		AutoReleasePool pool;
 #endif
-        _window->ProcessEvent();
-        
-        if(!_window->IsOpened())
-        {
-            break;
-        }
-        
-        _window->NextFrame();
+		_window->ProcessEvent();
 
-        _window->Update();
+		if (!_window->IsOpened())
+		{
+			break;
+		}
 
-        _window->Render();
+		_window->NextFrame();
 
-        _window->Present();
+		_window->Update();
 
-        _window->Flush();
-    }
+		_window->Render();
 
-    Shutdown();
+		_window->Present();
+
+		_window->Flush();
+	}
+
+	Shutdown();
 }
 
 GUIContext* EditorApplication::GetGUIContext()
 {
-    return _guiContext;
+	return _guiContext;
 }
 
 HS_NS_EDITOR_END

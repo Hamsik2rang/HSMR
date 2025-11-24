@@ -18,7 +18,7 @@
 // - Introduction, links and more at the top of imgui.cpp
 
 // Configuration flags to add in your imconfig file:
-//#define IMGUI_IMPL_WIN32_DISABLE_GAMEPAD              // Disable gamepad support. This was meaningful before <1.81 but we now load XInput dynamically so the option is now less relevant.
+// #define IMGUI_IMPL_WIN32_DISABLE_GAMEPAD              // Disable gamepad support. This was meaningful before <1.81 but we now load XInput dynamically so the option is now less relevant.
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
@@ -104,12 +104,12 @@ typedef DWORD(WINAPI* PFN_XInputGetState)(DWORD, XINPUT_STATE*);
 // Clang/GCC warnings with -Weverything
 #if defined(__clang__)
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-function-type"     // warning: cast between incompatible function types (for loader)
+#pragma clang diagnostic ignored "-Wcast-function-type" // warning: cast between incompatible function types (for loader)
 #endif
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"                  // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wcast-function-type"       // warning: cast between incompatible function types (for loader)
+#pragma GCC diagnostic ignored "-Wpragmas"            // warning: unknown option after '#pragma GCC diagnostic' kind
+#pragma GCC diagnostic ignored "-Wcast-function-type" // warning: cast between incompatible function types (for loader)
 #endif
 
 // Forward Declarations
@@ -119,25 +119,25 @@ static void ImGui_ImplWin32_UpdateMonitors();
 
 struct ImGui_ImplWin32_Data
 {
-    HWND                        hWnd;
-    HWND                        MouseHwnd;
-    int                         MouseTrackedArea;   // 0: not tracked, 1: client area, 2: non-client area
-    int                         MouseButtonsDown;
-    INT64                       Time;
-    INT64                       TicksPerSecond;
-    ImGuiMouseCursor            LastMouseCursor;
-    UINT32                      KeyboardCodePage;
-    bool                        WantUpdateMonitors;
+    HWND hWnd;
+    HWND MouseHwnd;
+    int MouseTrackedArea; // 0: not tracked, 1: client area, 2: non-client area
+    int MouseButtonsDown;
+    INT64 Time;
+    INT64 TicksPerSecond;
+    ImGuiMouseCursor LastMouseCursor;
+    UINT32 KeyboardCodePage;
+    bool WantUpdateMonitors;
 
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-    bool                        HasGamepad;
-    bool                        WantUpdateHasGamepad;
-    HMODULE                     XInputDLL;
-    PFN_XInputGetCapabilities   XInputGetCapabilities;
-    PFN_XInputGetState          XInputGetState;
+    bool HasGamepad;
+    bool WantUpdateHasGamepad;
+    HMODULE XInputDLL;
+    PFN_XInputGetCapabilities XInputGetCapabilities;
+    PFN_XInputGetState XInputGetState;
 #endif
 
-    ImGui_ImplWin32_Data()      { memset((void*)this, 0, sizeof(*this)); }
+    ImGui_ImplWin32_Data() { memset((void*)this, 0, sizeof(*this)); }
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
@@ -158,8 +158,8 @@ static void ImGui_ImplWin32_UpdateKeyboardCodePage(ImGuiIO& io)
 {
     // Retrieve keyboard code page, required for handling of non-Unicode Windows.
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData(io);
-    HKL keyboard_layout = ::GetKeyboardLayout(0);
-    LCID keyboard_lcid = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
+    HKL keyboard_layout      = ::GetKeyboardLayout(0);
+    LCID keyboard_lcid       = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
     if (::GetLocaleInfoA(keyboard_lcid, (LOCALE_RETURN_NUMBER | LOCALE_IDEFAULTANSICODEPAGE), (LPSTR)&bd->KeyboardCodePage, sizeof(bd->KeyboardCodePage)) == 0)
         bd->KeyboardCodePage = CP_ACP; // Fallback to default ANSI code page when fails.
 }
@@ -177,17 +177,17 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
         return false;
 
     // Setup backend capabilities flags
-    ImGui_ImplWin32_Data* bd = IM_NEW(ImGui_ImplWin32_Data)();
+    ImGui_ImplWin32_Data* bd   = IM_NEW(ImGui_ImplWin32_Data)();
     io.BackendPlatformUserData = (void*)bd;
-    io.BackendPlatformName = "imgui_impl_win32";
+    io.BackendPlatformName     = "imgui_impl_win32";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;         // We can honor GetMouseCursor() values (optional)
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;    // We can create multi-viewports on the Platform side (optional)
     io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.AddMouseViewportEvent() with correct data (optional)
 
-    bd->hWnd = (HWND)hwnd;
-    bd->TicksPerSecond = perf_frequency;
-    bd->Time = perf_counter;
+    bd->hWnd            = (HWND)hwnd;
+    bd->TicksPerSecond  = perf_frequency;
+    bd->Time            = perf_counter;
     bd->LastMouseCursor = ImGuiMouseCursor_COUNT;
     ImGui_ImplWin32_UpdateKeyboardCodePage(io);
 
@@ -195,7 +195,7 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
     ImGui_ImplWin32_UpdateMonitors();
 
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiViewport* main_viewport  = ImGui::GetMainViewport();
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (void*)bd->hWnd;
 
     // Be aware that GetPropA()/SetPropA() may be accessed from other processes.
@@ -207,19 +207,19 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
     bd->WantUpdateHasGamepad = true;
     const char* xinput_dll_names[] =
-    {
-        "xinput1_4.dll",   // Windows 8+
-        "xinput1_3.dll",   // DirectX SDK
-        "xinput9_1_0.dll", // Windows Vista, Windows 7
-        "xinput1_2.dll",   // DirectX SDK
-        "xinput1_1.dll"    // DirectX SDK
-    };
+        {
+            "xinput1_4.dll",   // Windows 8+
+            "xinput1_3.dll",   // DirectX SDK
+            "xinput9_1_0.dll", // Windows Vista, Windows 7
+            "xinput1_2.dll",   // DirectX SDK
+            "xinput1_1.dll"    // DirectX SDK
+        };
     for (int n = 0; n < IM_ARRAYSIZE(xinput_dll_names); n++)
         if (HMODULE dll = ::LoadLibraryA(xinput_dll_names[n]))
         {
-            bd->XInputDLL = dll;
+            bd->XInputDLL             = dll;
             bd->XInputGetCapabilities = (PFN_XInputGetCapabilities)::GetProcAddress(dll, "XInputGetCapabilities");
-            bd->XInputGetState = (PFN_XInputGetState)::GetProcAddress(dll, "XInputGetState");
+            bd->XInputGetState        = (PFN_XInputGetState)::GetProcAddress(dll, "XInputGetState");
             break;
         }
 #endif // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
@@ -227,18 +227,18 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
     return true;
 }
 
-IMGUI_IMPL_API bool     ImGui_ImplWin32_Init(void* hwnd)
+IMGUI_IMPL_API bool ImGui_ImplWin32_Init(void* hwnd)
 {
     return ImGui_ImplWin32_InitEx(hwnd, false);
 }
 
-IMGUI_IMPL_API bool     ImGui_ImplWin32_InitForOpenGL(void* hwnd)
+IMGUI_IMPL_API bool ImGui_ImplWin32_InitForOpenGL(void* hwnd)
 {
     // OpenGL needs CS_OWNDC
     return ImGui_ImplWin32_InitEx(hwnd, true);
 }
 
-void    ImGui_ImplWin32_Shutdown()
+void ImGui_ImplWin32_Shutdown()
 {
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
     IM_ASSERT(bd != nullptr && "No platform backend to shutdown, or already shutdown?");
@@ -253,7 +253,7 @@ void    ImGui_ImplWin32_Shutdown()
         ::FreeLibrary(bd->XInputDLL);
 #endif // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 
-    io.BackendPlatformName = nullptr;
+    io.BackendPlatformName     = nullptr;
     io.BackendPlatformUserData = nullptr;
     io.BackendFlags &= ~(ImGuiBackendFlags_HasMouseCursors | ImGuiBackendFlags_HasSetMousePos | ImGuiBackendFlags_HasGamepad | ImGuiBackendFlags_PlatformHasViewports | ImGuiBackendFlags_HasMouseHoveredViewport);
     IM_DELETE(bd);
@@ -275,17 +275,17 @@ static bool ImGui_ImplWin32_UpdateMouseCursor(ImGuiIO& io, ImGuiMouseCursor imgu
         LPTSTR win32_cursor = IDC_ARROW;
         switch (imgui_cursor)
         {
-        case ImGuiMouseCursor_Arrow:        win32_cursor = IDC_ARROW; break;
-        case ImGuiMouseCursor_TextInput:    win32_cursor = IDC_IBEAM; break;
-        case ImGuiMouseCursor_ResizeAll:    win32_cursor = IDC_SIZEALL; break;
-        case ImGuiMouseCursor_ResizeEW:     win32_cursor = IDC_SIZEWE; break;
-        case ImGuiMouseCursor_ResizeNS:     win32_cursor = IDC_SIZENS; break;
-        case ImGuiMouseCursor_ResizeNESW:   win32_cursor = IDC_SIZENESW; break;
-        case ImGuiMouseCursor_ResizeNWSE:   win32_cursor = IDC_SIZENWSE; break;
-        case ImGuiMouseCursor_Hand:         win32_cursor = IDC_HAND; break;
-        case ImGuiMouseCursor_Wait:         win32_cursor = IDC_WAIT; break;
-        case ImGuiMouseCursor_Progress:     win32_cursor = IDC_APPSTARTING; break;
-        case ImGuiMouseCursor_NotAllowed:   win32_cursor = IDC_NO; break;
+        case ImGuiMouseCursor_Arrow:      win32_cursor = IDC_ARROW; break;
+        case ImGuiMouseCursor_TextInput:  win32_cursor = IDC_IBEAM; break;
+        case ImGuiMouseCursor_ResizeAll:  win32_cursor = IDC_SIZEALL; break;
+        case ImGuiMouseCursor_ResizeEW:   win32_cursor = IDC_SIZEWE; break;
+        case ImGuiMouseCursor_ResizeNS:   win32_cursor = IDC_SIZENS; break;
+        case ImGuiMouseCursor_ResizeNESW: win32_cursor = IDC_SIZENESW; break;
+        case ImGuiMouseCursor_ResizeNWSE: win32_cursor = IDC_SIZENWSE; break;
+        case ImGuiMouseCursor_Hand:       win32_cursor = IDC_HAND; break;
+        case ImGuiMouseCursor_Wait:       win32_cursor = IDC_WAIT; break;
+        case ImGuiMouseCursor_Progress:   win32_cursor = IDC_APPSTARTING; break;
+        case ImGuiMouseCursor_NotAllowed: win32_cursor = IDC_NO; break;
         }
         ::SetCursor(::LoadCursor(nullptr, win32_cursor));
     }
@@ -331,7 +331,7 @@ static ImGuiViewport* ImGui_ImplWin32_FindViewportByPlatformHandle(ImGuiPlatform
 {
     // We cannot use ImGui::FindViewportByPlatformHandle() because it doesn't take a context.
     // When called from ImGui_ImplWin32_WndProcHandler_PlatformWindow() we don't assume that context is bound.
-    //return ImGui::FindViewportByPlatformHandle((void*)hwnd);
+    // return ImGui::FindViewportByPlatformHandle((void*)hwnd);
     for (ImGuiViewport* viewport : platform_io.Viewports)
         if (viewport->PlatformHandle == hwnd)
             return viewport;
@@ -348,7 +348,7 @@ static void ImGui_ImplWin32_UpdateMouseData(ImGuiIO& io, ImGuiPlatformIO& platfo
     POINT mouse_screen_pos;
     bool has_mouse_screen_pos = ::GetCursorPos(&mouse_screen_pos) != 0;
 
-    HWND focused_window = ::GetForegroundWindow();
+    HWND focused_window       = ::GetForegroundWindow();
     const bool is_app_focused = (focused_window && (focused_window == bd->hWnd || ::IsChild(focused_window, bd->hWnd) || ImGui_ImplWin32_FindViewportByPlatformHandle(platform_io, focused_window)));
     if (is_app_focused)
     {
@@ -356,7 +356,7 @@ static void ImGui_ImplWin32_UpdateMouseData(ImGuiIO& io, ImGuiPlatformIO& platfo
         // When multi-viewports are enabled, all Dear ImGui positions are same as OS positions.
         if (io.WantSetMousePos)
         {
-            POINT pos = { (int)io.MousePos.x, (int)io.MousePos.y };
+            POINT pos = {(int)io.MousePos.x, (int)io.MousePos.y};
             if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) == 0)
                 ::ClientToScreen(focused_window, &pos);
             ::SetCursorPos(pos.x, pos.y);
@@ -403,7 +403,7 @@ static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
     if (bd->WantUpdateHasGamepad)
     {
         XINPUT_CAPABILITIES caps = {};
-        bd->HasGamepad = bd->XInputGetCapabilities ? (bd->XInputGetCapabilities(0, XINPUT_FLAG_GAMEPAD, &caps) == ERROR_SUCCESS) : false;
+        bd->HasGamepad           = bd->XInputGetCapabilities ? (bd->XInputGetCapabilities(0, XINPUT_FLAG_GAMEPAD, &caps) == ERROR_SUCCESS) : false;
         bd->WantUpdateHasGamepad = false;
     }
 
@@ -414,35 +414,43 @@ static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
         return;
     io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 
-    #define IM_SATURATE(V)                      (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
-    #define MAP_BUTTON(KEY_NO, BUTTON_ENUM)     { io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); }
-    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (float)(VALUE - V0) / (float)(V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); }
-    MAP_BUTTON(ImGuiKey_GamepadStart,           XINPUT_GAMEPAD_START);
-    MAP_BUTTON(ImGuiKey_GamepadBack,            XINPUT_GAMEPAD_BACK);
-    MAP_BUTTON(ImGuiKey_GamepadFaceLeft,        XINPUT_GAMEPAD_X);
-    MAP_BUTTON(ImGuiKey_GamepadFaceRight,       XINPUT_GAMEPAD_B);
-    MAP_BUTTON(ImGuiKey_GamepadFaceUp,          XINPUT_GAMEPAD_Y);
-    MAP_BUTTON(ImGuiKey_GamepadFaceDown,        XINPUT_GAMEPAD_A);
-    MAP_BUTTON(ImGuiKey_GamepadDpadLeft,        XINPUT_GAMEPAD_DPAD_LEFT);
-    MAP_BUTTON(ImGuiKey_GamepadDpadRight,       XINPUT_GAMEPAD_DPAD_RIGHT);
-    MAP_BUTTON(ImGuiKey_GamepadDpadUp,          XINPUT_GAMEPAD_DPAD_UP);
-    MAP_BUTTON(ImGuiKey_GamepadDpadDown,        XINPUT_GAMEPAD_DPAD_DOWN);
-    MAP_BUTTON(ImGuiKey_GamepadL1,              XINPUT_GAMEPAD_LEFT_SHOULDER);
-    MAP_BUTTON(ImGuiKey_GamepadR1,              XINPUT_GAMEPAD_RIGHT_SHOULDER);
-    MAP_ANALOG(ImGuiKey_GamepadL2,              gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-    MAP_ANALOG(ImGuiKey_GamepadR2,              gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-    MAP_BUTTON(ImGuiKey_GamepadL3,              XINPUT_GAMEPAD_LEFT_THUMB);
-    MAP_BUTTON(ImGuiKey_GamepadR3,              XINPUT_GAMEPAD_RIGHT_THUMB);
-    MAP_ANALOG(ImGuiKey_GamepadLStickLeft,      gamepad.sThumbLX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadLStickRight,     gamepad.sThumbLX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadLStickUp,        gamepad.sThumbLY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadLStickDown,      gamepad.sThumbLY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadRStickLeft,      gamepad.sThumbRX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    MAP_ANALOG(ImGuiKey_GamepadRStickRight,     gamepad.sThumbRX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadRStickUp,        gamepad.sThumbRY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
-    MAP_ANALOG(ImGuiKey_GamepadRStickDown,      gamepad.sThumbRY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-    #undef MAP_BUTTON
-    #undef MAP_ANALOG
+#define IM_SATURATE(V) (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f \
+                                                   : V)
+#define MAP_BUTTON(KEY_NO, BUTTON_ENUM)                                \
+    {                                                                  \
+        io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); \
+    }
+#define MAP_ANALOG(KEY_NO, VALUE, V0, V1)                          \
+    {                                                              \
+        float vn = (float)(VALUE - V0) / (float)(V1 - V0);         \
+        io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); \
+    }
+    MAP_BUTTON(ImGuiKey_GamepadStart, XINPUT_GAMEPAD_START);
+    MAP_BUTTON(ImGuiKey_GamepadBack, XINPUT_GAMEPAD_BACK);
+    MAP_BUTTON(ImGuiKey_GamepadFaceLeft, XINPUT_GAMEPAD_X);
+    MAP_BUTTON(ImGuiKey_GamepadFaceRight, XINPUT_GAMEPAD_B);
+    MAP_BUTTON(ImGuiKey_GamepadFaceUp, XINPUT_GAMEPAD_Y);
+    MAP_BUTTON(ImGuiKey_GamepadFaceDown, XINPUT_GAMEPAD_A);
+    MAP_BUTTON(ImGuiKey_GamepadDpadLeft, XINPUT_GAMEPAD_DPAD_LEFT);
+    MAP_BUTTON(ImGuiKey_GamepadDpadRight, XINPUT_GAMEPAD_DPAD_RIGHT);
+    MAP_BUTTON(ImGuiKey_GamepadDpadUp, XINPUT_GAMEPAD_DPAD_UP);
+    MAP_BUTTON(ImGuiKey_GamepadDpadDown, XINPUT_GAMEPAD_DPAD_DOWN);
+    MAP_BUTTON(ImGuiKey_GamepadL1, XINPUT_GAMEPAD_LEFT_SHOULDER);
+    MAP_BUTTON(ImGuiKey_GamepadR1, XINPUT_GAMEPAD_RIGHT_SHOULDER);
+    MAP_ANALOG(ImGuiKey_GamepadL2, gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
+    MAP_ANALOG(ImGuiKey_GamepadR2, gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
+    MAP_BUTTON(ImGuiKey_GamepadL3, XINPUT_GAMEPAD_LEFT_THUMB);
+    MAP_BUTTON(ImGuiKey_GamepadR3, XINPUT_GAMEPAD_RIGHT_THUMB);
+    MAP_ANALOG(ImGuiKey_GamepadLStickLeft, gamepad.sThumbLX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
+    MAP_ANALOG(ImGuiKey_GamepadLStickRight, gamepad.sThumbLX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
+    MAP_ANALOG(ImGuiKey_GamepadLStickUp, gamepad.sThumbLY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
+    MAP_ANALOG(ImGuiKey_GamepadLStickDown, gamepad.sThumbLY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
+    MAP_ANALOG(ImGuiKey_GamepadRStickLeft, gamepad.sThumbRX, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
+    MAP_ANALOG(ImGuiKey_GamepadRStickRight, gamepad.sThumbRX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
+    MAP_ANALOG(ImGuiKey_GamepadRStickUp, gamepad.sThumbRY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
+    MAP_ANALOG(ImGuiKey_GamepadRStickDown, gamepad.sThumbRY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
+#undef MAP_BUTTON
+#undef MAP_ANALOG
 #else // #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
     IM_UNUSED(io);
 #endif
@@ -451,15 +459,15 @@ static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
 static BOOL CALLBACK ImGui_ImplWin32_UpdateMonitors_EnumFunc(HMONITOR monitor, HDC, LPRECT, LPARAM)
 {
     MONITORINFO info = {};
-    info.cbSize = sizeof(MONITORINFO);
+    info.cbSize      = sizeof(MONITORINFO);
     if (!::GetMonitorInfo(monitor, &info))
         return TRUE;
     ImGuiPlatformMonitor imgui_monitor;
-    imgui_monitor.MainPos = ImVec2((float)info.rcMonitor.left, (float)info.rcMonitor.top);
-    imgui_monitor.MainSize = ImVec2((float)(info.rcMonitor.right - info.rcMonitor.left), (float)(info.rcMonitor.bottom - info.rcMonitor.top));
-    imgui_monitor.WorkPos = ImVec2((float)info.rcWork.left, (float)info.rcWork.top);
-    imgui_monitor.WorkSize = ImVec2((float)(info.rcWork.right - info.rcWork.left), (float)(info.rcWork.bottom - info.rcWork.top));
-    imgui_monitor.DpiScale = ImGui_ImplWin32_GetDpiScaleForMonitor(monitor);
+    imgui_monitor.MainPos        = ImVec2((float)info.rcMonitor.left, (float)info.rcMonitor.top);
+    imgui_monitor.MainSize       = ImVec2((float)(info.rcMonitor.right - info.rcMonitor.left), (float)(info.rcMonitor.bottom - info.rcMonitor.top));
+    imgui_monitor.WorkPos        = ImVec2((float)info.rcWork.left, (float)info.rcWork.top);
+    imgui_monitor.WorkSize       = ImVec2((float)(info.rcWork.right - info.rcWork.left), (float)(info.rcWork.bottom - info.rcWork.top));
+    imgui_monitor.DpiScale       = ImGui_ImplWin32_GetDpiScaleForMonitor(monitor);
     imgui_monitor.PlatformHandle = (void*)monitor;
     if (imgui_monitor.DpiScale <= 0.0f)
         return TRUE; // Some accessibility applications are declaring virtual monitors with a DPI of 0, see #7902.
@@ -479,15 +487,15 @@ static void ImGui_ImplWin32_UpdateMonitors()
     bd->WantUpdateMonitors = false;
 }
 
-void    ImGui_ImplWin32_NewFrame()
+void ImGui_ImplWin32_NewFrame()
 {
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
     IM_ASSERT(bd != nullptr && "Context or backend not initialized? Did you call ImGui_ImplWin32_Init()?");
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io                  = ImGui::GetIO();
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
 
     // Setup display size (every frame to accommodate for window resizing)
-    RECT rect = { 0, 0, 0, 0 };
+    RECT rect = {0, 0, 0, 0};
     ::GetClientRect(bd->hWnd, &rect);
     io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
     if (bd->WantUpdateMonitors)
@@ -497,7 +505,7 @@ void    ImGui_ImplWin32_NewFrame()
     INT64 current_time = 0;
     ::QueryPerformanceCounter((LARGE_INTEGER*)&current_time);
     io.DeltaTime = (float)(current_time - bd->Time) / bd->TicksPerSecond;
-    bd->Time = current_time;
+    bd->Time     = current_time;
 
     // Update OS mouse position
     ImGui_ImplWin32_UpdateMouseData(io, platform_io);
@@ -527,134 +535,134 @@ ImGuiKey ImGui_ImplWin32_KeyEventToImGuiKey(WPARAM wParam, LPARAM lParam)
         return ImGuiKey_KeypadEnter;
 
     const int scancode = (int)LOBYTE(HIWORD(lParam));
-    //IMGUI_DEBUG_LOG("scancode %3d, keycode = 0x%02X\n", scancode, wParam);
+    // IMGUI_DEBUG_LOG("scancode %3d, keycode = 0x%02X\n", scancode, wParam);
     switch (wParam)
     {
-        case VK_TAB: return ImGuiKey_Tab;
-        case VK_LEFT: return ImGuiKey_LeftArrow;
-        case VK_RIGHT: return ImGuiKey_RightArrow;
-        case VK_UP: return ImGuiKey_UpArrow;
-        case VK_DOWN: return ImGuiKey_DownArrow;
-        case VK_PRIOR: return ImGuiKey_PageUp;
-        case VK_NEXT: return ImGuiKey_PageDown;
-        case VK_HOME: return ImGuiKey_Home;
-        case VK_END: return ImGuiKey_End;
-        case VK_INSERT: return ImGuiKey_Insert;
-        case VK_DELETE: return ImGuiKey_Delete;
-        case VK_BACK: return ImGuiKey_Backspace;
-        case VK_SPACE: return ImGuiKey_Space;
-        case VK_RETURN: return ImGuiKey_Enter;
-        case VK_ESCAPE: return ImGuiKey_Escape;
-        //case VK_OEM_7: return ImGuiKey_Apostrophe;
-        case VK_OEM_COMMA: return ImGuiKey_Comma;
-        //case VK_OEM_MINUS: return ImGuiKey_Minus;
-        case VK_OEM_PERIOD: return ImGuiKey_Period;
-        //case VK_OEM_2: return ImGuiKey_Slash;
-        //case VK_OEM_1: return ImGuiKey_Semicolon;
-        //case VK_OEM_PLUS: return ImGuiKey_Equal;
-        //case VK_OEM_4: return ImGuiKey_LeftBracket;
-        //case VK_OEM_5: return ImGuiKey_Backslash;
-        //case VK_OEM_6: return ImGuiKey_RightBracket;
-        //case VK_OEM_3: return ImGuiKey_GraveAccent;
-        case VK_CAPITAL: return ImGuiKey_CapsLock;
-        case VK_SCROLL: return ImGuiKey_ScrollLock;
-        case VK_NUMLOCK: return ImGuiKey_NumLock;
-        case VK_SNAPSHOT: return ImGuiKey_PrintScreen;
-        case VK_PAUSE: return ImGuiKey_Pause;
-        case VK_NUMPAD0: return ImGuiKey_Keypad0;
-        case VK_NUMPAD1: return ImGuiKey_Keypad1;
-        case VK_NUMPAD2: return ImGuiKey_Keypad2;
-        case VK_NUMPAD3: return ImGuiKey_Keypad3;
-        case VK_NUMPAD4: return ImGuiKey_Keypad4;
-        case VK_NUMPAD5: return ImGuiKey_Keypad5;
-        case VK_NUMPAD6: return ImGuiKey_Keypad6;
-        case VK_NUMPAD7: return ImGuiKey_Keypad7;
-        case VK_NUMPAD8: return ImGuiKey_Keypad8;
-        case VK_NUMPAD9: return ImGuiKey_Keypad9;
-        case VK_DECIMAL: return ImGuiKey_KeypadDecimal;
-        case VK_DIVIDE: return ImGuiKey_KeypadDivide;
-        case VK_MULTIPLY: return ImGuiKey_KeypadMultiply;
-        case VK_SUBTRACT: return ImGuiKey_KeypadSubtract;
-        case VK_ADD: return ImGuiKey_KeypadAdd;
-        case VK_LSHIFT: return ImGuiKey_LeftShift;
-        case VK_LCONTROL: return ImGuiKey_LeftCtrl;
-        case VK_LMENU: return ImGuiKey_LeftAlt;
-        case VK_LWIN: return ImGuiKey_LeftSuper;
-        case VK_RSHIFT: return ImGuiKey_RightShift;
-        case VK_RCONTROL: return ImGuiKey_RightCtrl;
-        case VK_RMENU: return ImGuiKey_RightAlt;
-        case VK_RWIN: return ImGuiKey_RightSuper;
-        case VK_APPS: return ImGuiKey_Menu;
-        case '0': return ImGuiKey_0;
-        case '1': return ImGuiKey_1;
-        case '2': return ImGuiKey_2;
-        case '3': return ImGuiKey_3;
-        case '4': return ImGuiKey_4;
-        case '5': return ImGuiKey_5;
-        case '6': return ImGuiKey_6;
-        case '7': return ImGuiKey_7;
-        case '8': return ImGuiKey_8;
-        case '9': return ImGuiKey_9;
-        case 'A': return ImGuiKey_A;
-        case 'B': return ImGuiKey_B;
-        case 'C': return ImGuiKey_C;
-        case 'D': return ImGuiKey_D;
-        case 'E': return ImGuiKey_E;
-        case 'F': return ImGuiKey_F;
-        case 'G': return ImGuiKey_G;
-        case 'H': return ImGuiKey_H;
-        case 'I': return ImGuiKey_I;
-        case 'J': return ImGuiKey_J;
-        case 'K': return ImGuiKey_K;
-        case 'L': return ImGuiKey_L;
-        case 'M': return ImGuiKey_M;
-        case 'N': return ImGuiKey_N;
-        case 'O': return ImGuiKey_O;
-        case 'P': return ImGuiKey_P;
-        case 'Q': return ImGuiKey_Q;
-        case 'R': return ImGuiKey_R;
-        case 'S': return ImGuiKey_S;
-        case 'T': return ImGuiKey_T;
-        case 'U': return ImGuiKey_U;
-        case 'V': return ImGuiKey_V;
-        case 'W': return ImGuiKey_W;
-        case 'X': return ImGuiKey_X;
-        case 'Y': return ImGuiKey_Y;
-        case 'Z': return ImGuiKey_Z;
-        case VK_F1: return ImGuiKey_F1;
-        case VK_F2: return ImGuiKey_F2;
-        case VK_F3: return ImGuiKey_F3;
-        case VK_F4: return ImGuiKey_F4;
-        case VK_F5: return ImGuiKey_F5;
-        case VK_F6: return ImGuiKey_F6;
-        case VK_F7: return ImGuiKey_F7;
-        case VK_F8: return ImGuiKey_F8;
-        case VK_F9: return ImGuiKey_F9;
-        case VK_F10: return ImGuiKey_F10;
-        case VK_F11: return ImGuiKey_F11;
-        case VK_F12: return ImGuiKey_F12;
-        case VK_F13: return ImGuiKey_F13;
-        case VK_F14: return ImGuiKey_F14;
-        case VK_F15: return ImGuiKey_F15;
-        case VK_F16: return ImGuiKey_F16;
-        case VK_F17: return ImGuiKey_F17;
-        case VK_F18: return ImGuiKey_F18;
-        case VK_F19: return ImGuiKey_F19;
-        case VK_F20: return ImGuiKey_F20;
-        case VK_F21: return ImGuiKey_F21;
-        case VK_F22: return ImGuiKey_F22;
-        case VK_F23: return ImGuiKey_F23;
-        case VK_F24: return ImGuiKey_F24;
-        case VK_BROWSER_BACK: return ImGuiKey_AppBack;
-        case VK_BROWSER_FORWARD: return ImGuiKey_AppForward;
-        default: break;
+    case VK_TAB:             return ImGuiKey_Tab;
+    case VK_LEFT:            return ImGuiKey_LeftArrow;
+    case VK_RIGHT:           return ImGuiKey_RightArrow;
+    case VK_UP:              return ImGuiKey_UpArrow;
+    case VK_DOWN:            return ImGuiKey_DownArrow;
+    case VK_PRIOR:           return ImGuiKey_PageUp;
+    case VK_NEXT:            return ImGuiKey_PageDown;
+    case VK_HOME:            return ImGuiKey_Home;
+    case VK_END:             return ImGuiKey_End;
+    case VK_INSERT:          return ImGuiKey_Insert;
+    case VK_DELETE:          return ImGuiKey_Delete;
+    case VK_BACK:            return ImGuiKey_Backspace;
+    case VK_SPACE:           return ImGuiKey_Space;
+    case VK_RETURN:          return ImGuiKey_Enter;
+    case VK_ESCAPE:          return ImGuiKey_Escape;
+    // case VK_OEM_7: return ImGuiKey_Apostrophe;
+    case VK_OEM_COMMA:       return ImGuiKey_Comma;
+    // case VK_OEM_MINUS: return ImGuiKey_Minus;
+    case VK_OEM_PERIOD:      return ImGuiKey_Period;
+    // case VK_OEM_2: return ImGuiKey_Slash;
+    // case VK_OEM_1: return ImGuiKey_Semicolon;
+    // case VK_OEM_PLUS: return ImGuiKey_Equal;
+    // case VK_OEM_4: return ImGuiKey_LeftBracket;
+    // case VK_OEM_5: return ImGuiKey_Backslash;
+    // case VK_OEM_6: return ImGuiKey_RightBracket;
+    // case VK_OEM_3: return ImGuiKey_GraveAccent;
+    case VK_CAPITAL:         return ImGuiKey_CapsLock;
+    case VK_SCROLL:          return ImGuiKey_ScrollLock;
+    case VK_NUMLOCK:         return ImGuiKey_NumLock;
+    case VK_SNAPSHOT:        return ImGuiKey_PrintScreen;
+    case VK_PAUSE:           return ImGuiKey_Pause;
+    case VK_NUMPAD0:         return ImGuiKey_Keypad0;
+    case VK_NUMPAD1:         return ImGuiKey_Keypad1;
+    case VK_NUMPAD2:         return ImGuiKey_Keypad2;
+    case VK_NUMPAD3:         return ImGuiKey_Keypad3;
+    case VK_NUMPAD4:         return ImGuiKey_Keypad4;
+    case VK_NUMPAD5:         return ImGuiKey_Keypad5;
+    case VK_NUMPAD6:         return ImGuiKey_Keypad6;
+    case VK_NUMPAD7:         return ImGuiKey_Keypad7;
+    case VK_NUMPAD8:         return ImGuiKey_Keypad8;
+    case VK_NUMPAD9:         return ImGuiKey_Keypad9;
+    case VK_DECIMAL:         return ImGuiKey_KeypadDecimal;
+    case VK_DIVIDE:          return ImGuiKey_KeypadDivide;
+    case VK_MULTIPLY:        return ImGuiKey_KeypadMultiply;
+    case VK_SUBTRACT:        return ImGuiKey_KeypadSubtract;
+    case VK_ADD:             return ImGuiKey_KeypadAdd;
+    case VK_LSHIFT:          return ImGuiKey_LeftShift;
+    case VK_LCONTROL:        return ImGuiKey_LeftCtrl;
+    case VK_LMENU:           return ImGuiKey_LeftAlt;
+    case VK_LWIN:            return ImGuiKey_LeftSuper;
+    case VK_RSHIFT:          return ImGuiKey_RightShift;
+    case VK_RCONTROL:        return ImGuiKey_RightCtrl;
+    case VK_RMENU:           return ImGuiKey_RightAlt;
+    case VK_RWIN:            return ImGuiKey_RightSuper;
+    case VK_APPS:            return ImGuiKey_Menu;
+    case '0':                return ImGuiKey_0;
+    case '1':                return ImGuiKey_1;
+    case '2':                return ImGuiKey_2;
+    case '3':                return ImGuiKey_3;
+    case '4':                return ImGuiKey_4;
+    case '5':                return ImGuiKey_5;
+    case '6':                return ImGuiKey_6;
+    case '7':                return ImGuiKey_7;
+    case '8':                return ImGuiKey_8;
+    case '9':                return ImGuiKey_9;
+    case 'A':                return ImGuiKey_A;
+    case 'B':                return ImGuiKey_B;
+    case 'C':                return ImGuiKey_C;
+    case 'D':                return ImGuiKey_D;
+    case 'E':                return ImGuiKey_E;
+    case 'F':                return ImGuiKey_F;
+    case 'G':                return ImGuiKey_G;
+    case 'H':                return ImGuiKey_H;
+    case 'I':                return ImGuiKey_I;
+    case 'J':                return ImGuiKey_J;
+    case 'K':                return ImGuiKey_K;
+    case 'L':                return ImGuiKey_L;
+    case 'M':                return ImGuiKey_M;
+    case 'N':                return ImGuiKey_N;
+    case 'O':                return ImGuiKey_O;
+    case 'P':                return ImGuiKey_P;
+    case 'Q':                return ImGuiKey_Q;
+    case 'R':                return ImGuiKey_R;
+    case 'S':                return ImGuiKey_S;
+    case 'T':                return ImGuiKey_T;
+    case 'U':                return ImGuiKey_U;
+    case 'V':                return ImGuiKey_V;
+    case 'W':                return ImGuiKey_W;
+    case 'X':                return ImGuiKey_X;
+    case 'Y':                return ImGuiKey_Y;
+    case 'Z':                return ImGuiKey_Z;
+    case VK_F1:              return ImGuiKey_F1;
+    case VK_F2:              return ImGuiKey_F2;
+    case VK_F3:              return ImGuiKey_F3;
+    case VK_F4:              return ImGuiKey_F4;
+    case VK_F5:              return ImGuiKey_F5;
+    case VK_F6:              return ImGuiKey_F6;
+    case VK_F7:              return ImGuiKey_F7;
+    case VK_F8:              return ImGuiKey_F8;
+    case VK_F9:              return ImGuiKey_F9;
+    case VK_F10:             return ImGuiKey_F10;
+    case VK_F11:             return ImGuiKey_F11;
+    case VK_F12:             return ImGuiKey_F12;
+    case VK_F13:             return ImGuiKey_F13;
+    case VK_F14:             return ImGuiKey_F14;
+    case VK_F15:             return ImGuiKey_F15;
+    case VK_F16:             return ImGuiKey_F16;
+    case VK_F17:             return ImGuiKey_F17;
+    case VK_F18:             return ImGuiKey_F18;
+    case VK_F19:             return ImGuiKey_F19;
+    case VK_F20:             return ImGuiKey_F20;
+    case VK_F21:             return ImGuiKey_F21;
+    case VK_F22:             return ImGuiKey_F22;
+    case VK_F23:             return ImGuiKey_F23;
+    case VK_F24:             return ImGuiKey_F24;
+    case VK_BROWSER_BACK:    return ImGuiKey_AppBack;
+    case VK_BROWSER_FORWARD: return ImGuiKey_AppForward;
+    default:                 break;
     }
 
     // Fallback to scancode
     // https://handmade.network/forums/t/2011-keyboard_inputs_-_scancodes,_raw_input,_text_input,_key_names
     switch (scancode)
     {
-    case 41: return ImGuiKey_GraveAccent;  // VK_OEM_8 in EN-UK, VK_OEM_3 in EN-US, VK_OEM_7 in FR, VK_OEM_5 in DE, etc.
+    case 41: return ImGuiKey_GraveAccent; // VK_OEM_8 in EN-UK, VK_OEM_3 in EN-US, VK_OEM_7 in FR, VK_OEM_5 in DE, etc.
     case 12: return ImGuiKey_Minus;
     case 13: return ImGuiKey_Equal;
     case 26: return ImGuiKey_LeftBracket;
@@ -726,20 +734,20 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
     {
         // We need to call TrackMouseEvent in order to receive WM_MOUSELEAVE events
         ImGuiMouseSource mouse_source = ImGui_ImplWin32_GetMouseSourceFromMessageExtraInfo();
-        const int area = (msg == WM_MOUSEMOVE) ? 1 : 2;
-        bd->MouseHwnd = hwnd;
+        const int area                = (msg == WM_MOUSEMOVE) ? 1 : 2;
+        bd->MouseHwnd                 = hwnd;
         if (bd->MouseTrackedArea != area)
         {
-            TRACKMOUSEEVENT tme_cancel = { sizeof(tme_cancel), TME_CANCEL, hwnd, 0 };
-            TRACKMOUSEEVENT tme_track = { sizeof(tme_track), (DWORD)((area == 2) ? (TME_LEAVE | TME_NONCLIENT) : TME_LEAVE), hwnd, 0 };
+            TRACKMOUSEEVENT tme_cancel = {sizeof(tme_cancel), TME_CANCEL, hwnd, 0};
+            TRACKMOUSEEVENT tme_track  = {sizeof(tme_track), (DWORD)((area == 2) ? (TME_LEAVE | TME_NONCLIENT) : TME_LEAVE), hwnd, 0};
             if (bd->MouseTrackedArea != 0)
                 ::TrackMouseEvent(&tme_cancel);
             ::TrackMouseEvent(&tme_track);
             bd->MouseTrackedArea = area;
         }
-        POINT mouse_pos = { (LONG)GET_X_LPARAM(lParam), (LONG)GET_Y_LPARAM(lParam) };
+        POINT mouse_pos        = {(LONG)GET_X_LPARAM(lParam), (LONG)GET_Y_LPARAM(lParam)};
         bool want_absolute_pos = (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0;
-        if (msg == WM_MOUSEMOVE && want_absolute_pos)    // WM_MOUSEMOVE are client-relative coordinates.
+        if (msg == WM_MOUSEMOVE && want_absolute_pos) // WM_MOUSEMOVE are client-relative coordinates.
             ::ClientToScreen(hwnd, &mouse_pos);
         if (msg == WM_NCMOUSEMOVE && !want_absolute_pos) // WM_NCMOUSEMOVE are absolute coordinates.
             ::ScreenToClient(hwnd, &mouse_pos);
@@ -763,20 +771,24 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
     case WM_DESTROY:
         if (bd->MouseHwnd == hwnd && bd->MouseTrackedArea != 0)
         {
-            TRACKMOUSEEVENT tme_cancel = { sizeof(tme_cancel), TME_CANCEL, hwnd, 0 };
+            TRACKMOUSEEVENT tme_cancel = {sizeof(tme_cancel), TME_CANCEL, hwnd, 0};
             ::TrackMouseEvent(&tme_cancel);
-            bd->MouseHwnd = nullptr;
+            bd->MouseHwnd        = nullptr;
             bd->MouseTrackedArea = 0;
             io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
         }
         return 0;
-    case WM_LBUTTONDOWN: case WM_LBUTTONDBLCLK:
-    case WM_RBUTTONDOWN: case WM_RBUTTONDBLCLK:
-    case WM_MBUTTONDOWN: case WM_MBUTTONDBLCLK:
-    case WM_XBUTTONDOWN: case WM_XBUTTONDBLCLK:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONDBLCLK:
     {
         ImGuiMouseSource mouse_source = ImGui_ImplWin32_GetMouseSourceFromMessageExtraInfo();
-        int button = 0;
+        int button                    = 0;
         if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) { button = 0; }
         if (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONDBLCLK) { button = 1; }
         if (msg == WM_MBUTTONDOWN || msg == WM_MBUTTONDBLCLK) { button = 2; }
@@ -794,7 +806,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
     case WM_XBUTTONUP:
     {
         ImGuiMouseSource mouse_source = ImGui_ImplWin32_GetMouseSourceFromMessageExtraInfo();
-        int button = 0;
+        int button                    = 0;
         if (msg == WM_LBUTTONUP) { button = 0; }
         if (msg == WM_RBUTTONUP) { button = 1; }
         if (msg == WM_MBUTTONUP) { button = 2; }
@@ -825,7 +837,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
 
             // Obtain virtual key code and convert to ImGuiKey
             const ImGuiKey key = ImGui_ImplWin32_KeyEventToImGuiKey(wParam, lParam);
-            const int vk = (int)wParam;
+            const int vk       = (int)wParam;
             const int scancode = (int)LOBYTE(HIWORD(lParam));
 
             // Special behavior for VK_SNAPSHOT / ImGuiKey_PrintScreen as Windows doesn't emit the key down event.
@@ -899,7 +911,6 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
     return 0;
 }
 
-
 //--------------------------------------------------------------------------------------------------------
 // DPI-related helpers (optional)
 //--------------------------------------------------------------------------------------------------------
@@ -918,7 +929,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
 // require a manifest to be functional for checks above 8.1. See https://github.com/ocornut/imgui/issues/4200
 static BOOL _IsWindowsVersionOrGreater(WORD major, WORD minor, WORD)
 {
-    typedef LONG(WINAPI* PFN_RtlVerifyVersionInfo)(OSVERSIONINFOEXW*, ULONG, ULONGLONG);
+    typedef LONG(WINAPI * PFN_RtlVerifyVersionInfo)(OSVERSIONINFOEXW*, ULONG, ULONGLONG);
     static PFN_RtlVerifyVersionInfo RtlVerifyVersionInfoFn = nullptr;
     if (RtlVerifyVersionInfoFn == nullptr)
         if (HMODULE ntdllModule = ::GetModuleHandleA("ntdll.dll"))
@@ -926,11 +937,11 @@ static BOOL _IsWindowsVersionOrGreater(WORD major, WORD minor, WORD)
     if (RtlVerifyVersionInfoFn == nullptr)
         return FALSE;
 
-    RTL_OSVERSIONINFOEXW versionInfo = { };
-    ULONGLONG conditionMask = 0;
-    versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
-    versionInfo.dwMajorVersion = major;
-    versionInfo.dwMinorVersion = minor;
+    RTL_OSVERSIONINFOEXW versionInfo = {};
+    ULONGLONG conditionMask          = 0;
+    versionInfo.dwOSVersionInfoSize  = sizeof(RTL_OSVERSIONINFOEXW);
+    versionInfo.dwMajorVersion       = major;
+    versionInfo.dwMinorVersion       = minor;
     VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
     VER_SET_CONDITION(conditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
     return (RtlVerifyVersionInfoFn(&versionInfo, VER_MAJORVERSION | VER_MINORVERSION, conditionMask) == 0) ? TRUE : FALSE;
@@ -942,15 +953,26 @@ static BOOL _IsWindowsVersionOrGreater(WORD major, WORD minor, WORD)
 #define _IsWindows10OrGreater()      _IsWindowsVersionOrGreater(HIBYTE(0x0A00), LOBYTE(0x0A00), 0) // _WIN32_WINNT_WINTHRESHOLD / _WIN32_WINNT_WIN10
 
 #ifndef DPI_ENUMS_DECLARED
-typedef enum { PROCESS_DPI_UNAWARE = 0, PROCESS_SYSTEM_DPI_AWARE = 1, PROCESS_PER_MONITOR_DPI_AWARE = 2 } PROCESS_DPI_AWARENESS;
-typedef enum { MDT_EFFECTIVE_DPI = 0, MDT_ANGULAR_DPI = 1, MDT_RAW_DPI = 2, MDT_DEFAULT = MDT_EFFECTIVE_DPI } MONITOR_DPI_TYPE;
+typedef enum
+{
+    PROCESS_DPI_UNAWARE           = 0,
+    PROCESS_SYSTEM_DPI_AWARE      = 1,
+    PROCESS_PER_MONITOR_DPI_AWARE = 2
+} PROCESS_DPI_AWARENESS;
+typedef enum
+{
+    MDT_EFFECTIVE_DPI = 0,
+    MDT_ANGULAR_DPI   = 1,
+    MDT_RAW_DPI       = 2,
+    MDT_DEFAULT       = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
 #endif
 #ifndef _DPI_AWARENESS_CONTEXTS_
 DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE    (DPI_AWARENESS_CONTEXT)-3
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE (DPI_AWARENESS_CONTEXT) - 3
 #endif
 #ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 (DPI_AWARENESS_CONTEXT)-4
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 (DPI_AWARENESS_CONTEXT) - 4
 #endif
 typedef HRESULT(WINAPI* PFN_SetProcessDpiAwareness)(PROCESS_DPI_AWARENESS);                     // Shcore.lib + dll, Windows 8.1+
 typedef HRESULT(WINAPI* PFN_GetDpiForMonitor)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);        // Shcore.lib + dll, Windows 8.1+
@@ -987,7 +1009,7 @@ void ImGui_ImplWin32_EnableDpiAwareness()
 }
 
 #if defined(_MSC_VER) && !defined(NOGDI)
-#pragma comment(lib, "gdi32")   // Link with gdi32.lib for GetDeviceCaps(). MinGW will require linking with '-lgdi32'
+#pragma comment(lib, "gdi32") // Link with gdi32.lib for GetDeviceCaps(). MinGW will require linking with '-lgdi32'
 #endif
 
 float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
@@ -995,7 +1017,7 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
     UINT xdpi = 96, ydpi = 96;
     if (_IsWindows8Point1OrGreater())
     {
-        static HINSTANCE shcore_dll = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
+        static HINSTANCE shcore_dll                    = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
         static PFN_GetDpiForMonitor GetDpiForMonitorFn = nullptr;
         if (GetDpiForMonitorFn == nullptr && shcore_dll != nullptr)
             GetDpiForMonitorFn = (PFN_GetDpiForMonitor)::GetProcAddress(shcore_dll, "GetDpiForMonitor");
@@ -1008,8 +1030,8 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
     }
 #ifndef NOGDI
     const HDC dc = ::GetDC(nullptr);
-    xdpi = ::GetDeviceCaps(dc, LOGPIXELSX);
-    ydpi = ::GetDeviceCaps(dc, LOGPIXELSY);
+    xdpi         = ::GetDeviceCaps(dc, LOGPIXELSX);
+    ydpi         = ::GetDeviceCaps(dc, LOGPIXELSY);
     IM_ASSERT(xdpi == ydpi); // Please contact me if you hit this assert!
     ::ReleaseDC(nullptr, dc);
 #endif
@@ -1027,7 +1049,7 @@ float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd)
 //--------------------------------------------------------------------------------------------------------
 
 #if defined(_MSC_VER)
-#pragma comment(lib, "dwmapi")  // Link with dwmapi.lib. MinGW will require linking with '-ldwmapi'
+#pragma comment(lib, "dwmapi") // Link with dwmapi.lib. MinGW will require linking with '-ldwmapi'
 #endif
 
 // [experimental]
@@ -1046,18 +1068,18 @@ void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd)
     DWORD color;
     if (_IsWindows8OrGreater() || (SUCCEEDED(::DwmGetColorizationColor(&color, &opaque)) && !opaque))
     {
-        HRGN region = ::CreateRectRgn(0, 0, -1, -1);
+        HRGN region       = ::CreateRectRgn(0, 0, -1, -1);
         DWM_BLURBEHIND bb = {};
-        bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
-        bb.hRgnBlur = region;
-        bb.fEnable = TRUE;
+        bb.dwFlags        = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+        bb.hRgnBlur       = region;
+        bb.fEnable        = TRUE;
         ::DwmEnableBlurBehindWindow((HWND)hwnd, &bb);
         ::DeleteObject(region);
     }
     else
     {
         DWM_BLURBEHIND bb = {};
-        bb.dwFlags = DWM_BB_ENABLE;
+        bb.dwFlags        = DWM_BB_ENABLE;
         ::DwmEnableBlurBehindWindow((HWND)hwnd, &bb);
     }
 }
@@ -1071,13 +1093,18 @@ void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd)
 // Helper structure we store in the void* PlatformUserData field of each ImGuiViewport to easily retrieve our backend data.
 struct ImGui_ImplWin32_ViewportData
 {
-    HWND    Hwnd;               // Stored in ImGuiViewport::PlatformHandle + PlatformHandleRaw
-    HWND    HwndParent;
-    bool    HwndOwned;
-    DWORD   DwStyle;
-    DWORD   DwExStyle;
+    HWND Hwnd; // Stored in ImGuiViewport::PlatformHandle + PlatformHandleRaw
+    HWND HwndParent;
+    bool HwndOwned;
+    DWORD DwStyle;
+    DWORD DwExStyle;
 
-    ImGui_ImplWin32_ViewportData() { Hwnd = HwndParent = nullptr; HwndOwned = false;  DwStyle = DwExStyle = 0; }
+    ImGui_ImplWin32_ViewportData()
+    {
+        Hwnd = HwndParent = nullptr;
+        HwndOwned         = false;
+        DwStyle = DwExStyle = 0;
+    }
     ~ImGui_ImplWin32_ViewportData() { IM_ASSERT(Hwnd == nullptr); }
 };
 
@@ -1108,20 +1135,21 @@ static HWND ImGui_ImplWin32_GetHwndFromViewportID(ImGuiID viewport_id)
 static void ImGui_ImplWin32_CreateWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplWin32_ViewportData* vd = IM_NEW(ImGui_ImplWin32_ViewportData)();
-    viewport->PlatformUserData = vd;
+    viewport->PlatformUserData       = vd;
 
     // Select style and parent window
     ImGui_ImplWin32_GetWin32StyleFromViewportFlags(viewport->Flags, &vd->DwStyle, &vd->DwExStyle);
     vd->HwndParent = ImGui_ImplWin32_GetHwndFromViewportID(viewport->ParentViewportId);
 
     // Create window
-    RECT rect = { (LONG)viewport->Pos.x, (LONG)viewport->Pos.y, (LONG)(viewport->Pos.x + viewport->Size.x), (LONG)(viewport->Pos.y + viewport->Size.y) };
+    RECT rect = {(LONG)viewport->Pos.x, (LONG)viewport->Pos.y, (LONG)(viewport->Pos.x + viewport->Size.x), (LONG)(viewport->Pos.y + viewport->Size.y)};
     ::AdjustWindowRectEx(&rect, vd->DwStyle, FALSE, vd->DwExStyle);
     vd->Hwnd = ::CreateWindowExW(
-        vd->DwExStyle, L"ImGui Platform", L"Untitled", vd->DwStyle,       // Style, class name, window name
-        rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,    // Window area
-        vd->HwndParent, nullptr, ::GetModuleHandle(nullptr), nullptr);          // Owner window, Menu, Instance, Param
-    vd->HwndOwned = true;
+        vd->DwExStyle, L"ImGui Platform", L"Untitled", vd->DwStyle,          // Style, class name, window name
+        rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, // Window area
+        vd->HwndParent, nullptr, ::GetModuleHandle(nullptr), nullptr
+    ); // Owner window, Menu, Instance, Param
+    vd->HwndOwned                   = true;
     viewport->PlatformRequestResize = false;
     viewport->PlatformHandle = viewport->PlatformHandleRaw = vd->Hwnd;
 
@@ -1156,7 +1184,7 @@ static void ImGui_ImplWin32_ShowWindow(ImGuiViewport* viewport)
     // ShowParent() also brings parent to front, which is not always desirable,
     // so we temporarily disable parenting. (#7354)
     if (vd->HwndParent != NULL)
-        ::SetWindowLongPtr(vd->Hwnd, GWLP_HWNDPARENT, (LONG_PTR)nullptr);
+        ::SetWindowLongPtr(vd->Hwnd, GWLP_HWNDPARENT, (LONG_PTR) nullptr);
 
     if (viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
         ::ShowWindow(vd->Hwnd, SW_SHOWNA);
@@ -1199,15 +1227,15 @@ static void ImGui_ImplWin32_UpdateWindow(ImGuiViewport* viewport)
     {
         // (Optional) Update TopMost state if it changed _after_ creation
         bool top_most_changed = (vd->DwExStyle & WS_EX_TOPMOST) != (new_ex_style & WS_EX_TOPMOST);
-        HWND insert_after = top_most_changed ? ((viewport->Flags & ImGuiViewportFlags_TopMost) ? HWND_TOPMOST : HWND_NOTOPMOST) : 0;
-        UINT swp_flag = top_most_changed ? 0 : SWP_NOZORDER;
+        HWND insert_after     = top_most_changed ? ((viewport->Flags & ImGuiViewportFlags_TopMost) ? HWND_TOPMOST : HWND_NOTOPMOST) : 0;
+        UINT swp_flag         = top_most_changed ? 0 : SWP_NOZORDER;
 
         // Apply flags and position (since it is affected by flags)
-        vd->DwStyle = new_style;
+        vd->DwStyle   = new_style;
         vd->DwExStyle = new_ex_style;
         ::SetWindowLong(vd->Hwnd, GWL_STYLE, vd->DwStyle);
         ::SetWindowLong(vd->Hwnd, GWL_EXSTYLE, vd->DwExStyle);
-        RECT rect = { (LONG)viewport->Pos.x, (LONG)viewport->Pos.y, (LONG)(viewport->Pos.x + viewport->Size.x), (LONG)(viewport->Pos.y + viewport->Size.y) };
+        RECT rect = {(LONG)viewport->Pos.x, (LONG)viewport->Pos.y, (LONG)(viewport->Pos.x + viewport->Size.x), (LONG)(viewport->Pos.y + viewport->Size.y)};
         ::AdjustWindowRectEx(&rect, vd->DwStyle, FALSE, vd->DwExStyle); // Client to Screen
         ::SetWindowPos(vd->Hwnd, insert_after, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, swp_flag | SWP_NOACTIVATE | SWP_FRAMECHANGED);
         ::ShowWindow(vd->Hwnd, SW_SHOWNA); // This is necessary when we alter the style
@@ -1219,7 +1247,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    POINT pos = { 0, 0 };
+    POINT pos = {0, 0};
     ::ClientToScreen(vd->Hwnd, &pos);
     return ImVec2((float)pos.x, (float)pos.y);
 }
@@ -1227,15 +1255,15 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
 static void ImGui_ImplWin32_UpdateWin32StyleFromWindow(ImGuiViewport* viewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
-    vd->DwStyle = ::GetWindowLongW(vd->Hwnd, GWL_STYLE);
-    vd->DwExStyle = ::GetWindowLongW(vd->Hwnd, GWL_EXSTYLE);
+    vd->DwStyle                      = ::GetWindowLongW(vd->Hwnd, GWL_STYLE);
+    vd->DwExStyle                    = ::GetWindowLongW(vd->Hwnd, GWL_EXSTYLE);
 }
 
 static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    RECT rect = { (LONG)pos.x, (LONG)pos.y, (LONG)pos.x, (LONG)pos.y };
+    RECT rect = {(LONG)pos.x, (LONG)pos.y, (LONG)pos.x, (LONG)pos.y};
     if (viewport->Flags & ImGuiViewportFlags_OwnedByApp)
         ImGui_ImplWin32_UpdateWin32StyleFromWindow(viewport); // Not our window, poll style before using
     ::AdjustWindowRectEx(&rect, vd->DwStyle, FALSE, vd->DwExStyle);
@@ -1255,9 +1283,9 @@ static void ImGui_ImplWin32_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    RECT rect = { 0, 0, (LONG)size.x, (LONG)size.y };
+    RECT rect = {0, 0, (LONG)size.x, (LONG)size.y};
     if (viewport->Flags & ImGuiViewportFlags_OwnedByApp)
-        ImGui_ImplWin32_UpdateWin32StyleFromWindow(viewport); // Not our window, poll style before using
+        ImGui_ImplWin32_UpdateWin32StyleFromWindow(viewport);       // Not our window, poll style before using
     ::AdjustWindowRectEx(&rect, vd->DwStyle, FALSE, vd->DwExStyle); // Client to Screen
     ::SetWindowPos(vd->Hwnd, nullptr, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
@@ -1343,7 +1371,11 @@ static void ImGui_ImplWin32_OnChangedViewport(ImGuiViewport* viewport)
 #endif
 }
 
-namespace ImGui { extern ImGuiIO& GetIO(ImGuiContext*); extern ImGuiPlatformIO& GetPlatformIO(ImGuiContext*); }
+namespace ImGui
+{
+extern ImGuiIO& GetIO(ImGuiContext*);
+extern ImGuiPlatformIO& GetPlatformIO(ImGuiContext*);
+} // namespace ImGui
 
 static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1352,9 +1384,9 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
     if (ctx == NULL)
         return DefWindowProc(hWnd, msg, wParam, lParam); // unlike ImGui_ImplWin32_WndProcHandler() we are called directly by Windows, we can't just return 0.
 
-    ImGuiIO& io = ImGui::GetIO(ctx);
+    ImGuiIO& io                  = ImGui::GetIO(ctx);
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO(ctx);
-    LRESULT result = 0;
+    LRESULT result               = 0;
     if (ImGui_ImplWin32_WndProcHandlerEx(hWnd, msg, wParam, lParam, io))
         result = 1;
     else if (ImGuiViewport* viewport = ImGui_ImplWin32_FindViewportByPlatformHandle(platform_io, hWnd))
@@ -1392,48 +1424,48 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
 static void ImGui_ImplWin32_InitMultiViewportSupport(bool platform_has_own_dc)
 {
     WNDCLASSEXW wcex;
-    wcex.cbSize = sizeof(WNDCLASSEXW);
-    wcex.style = CS_HREDRAW | CS_VREDRAW | (platform_has_own_dc ? CS_OWNDC : 0);
-    wcex.lpfnWndProc = ImGui_ImplWin32_WndProcHandler_PlatformWindow;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = ::GetModuleHandle(nullptr);
-    wcex.hIcon = nullptr;
-    wcex.hCursor = nullptr;
+    wcex.cbSize        = sizeof(WNDCLASSEXW);
+    wcex.style         = CS_HREDRAW | CS_VREDRAW | (platform_has_own_dc ? CS_OWNDC : 0);
+    wcex.lpfnWndProc   = ImGui_ImplWin32_WndProcHandler_PlatformWindow;
+    wcex.cbClsExtra    = 0;
+    wcex.cbWndExtra    = 0;
+    wcex.hInstance     = ::GetModuleHandle(nullptr);
+    wcex.hIcon         = nullptr;
+    wcex.hCursor       = nullptr;
     wcex.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
-    wcex.lpszMenuName = nullptr;
+    wcex.lpszMenuName  = nullptr;
     wcex.lpszClassName = L"ImGui Platform";
-    wcex.hIconSm = nullptr;
+    wcex.hIconSm       = nullptr;
     ::RegisterClassExW(&wcex);
 
     ImGui_ImplWin32_UpdateMonitors();
 
     // Register platform interface (will be coupled with a renderer interface)
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    platform_io.Platform_CreateWindow = ImGui_ImplWin32_CreateWindow;
-    platform_io.Platform_DestroyWindow = ImGui_ImplWin32_DestroyWindow;
-    platform_io.Platform_ShowWindow = ImGui_ImplWin32_ShowWindow;
-    platform_io.Platform_SetWindowPos = ImGui_ImplWin32_SetWindowPos;
-    platform_io.Platform_GetWindowPos = ImGui_ImplWin32_GetWindowPos;
-    platform_io.Platform_SetWindowSize = ImGui_ImplWin32_SetWindowSize;
-    platform_io.Platform_GetWindowSize = ImGui_ImplWin32_GetWindowSize;
-    platform_io.Platform_SetWindowFocus = ImGui_ImplWin32_SetWindowFocus;
-    platform_io.Platform_GetWindowFocus = ImGui_ImplWin32_GetWindowFocus;
+    ImGuiPlatformIO& platform_io            = ImGui::GetPlatformIO();
+    platform_io.Platform_CreateWindow       = ImGui_ImplWin32_CreateWindow;
+    platform_io.Platform_DestroyWindow      = ImGui_ImplWin32_DestroyWindow;
+    platform_io.Platform_ShowWindow         = ImGui_ImplWin32_ShowWindow;
+    platform_io.Platform_SetWindowPos       = ImGui_ImplWin32_SetWindowPos;
+    platform_io.Platform_GetWindowPos       = ImGui_ImplWin32_GetWindowPos;
+    platform_io.Platform_SetWindowSize      = ImGui_ImplWin32_SetWindowSize;
+    platform_io.Platform_GetWindowSize      = ImGui_ImplWin32_GetWindowSize;
+    platform_io.Platform_SetWindowFocus     = ImGui_ImplWin32_SetWindowFocus;
+    platform_io.Platform_GetWindowFocus     = ImGui_ImplWin32_GetWindowFocus;
     platform_io.Platform_GetWindowMinimized = ImGui_ImplWin32_GetWindowMinimized;
-    platform_io.Platform_SetWindowTitle = ImGui_ImplWin32_SetWindowTitle;
-    platform_io.Platform_SetWindowAlpha = ImGui_ImplWin32_SetWindowAlpha;
-    platform_io.Platform_UpdateWindow = ImGui_ImplWin32_UpdateWindow;
-    platform_io.Platform_GetWindowDpiScale = ImGui_ImplWin32_GetWindowDpiScale; // FIXME-DPI
-    platform_io.Platform_OnChangedViewport = ImGui_ImplWin32_OnChangedViewport; // FIXME-DPI
+    platform_io.Platform_SetWindowTitle     = ImGui_ImplWin32_SetWindowTitle;
+    platform_io.Platform_SetWindowAlpha     = ImGui_ImplWin32_SetWindowAlpha;
+    platform_io.Platform_UpdateWindow       = ImGui_ImplWin32_UpdateWindow;
+    platform_io.Platform_GetWindowDpiScale  = ImGui_ImplWin32_GetWindowDpiScale; // FIXME-DPI
+    platform_io.Platform_OnChangedViewport  = ImGui_ImplWin32_OnChangedViewport; // FIXME-DPI
 
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
+    ImGuiViewport* main_viewport     = ImGui::GetMainViewport();
+    ImGui_ImplWin32_Data* bd         = ImGui_ImplWin32_GetBackendData();
     ImGui_ImplWin32_ViewportData* vd = IM_NEW(ImGui_ImplWin32_ViewportData)();
-    vd->Hwnd = bd->hWnd;
-    vd->HwndOwned = false;
-    main_viewport->PlatformUserData = vd;
+    vd->Hwnd                         = bd->hWnd;
+    vd->HwndOwned                    = false;
+    main_viewport->PlatformUserData  = vd;
 }
 
 static void ImGui_ImplWin32_ShutdownMultiViewportSupport()
