@@ -92,7 +92,7 @@ bool EditorWindow::onInitialize()
 
 void EditorWindow::onNextFrame()
 {
-	if (false == _nativeWindow.shouldRender)
+	if (false == _shouldPresent)
 	{
 		return;
 	}
@@ -121,7 +121,7 @@ void EditorWindow::onResize()
 
 void EditorWindow::onRender()
 {
-	if (false == _nativeWindow.shouldRender)
+	if (false == _shouldPresent)
 	{
 		return;
 	}
@@ -146,7 +146,7 @@ void EditorWindow::onRender()
 
 void EditorWindow::onPresent()
 {
-	if (!_nativeWindow.shouldRender)
+	if (!_shouldPresent)
 	{
 		return;
 	}
