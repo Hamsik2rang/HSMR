@@ -5,7 +5,11 @@
 #include "RHI/RenderHandle.h"
 #include "Engine/Renderer/ForwardPath.h"
 
+#include "Core/HAL/Input.h"
+
 #include "Editor/GUI/ImGuiExtension.h"
+#include "Editor/GUI/GUIContext.h"
+#include "Editor/Core/EditorApplication.h"
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
@@ -111,6 +115,7 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate()
 {
+	processShortcuts();
 	updateEditorCamera();
 }
 
@@ -221,5 +226,33 @@ void EditorWindow::updateEditorCamera()
 	}
 }
 
+void EditorWindow::processShortcuts()
+{
+	// Ctrl+S (Windows) or Cmd+S (Mac) to save layout
+#if defined(__APPLE__)
+	bool modifierPressed = Input::IsPressed(Input::Button::LWIN_OR_COMMAND);
+#else
+	bool modifierPressed = Input::IsPressed(Input::Button::CONTROL);
+#endif
+
+	static bool sKeyWasPressed = false;
+
+	if (modifierPressed && Input::IsPressed(Input::Button::S))
+	{
+		if (!sKeyWasPressed)
+		{
+			auto* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+			if (guiContext)
+			{
+				guiContext->SaveLayout("");
+			}
+			sKeyWasPressed = true;
+		}
+	}
+	else
+	{
+		sKeyWasPressed = false;
+	}
+}
 
 HS_NS_EDITOR_END
