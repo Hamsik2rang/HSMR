@@ -31,9 +31,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
-        s_boundHsWindow->shouldClose = false;
-        s_boundHsWindow->shouldUpdate = true;
-        s_boundHsWindow->shouldRender = true;
         PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_OPEN);
 
         break;
@@ -115,10 +112,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
     case WM_CLOSE:
     {
-        s_boundHsWindow->shouldClose  = true;
-        s_boundHsWindow->shouldUpdate = false;
-        s_boundHsWindow->shouldRender = false;
-
         PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_CLOSE);
         PostQuitMessage(0);
         break;
@@ -134,7 +127,7 @@ HS_NS_BEGIN
 
 bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow)
 {
-    s_boundHsWindow     = &outNativeWindow;
+    s_boundHsWindow = &outNativeWindow;
 
     HINSTANCE hInstance = GetModuleHandleW(nullptr);
 
@@ -214,13 +207,8 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.isMinimized   = false;
     outNativeWindow.resizable     = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
     outNativeWindow.useHDR        = (flag & EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY) != EWindowFlags::NONE;
-    outNativeWindow.shouldRender  = true;
-    outNativeWindow.shouldUpdate  = true;
-    outNativeWindow.shouldClose   = false;
 
     // TODO: DISPLAY_DEVICEW, DEVMODEW 사용해서 추가 caps가져오기.
-
-
 
     return true;
 }

@@ -112,12 +112,14 @@ void Window::ProcessEvent()
 		}
 		case NativeEvent::Type::WINDOW_FOCUS_IN:
 		{
-
+            _shouldUpdate = true;
+            _shouldPresent = true;
 			break;
 		}
 		case NativeEvent::Type::WINDOW_FOCUS_OUT:
 		{
-
+            _shouldUpdate  = false;
+            _shouldPresent = false;
 			break;
 		}
 		default:
