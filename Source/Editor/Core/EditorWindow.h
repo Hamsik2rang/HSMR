@@ -48,6 +48,7 @@ private:
     void onRenderGUI();
 
     void updateEditorCamera();
+    void processShortcuts();
 
     std::vector<RenderTarget> _renderTargets;
 

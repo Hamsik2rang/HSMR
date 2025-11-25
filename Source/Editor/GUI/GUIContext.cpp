@@ -178,10 +178,14 @@ void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
 
 void GUIContext::LoadLayout(const std::string& layoutPath)
 {
+	std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+	ImGui::LoadIniSettingsFromDisk(fullPath.c_str());
 }
 
 void GUIContext::SaveLayout(const std::string& layoutPath)
 {
+	std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+	ImGui::SaveIniSettingsToDisk(fullPath.c_str());
 }
 
 HS_NS_EDITOR_END

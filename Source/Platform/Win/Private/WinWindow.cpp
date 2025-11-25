@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <cassert>
 
+#include "Core/HAL/Input.h"
+
 using namespace hs;
 
 static hs::NativeWindow* s_boundHsWindow                 = nullptr;
@@ -99,14 +101,74 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
     {
-        uint32 key = wParam;
-
+        uint8 keyCode = static_cast<uint8>(wParam);
+        if (keyCode < static_cast<uint8>(Input::Button::COUNT))
+        {
+            Input::s_button[keyCode].isPressed = 1;
+            Input::s_button[keyCode].repeatCount = (lParam & 0xFFFF);
+        }
         break;
     }
     case WM_KEYUP:
+    case WM_SYSKEYUP:
     {
-
+        uint8 keyCode = static_cast<uint8>(wParam);
+        if (keyCode < static_cast<uint8>(Input::Button::COUNT))
+        {
+            Input::s_button[keyCode].isPressed = 0;
+            Input::s_button[keyCode].repeatCount = 0;
+        }
+        break;
+    }
+    case WM_LBUTTONDOWN:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 1;
+        break;
+    }
+    case WM_LBUTTONUP:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 0;
+        break;
+    }
+    case WM_RBUTTONDOWN:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 1;
+        break;
+    }
+    case WM_RBUTTONUP:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 0;
+        break;
+    }
+    case WM_MBUTTONDOWN:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 1;
+        break;
+    }
+    case WM_MBUTTONUP:
+    {
+        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 0;
+        break;
+    }
+    case WM_MOUSEMOVE:
+    {
+        Input::s_move.xPoint = LOWORD(lParam);
+        Input::s_move.yPoint = HIWORD(lParam);
+        Input::s_move.isMoved = 1;
+        break;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        Input::s_scroll.vOffset = GET_WHEEL_DELTA_WPARAM(wParam);
+        Input::s_scroll.isScrolled = 1;
+        break;
+    }
+    case WM_MOUSEHWHEEL:
+    {
+        Input::s_scroll.hOffset = GET_WHEEL_DELTA_WPARAM(wParam);
+        Input::s_scroll.isScrolled = 1;
         break;
     }
     case WM_DESTROY:
@@ -224,6 +286,10 @@ void ShowNativeWindowInternal(const NativeWindow& nativeWindow)
 
 void PollNativeEventInternal(NativeWindow& nativeWindow)
 {
+    // Reset per-frame input states
+    Input::s_move.isMoved = 0;
+    Input::s_scroll.isScrolled = 0;
+
     s_boundHsWindow = &nativeWindow;
     MSG msg;
     while (::PeekMessage(&msg, (HWND)nativeWindow.handle, 0u, 0u, PM_REMOVE))
