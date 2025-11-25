@@ -166,12 +166,18 @@ void EditorWindow::onShutdown()
 
 void EditorWindow::onRenderGUI()
 {
+    GUIContext* guiContext = GetApplication()->GetGUIContext();
+
+	guiContext->SetScaleFactor(_nativeWindow.scale);
+
 	// TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
 	ImGuiExtension::BeginRender(_swapchain);
 
 	_basePanel->Draw(); // Draw panel tree.
 
 	ImGuiExtension::EndRender();
+
+	guiContext->SetScaleFactor(1.0f);
 }
 
 void EditorWindow::onSuspend()

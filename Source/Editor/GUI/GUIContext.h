@@ -30,8 +30,10 @@ public:
 	void Finalize();
 	void NextFrame();
 	void SetColorTheme(bool useWhite);
-	void SetFont(const std::string& fontPath, float fontSize = 18.0f);
+	void SetFont(const std::string& fontPath, float defaultFontSize = 16.0f);
 
+    HS_FORCEINLINE float GetScaleFactor() const { return _scaleFactor; }
+	void SetScaleFactor(float scale);
 	void LoadLayout(const std::string& layoutPath);
 	void SaveLayout(const std::string& layoutPath);
 
@@ -39,6 +41,8 @@ private:
 	ImGuiContext* _context; // 네임스페이스 없이 사용
 	ImFont* _font;
 	std::string _assetDirectory;
+
+	float _scaleFactor;
 };
 
 HS_NS_EDITOR_END
