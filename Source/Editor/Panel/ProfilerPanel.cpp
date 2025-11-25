@@ -38,16 +38,14 @@ void ProfilerPanel::Draw()
 {
 	static bool open = true;
 
-	ImGuiIO& io = ImGui::GetIO();
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoResize;
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
-	ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-	ImGui::SetNextWindowSize(ImVec2(250, 100), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.35f);
 	if (ImGui::Begin("Profiler Overlay", &open, windowFlags))
 	{
 		double elapsedTime = Timer::GetElapsedMilliseconds();
 		double delta = elapsedTime - _lastFrameTime;
-		ImGui::Text("Frame: %.1f FPS(%.3f ms/frame)\t", 1000.0f / delta, delta);
+		ImGui::Text("Frame: %.1f FPS (%.3f ms/frame)", 1000.0f / delta, delta);
 		_lastFrameTime = elapsedTime;
 	}
 	ImGui::End();
