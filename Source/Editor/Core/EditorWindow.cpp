@@ -38,6 +38,7 @@ bool EditorWindow::onInitialize()
 	scInfo.useDepth = false;
 	scInfo.useMSAA = false;
 	scInfo.useStencil = false;
+    scInfo.enableVSync  = true;
 
 #if __WINDOWS__
 	_rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
@@ -133,13 +134,13 @@ void EditorWindow::onRender()
 	RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
 	cmdBuffer->Begin();
 
-	uint8         frameIndex = _swapchain->GetCurrentFrameIndex();
-	RenderTarget* curRT = &_renderTargets[frameIndex];
+	uint8         imageIndex = _swapchain->GetCurrentImageIndex();
+    RenderTarget* curRT = &_renderTargets[imageIndex];
 
 	//     1. Render Scene to Scene Panel
 	_renderer->Render({}, curRT);
 
-	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[frameIndex]);
+	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
 
 	// 2. Render GUI
 	onRenderGUI();

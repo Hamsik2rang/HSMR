@@ -360,6 +360,7 @@ struct SwapchainInfo
 	bool useDepth;
 	bool useStencil;
 	bool useMSAA;
+    bool enableVSync;
 
 	const NativeWindow* nativeWindow;
 };
