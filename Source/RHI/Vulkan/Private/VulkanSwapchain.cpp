@@ -181,9 +181,7 @@ bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
 	vkGetPhysicalDeviceSurfacePresentModesKHR(_deviceVulkan->physicalDevice, surface, &presentModeCount, presentModes.data());
 
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
-	if (_info.enableVSync)
 	{
-		// VSync ON: MAILBOX (triple buffering, low latency) > FIFO (guaranteed)
 		for (size_t i = 0; i < presentModeCount; i++)
 		{
 			if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
@@ -191,21 +189,9 @@ bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
 				presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 				break;
 			}
-		}
-	}
-	else
-	{
-		// VSync OFF: IMMEDIATE (no wait) > FIFO_RELAXED > FIFO
-		for (size_t i = 0; i < presentModeCount; i++)
-		{
 			if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
 			{
 				presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-				break;
-			}
-			if (presentModes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
-			{
-				presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 			}
 		}
 	}
