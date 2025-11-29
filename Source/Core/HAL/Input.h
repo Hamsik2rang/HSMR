@@ -9,6 +9,11 @@
 
 #include "Precompile.h"
 
+#ifdef _WIN32
+#pragma push_macro("DELETE")
+#undef DELETE
+#endif
+
 HS_NS_BEGIN
 
 class HS_API Input
@@ -158,5 +163,10 @@ public:
 };
 
 HS_NS_END
+
+
+#ifdef _WIN32
+#pragma pop_macro("DELETE")
+#endif
 
 #endif

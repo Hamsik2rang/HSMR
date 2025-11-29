@@ -23,7 +23,7 @@ EngineContext* CreateEngineContext(const char* name, ERHIPlatform rhiPlatform)
     RHIContext* rhiContext = RHIContext::Create(rhiPlatform);
     g_engineContext->rhiContext = rhiContext;
 
-    
+    return g_engineContext;
 }
 
 HS_NS_END

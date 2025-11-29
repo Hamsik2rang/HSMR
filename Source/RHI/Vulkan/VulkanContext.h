@@ -82,9 +82,11 @@ public:
 
 	void WaitForIdle() const final;
 
+    HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::VULKAN; }
+
 	// TODO: ImGui 백엔드 변경되면 없애야합니다.
-	const VkInstance GetInstance() const { return _instanceVk; }
-	const VulkanDevice* GetDevice() const { return &(_device); }
+	HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }
+	HS_FORCEINLINE const VulkanDevice* GetDevice() const { return &(_device); }
 
 private:
 	bool createInstance();
