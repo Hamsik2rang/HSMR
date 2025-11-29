@@ -36,7 +36,7 @@ private:
 	static void clearDeletedSwapchainData();
 
 	static std::vector<std::vector<void*>> s_AddedTexturesPerFrame;
-	static uint8 s_currentFrameIndex;
+	static uint8 s_currentImageIndex;
 	static Swapchain* s_currentSwapchain;
 };
 
