@@ -16,21 +16,21 @@ using namespace hs::editor;
 int hs_editor_main(int argc, char* argv[])
 {
     SystemContext::Init();
-    EngineContext* engineContext = CreateEngineContext("HSMR", ERHIPlatform::METAL);
+    
     // TODO: Parse command arguments
     @autoreleasepool
     {
-        EditorApplication* hsApp = new EditorApplication("HSMR", engineContext);
-
+        EditorApplication* app = new EditorApplication("HSMR");
+        
         if ([NSApp delegate] == nil)
         {
             auto bp = true;
         }
-
-        hsApp->Run();
+        
+        app->Run();
+        
+        app->Shutdown();
     }
-    
-    delete engineContext;
     
     return 0;
 }

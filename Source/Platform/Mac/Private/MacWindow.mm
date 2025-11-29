@@ -120,7 +120,7 @@ void ProcessKeyEvent(NSEvent* event, bool isDown)
     hs::Input::Button button = MacKeyCodeToButton([event keyCode]);
     if (button != hs::Input::Button::UNKNOWN)
     {
-        hs::uint8 index = static_cast<hs::uint8>(button);
+        uint8 index = static_cast<uint8>(button);
         hs::Input::s_button[index].isPressed = isDown ? 1 : 0;
         hs::Input::s_button[index].repeatCount = isDown ? ([event isARepeat] ? 1 : 0) : 0;
     }
@@ -129,19 +129,19 @@ void ProcessKeyEvent(NSEvent* event, bool isDown)
 void ProcessModifierFlags(NSEventModifierFlags flags)
 {
     // Shift
-    hs::Input::s_button[static_cast<hs::uint8>(hs::Input::Button::SHIFT)].isPressed =
+    hs::Input::s_button[static_cast<uint8>(hs::Input::Button::SHIFT)].isPressed =
         (flags & NSEventModifierFlagShift) ? 1 : 0;
 
     // Control
-    hs::Input::s_button[static_cast<hs::uint8>(hs::Input::Button::CONTROL)].isPressed =
+    hs::Input::s_button[static_cast<uint8>(hs::Input::Button::CONTROL)].isPressed =
         (flags & NSEventModifierFlagControl) ? 1 : 0;
 
     // Option (Alt)
-    hs::Input::s_button[static_cast<hs::uint8>(hs::Input::Button::ALT)].isPressed =
+    hs::Input::s_button[static_cast<uint8>(hs::Input::Button::ALT)].isPressed =
         (flags & NSEventModifierFlagOption) ? 1 : 0;
 
     // Command
-    hs::Input::s_button[static_cast<hs::uint8>(hs::Input::Button::LWIN_OR_COMMAND)].isPressed =
+    hs::Input::s_button[static_cast<uint8>(hs::Input::Button::LWIN_OR_COMMAND)].isPressed =
         (flags & NSEventModifierFlagCommand) ? 1 : 0;
 }
 
@@ -169,7 +169,7 @@ void ProcessMouseButtonEvent(NSEvent* event, bool isDown)
 
     if (button != hs::Input::Button::UNKNOWN)
     {
-        hs::Input::s_button[static_cast<hs::uint8>(button)].isPressed = isDown ? 1 : 0;
+        hs::Input::s_button[static_cast<uint8>(button)].isPressed = isDown ? 1 : 0;
     }
 }
 
@@ -177,8 +177,8 @@ void ProcessMouseMoveEvent(NSEvent* event)
 {
     NSPoint location = [event locationInWindow];
 
-    hs::Input::s_move.xPoint = static_cast<hs::uint16>(location.x);
-    hs::Input::s_move.yPoint = static_cast<hs::uint16>(location.y);
+    hs::Input::s_move.xPoint = static_cast<uint16>(location.x);
+    hs::Input::s_move.yPoint = static_cast<uint16>(location.y);
     hs::Input::s_move.isMoved = 1;
 }
 
@@ -187,8 +187,8 @@ void ProcessScrollEvent(NSEvent* event)
     CGFloat deltaX = [event scrollingDeltaX];
     CGFloat deltaY = [event scrollingDeltaY];
 
-    hs::Input::s_scroll.hOffset = static_cast<hs::uint16>(deltaX);
-    hs::Input::s_scroll.vOffset = static_cast<hs::uint16>(deltaY);
+    hs::Input::s_scroll.hOffset = static_cast<uint16>(deltaX);
+    hs::Input::s_scroll.vOffset = static_cast<uint16>(deltaY);
     hs::Input::s_scroll.isScrolled = 1;
 }
 
@@ -333,8 +333,6 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.title     = name;
     outNativeWindow.width     = width;
     outNativeWindow.height    = height;
-    outNativeWindow.shouldRender = true;
-    outNativeWindow.shouldUpdate = true;
     
     outNativeWindow.surfaceWidth = width;
     outNativeWindow.surfaceHeight = height;

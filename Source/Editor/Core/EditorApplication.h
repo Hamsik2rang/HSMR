@@ -20,7 +20,7 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API EditorApplication : public Application
 {
 public:
-	EditorApplication(const char* appName, EngineContext* engineContext) noexcept;
+	EditorApplication(const char* appName) noexcept;
 	~EditorApplication() override;
 
 	void Run() override;
