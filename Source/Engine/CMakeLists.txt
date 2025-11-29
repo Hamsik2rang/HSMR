@@ -111,7 +111,7 @@ if(APPLE)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
         "-Wl, -all_load" Core Platform RHI
-        "-Wl, -force_load" ""${ASSIMP} ${OSX_FRAMEWORK}
+        "-Wl, -force_load" ${ASSIMP} ${OSX_FRAMEWORK}
     )
 else()
     target_link_libraries(${TARGET_NAME}

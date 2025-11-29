@@ -70,7 +70,7 @@ struct HS_API NativeEvent
 
     HS_FORCEINLINE bool operator!=(const NativeEvent& rhs)
     {
-        return (*this) != rhs;
+        return (this->type) != rhs.type;
     }
 };
 
