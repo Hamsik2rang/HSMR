@@ -184,11 +184,11 @@ bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
 	{
 		for (size_t i = 0; i < presentModeCount; i++)
 		{
-			if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
-			{
-				presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-				break;
-			}
+			//if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
+			//{
+			//	presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+			//	break;
+			//}
 			if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
 			{
 				presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
