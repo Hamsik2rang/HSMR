@@ -24,6 +24,7 @@ public:
 
 	HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
 	HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
+	HS_FORCEINLINE uint8		  GetCurrentImageIndex() const override { return _curImageIndex; }
 	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override 
 	{
 		return static_cast<RHICommandBuffer*>(_commandBufferVKs[_frameIndex]); 
@@ -31,7 +32,6 @@ public:
 
 	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]); }
 	HS_FORCEINLINE RHIFramebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
-	HS_FORCEINLINE uint32		  GetCurrentImageIndex() const { return _curImageIndex; }
 
 	VkSwapchainKHR handle = VK_NULL_HANDLE;
 

@@ -12,8 +12,11 @@
 #include "Core/Native/NativeWindow.h"
 #include "RHI/RHIDefinition.h"
 
-namespace hs { class RHICommandBuffer; }
-namespace hs { class RHIFramebuffer; }
+namespace hs
+{
+class RHICommandBuffer;
+class RHIFramebuffer;
+} // namespace hs
 
 HS_NS_BEGIN
 
@@ -27,21 +30,22 @@ public:
     //    HS_FORCEINLINE const std::vector<CommandBuffer*>& GetSubmittedCmdBuffers() const {return _submittedCmdBuffers;}
     //    HS_FORCEINLINE void ClearSubmittedCmdBuffers() { _submittedCmdBuffers.clear();}
 
-    virtual uint8           GetMaxFrameCount() const                   = 0;
-    virtual uint8           GetCurrentFrameIndex() const               = 0;
-    virtual RHICommandBuffer*  GetCommandBufferForCurrentFrame() const    = 0;
-    virtual RHICommandBuffer*  GetCommandBufferByIndex(uint8 index) const = 0;
-    virtual RHIFramebuffer*    GetFramebufferForCurrentFrame() const = 0;
+    virtual uint8 GetMaxFrameCount() const                               = 0;
+    virtual uint8 GetCurrentFrameIndex() const                           = 0;
+    virtual uint8 GetCurrentImageIndex() const                           = 0;
+    virtual RHICommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
+    virtual RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
+    virtual RHIFramebuffer* GetFramebufferForCurrentFrame() const        = 0;
 
     HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->surfaceWidth; }
     HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->surfaceHeight; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
-    HS_FORCEINLINE RHIRenderPass*   GetRenderPass() const { return _renderPass; }
+    HS_FORCEINLINE RHIRenderPass* GetRenderPass() const { return _renderPass; }
 
 protected:
-    SwapchainInfo   _info;
-    RHIRenderPass*     _renderPass;
+    SwapchainInfo _info;
+    RHIRenderPass* _renderPass;
 };
 
 HS_NS_END

@@ -181,14 +181,15 @@ bool SwapchainVulkan::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
 	vkGetPhysicalDeviceSurfacePresentModesKHR(_deviceVulkan->physicalDevice, surface, &presentModeCount, presentModes.data());
 
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    if (false == _info.enableVSync)
 	{
 		for (size_t i = 0; i < presentModeCount; i++)
 		{
-			//if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
-			//{
-			//	presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-			//	break;
-			//}
+			if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR)
+			{
+				presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				break;
+			}
 			if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)
 			{
 				presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
