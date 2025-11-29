@@ -88,6 +88,7 @@ set(HS_RHI_DIR "Source/RHI")
 set(HS_ENGINE_DIR "Source/Engine")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
+set(HS_SHADER_DIR "Shader")
 
 # =========================================
 # 라이브러리 빌드 후 자동 설치 함수 (변경 시에만)
@@ -99,8 +100,8 @@ function(hs_auto_install TARGET_NAME)
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}/dev/lib"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "$<TARGET_FILE:${TARGET_NAME}>"
-                "${INSTALL_FOLDER}/dev/lib/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            "$<TARGET_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/dev/lib/$<TARGET_FILE_NAME:${TARGET_NAME}>"
             COMMENT "[AUTO-INSTALL] ${TARGET_NAME} (if changed)"
             VERBATIM
         )
@@ -108,8 +109,8 @@ function(hs_auto_install TARGET_NAME)
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_FOLDER}"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "$<TARGET_FILE:${TARGET_NAME}>"
-                "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
+            "$<TARGET_FILE:${TARGET_NAME}>"
+            "${INSTALL_FOLDER}/$<TARGET_FILE_NAME:${TARGET_NAME}>"
             COMMENT "[AUTO-INSTALL] ${TARGET_NAME} (if changed)"
             VERBATIM
         )
@@ -122,6 +123,7 @@ add_subdirectory(${HS_RHI_DIR})
 add_subdirectory(${HS_ENGINE_DIR})
 add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
+add_subdirectory(${HS_SHADER_DIR})
 
 add_custom_target(
     RegenerateCMake
