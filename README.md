@@ -6,7 +6,7 @@ HS Mini Renderer - Lightweight cross-platform renderer
 ## Prerequisites
 * CMake (version 3.22.0 or newer)
 ### Windows
-* Visual Studio 2022 (or 2019, though this has not been tested)
+* Visual Studio 2026, 2022 (or 2019, though this has not been tested)
 
 ### MacOS(Apple Silicon)
 * XCode(the latest version)
