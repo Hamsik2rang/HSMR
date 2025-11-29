@@ -1,7 +1,7 @@
 #include "Editor/Core/EditorApplication.h"
 
 #include "Core/Log.h"
-#include "Core/SystemContext.h"
+#include "Core/HAL/Timer.h"
 #include "Core/Native/NativeWindow.h"
 
 #include "Engine/EngineContext.h"
@@ -66,7 +66,8 @@ void EditorApplication::Shutdown()
 
 void EditorApplication::Run()
 {
-	// TODO: Elapse Timer
+    Timer::Start();
+    float lastTime = 0.0f;
 
 	while (true)
 	{
@@ -80,9 +81,13 @@ void EditorApplication::Run()
 			break;
 		}
 
+		float curTime = Timer::GetElapsedMilliseconds();
+        _deltaTime    = curTime - lastTime;
+        lastTime      = curTime;
+        
 		_window->NextFrame();
 
-		_window->Update();
+		_window->Update(_deltaTime);
 
 		_window->Render();
 

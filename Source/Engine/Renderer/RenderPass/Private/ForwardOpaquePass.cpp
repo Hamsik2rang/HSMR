@@ -36,7 +36,7 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
 	_renderPassInfo.colorAttachmentCount = 1;
 	Attachment ca{};
 	ca.format = rtInfo.colorTextureInfos[0].format;
-	ca.clearValue = ClearValue(0.5f, 0.5f, 0.5f, 1.0f);
+	ca.clearValue = ClearValue(0.2f, 0.5f, 0.5f, 1.0f);
 	ca.isDepthStencil = false;
 	ca.loadAction = ELoadAction::CLEAR;
 	ca.storeAction = EStoreAction::STORE;
