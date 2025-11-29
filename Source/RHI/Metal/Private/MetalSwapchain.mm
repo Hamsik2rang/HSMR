@@ -29,14 +29,6 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     NSWindow* window     = (__bridge NSWindow*)(nh->handle);
     HSViewController* vc = (HSViewController*)[window delegate];
 
-    // Configure VSync on CAMetalLayer
-    NSView* contentView = [window contentView];
-    if ([contentView.layer isKindOfClass:[CAMetalLayer class]])
-    {
-        CAMetalLayer* metalLayer = (CAMetalLayer*)contentView.layer;
-        metalLayer.displaySyncEnabled = info.enableVSync ? YES : NO;
-    }
-
     _commandBuffers = new RHICommandBuffer*[_maxFrameCount];
 
     RHIContext* rhiContext = RHIContext::Get();
