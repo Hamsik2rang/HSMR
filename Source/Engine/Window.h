@@ -30,7 +30,7 @@ public:
 
 	void ProcessEvent();
 	void NextFrame();
-	virtual void Update();
+	virtual void Update(float deltaTime);
 	virtual void Render();
 	virtual void Present();
 
@@ -52,7 +52,7 @@ protected:
 
 	virtual bool onInitialize() { return true; }
 	virtual void onNextFrame() {}
-	virtual void onUpdate() {}
+	virtual void onUpdate(float deltaTime) {}
 	virtual void onRender() {}
 	virtual void onPresent() {}
 	virtual void onShutdown() {}

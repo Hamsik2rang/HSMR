@@ -36,7 +36,7 @@ private:
 
     bool onInitialize() override;
     void onNextFrame() override;
-    void onUpdate() override;
+    void onUpdate(float deltaTime) override;
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
