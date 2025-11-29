@@ -4,8 +4,8 @@
 //
 //  Created by Yongsik Im on 2/7/25.
 //
-#ifndef __HS_RESOURCE_MANAGER_H__
-#define __HS_RESOURCE_MANAGER_H__
+#ifndef __HS_OBJECT_MANAGER_H__
+#define __HS_OBJECT_MANAGER_H__
 
 #include "Precompile.h"
 
