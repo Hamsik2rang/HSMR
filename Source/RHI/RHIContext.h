@@ -86,7 +86,7 @@ public:
 	static RHIContext* Get();
 };
 
-extern HS_API RHIContext* g_pRHIContext;
+extern HS_API RHIContext* g_rhiContext;
 
 HS_NS_END
 

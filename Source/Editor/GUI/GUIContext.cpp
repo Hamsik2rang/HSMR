@@ -1,8 +1,11 @@
 #include "Editor/GUI/GUIContext.h"
 
 #include "Core/Log.h"
-#include "Core/HAL/FileSystem.h"
 #include "Core/SystemContext.h"
+
+#include "RHI/Swapchain.h"
+
+#include "Editor/GUI/ImGuiExtension.h"
 
 #include <string>
 
@@ -157,14 +160,12 @@ void GUIContext::SetColorTheme(bool useWhite)
 
 void GUIContext::SetScaleFactor(float scaleFactor)
 {
-    _scaleFactor = scaleFactor;
-
     ImGuiStyle& style = ImGui::GetStyle();
 
-    style.ScaleAllSizes(_scaleFactor);
+    style.ScaleAllSizes(scaleFactor);
 
     ImGuiIO& io        = ImGui::GetIO();
-    io.FontGlobalScale = _scaleFactor;
+    io.FontGlobalScale = scaleFactor;
 }
 
 // Font Push/Pop 어떻게?
@@ -178,14 +179,37 @@ void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
 
 void GUIContext::LoadLayout(const std::string& layoutPath)
 {
-	std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
-	ImGui::LoadIniSettingsFromDisk(fullPath.c_str());
+    std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+    ImGui::LoadIniSettingsFromDisk(fullPath.c_str());
+
+    #ifdef _DEBUG
+    HS_LOG(debug, "GUI Layout info is loaded from %s", fullPath.c_str());
+#endif
 }
 
 void GUIContext::SaveLayout(const std::string& layoutPath)
 {
-	std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
-	ImGui::SaveIniSettingsToDisk(fullPath.c_str());
+    std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+    ImGui::SaveIniSettingsToDisk(fullPath.c_str());
+
+#ifdef _DEBUG
+    HS_LOG(debug, "GUI Layout info is saved into %s", fullPath.c_str());
+#endif
+}
+
+void GUIContext::BeginRender(Swapchain* swapchain)
+{
+    _scaleFactor = swapchain->GetInfo().nativeWindow->scale;
+    SetScaleFactor(_scaleFactor);
+
+    ImGuiExtension::BeginRender(swapchain);
+}
+
+void GUIContext::EndRender()
+{
+    ImGuiExtension::EndRender();
+    _scaleFactor = 1.0f / _scaleFactor;
+    SetScaleFactor(_scaleFactor);
 }
 
 HS_NS_EDITOR_END

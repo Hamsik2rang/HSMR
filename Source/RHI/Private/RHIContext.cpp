@@ -8,13 +8,13 @@
 
 HS_NS_BEGIN
 
-HS_API RHIContext* g_pRHIContext = nullptr;
+HS_API RHIContext* g_rhiContext = nullptr;
 
 RHIContext* RHIContext::Create(ERHIPlatform platform)
 {
-	if (g_pRHIContext)
+	if (g_rhiContext)
 	{
-		return g_pRHIContext;
+		return g_rhiContext;
 	}
 
 	switch (platform)
@@ -22,13 +22,13 @@ RHIContext* RHIContext::Create(ERHIPlatform platform)
 #if defined(__WINDOWS__)
 	case ERHIPlatform::VULKAN:
 	{
-		g_pRHIContext = new VulkanContext();
+		g_rhiContext = new VulkanContext();
 	}
 	break;
 #elif defined(__APPLE__)
 	case ERHIPlatform::METAL:
 	{
-		g_pRHIContext = new MetalContext();
+		g_rhiContext = new MetalContext();
 	}
 	break;
 #endif
@@ -36,19 +36,19 @@ RHIContext* RHIContext::Create(ERHIPlatform platform)
 		HS_LOG(crash, "Unsupported RHI");
 	}
 
-	g_pRHIContext->Initialize();
+	g_rhiContext->Initialize();
 
-	return g_pRHIContext;
+	return g_rhiContext;
 }
 
 RHIContext* RHIContext::Get()
 {
-	if (!g_pRHIContext)
+	if (!g_rhiContext)
 	{
 		HS_LOG(error, "RHIContext is not created");
 	}
 
-	return g_pRHIContext;
+	return g_rhiContext;
 }
 
 HS_NS_END

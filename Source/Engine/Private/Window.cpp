@@ -71,6 +71,7 @@ void Window::ProcessEvent()
 		{
 			_shouldUpdate = true;
 			_shouldPresent = true;
+            onSuspend();
 			onRestore();
 
 			break;

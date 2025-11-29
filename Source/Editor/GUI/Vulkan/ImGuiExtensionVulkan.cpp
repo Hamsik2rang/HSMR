@@ -29,7 +29,7 @@ static VkDescriptorPool s_descriptorPool = VK_NULL_HANDLE;
 static SamplerVulkan* s_samplerVK;
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
-uint8 ImGuiExtension::s_currentFrameIndex = 0;
+uint8 ImGuiExtension::s_currentImageIndex = 0;
 std::vector<std::vector<void*>> ImGuiExtension::s_AddedTexturesPerFrame;
 
 static void check_vk_result(VkResult result)
@@ -69,7 +69,7 @@ void ImGuiExtension::ImageOffscreen(hs::RHITexture* use_texture, const ImVec2& i
 {
 	TextureVulkan* textureVK = static_cast<TextureVulkan*>(use_texture);
 	VkDescriptorSet dSet = ImGui_ImplVulkan_AddTexture(s_samplerVK->handle, textureVK->imageViewVk, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	s_AddedTexturesPerFrame[s_currentFrameIndex].push_back(reinterpret_cast<void*>(dSet));
+	s_AddedTexturesPerFrame[s_currentImageIndex].push_back(reinterpret_cast<void*>(dSet));
 
 	ImGui::Image(reinterpret_cast<ImTextureID>(dSet), image_size, uv0, uv1, tint_col, border_col);
 }
@@ -77,7 +77,7 @@ void ImGuiExtension::ImageOffscreen(hs::RHITexture* use_texture, const ImVec2& i
 void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 {
 	s_currentSwapchain = swapchain;
-	s_currentFrameIndex = 0;
+    s_currentImageIndex = 0;
 	s_AddedTexturesPerFrame.resize(s_currentSwapchain->GetMaxFrameCount());
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
@@ -153,22 +153,23 @@ void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
 		clearDeletedSwapchainData();
 		s_currentSwapchain = swapchain;
 	}
-	s_currentFrameIndex = swapchain->GetCurrentFrameIndex();
-	HS_ASSERT(s_currentFrameIndex < s_AddedTexturesPerFrame.size(), "ImGuiExtension::BeginRender: Current frame index out of bounds");
+    s_currentImageIndex = swapchain->GetCurrentImageIndex();
+    HS_ASSERT(s_currentImageIndex < s_AddedTexturesPerFrame.size(), "ImGuiExtension::BeginRender: Current frame index out of bounds");
 
-	size_t rSetCount = s_AddedTexturesPerFrame[s_currentFrameIndex].size();
+	size_t rSetCount = s_AddedTexturesPerFrame[s_currentImageIndex].size();
 	if (rSetCount > 0)
 	{
+        g_rhiContext->WaitForIdle();
 		for (size_t i = 0; i < rSetCount; i++)
 		{
-			void* rSet = s_AddedTexturesPerFrame[s_currentFrameIndex][i];
+            void* rSet = s_AddedTexturesPerFrame[s_currentImageIndex][i];
 			if (rSet)
 			{
 				ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(rSet));
-				s_AddedTexturesPerFrame[s_currentFrameIndex][i] = nullptr; // Clear the pointer after destruction
+                s_AddedTexturesPerFrame[s_currentImageIndex][i] = nullptr; // Clear the pointer after destruction
 			}
 		}
-		s_AddedTexturesPerFrame[s_currentFrameIndex].clear();
+        s_AddedTexturesPerFrame[s_currentImageIndex].clear();
 	}
 
 	ImGui_ImplVulkan_NewFrame();
