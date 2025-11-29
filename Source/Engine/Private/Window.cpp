@@ -144,9 +144,9 @@ void Window::NextFrame()
 	onNextFrame();
 }
 
-void Window::Update()
+void Window::Update(float deltaTime)
 {
-	onUpdate();
+	onUpdate(deltaTime);
 }
 
 void Window::Render()

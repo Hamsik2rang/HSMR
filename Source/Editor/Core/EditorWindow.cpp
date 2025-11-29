@@ -113,7 +113,7 @@ void EditorWindow::onNextFrame()
 	}
 }
 
-void EditorWindow::onUpdate()
+void EditorWindow::onUpdate(float deltaTime)
 {
 	processShortcuts();
 	updateEditorCamera();

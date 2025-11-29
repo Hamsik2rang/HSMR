@@ -263,7 +263,7 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.surfaceHeight = surfaceRect.bottom - surfaceRect.top;
     outNativeWindow.flags         = flag;
     outNativeWindow.title         = name;
-    outNativeWindow.scale         = dpi / USER_DEFAULT_SCREEN_DPI;
+    outNativeWindow.scale         = (float)dpi / (float)USER_DEFAULT_SCREEN_DPI;
     outNativeWindow.handle        = hWnd;
     outNativeWindow.isMaximized   = false;
     outNativeWindow.isMinimized   = false;
