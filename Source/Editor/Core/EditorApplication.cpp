@@ -3,6 +3,7 @@
 #include "Core/Log.h"
 #include "Core/SystemContext.h"
 #include "Core/Native/NativeWindow.h"
+#include "Core/HAL/Timer.h"
 
 #include "Engine/EngineContext.h"
 #include "Engine/Resource/ObjectManager.h"
@@ -13,6 +14,9 @@
 #if defined(__APPLE__)
 #include "Platform/Mac/AutoReleasePool.h"
 #endif
+
+#include <thread>
+#include <chrono>
 
 HS_NS_EDITOR_BEGIN
 
@@ -66,7 +70,12 @@ void EditorApplication::Shutdown()
 
 void EditorApplication::Run()
 {
-	// TODO: Elapse Timer
+	Timer::Start();
+
+	double lastTimeMs        = 0.0;
+	const bool enableVSync   = true;  // TODO: Get from config
+	const double targetFps   = 60.0;
+	const double targetFrameTimeMs = 1000.0 / targetFps;
 
 	while (true)
 	{
@@ -80,6 +89,10 @@ void EditorApplication::Run()
 			break;
 		}
 
+		double currentTimeMs = Timer::GetElapsedMilliseconds();
+		_deltaTime           = static_cast<float>((currentTimeMs - lastTimeMs) * 0.001);
+		lastTimeMs           = currentTimeMs;
+
 		_window->NextFrame();
 
 		_window->Update();
@@ -89,8 +102,24 @@ void EditorApplication::Run()
 		_window->Present();
 
 		_window->Flush();
+
+		// Frame rate limiting when VSync is disabled
+		if (!enableVSync)
+		{
+			double frameTimeMs   = Timer::GetElapsedMilliseconds() - currentTimeMs;
+			double sleepTimeMs   = targetFrameTimeMs - frameTimeMs;
+
+			if (sleepTimeMs > 1.0)
+			{
+				// Sleep for most of the remaining time to save CPU/power
+				std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(sleepTimeMs - 1.0)));
+			}
+		}
+		// When VSync is enabled, Present() blocks until the next vertical blank,
+		// so no additional frame limiting is needed.
 	}
 
+	Timer::Stop();
 	Shutdown();
 }
 
