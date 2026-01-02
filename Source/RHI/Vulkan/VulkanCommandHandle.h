@@ -57,6 +57,10 @@ struct HS_API CommandBufferVulkan : public RHICommandBuffer
 	void BindComputePipeline(RHIComputePipeline* pipeline) override;
 	void BindComputeResourceSet(RHIResourceSet* rSet) override;
 	void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ) override;
+	void EndComputePass() override;
+
+	// Memory barriers
+	void TextureBarrier(RHITexture* texture) override;
 
 	void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) override;
 	void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) override;

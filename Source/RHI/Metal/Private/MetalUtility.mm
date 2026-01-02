@@ -160,6 +160,7 @@ MTLTextureUsage MetalUtility::ToTextureUsage(ETextureUsage usage)
     MTLTextureUsage result = 0;
     if ((usage & ETextureUsage::SAMPLED) != 0) result |= MTLTextureUsageShaderRead;
     if ((usage & ETextureUsage::STAGING) != 0) result |= MTLTextureUsageShaderWrite;
+    if ((usage & ETextureUsage::STORAGE) != 0) result |= MTLTextureUsageShaderWrite;  // UAV/RWTexture support
     if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
     if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
 
@@ -170,9 +171,9 @@ ETextureUsage MetalUtility::FromTextureUsage(MTLTextureUsage usage)
 {
     ETextureUsage result = ETextureUsage::UNKNOWN;
     if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SAMPLED;
-    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STAGING;
+    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STORAGE;  // Map to STORAGE for compute
     if ((usage & MTLTextureUsageRenderTarget) != 0) result |= (ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::DEPTH_STENCIL_ATTACHMENT);
-    
+
     return result;
 }
 
