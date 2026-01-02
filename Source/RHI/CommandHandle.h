@@ -16,6 +16,7 @@ HS_NS_BEGIN
 class RHIRenderPass;
 class RHIFramebuffer;
 class RHIGraphicsPipeline;
+class RHIComputePipeline;
 class RHIResourceSet;
 
 class HS_API RHICommandQueue : public RHIHandle
@@ -55,7 +56,12 @@ public:
     virtual void DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount) = 0;
     virtual void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) = 0;
     virtual void EndRenderPass() = 0;
-    
+
+    // Compute commands
+    virtual void BindComputePipeline(RHIComputePipeline* pipeline) = 0;
+    virtual void BindComputeResourceSet(RHIResourceSet* rSet) = 0;
+    virtual void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ) = 0;
+
     virtual void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) = 0;
     virtual void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) = 0;
     

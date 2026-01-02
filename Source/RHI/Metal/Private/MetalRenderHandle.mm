@@ -30,4 +30,14 @@ MetalGraphicsPipeline::MetalGraphicsPipeline(const char* name, const GraphicsPip
 MetalGraphicsPipeline::~MetalGraphicsPipeline()
 {
 }
+
+MetalComputePipeline::MetalComputePipeline(const char* name, const ComputePipelineInfo& info)
+    : RHIComputePipeline(name, info)
+{
+}
+
+MetalComputePipeline::~MetalComputePipeline()
+{
+}
+
 HS_NS_END

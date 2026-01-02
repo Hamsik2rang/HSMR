@@ -870,7 +870,8 @@ struct GraphicsPipelineInfo
 
 struct ComputePipelineInfo
 {
-	//...
+	RHIShader* computeShader;
+	RHIResourceLayout* resourceLayout;
 };
 
 template <>

@@ -226,6 +226,33 @@ void CommandBufferVulkan::PopDebugMark()
 
 }
 
+void CommandBufferVulkan::BindComputePipeline(RHIComputePipeline* pipeline)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(pipeline, "Compute Pipeline is nullptr");
 
+	ComputePipelineVulkan* pipelineVK = static_cast<ComputePipelineVulkan*>(pipeline);
+	curComputePipeline = pipelineVK->handle;
+
+	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineVK->handle);
+
+	_isComputeBegan = true;
+	_isGraphicsBegan = false;
+}
+
+void CommandBufferVulkan::BindComputeResourceSet(RHIResourceSet* rSet)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(_isComputeBegan, "Compute pipeline is not bound");
+	// TODO: Implement descriptor set binding for compute
+}
+
+void CommandBufferVulkan::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(_isComputeBegan, "Compute pipeline is not bound");
+
+	vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);
+}
 
 HS_NS_END

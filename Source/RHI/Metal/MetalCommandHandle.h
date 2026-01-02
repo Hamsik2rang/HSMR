@@ -18,6 +18,7 @@ class MetalContext;
 
 struct MetalRenderPass;
 struct MetalGraphicsPipeline;
+struct MetalComputePipeline;
 struct MetalFramebuffer;
 
 struct MetalBuffer;
@@ -57,6 +58,11 @@ public:
     void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) override;
     void EndRenderPass() override;
 
+    // Compute commands
+    void BindComputePipeline(RHIComputePipeline* pipeline) override;
+    void BindComputeResourceSet(RHIResourceSet* rSet) override;
+    void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ) override;
+
     void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) override;
     void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) override;
 
@@ -65,10 +71,12 @@ public:
 
     id<MTLCommandBuffer>        handle;
     id<MTLRenderCommandEncoder> curRenderEncoder;
+    id<MTLComputeCommandEncoder> curComputeEncoder;
     MTLRenderPassDescriptor*    curRenderPassDesc;
     MetalRenderPass*            curBindRenderPass;
     MetalFramebuffer*           curBindFramebuffer;
     MetalGraphicsPipeline*      curBindPipeline;
+    MetalComputePipeline*       curBindComputePipeline;
     MetalBuffer*                curBindIndexBuffer;
 
     id<MTLDevice>       device;

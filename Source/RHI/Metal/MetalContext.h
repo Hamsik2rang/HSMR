@@ -40,6 +40,9 @@ public:
     RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) override;
     void              DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) override;
 
+    RHIComputePipeline* CreateComputePipeline(const char* name, const ComputePipelineInfo& info) override;
+    void             DestroyComputePipeline(RHIComputePipeline* pipeline) override;
+
     RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* path) override;
     RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) override;
     void    DestroyShader(RHIShader* shader) override;
