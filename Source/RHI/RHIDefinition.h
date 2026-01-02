@@ -178,6 +178,14 @@ enum class EPixelFormat
 	B8G8A8R8_UNORM = 80,
 	B8G8A8R8_SRGB = 81,
 
+	// Floating-point formats (for HDR, compute, atmosphere LUTs)
+	R16F = 100,
+	RG16F = 101,
+	RGBA16F = 102,
+	R32F = 110,
+	RG32F = 111,
+	RGBA32F = 112,
+
 	DEPTH32 = 252,
 	STENCIL8 = 253,
 	DEPTH24_STENCIL8 = 255,
