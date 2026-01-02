@@ -255,4 +255,46 @@ void CommandBufferVulkan::Dispatch(uint32 groupCountX, uint32 groupCountY, uint3
 	vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);
 }
 
+void CommandBufferVulkan::EndComputePass()
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+
+	curComputePipeline = VK_NULL_HANDLE;
+	curComputePipelineLayout = VK_NULL_HANDLE;
+	_isComputeBegan = false;
+}
+
+void CommandBufferVulkan::TextureBarrier(RHITexture* texture)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+
+	TextureVulkan* textureVK = static_cast<TextureVulkan*>(texture);
+
+	// Create image memory barrier for compute shader synchronization
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = textureVK->handle;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+	vkCmdPipelineBarrier(
+		handle,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &barrier
+	);
+}
+
 HS_NS_END

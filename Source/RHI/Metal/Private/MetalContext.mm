@@ -398,9 +398,19 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
     desc.mipmapLevelCount      = info.mipLevel;
     desc.usage                 = MetalUtility::ToTextureUsage(info.usage);
     desc.sampleCount           = 1;
-    desc.storageMode           = MTLStorageModeManaged;
     desc.pixelFormat           = MetalUtility::ToPixelFormat(info.format);
     desc.textureType           = MetalUtility::ToTextureType(info.type);
+
+    // Use Private storage mode for compute shader storage textures (GPU-only access)
+    // Use Managed for textures that need CPU readback
+    if ((info.usage & ETextureUsage::STORAGE) != static_cast<ETextureUsage>(0))
+    {
+        desc.storageMode = MTLStorageModePrivate;
+    }
+    else
+    {
+        desc.storageMode = MTLStorageModeManaged;
+    }
 
     MetalTexture->handle = [s_device newTextureWithDescriptor:desc];
 

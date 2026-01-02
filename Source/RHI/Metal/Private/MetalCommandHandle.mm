@@ -351,6 +351,37 @@ void MetalCommandBuffer::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32
     [curComputeEncoder dispatchThreadgroups:threadgroupsPerGrid threadsPerThreadgroup:threadgroupSize];
 }
 
+void MetalCommandBuffer::EndComputePass()
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+
+    if (nil != curComputeEncoder)
+    {
+        [curComputeEncoder endEncoding];
+        curComputeEncoder = nil;
+    }
+
+    curBindComputePipeline = nullptr;
+    _isComputeBegan = false;
+}
+
+void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+
+    // For Metal, we need to use a blit encoder to synchronize texture access
+    // between compute and render passes. This is handled automatically by
+    // ending the compute encoder before starting a render pass.
+    //
+    // For explicit synchronization between compute dispatches, we can use
+    // memoryBarrierWithScope on the compute encoder if it's still active.
+    if (nil != curComputeEncoder)
+    {
+        // Use memory barrier for compute shader synchronization
+        [curComputeEncoder memoryBarrierWithScope:MTLBarrierScopeTextures];
+    }
+}
+
 void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
 {
 }
