@@ -193,6 +193,7 @@ enum class ETextureType
 	TEX_2D,
 	TEX_2D_ARRAY,
 	TEX_CUBE,
+	TEX_3D,
 };
 
 enum class ETextureUsage : uint16
