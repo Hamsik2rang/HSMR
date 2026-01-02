@@ -11,7 +11,7 @@
 #define __HS_ATMOSPHERE_PARAMETERS_H__
 
 #include "Precompile.h"
-#include "ThirdParty/glm/glm.hpp"
+#include "Core/ThirdParty/glm/glm.hpp"
 
 HS_NS_BEGIN
 
