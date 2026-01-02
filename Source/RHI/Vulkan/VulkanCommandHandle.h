@@ -53,13 +53,20 @@ struct HS_API CommandBufferVulkan : public RHICommandBuffer
 
 	void EndRenderPass() override;
 
+	// Compute commands
+	void BindComputePipeline(RHIComputePipeline* pipeline) override;
+	void BindComputeResourceSet(RHIResourceSet* rSet) override;
+	void Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ) override;
+
 	void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) override;
 	void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) override;
 
-	void PushDebugMark(const char* label, float color[4]);
-	void PopDebugMark();
+	void PushDebugMark(const char* label, float color[4]) override;
+	void PopDebugMark() override;
 
 	VkCommandBuffer handle = VK_NULL_HANDLE;
+	VkPipeline curComputePipeline = VK_NULL_HANDLE;
+	VkPipelineLayout curComputePipelineLayout = VK_NULL_HANDLE;
 };
 
 HS_NS_END

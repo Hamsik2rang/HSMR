@@ -35,12 +35,18 @@ struct MetalGraphicsPipeline : public RHIGraphicsPipeline
 {
     MetalGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info);
     ~MetalGraphicsPipeline() override;
-    
+
     id<MTLRenderPipelineState> pipelineState;
     id<MTLDepthStencilState> depthStencilState;
 };
 
+struct MetalComputePipeline : public RHIComputePipeline
+{
+    MetalComputePipeline(const char* name, const ComputePipelineInfo& info);
+    ~MetalComputePipeline() override;
 
+    id<MTLComputePipelineState> pipelineState;
+};
 
 HS_NS_END
 

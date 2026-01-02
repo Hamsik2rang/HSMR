@@ -227,6 +227,33 @@ void MetalContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
     delete pipelineMetal;
 }
 
+RHIComputePipeline* MetalContext::CreateComputePipeline(const char* name, const ComputePipelineInfo& info)
+{
+    MetalComputePipeline* pipelineMetal = new MetalComputePipeline(name, info);
+
+    MetalShader* shaderMetal = static_cast<MetalShader*>(info.computeShader);
+    id<MTLFunction> computeFunction = shaderMetal->handle;
+
+    NSError* error = nil;
+    pipelineMetal->pipelineState = [s_device newComputePipelineStateWithFunction:computeFunction error:&error];
+
+    if (error != nil)
+    {
+        HS_LOG(error, "Failed to create compute pipeline: %s", [[error localizedDescription] UTF8String]);
+        delete pipelineMetal;
+        return nullptr;
+    }
+
+    return static_cast<RHIComputePipeline*>(pipelineMetal);
+}
+
+void MetalContext::DestroyComputePipeline(RHIComputePipeline* pipeline)
+{
+    MetalComputePipeline* pipelineMetal = static_cast<MetalComputePipeline*>(pipeline);
+
+    delete pipelineMetal;
+}
+
 RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
     FileHandle handle = 0;
