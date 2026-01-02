@@ -20,7 +20,7 @@ using namespace hs;
 HS_NS_EDITOR_BEGIN
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
-uint8 ImGuiExtension::s_currentFrameIndex = 0;
+uint8 ImGuiExtension::s_currentImageIndex = 0;
 
 
 

@@ -185,6 +185,7 @@ MTLTextureType MetalUtility::ToTextureType(ETextureType type)
         case ETextureType::TEX_2D:       return MTLTextureType2D;
         case ETextureType::TEX_2D_ARRAY: return MTLTextureType2DArray;
         case ETextureType::TEX_CUBE:     return MTLTextureTypeCube;
+        case ETextureType::TEX_3D:       return MTLTextureType3D;
 
         default:                         break;
     }
@@ -201,6 +202,7 @@ ETextureType MetalUtility::FromTextureType(MTLTextureType type)
         case MTLTextureType2D:      return ETextureType::TEX_2D;
         case MTLTextureType2DArray: return ETextureType::TEX_2D_ARRAY;
         case MTLTextureTypeCube:    return ETextureType::TEX_CUBE;
+        case MTLTextureType3D:      return ETextureType::TEX_3D;
 
         default:                    break;
     }

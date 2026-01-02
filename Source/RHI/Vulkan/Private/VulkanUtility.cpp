@@ -243,8 +243,9 @@ VkImageType RHIUtilityVulkan::ToImageType(ETextureType type)
 		return VK_IMAGE_TYPE_1D;
 	case ETextureType::TEX_2D:
 	case ETextureType::TEX_2D_ARRAY:
+	case ETextureType::TEX_CUBE:  // Cube maps use 2D image type with 6 array layers
 		return VK_IMAGE_TYPE_2D;
-	case ETextureType::TEX_CUBE:
+	case ETextureType::TEX_3D:
 		return VK_IMAGE_TYPE_3D;
 	default:
 		HS_LOG(error, "Unsupported texture type: %d", static_cast<int>(type));
@@ -261,7 +262,7 @@ ETextureType RHIUtilityVulkan::FromImageType(VkImageType type)
 	case VK_IMAGE_TYPE_2D:
 		return ETextureType::TEX_2D;
 	case VK_IMAGE_TYPE_3D:
-		return ETextureType::TEX_CUBE;
+		return ETextureType::TEX_3D;
 	default:
 		HS_LOG(error, "Unsupported VkImageType: %d", static_cast<int>(type));
 	}
@@ -282,6 +283,8 @@ VkImageViewType RHIUtilityVulkan::ToImageViewType(ETextureType type)
 		return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 	case ETextureType::TEX_CUBE:
 		return VK_IMAGE_VIEW_TYPE_CUBE;
+	case ETextureType::TEX_3D:
+		return VK_IMAGE_VIEW_TYPE_3D;
 	default:
 		HS_LOG(error, "Unsupported texture view type: %d", static_cast<int>(type));
 	}
@@ -302,6 +305,8 @@ ETextureType RHIUtilityVulkan::FromImageViewType(VkImageViewType type)
 		return ETextureType::TEX_2D_ARRAY;
 	case VK_IMAGE_VIEW_TYPE_CUBE:
 		return ETextureType::TEX_CUBE;
+	case VK_IMAGE_VIEW_TYPE_3D:
+		return ETextureType::TEX_3D;
 	default:
 		HS_LOG(error, "Unsupported VkImageViewType: %d", static_cast<int>(type));
 	}
