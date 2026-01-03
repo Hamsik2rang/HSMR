@@ -224,7 +224,9 @@ namespace EarthAtmosphere
 		params.topRadius    = TOP_RADIUS;
 
 		// Rayleigh - exponential decay from sea level
-		params.rayleighDensity.layers[0] = DensityProfileLayer(
+		// Note: layers[0].width = 0 means layer[0] has zero thickness,
+		// so GetProfileDensity always uses layers[1] for altitude >= 0
+		params.rayleighDensity.layers[1] = DensityProfileLayer(
 			0.0f,                          // width (unused for last layer)
 			1.0f,                          // expTerm
 			-1.0f / RAYLEIGH_SCALE_HEIGHT, // expScale
@@ -234,7 +236,7 @@ namespace EarthAtmosphere
 		params.rayleighScattering = RayleighScattering();
 
 		// Mie - exponential decay from sea level
-		params.mieDensity.layers[0] = DensityProfileLayer(
+		params.mieDensity.layers[1] = DensityProfileLayer(
 			0.0f,                      // width
 			1.0f,                      // expTerm
 			-1.0f / MIE_SCALE_HEIGHT,  // expScale

@@ -14,6 +14,7 @@
 #include "RHI/CommandHandle.h"
 
 #include "Core/Log.h"
+#include "Core/SystemContext.h"
 
 HS_NS_BEGIN
 
@@ -298,10 +299,15 @@ bool AtmospherePrecompute::CreateShaders()
 {
 	// Get shader path based on platform
 	std::string shaderExt = (_context->GetCurrentPlatform() == ERHIPlatform::METAL) ? ".metal" : ".spv";
-	std::string shaderPath = "Atmosphere/";
+#ifdef __APPLE__
+	std::string shaderPath = SystemContext::Get()->assetDirectory + "Shaders/";
+#elif __WINDOWS__
+	std::string shaderPath = SystemContext::Get()->assetDirectory + "Shaders\\";
+#endif
 
 	ShaderInfo computeShaderInfo{};
 	computeShaderInfo.stage = EShaderStage::COMPUTE;
+	computeShaderInfo.entryName = "main";
 
 	std::string transmittancePath = shaderPath + "Transmittance.comp" + shaderExt;
 	_transmittanceShader = _context->CreateShader("TransmittanceCS", computeShaderInfo, transmittancePath.c_str());
@@ -360,12 +366,14 @@ bool AtmospherePrecompute::CreateResourceLayouts()
 		bindings[0].binding = 0;
 		bindings[0].arrayCount = 1;
 		bindings[0].name = "atmosphere";
+		bindings[0].resource.buffers.push_back(_paramsBuffer);
 
 		bindings[1].type = EResourceType::STORAGE_IMAGE;
 		bindings[1].stage = EShaderStage::COMPUTE;
 		bindings[1].binding = 1;
 		bindings[1].arrayCount = 1;
 		bindings[1].name = "TransmittanceTexture";
+		bindings[1].resource.textures.push_back(_transmittanceTexture);
 
 		_transmittanceLayout = _context->CreateResourceLayout("TransmittanceLayout", bindings, 2);
 		if (!_transmittanceLayout) return false;
@@ -380,30 +388,35 @@ bool AtmospherePrecompute::CreateResourceLayouts()
 		bindings[0].binding = 0;
 		bindings[0].arrayCount = 1;
 		bindings[0].name = "atmosphere";
+		bindings[0].resource.buffers.push_back(_paramsBuffer);
 
 		bindings[1].type = EResourceType::SAMPLED_IMAGE;
 		bindings[1].stage = EShaderStage::COMPUTE;
 		bindings[1].binding = 1;
 		bindings[1].arrayCount = 1;
 		bindings[1].name = "TransmittanceTexture";
+		bindings[1].resource.textures.push_back(_transmittanceTexture);
 
 		bindings[2].type = EResourceType::SAMPLER;
 		bindings[2].stage = EShaderStage::COMPUTE;
 		bindings[2].binding = 2;
 		bindings[2].arrayCount = 1;
 		bindings[2].name = "TransmittanceSampler";
+		bindings[2].resource.samplers.push_back(_linearSampler);
 
 		bindings[3].type = EResourceType::STORAGE_IMAGE;
 		bindings[3].stage = EShaderStage::COMPUTE;
 		bindings[3].binding = 3;
 		bindings[3].arrayCount = 1;
 		bindings[3].name = "DeltaIrradianceTexture";
+		bindings[3].resource.textures.push_back(_deltaIrradianceTexture);
 
 		bindings[4].type = EResourceType::STORAGE_IMAGE;
 		bindings[4].stage = EShaderStage::COMPUTE;
 		bindings[4].binding = 4;
 		bindings[4].arrayCount = 1;
 		bindings[4].name = "IrradianceTexture";
+		bindings[4].resource.textures.push_back(_irradianceTexture);
 
 		_directIrradianceLayout = _context->CreateResourceLayout("DirectIrradianceLayout", bindings, 5);
 		if (!_directIrradianceLayout) return false;
@@ -418,42 +431,49 @@ bool AtmospherePrecompute::CreateResourceLayouts()
 		bindings[0].binding = 0;
 		bindings[0].arrayCount = 1;
 		bindings[0].name = "atmosphere";
+		bindings[0].resource.buffers.push_back(_paramsBuffer);
 
 		bindings[1].type = EResourceType::SAMPLED_IMAGE;
 		bindings[1].stage = EShaderStage::COMPUTE;
 		bindings[1].binding = 1;
 		bindings[1].arrayCount = 1;
 		bindings[1].name = "TransmittanceTexture";
+		bindings[1].resource.textures.push_back(_transmittanceTexture);
 
 		bindings[2].type = EResourceType::SAMPLER;
 		bindings[2].stage = EShaderStage::COMPUTE;
 		bindings[2].binding = 2;
 		bindings[2].arrayCount = 1;
 		bindings[2].name = "TransmittanceSampler";
+		bindings[2].resource.samplers.push_back(_linearSampler);
 
 		bindings[3].type = EResourceType::STORAGE_IMAGE;
 		bindings[3].stage = EShaderStage::COMPUTE;
 		bindings[3].binding = 3;
 		bindings[3].arrayCount = 1;
 		bindings[3].name = "DeltaRayleighScatteringTexture";
+		bindings[3].resource.textures.push_back(_deltaRayleighScatteringTexture);
 
 		bindings[4].type = EResourceType::STORAGE_IMAGE;
 		bindings[4].stage = EShaderStage::COMPUTE;
 		bindings[4].binding = 4;
 		bindings[4].arrayCount = 1;
 		bindings[4].name = "DeltaMieScatteringTexture";
+		bindings[4].resource.textures.push_back(_deltaMieScatteringTexture);
 
 		bindings[5].type = EResourceType::STORAGE_IMAGE;
 		bindings[5].stage = EShaderStage::COMPUTE;
 		bindings[5].binding = 5;
 		bindings[5].arrayCount = 1;
 		bindings[5].name = "ScatteringTexture";
+		bindings[5].resource.textures.push_back(_scatteringTexture);
 
 		bindings[6].type = EResourceType::STORAGE_IMAGE;
 		bindings[6].stage = EShaderStage::COMPUTE;
 		bindings[6].binding = 6;
 		bindings[6].arrayCount = 1;
 		bindings[6].name = "SingleMieScatteringTexture";
+		bindings[6].resource.textures.push_back(_singleMieScatteringTexture);
 
 		_singleScatteringLayout = _context->CreateResourceLayout("SingleScatteringLayout", bindings, 7);
 		if (!_singleScatteringLayout) return false;
@@ -552,8 +572,28 @@ void AtmospherePrecompute::DestroyPipelines()
 
 bool AtmospherePrecompute::CreateResourceSets()
 {
-	// Resource sets would bind actual resources to the layouts
-	// This is a simplified implementation
+	// Create resource sets from layouts (layouts already contain resource bindings)
+	if (_transmittanceLayout)
+	{
+		_transmittanceSet = _context->CreateResourceSet("TransmittanceSet", _transmittanceLayout);
+		if (!_transmittanceSet) return false;
+	}
+
+	if (_directIrradianceLayout)
+	{
+		_directIrradianceSet = _context->CreateResourceSet("DirectIrradianceSet", _directIrradianceLayout);
+		if (!_directIrradianceSet) return false;
+	}
+
+	if (_singleScatteringLayout)
+	{
+		_singleScatteringSet = _context->CreateResourceSet("SingleScatteringSet", _singleScatteringLayout);
+		if (!_singleScatteringSet) return false;
+	}
+
+	// Note: ScatteringDensity, IndirectIrradiance, MultipleScattering use placeholder layouts
+	// They would need their own proper layouts for full implementation
+
 	return true;
 }
 

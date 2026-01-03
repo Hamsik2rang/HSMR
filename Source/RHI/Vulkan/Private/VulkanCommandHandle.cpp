@@ -131,12 +131,19 @@ void CommandBufferVulkan::BindPipeline(RHIGraphicsPipeline* pipeline)
 	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
 	HS_ASSERT(pipeline, "Pipeline is nullptr");
 	GraphicsPipelineVulkan* pipelineVK = static_cast<GraphicsPipelineVulkan*>(pipeline);
+	curGraphicsPipeline = pipelineVK->handle;
+	curGraphicsPipelineLayout = pipelineVK->layout;
 	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineVK->handle);
 }
 
 void CommandBufferVulkan::BindResourceSet(RHIResourceSet* rSet)
 {
-	// TODO: Implementation it.
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	HS_ASSERT(rSet, "Resource set is nullptr");
+
+	ResourceSetVulkan* rSetVK = static_cast<ResourceSetVulkan*>(rSet);
+	vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		curGraphicsPipelineLayout, 0, 1, &rSetVK->handle, 0, nullptr);
 }
 
 void CommandBufferVulkan::SetViewport(const Viewport& viewport)
@@ -213,7 +220,17 @@ void CommandBufferVulkan::CopyTexture(RHITexture* srcTexture, RHITexture* dstTex
 
 void CommandBufferVulkan::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
+	HS_ASSERT(buffer, "Buffer is nullptr");
+	HS_ASSERT(srcData, "Source data is nullptr");
+	HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+	HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
 
+	BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
+
+	// vkCmdUpdateBuffer updates buffer contents inline within the command buffer
+	// Note: dataSize must be less than or equal to 65536 bytes
+	// Note: dstOffset and dataSize must be multiples of 4
+	vkCmdUpdateBuffer(handle, bufferVK->handle, static_cast<VkDeviceSize>(dstOffset), static_cast<VkDeviceSize>(dataSize), srcData);
 }
 
 void CommandBufferVulkan::PushDebugMark(const char* label, float color[4])
@@ -233,6 +250,7 @@ void CommandBufferVulkan::BindComputePipeline(RHIComputePipeline* pipeline)
 
 	ComputePipelineVulkan* pipelineVK = static_cast<ComputePipelineVulkan*>(pipeline);
 	curComputePipeline = pipelineVK->handle;
+	curComputePipelineLayout = pipelineVK->layout;
 
 	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineVK->handle);
 
@@ -244,7 +262,11 @@ void CommandBufferVulkan::BindComputeResourceSet(RHIResourceSet* rSet)
 {
 	HS_ASSERT(_isBegan, "CommandBuffer has not began");
 	HS_ASSERT(_isComputeBegan, "Compute pipeline is not bound");
-	// TODO: Implement descriptor set binding for compute
+	HS_ASSERT(rSet, "Resource set is nullptr");
+
+	ResourceSetVulkan* rSetVK = static_cast<ResourceSetVulkan*>(rSet);
+	vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE,
+		curComputePipelineLayout, 0, 1, &rSetVK->handle, 0, nullptr);
 }
 
 void CommandBufferVulkan::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)

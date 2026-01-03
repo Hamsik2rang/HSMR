@@ -20,6 +20,8 @@
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class EditorCamera; } }
+namespace hs { class AtmosphereRenderer; }
+namespace hs { class AtmosphereSkyPass; }
 
 HS_NS_EDITOR_BEGIN
 
@@ -54,7 +56,9 @@ private:
 
     RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
     Scoped<RenderPath> _renderer;
-    
+    Scoped<AtmosphereRenderer> _atmosphereRenderer;
+    AtmosphereSkyPass* _atmosphereSkyPass = nullptr;
+
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;

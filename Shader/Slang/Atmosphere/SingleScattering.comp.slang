@@ -22,12 +22,8 @@ RWTexture3D<float4> ScatteringTexture;
 // Optional separate Mie storage
 RWTexture3D<float4> SingleMieScatteringTexture;
 
-// Push constant for configuration
-struct PushConstants
-{
-    int combineScatteringTextures;  // 1 = combine Mie into alpha of Scattering
-};
-[[vk::push_constant]] PushConstants pushConstants;
+// Configuration - hardcode to not combine for now (no push constants)
+static const int combineScatteringTextures = 0;
 
 // Number of integration samples for single scattering
 static const int SCATTERING_INTEGRAL_SAMPLES = 50;
@@ -164,7 +160,7 @@ void ComputeMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 mieWithPhase = mie * MiePhaseFunction(atmosphere.miePhaseFunctionG, nu);
 
     // Store combined or separate
-    if (pushConstants.combineScatteringTextures != 0)
+    if (combineScatteringTextures != 0)
     {
         // Store Rayleigh in RGB, Mie red channel in alpha (for reconstruction)
         ScatteringTexture[dispatchThreadID] = float4(rayleighWithPhase, mieWithPhase.r);

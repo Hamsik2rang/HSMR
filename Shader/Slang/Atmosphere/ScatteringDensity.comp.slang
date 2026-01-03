@@ -21,13 +21,6 @@ SamplerState LinearSampler;
 // Output scattering density texture
 RWTexture3D<float4> ScatteringDensityTexture;
 
-// Push constant
-struct PushConstants
-{
-    int scatteringOrder;  // Current scattering order (2, 3, 4, ...)
-};
-[[vk::push_constant]] PushConstants pushConstants;
-
 // Number of integration samples
 static const int SPHERICAL_SAMPLES = 16;
 
@@ -39,20 +32,16 @@ float3 GetTransmittance(float r, float mu)
 }
 
 // Get scattering from textures
+// Note: MultipleScatteringTexture should be zeroed for order 2, so no condition needed
 float3 GetScattering(float r, float mu, float mu_s, float nu, bool rayIntersectsGround)
 {
     float3 uvw = GetScatteringTextureUvwFromRMuMuSNu(atmosphere, r, mu, mu_s, nu, rayIntersectsGround);
 
     float3 rayleigh = SingleRayleighScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
     float3 mie = SingleMieScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
+    float3 multipleScattering = MultipleScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
 
-    if (pushConstants.scatteringOrder > 2)
-    {
-        float3 multipleScattering = MultipleScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
-        rayleigh += multipleScattering;
-    }
-
-    return rayleigh * RayleighPhaseFunction(nu) + mie * MiePhaseFunction(atmosphere.miePhaseFunctionG, nu);
+    return (rayleigh + multipleScattering) * RayleighPhaseFunction(nu) + mie * MiePhaseFunction(atmosphere.miePhaseFunctionG, nu);
 }
 
 // Get irradiance
@@ -63,7 +52,7 @@ float3 GetIrradiance(float r, float mu_s)
 }
 
 // Compute scattering density
-float3 ComputeScatteringDensity(float r, float mu, float mu_s, float nu, int scatteringOrder)
+float3 ComputeScatteringDensity(float r, float mu, float mu_s, float nu)
 {
     float3 rayleigh_mie = float3(0.0, 0.0, 0.0);
 
@@ -159,7 +148,7 @@ void ComputeMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     GetRMuMuSNuFromScatteringTextureUvw(atmosphere, uvw, r, mu, mu_s, nu, rayIntersectsGround);
 
     // Compute scattering density
-    float3 scatteringDensity = ComputeScatteringDensity(r, mu, mu_s, nu, pushConstants.scatteringOrder);
+    float3 scatteringDensity = ComputeScatteringDensity(r, mu, mu_s, nu);
 
     ScatteringDensityTexture[dispatchThreadID] = float4(scatteringDensity, 1.0);
 }
