@@ -14,6 +14,20 @@ VkFormat RHIUtilityVulkan::ToPixelFormat(EPixelFormat format)
 		return VK_FORMAT_B8G8R8A8_UNORM;
 	case EPixelFormat::B8G8A8R8_SRGB:
 		return VK_FORMAT_B8G8R8A8_SRGB;
+	// Floating-point formats
+	case EPixelFormat::R16F:
+		return VK_FORMAT_R16_SFLOAT;
+	case EPixelFormat::RG16F:
+		return VK_FORMAT_R16G16_SFLOAT;
+	case EPixelFormat::RGBA16F:
+		return VK_FORMAT_R16G16B16A16_SFLOAT;
+	case EPixelFormat::R32F:
+		return VK_FORMAT_R32_SFLOAT;
+	case EPixelFormat::RG32F:
+		return VK_FORMAT_R32G32_SFLOAT;
+	case EPixelFormat::RGBA32F:
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	// Depth/stencil formats
 	case EPixelFormat::DEPTH32:
 		return VK_FORMAT_D32_SFLOAT;
 	case EPixelFormat::STENCIL8:
@@ -40,6 +54,20 @@ EPixelFormat RHIUtilityVulkan::FromPixelFormat(VkFormat format)
 		return EPixelFormat::B8G8A8R8_UNORM;
 	case VK_FORMAT_B8G8R8A8_SRGB:
 		return EPixelFormat::B8G8A8R8_SRGB;
+	// Floating-point formats
+	case VK_FORMAT_R16_SFLOAT:
+		return EPixelFormat::R16F;
+	case VK_FORMAT_R16G16_SFLOAT:
+		return EPixelFormat::RG16F;
+	case VK_FORMAT_R16G16B16A16_SFLOAT:
+		return EPixelFormat::RGBA16F;
+	case VK_FORMAT_R32_SFLOAT:
+		return EPixelFormat::R32F;
+	case VK_FORMAT_R32G32_SFLOAT:
+		return EPixelFormat::RG32F;
+	case VK_FORMAT_R32G32B32A32_SFLOAT:
+		return EPixelFormat::RGBA32F;
+	// Depth/stencil formats
 	case VK_FORMAT_D32_SFLOAT:
 		return EPixelFormat::DEPTH32;
 	case VK_FORMAT_S8_UINT:

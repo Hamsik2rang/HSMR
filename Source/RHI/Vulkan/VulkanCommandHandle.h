@@ -69,6 +69,8 @@ struct HS_API CommandBufferVulkan : public RHICommandBuffer
 	void PopDebugMark() override;
 
 	VkCommandBuffer handle = VK_NULL_HANDLE;
+	VkPipeline curGraphicsPipeline = VK_NULL_HANDLE;
+	VkPipelineLayout curGraphicsPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline curComputePipeline = VK_NULL_HANDLE;
 	VkPipelineLayout curComputePipelineLayout = VK_NULL_HANDLE;
 };

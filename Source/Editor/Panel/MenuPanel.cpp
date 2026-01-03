@@ -23,7 +23,7 @@ void MenuPanel::Cleanup()
 void MenuPanel::Draw()
 {
     static bool useWhite = false;
-    static bool showDemo = true;
+    static bool showDemo = false;
     if (ImGui::BeginMenuBar())
     {
         if (ImGui::BeginMenu("File"))

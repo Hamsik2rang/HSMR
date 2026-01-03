@@ -97,8 +97,8 @@ private:
 	VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
 	VkRenderPass createRenderPass(const RenderPassInfo& info);
 	VkFramebuffer createFramebuffer(const FramebufferInfo& info);
-	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info);
-	VkPipeline createComputePipeline(const ComputePipelineInfo& info);
+	VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout);
+	VkPipeline createComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout);
 
 	uint32 getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties);
 

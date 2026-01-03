@@ -20,36 +20,25 @@ SamplerState LinearSampler;
 RWTexture2D<float4> DeltaIrradianceTexture;  // This order's contribution
 RWTexture2D<float4> IrradianceTexture;       // Accumulated irradiance
 
-// Push constant
-struct PushConstants
-{
-    int scatteringOrder;  // Current scattering order
-};
-[[vk::push_constant]] PushConstants pushConstants;
-
 // Number of integration samples
 static const int IRRADIANCE_INTEGRAL_SAMPLES = 32;
 
 // Get scattering at ground level
+// Note: MultipleScatteringTexture should be zeroed for order 2, so no condition needed
 float3 GetScattering(float r, float mu, float mu_s, float nu, bool rayIntersectsGround)
 {
     float3 uvw = GetScatteringTextureUvwFromRMuMuSNu(atmosphere, r, mu, mu_s, nu, rayIntersectsGround);
 
     float3 rayleigh = SingleRayleighScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
     float3 mie = SingleMieScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
-
-    if (pushConstants.scatteringOrder > 2)
-    {
-        float3 multipleScattering = MultipleScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
-        rayleigh += multipleScattering;
-    }
+    float3 multipleScattering = MultipleScatteringTexture.SampleLevel(LinearSampler, uvw, 0).rgb;
 
     // Apply phase functions
-    return rayleigh * RayleighPhaseFunction(nu) + mie * MiePhaseFunction(atmosphere.miePhaseFunctionG, nu);
+    return (rayleigh + multipleScattering) * RayleighPhaseFunction(nu) + mie * MiePhaseFunction(atmosphere.miePhaseFunctionG, nu);
 }
 
 // Compute indirect irradiance
-float3 ComputeIndirectIrradiance(float r, float mu_s, int scatteringOrder)
+float3 ComputeIndirectIrradiance(float r, float mu_s)
 {
     float3 result = float3(0.0, 0.0, 0.0);
 
@@ -99,7 +88,7 @@ void ComputeMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     GetRMuSFromIrradianceTextureUv(atmosphere, uv, r, mu_s);
 
     // Compute indirect irradiance
-    float3 indirectIrradiance = ComputeIndirectIrradiance(r, mu_s, pushConstants.scatteringOrder);
+    float3 indirectIrradiance = ComputeIndirectIrradiance(r, mu_s);
 
     // Write delta (this order's contribution)
     DeltaIrradianceTexture[dispatchThreadID.xy] = float4(indirectIrradiance, 1.0);

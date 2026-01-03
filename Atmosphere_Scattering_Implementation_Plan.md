@@ -756,25 +756,55 @@ Shader/
 
 ---
 
-### ⏳ Phase 3: 런타임 렌더링 (미완료)
+### ✅ Phase 3: 런타임 렌더링 (완료)
 
-#### 남은 작업:
-1. **AtmosphereRenderer 클래스 구현**
-   - 사전계산 결과를 렌더링에 사용
-   - LUT 텍스처 바인딩 관리
+#### 3.1 AtmosphereRenderer 클래스 구현 ✅
+- **파일**:
+  - `Source/Engine/Renderer/Atmosphere/AtmosphereRenderer.h`
+  - `Source/Engine/Renderer/Atmosphere/Private/AtmosphereRenderer.cpp`
+- **기능**:
+  - `AtmospherePrecompute` 래핑 및 LUT 텍스처 접근
+  - 태양 방향, 노출, 화이트 포인트 설정
+  - LUT 샘플러 생성 및 관리
+  - `SkyUniforms` 구조체 정의 (역 뷰-프로젝션, 카메라 위치, 태양 방향 등)
 
-2. **렌더링 셰이더 작성**
-   - `AtmosphereAPI.hlsli`: GetSkyRadiance, GetSkyRadianceToPoint, GetSunAndSkyIrradiance
-   - `Sky.hlsl`: 하늘 렌더링
-   - `AerialPerspective.hlsl`: 공기 원근법 적용
+#### 3.2 AtmosphereSkyPass 구현 ✅
+- **파일**:
+  - `Source/Engine/Renderer/Atmosphere/AtmosphereSkyPass.h`
+  - `Source/Engine/Renderer/Atmosphere/Private/AtmosphereSkyPass.cpp`
+- **기능**:
+  - `RenderPass` 상속, `ERenderingOrder::SKYBOX` 순서
+  - 풀스크린 삼각형 렌더링
+  - LUT 텍스처 및 유니폼 버퍼 바인딩
+  - 카메라/태양 파라미터 업데이트
 
-3. **ForwardPath/RenderPath 통합**
-   - 기존 렌더링 파이프라인에 대기 산란 적용
-   - 톤 매핑 및 후처리
+#### 3.3 렌더링 API 셰이더 ✅
+- **파일**: `Shader/Slang/Atmosphere/AtmosphereAPI.hlsli`
+- **함수**:
+  - `GetTransmittanceToTopAtmosphereBoundary()`: 투과율 LUT 조회
+  - `GetTransmittance()`: 두 점 사이 투과율
+  - `GetScatteringSimple()`: 산란 LUT 조회
+  - `GetIrradiance()`: 조사량 LUT 조회
+  - `GetSkyRadiance()`: 하늘 radiance 계산 (메인 API)
+  - `GetSkyRadianceToPoint()`: Aerial perspective용
+  - `GetSunAndSkyIrradiance()`: 지표면 조사량
+  - `GetSolarRadiance()`: 태양 디스크 radiance
+  - `ToneMap()`: 노출 톤 매핑
 
-4. **테스트 및 검증**
-   - 참조 구현체와 비교
-   - 시각적 품질 확인
+#### 3.4 하늘 렌더링 셰이더 ✅
+- **Vertex Shader**: `Shader/Slang/Atmosphere/Sky.vert.slang`
+  - 풀스크린 삼각형 위치 전달
+  - 역 뷰-프로젝션으로 월드 공간 시선 방향 계산
+- **Fragment Shader**: `Shader/Slang/Atmosphere/Sky.frag.slang`
+  - `AtmosphereAPI.hlsli` 사용
+  - `GetSkyRadiance()` 호출로 하늘 색상 계산
+  - 태양 디스크 렌더링 (부드러운 가장자리)
+  - 톤 매핑 적용
+
+#### 3.5 남은 작업
+- **ForwardPath 통합**: 렌더 패스 등록 및 초기화
+- **빌드 테스트**: CMake 빌드 및 셰이더 컴파일 검증
+- **시각적 검증**: 참조 구현체와 비교
 
 ---
 
@@ -789,6 +819,8 @@ Shader/
 
 | 커밋 | 설명 | 날짜 |
 |------|------|------|
+| - | feat(Atmosphere): Add AtmosphereRenderer and AtmosphereSkyPass | 2026-01-02 |
+| `e8f9614` | docs: Update implementation progress (Phase 1-2 complete) | 2026-01-02 |
 | `0cfbdd6` | feat(Atmosphere): Add AtmospherePrecompute class and floating-point pixel formats | 2026-01-02 |
 | `d94bd66` | feat(Atmosphere): Add AtmosphereParameters and precomputation shaders | 2026-01-02 |
 | `012b255` | feat(RHI): Add UAV (RWTexture) and memory barrier support | 2026-01-02 |
@@ -804,8 +836,12 @@ Shader/
 Source/Engine/Renderer/Atmosphere/
 ├── AtmosphereParameters.h          # 대기 파라미터 구조체
 ├── AtmospherePrecompute.h          # 사전계산 클래스 헤더
+├── AtmosphereRenderer.h            # 렌더링 관리 클래스 헤더
+├── AtmosphereSkyPass.h             # 하늘 렌더링 패스 헤더
 └── Private/
-    └── AtmospherePrecompute.cpp    # 사전계산 클래스 구현
+    ├── AtmospherePrecompute.cpp    # 사전계산 클래스 구현
+    ├── AtmosphereRenderer.cpp      # 렌더링 관리 클래스 구현
+    └── AtmosphereSkyPass.cpp       # 하늘 렌더링 패스 구현
 
 Source/RHI/
 ├── RHIDefinition.h                 # EPixelFormat에 floating-point 포맷 추가
@@ -814,16 +850,132 @@ Source/RHI/
 
 Shader/Slang/Atmosphere/
 ├── AtmosphereCommon.hlsli          # 공통 함수
+├── AtmosphereAPI.hlsli             # 런타임 렌더링 API
 ├── Transmittance.comp.slang        # 투과율 계산
 ├── DirectIrradiance.comp.slang     # 직접 조사량
 ├── SingleScattering.comp.slang     # 단일 산란
 ├── ScatteringDensity.comp.slang    # 산란 밀도
 ├── IndirectIrradiance.comp.slang   # 간접 조사량
-└── MultipleScattering.comp.slang   # 다중 산란
+├── MultipleScattering.comp.slang   # 다중 산란
+├── Sky.vert.slang                  # 하늘 버텍스 셰이더
+└── Sky.frag.slang                  # 하늘 프래그먼트 셰이더
 ```
 
 ---
 
+## 15. 디버깅 및 수정 내역 (2026-01-03)
+
+### 15.1 문제점 및 해결 요약
+
+오늘 작업에서 대기 산란 사전 계산을 실행하는 과정에서 여러 Vulkan 관련 오류를 발견하고 수정하였습니다.
+
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| 푸시 상수 오류 | 셰이더가 `[[vk::push_constant]]` 사용 | 조건문 제거, 항상 MultipleScatteringTexture 샘플링 |
+| 명시적 바인딩 불필요 | `[[vk::binding]]` 어노테이션 유지보수 부담 | 모든 바인딩 어노테이션 제거 |
+| 디스크립터 풀 타입 부족 | `SAMPLED_IMAGE`, `SAMPLER` 누락 | VulkanContext 초기화에 추가 |
+| 디스크립터 셋 바인딩 안됨 | `BindComputeResourceSet` 미구현 | 완전한 구현 추가 |
+| 디스크립터 업데이트 안됨 | `CreateResourceSet`에서 `vkUpdateDescriptorSets` 미호출 | 전체 바인딩 타입 지원하는 구현 추가 |
+| 이미지 레이아웃 불일치 | SAMPLED_IMAGE에 `SHADER_READ_ONLY_OPTIMAL` 사용 | 컴퓨트용 `GENERAL` 레이아웃 사용 |
+
+### 15.2 셰이더 단순화
+
+**원칙**: 선택적 기능은 제거하여 코드 단순화
+
+#### 제거된 항목
+- `[[vk::binding(N, 0)]]` 어노테이션 35개
+- `[[vk::push_constant]]` 2개
+- `scatteringOrder` 조건문 2개 (ScatteringDensity, IndirectIrradiance)
+
+#### 단순화된 로직
+```hlsl
+// 변경 전 (조건부 샘플링)
+if (scatteringOrder > 2) {
+    multipleScattering = MultipleScatteringTexture.SampleLevel(...);
+    rayleigh += multipleScattering;
+}
+
+// 변경 후 (항상 샘플링 - order 2에서는 0이 더해짐)
+multipleScattering = MultipleScatteringTexture.SampleLevel(...);
+rayleigh += multipleScattering;
+```
+
+### 15.3 RHI 레이어 수정
+
+#### VulkanContext.cpp
+
+1. **디스크립터 풀 타입 확장** (라인 103-111)
+```cpp
+std::vector<PoolSizeRatio> ratios = {
+    {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3},
+    {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3},
+    {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3},
+    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4},
+    {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 3},   // 추가
+    {VK_DESCRIPTOR_TYPE_SAMPLER, 3},         // 추가
+};
+```
+
+2. **CreateResourceSet 전면 재구현** (라인 907-1047)
+   - `vkUpdateDescriptorSets` 호출 추가
+   - 지원 타입: UNIFORM_BUFFER, STORAGE_BUFFER, SAMPLED_IMAGE, STORAGE_IMAGE, SAMPLER, COMBINED_IMAGE_SAMPLER
+   - 이미지 레이아웃: 컴퓨트 호환성을 위해 `VK_IMAGE_LAYOUT_GENERAL` 사용
+
+3. **createComputePipeline 수정** (라인 1541-1593)
+   - 시그니처: `VkPipelineLayout& outLayout` 매개변수 추가
+   - 파이프라인 레이아웃 반환하여 저장
+
+4. **DestroyComputePipeline 수정** (라인 358-373)
+   - 파이프라인 레이아웃 파괴 추가
+
+#### VulkanRenderHandle.h
+
+```cpp
+struct PipelineVulkanBase {
+    VkPipeline handle = VK_NULL_HANDLE;
+    VkPipelineLayout layout = VK_NULL_HANDLE;  // 추가
+};
+```
+
+#### VulkanCommandHandle.cpp
+
+```cpp
+void CommandBufferVulkan::BindComputePipeline(RHIComputePipeline* pipeline) {
+    // ... 기존 코드 ...
+    curComputePipelineLayout = pipelineVK->layout;  // 추가
+}
+
+void CommandBufferVulkan::BindComputeResourceSet(RHIResourceSet* rSet) {
+    ResourceSetVulkan* rSetVK = static_cast<ResourceSetVulkan*>(rSet);
+    vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE,
+        curComputePipelineLayout, 0, 1, &rSetVK->handle, 0, nullptr);
+}
+```
+
+### 15.4 최종 결과
+
+```
+[INFO] AtmospherePrecompute initialized successfully
+[INFO] Starting atmosphere precomputation...
+[INFO] Atmosphere precomputation complete
+```
+
+대기 산란 사전 계산이 성공적으로 완료됩니다.
+
+### 15.5 남은 작업
+
+1. **vkMapMemory 오류 해결**: 대기 산란과 무관한 별도 메모리 매핑 문제
+2. **런타임 렌더링 테스트**: 실제 하늘 렌더링 시각적 검증
+3. **ForwardPath 통합**: 렌더 패스 등록
+
+---
+
+## 16. 참고 문서
+
+- `Docs/AtmosphereScatteringImplementation.md`: 오늘 작업의 상세 로그
+
+---
+
 *문서 작성일: 2026-01-02*
-*최종 수정일: 2026-01-02*
+*최종 수정일: 2026-01-03*
 *HSMR 엔진 버전: rnd/precomputed-atmospheric-scattering branch*

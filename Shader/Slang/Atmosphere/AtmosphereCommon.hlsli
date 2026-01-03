@@ -41,7 +41,9 @@ struct DensityProfileLayerGPU
     float expScale;
     float linearTerm;
     float constantTerm;
-    float3 _padding;
+    float _padding0;
+    float _padding1;
+    float _padding2;
 };
 
 struct AtmosphereParametersGPU
