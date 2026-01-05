@@ -104,25 +104,6 @@ set(ENGINE_RENDERER_RENDER_PASS_SOURCES
 source_group("Renderer\\RenderPass\\Private" FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 list(APPEND TOTAL_FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 
-set(ENGINE_RENDERER_ATMOSPHERE_HEADERS
-    Renderer/Atmosphere/AtmosphereParameters.h
-    Renderer/Atmosphere/AtmospherePrecompute.h
-    Renderer/Atmosphere/AtmosphereRenderer.h
-    Renderer/Atmosphere/AtmosphereSkyPass.h
-)
-
-source_group("Renderer\\Atmosphere\\Public" FILES ${ENGINE_RENDERER_ATMOSPHERE_HEADERS})
-list(APPEND TOTAL_FILES ${ENGINE_RENDERER_ATMOSPHERE_HEADERS})
-
-set(ENGINE_RENDERER_ATMOSPHERE_SOURCES
-    Renderer/Atmosphere/Private/AtmospherePrecompute.cpp
-    Renderer/Atmosphere/Private/AtmosphereRenderer.cpp
-    Renderer/Atmosphere/Private/AtmosphereSkyPass.cpp
-)
-
-source_group("Renderer\\Atmosphere\\Private" FILES ${ENGINE_RENDERER_ATMOSPHERE_SOURCES})
-list(APPEND TOTAL_FILES ${ENGINE_RENDERER_ATMOSPHERE_SOURCES})
-
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
@@ -135,7 +116,7 @@ if(APPLE)
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-Core Platform RHI
+        Core Platform RHI
         ${ASSIMP}
     )
 endif()
