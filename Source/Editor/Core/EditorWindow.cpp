@@ -1,12 +1,10 @@
 #include "Editor/Core/EditorWindow.h"
 
-#include "Engine/Renderer/Atmosphere/AtmosphereRenderer.h"
-#include "Engine/Renderer/Atmosphere/AtmosphereSkyPass.h"
-#include "Engine/Renderer/Atmosphere/AtmosphereParameters.h"
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 #include "Engine/Renderer/ForwardPath.h"
+#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
 
 #include "Core/HAL/Input.h"
 
@@ -54,18 +52,11 @@ bool EditorWindow::onInitialize()
 	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();
 
-	// Initialize Atmosphere Renderer
-	_atmosphereRenderer = MakeScoped<AtmosphereRenderer>();
-	if (!_atmosphereRenderer->Initialize(_rhiContext, EarthAtmosphere::CreateDefault()))
-	{
-		HS_LOG(error, "Failed to initialize AtmosphereRenderer");
-	}
-
 	ImGuiExtension::InitializeBackend(_swapchain);
 
 	// Add Atmosphere Sky Pass (replaces ForwardOpaquePass)
-	_atmosphereSkyPass = new AtmosphereSkyPass("Atmosphere Sky Pass", _renderer.get(), _atmosphereRenderer.get());
-	_renderer->AddPass(_atmosphereSkyPass);
+    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
+	_renderer->AddPass(std::move(opaquePass));
 
 	_renderTargets.resize(_swapchain->GetMaxFrameCount());
 
@@ -146,12 +137,6 @@ void EditorWindow::onRender()
 	RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
 	cmdBuffer->Begin();
 
-	// Precompute atmosphere LUTs (one-time)
-	if (_atmosphereRenderer && !_atmosphereRenderer->IsPrecomputed())
-	{
-		_atmosphereRenderer->Precompute(cmdBuffer);
-	}
-
 	uint8         imageIndex = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
@@ -185,12 +170,6 @@ void EditorWindow::onShutdown()
 	{
 		_renderer->Shutdown();
 		_renderer.reset();  // Automatic cleanup with Scoped<>
-	}
-
-	if (_atmosphereRenderer)
-	{
-		_atmosphereRenderer->Finalize();
-		_atmosphereRenderer.reset();
 	}
 }
 

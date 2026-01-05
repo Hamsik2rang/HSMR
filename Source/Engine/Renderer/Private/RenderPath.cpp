@@ -1,4 +1,4 @@
-﻿//
+//
 //  RenderPath.mm
 //  HSMR
 //

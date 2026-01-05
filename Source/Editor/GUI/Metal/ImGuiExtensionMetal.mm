@@ -20,9 +20,7 @@ using namespace hs;
 HS_NS_EDITOR_BEGIN
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
-uint8 ImGuiExtension::s_currentImageIndex = 0;
-
-
+uint8 ImGuiExtension::s_currentImageIndex     = 0;
 
 void ImGuiExtension::ImageOffscreen(RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
@@ -47,22 +45,22 @@ void ImGuiExtension::InitializeBackend(Swapchain* swapchain)
 void ImGuiExtension::BeginRender(Swapchain* swapchain)
 {
     s_currentSwapchain = swapchain;
-    
+
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
     NSWindow* window        = (__bridge NSWindow*)swMetal->nativeHandle;
-    HSViewController* vc = (HSViewController*)[window delegate];
+    HSViewController* vc    = (HSViewController*)[window delegate];
     NSView* view            = [vc view];
 
     const NativeWindow* nativeWindow = (swapchain->GetInfo().nativeWindow);
-    
-    CGSize backingSize = [vc getBackingViewSize];
+
+    CGSize backingSize       = [vc getBackingViewSize];
     float backingScaleFactor = [window backingScaleFactor];
-    
-    ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize.x = backingSize.width;
-    io.DisplaySize.y = backingSize.height;
+
+    ImGuiIO& io                = ImGui::GetIO();
+    io.DisplaySize.x           = backingSize.width;
+    io.DisplaySize.y           = backingSize.height;
     io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
-    
+
     MTLRenderPassDescriptor* rpDesc = static_cast<MetalRenderPass*>(swMetal->GetRenderPass())->handle;
 
     ImGui_ImplMetal_NewFrame(rpDesc);
@@ -73,8 +71,8 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
 void ImGuiExtension::EndRender()
 {
     MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
-    RHIFramebuffer* framebuffer = s_currentSwapchain->GetFramebufferForCurrentFrame();
-    Area area{ 0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight() };
+    RHIFramebuffer* framebuffer        = s_currentSwapchain->GetFramebufferForCurrentFrame();
+    Area area{0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight()};
     cmdMetalBuffer->BeginRenderPass(s_currentSwapchain->GetRenderPass(), framebuffer, area);
 
     ImGui::Render();
@@ -87,7 +85,7 @@ void ImGuiExtension::FinalizeBackend()
     ImGui_ImplOSX_Shutdown();
 }
 
-void ImGuiExtension::SetProcessEventHandler(void **fnHandler)
+void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
 {
     // empty.
     // SetNativePreEventHandler(fnHandler);

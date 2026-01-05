@@ -1,4 +1,4 @@
-﻿//
+//
 //  EditorWindow.h
 //  Editor
 //
@@ -56,8 +56,6 @@ private:
 
     RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
     Scoped<RenderPath> _renderer;
-    Scoped<AtmosphereRenderer> _atmosphereRenderer;
-    AtmosphereSkyPass* _atmosphereSkyPass = nullptr;
 
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
