@@ -92,22 +92,22 @@ void Log::print(const char* file, const uint32 line, const char* start, const ch
     fprintf(stdout, " (%s:%u)%s\n", file, line, end);
     fflush(stdout);
 
-    // Also write to log file for debugging
-    static FILE* logFile = nullptr;
-    if (logFile == nullptr)
-    {
-        logFile = fopen("hsmr_debug.log", "w");
-    }
-    if (logFile)
-    {
-        fprintf(logFile, " %s ", tag);
-        va_list ptr_copy;
-        va_copy(ptr_copy, ptr);
-        vfprintf(logFile, fmt, ptr_copy);
-        va_end(ptr_copy);
-        fprintf(logFile, " (%s:%u)\n", file, line);
-        fflush(logFile);
-    }
+    //Also write to log file for debugging
+    //static FILE* logFile = nullptr;
+    //if (logFile == nullptr)
+    //{
+    //    logFile = fopen("hsmr_debug.log", "w");
+    //}
+    //if (logFile)
+    //{
+    //    fprintf(logFile, " %s ", tag);
+    //    va_list ptr_copy;
+    //    va_copy(ptr_copy, ptr);
+    //    vfprintf(logFile, fmt, ptr_copy);
+    //    va_end(ptr_copy);
+    //    fprintf(logFile, " (%s:%u)\n", file, line);
+    //    fflush(logFile);
+    //}
 }
 
 HS_NS_END
