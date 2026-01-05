@@ -15,6 +15,14 @@ MTLPixelFormat MetalUtility::ToPixelFormat(EPixelFormat format)
         case EPixelFormat::B8G8A8R8_UNORM:   return MTLPixelFormatBGRA8Unorm;
         case EPixelFormat::B8G8A8R8_SRGB:    return MTLPixelFormatBGRA8Unorm_sRGB;
 
+        // Floating-point formats (for HDR, compute, atmosphere LUTs)
+        case EPixelFormat::R16F:             return MTLPixelFormatR16Float;
+        case EPixelFormat::RG16F:            return MTLPixelFormatRG16Float;
+        case EPixelFormat::RGBA16F:          return MTLPixelFormatRGBA16Float;
+        case EPixelFormat::R32F:             return MTLPixelFormatR32Float;
+        case EPixelFormat::RG32F:            return MTLPixelFormatRG32Float;
+        case EPixelFormat::RGBA32F:          return MTLPixelFormatRGBA32Float;
+
         case EPixelFormat::DEPTH32:          return MTLPixelFormatDepth32Float;
         case EPixelFormat::DEPTH32_STENCIL8: return MTLPixelFormatDepth32Float_Stencil8;
         case EPixelFormat::DEPTH24_STENCIL8: return MTLPixelFormatDepth24Unorm_Stencil8;
@@ -34,6 +42,14 @@ EPixelFormat MetalUtility::FromPixelFormat(MTLPixelFormat format)
         case MTLPixelFormatRGBA8Unorm_sRGB: return EPixelFormat::R8G8B8A8_SRGB;
         case MTLPixelFormatBGRA8Unorm:      return EPixelFormat::B8G8A8R8_UNORM;
         case MTLPixelFormatBGRA8Unorm_sRGB: return EPixelFormat::B8G8A8R8_SRGB;
+
+        // Floating-point formats
+        case MTLPixelFormatR16Float:        return EPixelFormat::R16F;
+        case MTLPixelFormatRG16Float:       return EPixelFormat::RG16F;
+        case MTLPixelFormatRGBA16Float:     return EPixelFormat::RGBA16F;
+        case MTLPixelFormatR32Float:        return EPixelFormat::R32F;
+        case MTLPixelFormatRG32Float:       return EPixelFormat::RG32F;
+        case MTLPixelFormatRGBA32Float:     return EPixelFormat::RGBA32F;
 
         default:                            break;
     }
@@ -160,6 +176,7 @@ MTLTextureUsage MetalUtility::ToTextureUsage(ETextureUsage usage)
     MTLTextureUsage result = 0;
     if ((usage & ETextureUsage::SAMPLED) != 0) result |= MTLTextureUsageShaderRead;
     if ((usage & ETextureUsage::STAGING) != 0) result |= MTLTextureUsageShaderWrite;
+    if ((usage & ETextureUsage::STORAGE) != 0) result |= MTLTextureUsageShaderWrite;  // UAV/RWTexture support
     if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
     if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
 
@@ -170,9 +187,9 @@ ETextureUsage MetalUtility::FromTextureUsage(MTLTextureUsage usage)
 {
     ETextureUsage result = ETextureUsage::UNKNOWN;
     if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SAMPLED;
-    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STAGING;
+    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STORAGE;  // Map to STORAGE for compute
     if ((usage & MTLTextureUsageRenderTarget) != 0) result |= (ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::DEPTH_STENCIL_ATTACHMENT);
-    
+
     return result;
 }
 
@@ -185,6 +202,7 @@ MTLTextureType MetalUtility::ToTextureType(ETextureType type)
         case ETextureType::TEX_2D:       return MTLTextureType2D;
         case ETextureType::TEX_2D_ARRAY: return MTLTextureType2DArray;
         case ETextureType::TEX_CUBE:     return MTLTextureTypeCube;
+        case ETextureType::TEX_3D:       return MTLTextureType3D;
 
         default:                         break;
     }
@@ -201,6 +219,7 @@ ETextureType MetalUtility::FromTextureType(MTLTextureType type)
         case MTLTextureType2D:      return ETextureType::TEX_2D;
         case MTLTextureType2DArray: return ETextureType::TEX_2D_ARRAY;
         case MTLTextureTypeCube:    return ETextureType::TEX_CUBE;
+        case MTLTextureType3D:      return ETextureType::TEX_3D;
 
         default:                    break;
     }
@@ -222,6 +241,18 @@ size_t MetalUtility::GetBytesPerPixel(MTLPixelFormat format)
         case MTLPixelFormatBGRA8Unorm:
         case MTLPixelFormatBGRA8Unorm_sRGB:
             return 4;
+
+        // Floating-point formats
+        case MTLPixelFormatR16Float:
+            return 2;
+        case MTLPixelFormatRG16Float:
+        case MTLPixelFormatR32Float:
+            return 4;
+        case MTLPixelFormatRGBA16Float:
+        case MTLPixelFormatRG32Float:
+            return 8;
+        case MTLPixelFormatRGBA32Float:
+            return 16;
 
         default:
             break;

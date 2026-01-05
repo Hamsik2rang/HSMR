@@ -200,7 +200,7 @@ void GUIContext::SaveLayout(const std::string& layoutPath)
 void GUIContext::BeginRender(Swapchain* swapchain)
 {
     _scaleFactor = swapchain->GetInfo().nativeWindow->scale;
-    SetScaleFactor(_scaleFactor);
+//    SetScaleFactor(_scaleFactor);
 
     ImGuiExtension::BeginRender(swapchain);
 }
@@ -209,7 +209,7 @@ void GUIContext::EndRender()
 {
     ImGuiExtension::EndRender();
     _scaleFactor = 1.0f / _scaleFactor;
-    SetScaleFactor(_scaleFactor);
+//    SetScaleFactor(_scaleFactor);
 }
 
 HS_NS_EDITOR_END

@@ -116,7 +116,7 @@ if(APPLE)
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-Core Platform RHI
+        Core Platform RHI
         ${ASSIMP}
     )
 endif()

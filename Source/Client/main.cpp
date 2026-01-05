@@ -21,10 +21,9 @@
 
 #ifndef UNICODE
 #define UNICODE
-#endif 
+#endif
 
-//#include "Platform/Windows/Win.h"
-
+#include <windows.h>
 
 #endif
 

@@ -124,7 +124,7 @@ VkDescriptorPool DescriptorPoolAllocatorVulkan::acquirePool()
 		VkDescriptorPoolCreateInfo poolCreateInfo{};
 		poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolCreateInfo.pNext = nullptr;
-		poolCreateInfo.flags = 0;
+		poolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 		poolCreateInfo.maxSets = _setsPerPool;
 		poolCreateInfo.poolSizeCount = static_cast<uint32>(poolSizes.size());
 		poolCreateInfo.pPoolSizes = poolSizes.data();

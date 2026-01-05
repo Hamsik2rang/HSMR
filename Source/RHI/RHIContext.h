@@ -44,6 +44,9 @@ public:
 	virtual RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) = 0;
 	virtual void DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) = 0;
 
+	virtual RHIComputePipeline* CreateComputePipeline(const char* name, const ComputePipelineInfo& info) = 0;
+	virtual void DestroyComputePipeline(RHIComputePipeline* pipeline) = 0;
+
 	virtual RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* path) = 0;
 	virtual RHIShader* CreateShader(const char* name, const ShaderInfo& info, const char* byteCode, size_t byteCodeSize) = 0;
 	virtual void DestroyShader(RHIShader* shader) = 0;
