@@ -31,6 +31,7 @@ public:
 
     HS_FORCEINLINE uint8 GetMaxFrameCount() const override { return _maxFrameCount; }
     HS_FORCEINLINE uint8 GetCurrentFrameIndex() const override { return _frameIndex; }
+    HS_FORCEINLINE uint8 GetCurrentImageIndex() const override { return _imageIndex; }
     HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override { return _commandBuffers[_frameIndex]; }
     HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override
     {
@@ -41,6 +42,7 @@ public:
 
 private:
     uint8 _frameIndex;
+    uint8 _imageIndex;
     uint8 _maxFrameCount = 3;
 
     void setRenderTargets();

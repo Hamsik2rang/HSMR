@@ -36,6 +36,7 @@ public:
 struct HS_API PipelineVulkanBase
 {
 	VkPipeline handle = VK_NULL_HANDLE;
+	VkPipelineLayout layout = VK_NULL_HANDLE;
 };
 
 struct HS_API GraphicsPipelineVulkan : public RHIGraphicsPipeline, public PipelineVulkanBase

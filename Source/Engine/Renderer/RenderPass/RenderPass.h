@@ -1,4 +1,4 @@
-﻿//
+//
 //  RenderPass.h
 //  Renderer
 //
@@ -23,10 +23,11 @@ enum class HS_API ERenderingOrder : uint16
 {
     INVALID = 0,
 
-    SKYBOX      = 500,
-    OPAQUE      = 1000,
-    TRANSPARENT = 2000,
+    OPAQUE      = 2000,
+    SKYBOX      = 2500,
+    TRANSPARENT = 3000,
 
+    POST_PROCESS = 8000
     //...
 };
 

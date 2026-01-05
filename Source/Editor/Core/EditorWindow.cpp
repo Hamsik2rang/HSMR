@@ -1,9 +1,10 @@
 #include "Editor/Core/EditorWindow.h"
 
-#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
+#include "RHI/CommandHandle.h"
 #include "Engine/Renderer/ForwardPath.h"
+#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
 
 #include "Core/HAL/Input.h"
 
@@ -53,7 +54,9 @@ bool EditorWindow::onInitialize()
 
 	ImGuiExtension::InitializeBackend(_swapchain);
 
-	_renderer->AddPass(new ForwardOpaquePass("Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE));
+	// Add Atmosphere Sky Pass (replaces ForwardOpaquePass)
+    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
+	_renderer->AddPass(std::move(opaquePass));
 
 	_renderTargets.resize(_swapchain->GetMaxFrameCount());
 
@@ -213,10 +216,9 @@ void EditorWindow::setupPanels()
 	_profilerPanel->Setup();
 	_basePanel->InsertPanel(_profilerPanel.get());
 
-	_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
-	_hierarchyPanel->Setup();
-	_basePanel->InsertPanel(_hierarchyPanel.get());
-
+	//_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
+	//_hierarchyPanel->Setup();
+	//_basePanel->InsertPanel(_hierarchyPanel.get());
 }
 
 void EditorWindow::updateEditorCamera()

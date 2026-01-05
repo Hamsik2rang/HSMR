@@ -131,12 +131,19 @@ void CommandBufferVulkan::BindPipeline(RHIGraphicsPipeline* pipeline)
 	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
 	HS_ASSERT(pipeline, "Pipeline is nullptr");
 	GraphicsPipelineVulkan* pipelineVK = static_cast<GraphicsPipelineVulkan*>(pipeline);
+	curGraphicsPipeline = pipelineVK->handle;
+	curGraphicsPipelineLayout = pipelineVK->layout;
 	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineVK->handle);
 }
 
 void CommandBufferVulkan::BindResourceSet(RHIResourceSet* rSet)
 {
-	// TODO: Implementation it.
+	HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
+	HS_ASSERT(rSet, "Resource set is nullptr");
+
+	ResourceSetVulkan* rSetVK = static_cast<ResourceSetVulkan*>(rSet);
+	vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		curGraphicsPipelineLayout, 0, 1, &rSetVK->handle, 0, nullptr);
 }
 
 void CommandBufferVulkan::SetViewport(const Viewport& viewport)
@@ -213,7 +220,17 @@ void CommandBufferVulkan::CopyTexture(RHITexture* srcTexture, RHITexture* dstTex
 
 void CommandBufferVulkan::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
+	HS_ASSERT(buffer, "Buffer is nullptr");
+	HS_ASSERT(srcData, "Source data is nullptr");
+	HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+	HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
 
+	BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
+
+	// vkCmdUpdateBuffer updates buffer contents inline within the command buffer
+	// Note: dataSize must be less than or equal to 65536 bytes
+	// Note: dstOffset and dataSize must be multiples of 4
+	vkCmdUpdateBuffer(handle, bufferVK->handle, static_cast<VkDeviceSize>(dstOffset), static_cast<VkDeviceSize>(dataSize), srcData);
 }
 
 void CommandBufferVulkan::PushDebugMark(const char* label, float color[4])
@@ -226,6 +243,80 @@ void CommandBufferVulkan::PopDebugMark()
 
 }
 
+void CommandBufferVulkan::BindComputePipeline(RHIComputePipeline* pipeline)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(pipeline, "Compute Pipeline is nullptr");
 
+	ComputePipelineVulkan* pipelineVK = static_cast<ComputePipelineVulkan*>(pipeline);
+	curComputePipeline = pipelineVK->handle;
+	curComputePipelineLayout = pipelineVK->layout;
+
+	vkCmdBindPipeline(handle, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineVK->handle);
+
+	_isComputeBegan = true;
+	_isGraphicsBegan = false;
+}
+
+void CommandBufferVulkan::BindComputeResourceSet(RHIResourceSet* rSet)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(_isComputeBegan, "Compute pipeline is not bound");
+	HS_ASSERT(rSet, "Resource set is nullptr");
+
+	ResourceSetVulkan* rSetVK = static_cast<ResourceSetVulkan*>(rSet);
+	vkCmdBindDescriptorSets(handle, VK_PIPELINE_BIND_POINT_COMPUTE,
+		curComputePipelineLayout, 0, 1, &rSetVK->handle, 0, nullptr);
+}
+
+void CommandBufferVulkan::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+	HS_ASSERT(_isComputeBegan, "Compute pipeline is not bound");
+
+	vkCmdDispatch(handle, groupCountX, groupCountY, groupCountZ);
+}
+
+void CommandBufferVulkan::EndComputePass()
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+
+	curComputePipeline = VK_NULL_HANDLE;
+	curComputePipelineLayout = VK_NULL_HANDLE;
+	_isComputeBegan = false;
+}
+
+void CommandBufferVulkan::TextureBarrier(RHITexture* texture)
+{
+	HS_ASSERT(_isBegan, "CommandBuffer has not began");
+
+	TextureVulkan* textureVK = static_cast<TextureVulkan*>(texture);
+
+	// Create image memory barrier for compute shader synchronization
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = textureVK->handle;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+	vkCmdPipelineBarrier(
+		handle,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &barrier
+	);
+}
 
 HS_NS_END

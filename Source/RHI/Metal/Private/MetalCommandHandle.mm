@@ -30,10 +30,12 @@ MetalCommandBuffer::MetalCommandBuffer(const char* name, id<MTLDevice> device, i
     , cmdQueue(commandQueue)
     , handle(nil)
     , curRenderEncoder(nil)
+    , curComputeEncoder(nil)
     , curRenderPassDesc(nil)
     , curBindRenderPass(nullptr)
     , curBindFramebuffer(nullptr)
     , curBindPipeline(nullptr)
+    , curBindComputePipeline(nullptr)
     , curBindIndexBuffer(nullptr)
 {
 }
@@ -46,12 +48,14 @@ void MetalCommandBuffer::Begin()
 {
     HS_ASSERT(!_isBegan, "CommandBuffer is already began");
 
-    curRenderEncoder   = nil;
-    curRenderPassDesc  = nil;
-    curBindRenderPass  = nullptr;
-    curBindFramebuffer = nullptr;
-    curBindPipeline    = nullptr;
-    curBindIndexBuffer = nullptr;
+    curRenderEncoder      = nil;
+    curComputeEncoder     = nil;
+    curRenderPassDesc     = nil;
+    curBindRenderPass     = nullptr;
+    curBindFramebuffer    = nullptr;
+    curBindPipeline       = nullptr;
+    curBindComputePipeline = nullptr;
+    curBindIndexBuffer    = nullptr;
 
     handle = [cmdQueue commandBufferWithUnretainedReferences];
 
@@ -72,6 +76,12 @@ void MetalCommandBuffer::Reset()
     {
         [curRenderEncoder endEncoding];
         curRenderEncoder = nil;
+    }
+
+    if (nil != curComputeEncoder)
+    {
+        [curComputeEncoder endEncoding];
+        curComputeEncoder = nil;
     }
 
     _isBegan = false;
@@ -242,6 +252,134 @@ void MetalCommandBuffer::EndRenderPass()
     curBindPipeline    = nullptr;
 
     _isRenderPassBegan = false;
+}
+
+void MetalCommandBuffer::BindComputePipeline(RHIComputePipeline* pipeline)
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+    HS_CHECK(pipeline, "Compute Pipeline is null");
+
+    // End render encoder if active (can't have both at once)
+    if (nil != curRenderEncoder)
+    {
+        [curRenderEncoder endEncoding];
+        curRenderEncoder = nil;
+        _isRenderPassBegan = false;
+    }
+
+    // Create compute encoder if not already created
+    if (nil == curComputeEncoder)
+    {
+        curComputeEncoder = [handle computeCommandEncoder];
+    }
+
+    curBindComputePipeline = static_cast<MetalComputePipeline*>(pipeline);
+    [curComputeEncoder setComputePipelineState:curBindComputePipeline->pipelineState];
+}
+
+void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+    HS_CHECK(curComputeEncoder, "Compute encoder is not active");
+
+    for (size_t i = 0; i < rSet->layouts.size(); i++)
+    {
+        const auto& bindings = rSet->layouts[i]->bindings;
+        for (size_t j = 0; j < bindings.size(); j++)
+        {
+            const ResourceBinding& rb = bindings[j];
+
+            switch (rb.type)
+            {
+                case EResourceType::UNIFORM_BUFFER:
+                case EResourceType::STORAGE_BUFFER:
+                {
+                    for (uint8 k = 0; k < rb.arrayCount; k++)
+                    {
+                        MetalBuffer* buffer = static_cast<MetalBuffer*>(rb.resource.buffers[k]);
+                        [curComputeEncoder setBuffer:buffer->handle offset:rb.resource.offsets[k] atIndex:rb.binding + k];
+                    }
+                }
+                break;
+                case EResourceType::COMBINED_IMAGE_SAMPLER:
+                case EResourceType::SAMPLED_IMAGE:
+                case EResourceType::STORAGE_IMAGE:
+                {
+                    for (uint8 k = 0; k < rb.arrayCount; k++)
+                    {
+                        MetalTexture* texture = static_cast<MetalTexture*>(rb.resource.textures[k]);
+                        [curComputeEncoder setTexture:texture->handle atIndex:rb.binding + k];
+                    }
+                }
+                break;
+                case EResourceType::SAMPLER:
+                {
+                    for (uint8 k = 0; k < rb.arrayCount; k++)
+                    {
+                        MetalSampler* sampler = static_cast<MetalSampler*>(rb.resource.samplers[k]);
+                        [curComputeEncoder setSamplerState:sampler->handle atIndex:rb.binding + k];
+                    }
+                }
+                break;
+                default:
+                {
+                    HS_LOG(crash, "Not Implemented ResourceType for Compute");
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void MetalCommandBuffer::Dispatch(uint32 groupCountX, uint32 groupCountY, uint32 groupCountZ)
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+    HS_CHECK(curComputeEncoder, "Compute encoder is not active");
+    HS_CHECK(curBindComputePipeline, "Compute pipeline is not bound");
+
+    MTLSize threadgroupsPerGrid = MTLSizeMake(groupCountX, groupCountY, groupCountZ);
+
+    // Get the max threads per threadgroup from the pipeline state
+    NSUInteger maxTotalThreadsPerThreadgroup = curBindComputePipeline->pipelineState.maxTotalThreadsPerThreadgroup;
+    NSUInteger threadExecutionWidth = curBindComputePipeline->pipelineState.threadExecutionWidth;
+
+    // Calculate optimal threadgroup size
+    // For now, use a simple approach: try to use 256 threads per threadgroup
+    NSUInteger threadsPerThreadgroup = MIN(256, maxTotalThreadsPerThreadgroup);
+    MTLSize threadgroupSize = MTLSizeMake(threadsPerThreadgroup, 1, 1);
+
+    [curComputeEncoder dispatchThreadgroups:threadgroupsPerGrid threadsPerThreadgroup:threadgroupSize];
+}
+
+void MetalCommandBuffer::EndComputePass()
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+
+    if (nil != curComputeEncoder)
+    {
+        [curComputeEncoder endEncoding];
+        curComputeEncoder = nil;
+    }
+
+    curBindComputePipeline = nullptr;
+    _isComputeBegan = false;
+}
+
+void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+{
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+
+    // For Metal, we need to use a blit encoder to synchronize texture access
+    // between compute and render passes. This is handled automatically by
+    // ending the compute encoder before starting a render pass.
+    //
+    // For explicit synchronization between compute dispatches, we can use
+    // memoryBarrierWithScope on the compute encoder if it's still active.
+    if (nil != curComputeEncoder)
+    {
+        // Use memory barrier for compute shader synchronization
+        [curComputeEncoder memoryBarrierWithScope:MTLBarrierScopeTextures];
+    }
 }
 
 void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)

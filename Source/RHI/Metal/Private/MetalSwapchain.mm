@@ -20,6 +20,7 @@ HS_NS_BEGIN
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     : Swapchain(info)
     , _frameIndex(0)
+    , _imageIndex(0)
     , _maxFrameCount(3)
     , _drawable(nil)
 {

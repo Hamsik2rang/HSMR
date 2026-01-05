@@ -227,6 +227,33 @@ void MetalContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
     delete pipelineMetal;
 }
 
+RHIComputePipeline* MetalContext::CreateComputePipeline(const char* name, const ComputePipelineInfo& info)
+{
+    MetalComputePipeline* pipelineMetal = new MetalComputePipeline(name, info);
+
+    MetalShader* shaderMetal = static_cast<MetalShader*>(info.computeShader);
+    id<MTLFunction> computeFunction = shaderMetal->handle;
+
+    NSError* error = nil;
+    pipelineMetal->pipelineState = [s_device newComputePipelineStateWithFunction:computeFunction error:&error];
+
+    if (error != nil)
+    {
+        HS_LOG(error, "Failed to create compute pipeline: %s", [[error localizedDescription] UTF8String]);
+        delete pipelineMetal;
+        return nullptr;
+    }
+
+    return static_cast<RHIComputePipeline*>(pipelineMetal);
+}
+
+void MetalContext::DestroyComputePipeline(RHIComputePipeline* pipeline)
+{
+    MetalComputePipeline* pipelineMetal = static_cast<MetalComputePipeline*>(pipeline);
+
+    delete pipelineMetal;
+}
+
 RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
     FileHandle handle = 0;
@@ -371,9 +398,19 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
     desc.mipmapLevelCount      = info.mipLevel;
     desc.usage                 = MetalUtility::ToTextureUsage(info.usage);
     desc.sampleCount           = 1;
-    desc.storageMode           = MTLStorageModeManaged;
     desc.pixelFormat           = MetalUtility::ToPixelFormat(info.format);
     desc.textureType           = MetalUtility::ToTextureType(info.type);
+
+    // Use Private storage mode for compute shader storage textures (GPU-only access)
+    // Use Managed for textures that need CPU readback
+    if ((info.usage & ETextureUsage::STORAGE) != static_cast<ETextureUsage>(0))
+    {
+        desc.storageMode = MTLStorageModePrivate;
+    }
+    else
+    {
+        desc.storageMode = MTLStorageModeManaged;
+    }
 
     MetalTexture->handle = [s_device newTextureWithDescriptor:desc];
 
