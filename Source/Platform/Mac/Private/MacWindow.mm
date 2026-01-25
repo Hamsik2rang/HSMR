@@ -212,7 +212,7 @@ void ProcessScrollEvent(NSEvent* event)
     layer.colorspace      = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
     layer.framebufferOnly = YES;
     layer.drawableSize    = self.view.bounds.size;
-    layer.contentsScale   = [[NSScreen mainScreen] backingScaleFactor];
+//    layer.contentsScale   = [[NSScreen mainScreen] backingScaleFactor];
     
     auto curDrawableSize = layer.drawableSize;
     
