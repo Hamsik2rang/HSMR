@@ -39,6 +39,12 @@ public:
 	static Scoped<Material> LoadMaterialFromFile(const std::string& path, bool isAbsolutePath = false);
 	static void FreeMaterial(Material* material);
 
+	// Load model with meshes and materials
+	static bool LoadModel(const std::string& path,
+	                      std::vector<Scoped<Mesh>>& outMeshes,
+	                      std::vector<Scoped<Material>>& outMaterials,
+	                      bool isAbsolutePath = false);
+
 
 	static const Image* GetFallbackImage2DWhite();
 	static const Image* GetFallbackImage2DBlack();

@@ -57,17 +57,18 @@ protected:
     RHIComputePipeline(const char* name, const ComputePipelineInfo& info);
 };
 
-template<>
-struct Hasher<RHIRenderPass>
-{
-    static uint32 Get(const RHIRenderPass& key)
-    {
-        return 0;
-    }
-};
-
-
-
 HS_NS_END
+
+namespace std
+{
+    template<>
+    struct hash<hs::RHIRenderPass>
+    {
+        size_t operator()(const hs::RHIRenderPass& key) const
+        {
+            return std::hash<hs::RenderPassInfo>{}(key.info);
+        }
+    };
+}
 
 #endif /* __HS_RENDER_PASS_H__ */

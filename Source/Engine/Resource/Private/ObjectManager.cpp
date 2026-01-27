@@ -20,6 +20,7 @@
 #include "stb_image.h"
 
 #include <unordered_map>
+#include <thread>
 
 HS_NS_BEGIN
 
@@ -961,6 +962,174 @@ const Mesh* ObjectManager::GetFallbackMeshSphere()
 		HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback mesh.");
 	}
 	return s_fallbackMeshSphere.get(); // Return empty mesh or handle error appropriately
+}
+
+bool ObjectManager::LoadModel(const std::string& path, 
+                              std::vector<Scoped<Mesh>>& outMeshes,
+                              std::vector<Scoped<Material>>& outMaterials,
+                              bool isAbsolutePath)
+{
+    std::string filePath = path;
+    if (!isAbsolutePath)
+    {
+        filePath = s_resourcePath + path;
+    }
+
+    Assimp::Importer importer;
+    
+    uint32 importFlags = aiProcess_Triangulate | 
+                        aiProcess_CalcTangentSpace |
+                        aiProcess_GenNormals |
+                        aiProcess_JoinIdenticalVertices |
+                        aiProcess_ImproveCacheLocality |
+                        aiProcess_LimitBoneWeights |
+                        aiProcess_RemoveRedundantMaterials |
+                        aiProcess_OptimizeMeshes |
+                        aiProcess_GenUVCoords |
+                        aiProcess_TransformUVCoords;
+
+    const aiScene* scene = importer.ReadFile(filePath, importFlags);
+    
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        HS_LOG(error, "Failed to load model: %s", importer.GetErrorString());
+        return false;
+    }
+
+    HS_LOG(info, "Loading model: %s", filePath);
+    HS_LOG(info, "  - Meshes: %d", scene->mNumMeshes);
+    HS_LOG(info, "  - Materials: %d", scene->mNumMaterials);
+
+    std::string modelDirectory;
+    size_t lastSlash = filePath.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+    {
+        modelDirectory = filePath.substr(0, lastSlash);
+    }
+
+    std::vector<Scoped<Material>> materials;
+    materials.reserve(scene->mNumMaterials);
+    
+    for (uint32 i = 0; i < scene->mNumMaterials; ++i)
+    {
+        aiMaterial* aiMat = scene->mMaterials[i];
+        Scoped<Material> material = MakeScoped<Material>();
+
+        aiColor4D diffuse;
+        if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS)
+        {
+            material->SetDiffuseColor(glm::vec4(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
+        }
+
+        aiColor4D specular;
+        if (aiMat->Get(AI_MATKEY_COLOR_SPECULAR, specular) == AI_SUCCESS)
+        {
+            material->SetSpecularColor(glm::vec4(specular.r, specular.g, specular.b, specular.a));
+        }
+
+        float shininess;
+        if (aiMat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS)
+        {
+            material->SetShininess(shininess);
+        }
+
+        for (aiTextureType type = aiTextureType_DIFFUSE; type <= aiTextureType_AMBIENT_OCCLUSION; type = (aiTextureType)(type + 1))
+        {
+            uint32 textureCount = aiMat->GetTextureCount(type);
+            if (textureCount > 0)
+            {
+                aiString path;
+                if (aiMat->GetTexture(type, 0, &path) == AI_SUCCESS)
+                {
+                    std::string texturePath = path.C_Str();
+                    if (!FileSystem::IsAbsolutePath(texturePath))
+                    {
+                        texturePath = modelDirectory + "/" + texturePath;
+                    }
+
+                    Scoped<Image> texture = LoadImageFromFile(texturePath, true);
+                    if (texture)
+                    {
+                        EMaterialTextureType hsTextureType = EMaterialTextureType::DIFFUSE;
+                        if (type == aiTextureType_NORMALS) hsTextureType = EMaterialTextureType::NORMAL;
+                        else if (type == aiTextureType_SPECULAR) hsTextureType = EMaterialTextureType::SPECULAR;
+                        
+                        material->SetTexture(hsTextureType, texture.release());
+                    }
+                }
+            }
+        }
+
+        materials.push_back(std::move(material));
+    }
+
+    outMeshes.clear();
+    outMaterials.clear();
+    
+    for (uint32 i = 0; i < scene->mNumMeshes; ++i)
+    {
+        aiMesh* mesh = scene->mMeshes[i];
+        Scoped<Mesh> hsMesh = MakeScoped<Mesh>();
+
+        std::vector<float> positions;
+        positions.reserve(mesh->mNumVertices * 3);
+        for (uint32 j = 0; j < mesh->mNumVertices; ++j)
+        {
+            positions.push_back(mesh->mVertices[j].x);
+            positions.push_back(mesh->mVertices[j].y);
+            positions.push_back(mesh->mVertices[j].z);
+        }
+        hsMesh->SetPosition(std::move(positions));
+
+        if (mesh->HasNormals())
+        {
+            std::vector<float> normals;
+            normals.reserve(mesh->mNumVertices * 3);
+            for (uint32 j = 0; j < mesh->mNumVertices; ++j)
+            {
+                normals.push_back(mesh->mNormals[j].x);
+                normals.push_back(mesh->mNormals[j].y);
+                normals.push_back(mesh->mNormals[j].z);
+            }
+            hsMesh->SetNormal(std::move(normals));
+        }
+
+        if (mesh->HasTextureCoords(0))
+        {
+            std::vector<float> texCoords;
+            texCoords.reserve(mesh->mNumVertices * 2);
+            for (uint32 j = 0; j < mesh->mNumVertices; ++j)
+            {
+                texCoords.push_back(mesh->mTextureCoords[0][j].x);
+                texCoords.push_back(mesh->mTextureCoords[0][j].y);
+            }
+            hsMesh->SetTexCoord(std::move(texCoords), 0);
+        }
+
+        std::vector<uint32> indices;
+        indices.reserve(mesh->mNumFaces * 3);
+        for (uint32 j = 0; j < mesh->mNumFaces; ++j)
+        {
+            aiFace& face = mesh->mFaces[j];
+            for (uint32 k = 0; k < face.mNumIndices; ++k)
+            {
+                indices.push_back(face.mIndices[k]);
+            }
+        }
+        hsMesh->SetIndices(std::move(indices));
+
+        if (mesh->mMaterialIndex < materials.size())
+        {
+            hsMesh->SetMaterialIndex(mesh->mMaterialIndex);
+        }
+
+        hsMesh->CalculateBounds();
+        outMeshes.push_back(std::move(hsMesh));
+    }
+
+    outMaterials = std::move(materials);
+
+    return true;
 }
 
 HS_NS_END

@@ -1,0 +1,14 @@
+{
+  "window": {
+    "title": "HSMR Prototype",
+    "width": 1920,
+    "height": 1080,
+    "vsync": true,
+    "fullscreen": false
+  },
+
+  "defaultScene": "Assets/Samples/simple_scene.json",
+
+  "assetPath": "Assets/",
+  "shaderPath": "Shader/"
+}

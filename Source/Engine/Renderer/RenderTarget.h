@@ -46,34 +46,38 @@ private:
     RHITexture*              _depthStencilTexture;
 };
 
-template <>
-struct Hasher<RenderTarget>
-{
-    static uint32 Get(const RenderTarget& key)
-    {
-        const RenderTargetInfo& info = key.GetInfo();
-
-        uint32 hash = HashCombine(key.GetWidth(), key.GetHeight(), info.isSwapchainTarget);
-        hash        = HashCombine(hash, Hasher<size_t>::Get(key.GetColorTextureCount()), info.useDepthStencilTexture);
-        for (size_t i = 0; i < key.GetColorTextureCount(); i++)
-        {
-            RHITexture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
-            hash                  = HashCombine(hash, Hasher<TextureInfo>::Get(colorTexture->info), PointerHash(colorTexture));
-        }
-
-        if (info.useDepthStencilTexture)
-        {
-            RHITexture* depthTexture = key.GetDepthStencilTexture();
-            uint32   b            = Hasher<TextureInfo>::Get(depthTexture->info);
-            uint32   c            = PointerHash(depthTexture);
-
-            hash = HashCombine(hash, b, c);
-        }
-
-        return hash;
-    }
-};
-
 HS_NS_END
+
+namespace std
+{
+    template <>
+    struct hash<hs::RenderTarget>
+    {
+        size_t operator()(const hs::RenderTarget& key) const
+        {
+            const hs::RenderTargetInfo& info = key.GetInfo();
+
+            size_t h = hs::HashCombine(key.GetWidth(), key.GetHeight(), static_cast<uint32>(info.isSwapchainTarget));
+            h = hs::HashCombine64(h, key.GetColorTextureCount(), static_cast<size_t>(info.useDepthStencilTexture));
+
+            std::hash<hs::TextureInfo> textureHash;
+            for (size_t i = 0; i < key.GetColorTextureCount(); i++)
+            {
+                hs::RHITexture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
+                h = hs::HashCombine64(h, textureHash(colorTexture->info), hs::PointerHash(colorTexture));
+            }
+
+            if (info.useDepthStencilTexture)
+            {
+                hs::RHITexture* depthTexture = key.GetDepthStencilTexture();
+                size_t b = textureHash(depthTexture->info);
+                size_t c = hs::PointerHash(depthTexture);
+                h = hs::HashCombine64(h, b, c);
+            }
+
+            return h;
+        }
+    };
+}
 
 #endif /* __HS_RENDER_TARGET_H__ */

@@ -882,80 +882,86 @@ struct ComputePipelineInfo
 	RHIResourceLayout* resourceLayout;
 };
 
-template <>
-struct hs::Hasher<Attachment>
-{
-	static uint32 Get(const Attachment& key)
-	{
-		uint32 hash = HashCombine(Hasher<EPixelFormat>::Get(key.format), Hasher<ELoadAction>::Get(key.loadAction), Hasher<EStoreAction>::Get(key.storeAction));
-		hash = HashCombine(hash, key.isDepthStencil);
-
-		return hash;
-	}
-};
-
-template <>
-struct hs::Hasher<RenderPassInfo>
-{
-	static uint32 Get(const RenderPassInfo& key)
-	{
-		uint32 hash = HashCombine(Hasher<uint64>::Get(key.colorAttachmentCount), key.useDepthStencilAttachment, key.isSwapchainRenderPass);
-		for (size_t i = 0; i < key.colorAttachmentCount / 2; i += 2)
-		{
-			hash = HashCombine(hash, Hasher<Attachment>::Get(key.colorAttachments[i]), Hasher<Attachment>::Get(key.colorAttachments[i + 1]));
-		}
-
-		uint32 b = (key.colorAttachmentCount % 2 != 0) ? Hasher<Attachment>::Get(key.colorAttachments.back()) : 0;
-		uint32 c = (key.useDepthStencilAttachment) ? Hasher<Attachment>::Get(key.depthStencilAttachment) : 0;
-		hash = HashCombine(hash, b, c);
-		return hash;
-	}
-};
-
-template <>
-struct Hasher<TextureInfo>
-{
-	static uint32 Get(const TextureInfo& key)
-	{
-		uint32 hash = 0;
-		hash = HashCombine(key.extent.width, key.extent.height, key.extent.depth);
-		hash = HashCombine(hash, Hasher<EPixelFormat>::Get(key.format), Hasher<ETextureType>::Get(key.type));
-		hash = HashCombine(hash, Hasher<ETextureUsage>::Get(key.usage), key.mipLevel);
-		hash = HashCombine(hash, key.arrayLength, Hasher<size_t>::Get(key.byteSize));
-
-		hash = HashCombine(hash, key.isCompressed, key.isSwapchainTexture);
-		hash = HashCombine(hash, key.isDepthStencilBuffer, key.useGenerateMipmap);
-
-		return hash;
-	}
-};
-
-template <>
-struct Hasher<SamplerInfo>
-{
-	static uint32 Get(const SamplerInfo& key)
-	{
-		uint32 hash = 0;
-		hash = HashCombine(static_cast<uint32>(key.type), static_cast<uint32>(key.minFilter), static_cast<uint32>(key.magFilter));
-		hash = HashCombine(hash, static_cast<uint32>(key.mipmapMode), static_cast<uint32>(key.addressU));
-		hash = HashCombine(hash, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
-		hash = HashCombine(hash, key.isPixelCoordinate);
-
-		return hash;
-	}
-};
-
-template <>
-struct Hasher<BufferInfo>
-{
-	static uint32 Get(const BufferInfo& key)
-	{
-		uint32 hash = 0;
-		hash = HashCombine(static_cast<uint32>(key.usage), static_cast<uint32>(key.memoryOption));
-		return hash;
-	}
-};
-
 HS_NS_END
+
+namespace std
+{
+	template <>
+	struct hash<hs::Attachment>
+	{
+		size_t operator()(const hs::Attachment& key) const
+		{
+			size_t h = hs::HashCombine(
+				static_cast<uint32>(key.format),
+				static_cast<uint32>(key.loadAction),
+				static_cast<uint32>(key.storeAction));
+			h = hs::HashCombine(static_cast<uint32>(h), static_cast<uint32>(key.isDepthStencil));
+			return h;
+		}
+	};
+
+	template <>
+	struct hash<hs::RenderPassInfo>
+	{
+		size_t operator()(const hs::RenderPassInfo& key) const
+		{
+			size_t h = hs::HashCombine(
+				static_cast<uint32>(key.colorAttachmentCount),
+				static_cast<uint32>(key.useDepthStencilAttachment),
+				static_cast<uint32>(key.isSwapchainRenderPass));
+
+			std::hash<hs::Attachment> attachmentHash;
+			for (size_t i = 0; i + 1 < key.colorAttachmentCount; i += 2)
+			{
+				h = hs::HashCombine64(h, attachmentHash(key.colorAttachments[i]), attachmentHash(key.colorAttachments[i + 1]));
+			}
+
+			size_t b = (key.colorAttachmentCount % 2 != 0) ? attachmentHash(key.colorAttachments.back()) : 0;
+			size_t c = (key.useDepthStencilAttachment) ? attachmentHash(key.depthStencilAttachment) : 0;
+			h = hs::HashCombine64(h, b, c);
+			return h;
+		}
+	};
+
+	template <>
+	struct hash<hs::TextureInfo>
+	{
+		size_t operator()(const hs::TextureInfo& key) const
+		{
+			size_t h = hs::HashCombine(key.extent.width, key.extent.height, key.extent.depth);
+			h = hs::HashCombine64(h, static_cast<uint32>(key.format), static_cast<uint32>(key.type));
+			h = hs::HashCombine64(h, static_cast<uint32>(key.usage), key.mipLevel);
+			h = hs::HashCombine64(h, key.arrayLength, key.byteSize);
+			h = hs::HashCombine64(h, key.isCompressed, key.isSwapchainTexture);
+			h = hs::HashCombine64(h, key.isDepthStencilBuffer, key.useGenerateMipmap);
+			return h;
+		}
+	};
+
+	template <>
+	struct hash<hs::SamplerInfo>
+	{
+		size_t operator()(const hs::SamplerInfo& key) const
+		{
+			size_t h = hs::HashCombine(
+				static_cast<uint32>(key.type),
+				static_cast<uint32>(key.minFilter),
+				static_cast<uint32>(key.magFilter));
+			h = hs::HashCombine64(h, static_cast<uint32>(key.mipmapMode), static_cast<uint32>(key.addressU));
+			h = hs::HashCombine64(h, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
+			h = hs::HashCombine64(h, key.isPixelCoordinate);
+			return h;
+		}
+	};
+
+	template <>
+	struct hash<hs::BufferInfo>
+	{
+		size_t operator()(const hs::BufferInfo& key) const
+		{
+			return hs::HashCombine(static_cast<uint32>(key.usage), static_cast<uint32>(key.memoryOption));
+		}
+	};
+}
 
 #endif

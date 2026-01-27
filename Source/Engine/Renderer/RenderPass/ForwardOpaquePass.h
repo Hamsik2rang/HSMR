@@ -27,6 +27,7 @@ public:
     void Configure(RenderTarget* renderTarget) override;
 
     void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) override;
+    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const RenderParameter& param) override;
 
     void OnAfterRendering() override;
 

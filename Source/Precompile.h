@@ -80,6 +80,18 @@ typedef uint64_t uint64;
 #define HS_EDITOR_API
 #endif
 
+#if defined(HS_PROFILER_API_EXPORT)
+#define HS_PROFILER_API __attribute__((__visibility__("default")))
+#else
+#define HS_PROFILER_API
+#endif
+
+#if defined(HS_APPLICATION_API_EXPORT)
+#define HS_APPLICATION_API __attribute__((__visibility__("default")))
+#else
+#define HS_APPLICATION_API
+#endif
+
 #else
 
 #if defined(HS_API_EXPORT)
@@ -96,6 +108,22 @@ typedef uint64_t uint64;
 #define HS_EDITOR_API __declspec(dllimport)
 #else
 #define HS_EDITOR_API
+#endif
+
+#if defined(HS_PROFILER_API_EXPORT)
+#define HS_PROFILER_API __declspec(dllexport)
+#elif defined(HS_PROFILER_API_IMPORT)
+#define HS_PROFILER_API __declspec(dllimport)
+#else
+#define HS_PROFILER_API
+#endif
+
+#if defined(HS_APPLICATION_API_EXPORT)
+#define HS_APPLICATION_API __declspec(dllexport)
+#elif defined(HS_APPLICATION_API_IMPORT)
+#define HS_APPLICATION_API __declspec(dllimport)
+#else
+#define HS_APPLICATION_API
 #endif
 #endif
 

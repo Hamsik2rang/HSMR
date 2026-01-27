@@ -1,0 +1,95 @@
+{
+  "name": "Shadow Mapping Test",
+
+  "camera": {
+    "position": [5, 8, -10],
+    "target": [0, 0, 0],
+    "fov": 45,
+    "near": 0.1,
+    "far": 500
+  },
+
+  "shaders": [
+    {
+      "name": "shadow_depth",
+      "path": "Shader/ShadowDepth.slang",
+      "stages": ["vertex", "fragment"]
+    },
+    {
+      "name": "shadow_main",
+      "path": "Shader/ShadowMain.slang",
+      "stages": ["vertex", "fragment"]
+    }
+  ],
+
+  "textures": [],
+
+  "models": [
+    {
+      "name": "cube",
+      "path": "Models/cube.obj",
+      "settings": {
+        "generateNormals": true,
+        "generateTangents": false,
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "plane",
+      "path": "Models/plane.obj",
+      "settings": {
+        "generateNormals": true,
+        "generateTangents": false,
+        "scale": 1.0
+      }
+    }
+  ],
+
+  "objects": [
+    {
+      "name": "Shadow Caster",
+      "model": "cube",
+      "shader": "shadow_main",
+      "transform": {
+        "position": [0, 2, 0],
+        "rotation": [45, 30, 0],
+        "scale": [1, 1, 1]
+      },
+      "material": {
+        "baseColor": [0.8, 0.2, 0.2, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.5
+      }
+    },
+    {
+      "name": "Second Cube",
+      "model": "cube",
+      "shader": "shadow_main",
+      "transform": {
+        "position": [3, 1, -2],
+        "rotation": [0, 45, 0],
+        "scale": [0.8, 0.8, 0.8]
+      },
+      "material": {
+        "baseColor": [0.2, 0.8, 0.2, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.5
+      }
+    },
+    {
+      "name": "Ground",
+      "model": "plane",
+      "shader": "shadow_main",
+      "transform": {
+        "position": [0, 0, 0],
+        "rotation": [0, 0, 0],
+        "scale": [20, 1, 20]
+      },
+      "material": {
+        "baseColor": [0.9, 0.9, 0.9, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.9
+      }
+    }
+  ]
+}

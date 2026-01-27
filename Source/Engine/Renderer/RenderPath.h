@@ -42,9 +42,9 @@ public:
     private:
         RenderPath* _renderer;
 
-        std::unordered_map<uint32, RHIRenderPass*> _renderPassCache;
-        std::unordered_map<uint32, RHIFramebuffer*> _framebufferCache;
-        std::unordered_map<uint32, RHIGraphicsPipeline*> _gPipelineCache;
+        std::unordered_map<size_t, RHIRenderPass*> _renderPassCache;
+        std::unordered_map<size_t, RHIFramebuffer*> _framebufferCache;
+        std::unordered_map<size_t, RHIGraphicsPipeline*> _gPipelineCache;
     };
 
     RenderPath(RHIContext* rhiContext);

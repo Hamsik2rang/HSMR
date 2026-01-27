@@ -60,7 +60,7 @@ RenderPath::RHIHandleCache::~RHIHandleCache()
 
 RHIRenderPass* RenderPath::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
 {
-    uint32 hash = Hasher<RenderPassInfo>::Get(info);
+    size_t hash = std::hash<RenderPassInfo>{}(info);
 
     if (_renderPassCache.find(hash) == _renderPassCache.end())
     {
@@ -74,7 +74,7 @@ RHIRenderPass* RenderPath::RHIHandleCache::GetRenderPass(const RenderPassInfo& i
 
 RHIFramebuffer* RenderPath::RHIHandleCache::GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget)
 {
-    uint32 hash = HashCombine(Hasher<RenderTarget>::Get(*renderTarget), Hasher<RHIRenderPass>::Get(*renderPass));
+    size_t hash = HashCombine64(std::hash<RenderTarget>{}(*renderTarget), std::hash<RHIRenderPass>{}(*renderPass));
 
     if (_framebufferCache.find(hash) == _framebufferCache.end())
     {

@@ -45,28 +45,33 @@ struct HS_API  RenderParameter
 
 HS_NS_END
 
-template <>
-struct hs::Hasher<hs::RenderTargetInfo>
+namespace std
 {
-    static uint32 Get(hs::RenderTargetInfo& key)
+    template <>
+    struct hash<hs::RenderTargetInfo>
     {
-        uint32 hash = HashCombine(key.colorTextureCount, key.useDepthStencilTexture, key.isSwapchainTarget);
-
-        for (size_t i = 0; i < key.colorTextureCount / 2; i += 2)
+        size_t operator()(const hs::RenderTargetInfo& key) const
         {
-            hash = HashCombine(hash,
-                hs::Hasher<hs::TextureInfo>::Get(key.colorTextureInfos[i]),
-                hs::Hasher<hs::TextureInfo>::Get(key.colorTextureInfos[i + 1]));
-        }
-        if (key.colorTextureCount % 2 != 0)
-        {
-            hash = HashCombine(hash, hs::Hasher<hs::TextureInfo>::Get(key.colorTextureInfos.back()));
-        }
+            size_t h = hs::HashCombine(
+                static_cast<uint32>(key.colorTextureCount),
+                static_cast<uint32>(key.useDepthStencilTexture),
+                static_cast<uint32>(key.isSwapchainTarget));
 
-        hash = HashCombine(hash, key.width, key.height);
+            std::hash<hs::TextureInfo> textureHash;
+            for (size_t i = 0; i + 1 < key.colorTextureCount; i += 2)
+            {
+                h = hs::HashCombine64(h, textureHash(key.colorTextureInfos[i]), textureHash(key.colorTextureInfos[i + 1]));
+            }
+            if (key.colorTextureCount % 2 != 0)
+            {
+                h = hs::HashCombine64(h, textureHash(key.colorTextureInfos.back()));
+            }
 
-        return hash;
-    }
-};
+            h = hs::HashCombine64(h, key.width, key.height);
+
+            return h;
+        }
+    };
+}
 
 #endif /* __HS_RENDER_DEFINITION_H__ */

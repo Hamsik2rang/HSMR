@@ -1,0 +1,81 @@
+{
+  "name": "Simple Test Scene",
+
+  "camera": {
+    "position": [0, 2, -5],
+    "target": [0, 0, 0],
+    "fov": 60,
+    "near": 0.1,
+    "far": 100
+  },
+
+  "shaders": [
+    {
+      "name": "basic",
+      "path": "Shader/Basic.slang",
+      "stages": ["vertex", "fragment"]
+    }
+  ],
+
+  "textures": [],
+
+  "models": [
+    {
+      "name": "cube",
+      "path": "Models/cube.obj",
+      "settings": {
+        "generateNormals": true,
+        "generateTangents": false,
+        "scale": 1.0
+      }
+    }
+  ],
+
+  "objects": [
+    {
+      "name": "Red Cube",
+      "model": "cube",
+      "shader": "basic",
+      "transform": {
+        "position": [-2, 0.5, 0],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1]
+      },
+      "material": {
+        "baseColor": [1.0, 0.2, 0.2, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.5
+      }
+    },
+    {
+      "name": "Green Cube",
+      "model": "cube",
+      "shader": "basic",
+      "transform": {
+        "position": [0, 0.5, 0],
+        "rotation": [0, 45, 0],
+        "scale": [1, 1, 1]
+      },
+      "material": {
+        "baseColor": [0.2, 1.0, 0.2, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.5
+      }
+    },
+    {
+      "name": "Blue Cube",
+      "model": "cube",
+      "shader": "basic",
+      "transform": {
+        "position": [2, 0.5, 0],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1]
+      },
+      "material": {
+        "baseColor": [0.2, 0.2, 1.0, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.5
+      }
+    }
+  ]
+}

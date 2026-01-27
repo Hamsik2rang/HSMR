@@ -1,0 +1,81 @@
+{
+  "name": "PBR Test Scene",
+
+  "camera": {
+    "position": [0, 2, -5],
+    "target": [0, 0, 0],
+    "fov": 60,
+    "near": 0.1,
+    "far": 1000
+  },
+
+  "shaders": [
+    {
+      "name": "pbr",
+      "path": "Shader/PBR.slang",
+      "stages": ["vertex", "fragment"]
+    }
+  ],
+
+  "textures": [
+    { "name": "envMap", "path": "Textures/environment.hdr" },
+    { "name": "albedo", "path": "Textures/rustediron_albedo.png" },
+    { "name": "normal", "path": "Textures/rustediron_normal.png" },
+    { "name": "metallic", "path": "Textures/rustediron_metallic.png" },
+    { "name": "roughness", "path": "Textures/rustediron_roughness.png" }
+  ],
+
+  "models": [
+    {
+      "name": "sphere",
+      "path": "Models/sphere.obj",
+      "settings": {
+        "generateNormals": true,
+        "generateTangents": true,
+        "scale": 1.0
+      }
+    },
+    {
+      "name": "cube",
+      "path": "Models/cube.obj",
+      "settings": {
+        "generateNormals": true,
+        "generateTangents": false,
+        "scale": 1.0
+      }
+    }
+  ],
+
+  "objects": [
+    {
+      "name": "PBR Sphere",
+      "model": "sphere",
+      "shader": "pbr",
+      "transform": {
+        "position": [0, 1, 0],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1]
+      },
+      "material": {
+        "baseColor": [1.0, 1.0, 1.0, 1.0],
+        "metallic": 1.0,
+        "roughness": 0.2
+      }
+    },
+    {
+      "name": "Ground Plane",
+      "model": "cube",
+      "shader": "pbr",
+      "transform": {
+        "position": [0, -0.5, 0],
+        "rotation": [0, 0, 0],
+        "scale": [10, 0.1, 10]
+      },
+      "material": {
+        "baseColor": [0.5, 0.5, 0.5, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.8
+      }
+    }
+  ]
+}

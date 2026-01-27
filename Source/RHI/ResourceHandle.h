@@ -91,60 +91,63 @@ protected:
     RHIResourceSetPool(const char* name);
 };
 
-template <>
-struct Hasher<RHITexture>
-{
-    static uint32 Get(const RHITexture& key)
-    {
-        return Hasher<TextureInfo>::Get(key.info);
-    }
-};
-
-template <>
-struct Hasher<RHITexture*>
-{
-    static uint32 Get(const RHITexture*& key)
-    {
-        return Hasher<TextureInfo>::Get(key->info);
-    }
-};
-
-template <>
-struct Hasher<RHISampler>
-{
-    static uint32 Get(const RHISampler& key)
-    {
-        return Hasher<SamplerInfo>::Get(key.info);
-    }
-};
-
-template <>
-struct Hasher<RHISampler*>
-{
-    static uint32 Get(const RHISampler*& key)
-    {
-        return Hasher<SamplerInfo>::Get(key->info);
-    }
-};
-
-template <>
-struct Hasher<RHIBuffer>
-{
-    static uint32 Get(const RHIBuffer& key)
-    {
-        return Hasher<BufferInfo>::Get(key.info);
-    }
-};
-
-template <>
-struct Hasher<RHIBuffer*>
-{
-    static uint32 Get(const RHIBuffer*& key)
-    {
-        return Hasher<BufferInfo>::Get(key->info);
-    }
-};
-
 HS_NS_END
+
+namespace std
+{
+    template <>
+    struct hash<hs::RHITexture>
+    {
+        size_t operator()(const hs::RHITexture& key) const
+        {
+            return std::hash<hs::TextureInfo>{}(key.info);
+        }
+    };
+
+    template <>
+    struct hash<hs::RHITexture*>
+    {
+        size_t operator()(const hs::RHITexture* key) const
+        {
+            return std::hash<hs::TextureInfo>{}(key->info);
+        }
+    };
+
+    template <>
+    struct hash<hs::RHISampler>
+    {
+        size_t operator()(const hs::RHISampler& key) const
+        {
+            return std::hash<hs::SamplerInfo>{}(key.info);
+        }
+    };
+
+    template <>
+    struct hash<hs::RHISampler*>
+    {
+        size_t operator()(const hs::RHISampler* key) const
+        {
+            return std::hash<hs::SamplerInfo>{}(key->info);
+        }
+    };
+
+    template <>
+    struct hash<hs::RHIBuffer>
+    {
+        size_t operator()(const hs::RHIBuffer& key) const
+        {
+            return std::hash<hs::BufferInfo>{}(key.info);
+        }
+    };
+
+    template <>
+    struct hash<hs::RHIBuffer*>
+    {
+        size_t operator()(const hs::RHIBuffer* key) const
+        {
+            return std::hash<hs::BufferInfo>{}(key->info);
+        }
+    };
+}
 
 #endif /* __HS_RESOURCE_HANDLE_H__ */

@@ -88,6 +88,12 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 	commandBuffer->PopDebugMark();
 }
 
+void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const RenderParameter& param)
+{
+	// Delegate to the main Execute method
+	Execute(commandBuffer, renderPass);
+}
+
 void ForwardOpaquePass::OnAfterRendering()
 {
 
