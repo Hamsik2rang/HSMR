@@ -2,44 +2,77 @@ set(TARGET_NAME Platform)
 
 set(TOTAL_FILES)
 
-if(WIN32)
-    set(PLATFORM_WIN_HEADERS
-        Win/WinFileSystem.h
-        Win/WinSystemContext.h
-        Win/WinWindow.h
-        Win/WinInput.h
+# SDL3 Platform Implementation (cross-platform)
+if(HSMR_USE_SDL)
+    set(PLATFORM_SDL_HEADERS
+        SDL/SDLPlatform.h
     )
-    source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
-    list(APPEND TOTAL_FILES ${PLATFORM_WIN_HEADERS})
+    source_group("SDL\\Public" FILES ${PLATFORM_SDL_HEADERS})
+    list(APPEND TOTAL_FILES ${PLATFORM_SDL_HEADERS})
 
-    set(PLATFORM_WIN_SOURCES
-        Win/Private/WinFileSystem.cpp
-        Win/Private/WinSystemContext.cpp
-        Win/Private/WinWindow.cpp
-        Win/Private/WinInput.cpp
+    set(PLATFORM_SDL_SOURCES
+        SDL/Private/SDLPlatform.cpp
     )
-    source_group("Win\\Private" FILES ${PLATFORM_WIN_SOURCES})
-    list(APPEND TOTAL_FILES ${PLATFORM_WIN_SOURCES})
-else() # MAC
-    set(PLATFORM_MAC_HEADERS
-        Mac/AutoReleasePool.h
-        Mac/MacFileSystem.h
-        Mac/MacSystemContext.h
-        Mac/MacWindow.h
-        Mac/MacInput.h
-    )
-    source_group("Mac\\Public" FILES ${PLATFORM_MAC_HEADERS})
-    list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})
+    source_group("SDL\\Private" FILES ${PLATFORM_SDL_SOURCES})
+    list(APPEND TOTAL_FILES ${PLATFORM_SDL_SOURCES})
 
-    set(PLATFORM_MAC_HEADERS
-        Mac/Private/AutoReleasePool.mm
-        Mac/Private/MacFileSystem.mm
-        Mac/Private/MacSystemContext.mm
-        Mac/Private/MacWindow.mm
-        Mac/Private/MacInput.mm
-    )
-    source_group("Mac\\Private" FILES ${PLATFORM_MAC_HEADERS})
-    list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})
+    # Still need platform-specific SystemContext and FileSystem
+    if(WIN32)
+        set(PLATFORM_WIN_HEADERS
+            Win/WinFileSystem.h
+            Win/WinSystemContext.h
+        )
+        source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
+        list(APPEND TOTAL_FILES ${PLATFORM_WIN_HEADERS})
+
+        set(PLATFORM_WIN_SOURCES
+            Win/Private/WinFileSystem.cpp
+            Win/Private/WinSystemContext.cpp
+        )
+        source_group("Win\\Private" FILES ${PLATFORM_WIN_SOURCES})
+        list(APPEND TOTAL_FILES ${PLATFORM_WIN_SOURCES})
+    endif()
+else()
+    # Native platform implementation (fallback)
+    if(WIN32)
+        set(PLATFORM_WIN_HEADERS
+            Win/WinFileSystem.h
+            Win/WinSystemContext.h
+            Win/WinWindow.h
+            Win/WinInput.h
+        )
+        source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
+        list(APPEND TOTAL_FILES ${PLATFORM_WIN_HEADERS})
+
+        set(PLATFORM_WIN_SOURCES
+            Win/Private/WinFileSystem.cpp
+            Win/Private/WinSystemContext.cpp
+            Win/Private/WinWindow.cpp
+            Win/Private/WinInput.cpp
+        )
+        source_group("Win\\Private" FILES ${PLATFORM_WIN_SOURCES})
+        list(APPEND TOTAL_FILES ${PLATFORM_WIN_SOURCES})
+    else() # MAC
+        set(PLATFORM_MAC_HEADERS
+            Mac/AutoReleasePool.h
+            Mac/MacFileSystem.h
+            Mac/MacSystemContext.h
+            Mac/MacWindow.h
+            Mac/MacInput.h
+        )
+        source_group("Mac\\Public" FILES ${PLATFORM_MAC_HEADERS})
+        list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})
+
+        set(PLATFORM_MAC_HEADERS
+            Mac/Private/AutoReleasePool.mm
+            Mac/Private/MacFileSystem.mm
+            Mac/Private/MacSystemContext.mm
+            Mac/Private/MacWindow.mm
+            Mac/Private/MacInput.mm
+        )
+        source_group("Mac\\Private" FILES ${PLATFORM_MAC_HEADERS})
+        list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})
+    endif()
 endif()
 
 if(HS_ARCH STREQUAL "x64")
@@ -84,7 +117,22 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(APPLE)
+if(HSMR_USE_SDL)
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        Core
+        ${HS_SDL3_LIB}
+    )
+    # Copy SDL3 DLL to output directory
+    if(WIN32)
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${HS_SDL3_DLL}"
+            "${INSTALL_FOLDER}/SDL3.dll"
+            COMMENT "[SDL3] Copying SDL3.dll to output"
+        )
+    endif()
+elseif(APPLE)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
         Core

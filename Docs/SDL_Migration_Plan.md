@@ -293,3 +293,234 @@ cmake --build Build --config Debug
 
 ### 다음 단계
 Phase 2: Platform/SDL 구현 파일 생성
+
+---
+
+## Phase 2: Platform/SDL 구현 - 완료
+
+**날짜**: 2026-01-29
+
+### 수행 작업
+
+1. **새 파일 생성**
+   - `Source/Platform/SDL/SDLPlatform.h` - SDL 플랫폼 헤더
+   - `Source/Platform/SDL/Private/SDLPlatform.cpp` - SDL 플랫폼 구현
+
+2. **SDLPlatform.cpp 주요 구현 내용**
+   - `GetSDLWindow()` - Vulkan surface 생성용 SDL 윈도우 핸들 반환
+   - `MapSDLScancodeToVK()` - SDL 스캔코드 → Windows VK 코드 매핑 (Input 시스템 호환)
+   - `CreateNativeWindowInternal()` - SDL_CreateWindow + NativeWindow 구조체 초기화
+   - `DestroyNativeWindowInternal()` - SDL_DestroyWindow + SDL_Quit
+   - `ShowNativeWindowInternal()` - SDL_ShowWindow
+   - `PollNativeEventInternal()` - SDL_PollEvent + 이벤트 처리
+   - `SetNativePreEventHandler()` - ImGui 이벤트 핸들러 등록
+
+3. **Platform/CMakeLists.txt 수정**
+   - `HSMR_USE_SDL` 조건부 빌드 분기 추가
+   - SDL 사용 시: SDLPlatform + WinFileSystem/WinSystemContext
+   - SDL 미사용 시: 기존 Win/Mac 전체 코드 (fallback)
+   - SDL3 라이브러리 링킹 추가
+   - SDL3.dll 복사 커맨드 추가
+
+4. **Core/Native/Private/NativeWindow.cpp 수정**
+   - `HSMR_USE_SDL` 조건부 include 추가
+
+### 변경된 파일
+- `Source/Platform/SDL/SDLPlatform.h` (신규)
+- `Source/Platform/SDL/Private/SDLPlatform.cpp` (신규)
+- `Source/Platform/CMakeLists.txt`
+- `Source/Core/Native/Private/NativeWindow.cpp`
+
+### SDL 이벤트 매핑
+
+| SDL 이벤트 | NativeEvent |
+|------------|-------------|
+| SDL_EVENT_QUIT | WINDOW_CLOSE |
+| SDL_EVENT_WINDOW_RESIZED | WINDOW_RESIZE |
+| SDL_EVENT_WINDOW_MINIMIZED | WINDOW_MINIMIZE |
+| SDL_EVENT_WINDOW_MAXIMIZED | WINDOW_MAXIMIZE |
+| SDL_EVENT_WINDOW_RESTORED | WINDOW_RESTORE |
+| SDL_EVENT_WINDOW_FOCUS_GAINED | WINDOW_FOCUS_IN |
+| SDL_EVENT_WINDOW_FOCUS_LOST | WINDOW_FOCUS_OUT |
+| SDL_EVENT_KEY_DOWN/UP | Input::s_button 업데이트 |
+| SDL_EVENT_MOUSE_BUTTON_* | Input::s_button 업데이트 |
+| SDL_EVENT_MOUSE_MOTION | Input::s_move 업데이트 |
+| SDL_EVENT_MOUSE_WHEEL | Input::s_scroll 업데이트 |
+
+### 다음 단계
+Phase 3: VulkanContext SDL surface 생성
+
+---
+
+## Phase 3: VulkanContext SDL surface - 완료
+
+**날짜**: 2026-01-29
+
+### 수행 작업
+
+1. **VulkanContext.cpp 헤더 추가** (line 15-18)
+   ```cpp
+   #ifdef __SDL__
+   #include "Platform/SDL/SDLPlatform.h"
+   #include <SDL3/SDL_vulkan.h>
+   #endif
+   ```
+
+2. **createInstance() 확장 목록 수정** (line 1355-1390)
+   - `__SDL__` 정의 시: `SDL_Vulkan_GetInstanceExtensions()` 사용
+   - 그 외: 기존 `VK_KHR_WIN32_SURFACE_EXTENSION_NAME` 사용
+   - Debug 확장은 공통으로 추가
+
+3. **createSurface() 함수 수정** (line 1455-1478)
+   - `__SDL__` 정의 시: `SDL_Vulkan_CreateSurface()` 사용
+   - 그 외: 기존 `vkCreateWin32SurfaceKHR()` 사용
+
+### 변경된 파일
+- `Source/RHI/Vulkan/Private/VulkanContext.cpp`
+
+### SDL Vulkan 통합 흐름
+```
+SDL_Vulkan_GetInstanceExtensions()
+        ↓
+    VkInstance 생성
+        ↓
+SDL_Vulkan_CreateSurface(sdlWindow, instance, ...)
+        ↓
+    VkSurfaceKHR 획득
+        ↓
+    Swapchain 생성
+```
+
+### 다음 단계
+Phase 4: ImGui SDL3 backend 연동
+
+---
+
+## Phase 4: ImGui SDL3 backend - 완료
+
+**날짜**: 2026-01-29
+
+### 수행 작업
+
+1. **Editor/CMakeLists.txt 수정**
+   - `HSMR_USE_SDL` 조건 분기 추가
+   - SDL 사용 시: `imgui_impl_sdl3.h/cpp` 포함
+   - Native 사용 시: `imgui_impl_win32.h/cpp` 포함
+   - SDL3 라이브러리 링킹 추가
+
+2. **ImGuiExtensionVulkan.cpp 수정**
+   - 조건부 include 추가:
+     ```cpp
+     #ifdef __SDL__
+     #include "ImGui/imgui_impl_sdl3.h"
+     #else
+     #include "ImGui/imgui_impl_win32.h"
+     #endif
+     ```
+   - `InitializeBackend()`: `ImGui_ImplSDL3_InitForVulkan()` 사용
+   - `BeginRender()`: `ImGui_ImplSDL3_NewFrame()` 사용
+   - `FinalizeBackend()`: `ImGui_ImplSDL3_Shutdown()` 사용
+   - `SetProcessEventHandler()`: `ImGui_ImplSDL3_ProcessEvent` 반환
+
+3. **SDLPlatform.cpp 이벤트 처리 수정**
+   - ImGui 이벤트 핸들러 호출 후 윈도우 이벤트는 항상 처리
+
+### 변경된 파일
+- `Source/Editor/CMakeLists.txt`
+- `Source/Editor/GUI/Vulkan/ImGuiExtensionVulkan.cpp`
+- `Source/Platform/SDL/Private/SDLPlatform.cpp`
+
+### ImGui 초기화 흐름
+```
+SDL_Window 생성
+      ↓
+ImGui_ImplSDL3_InitForVulkan(sdlWindow)
+      ↓
+ImGui_ImplVulkan_Init(&initInfo)
+      ↓
+[매 프레임]
+ImGui_ImplVulkan_NewFrame()
+ImGui_ImplSDL3_NewFrame()
+ImGui::NewFrame()
+      ↓
+[종료 시]
+ImGui_ImplVulkan_Shutdown()
+ImGui_ImplSDL3_Shutdown()
+```
+
+---
+
+# 구현 완료
+
+## 전체 변경 파일 목록
+
+| 파일 | Phase | 변경 내용 |
+|------|-------|----------|
+| `CMakeLists.txt` | 1 | SDL3 옵션, 경로 설정 |
+| `Source/Platform/SDL/SDLPlatform.h` | 2 | 신규 생성 |
+| `Source/Platform/SDL/Private/SDLPlatform.cpp` | 2,4 | 신규 생성, 이벤트 처리 수정 |
+| `Source/Platform/CMakeLists.txt` | 2 | SDL 조건부 빌드 |
+| `Source/Core/Native/Private/NativeWindow.cpp` | 2 | SDL 헤더 포함 |
+| `Source/RHI/Vulkan/Private/VulkanContext.cpp` | 3 | SDL surface 생성 |
+| `Source/Editor/CMakeLists.txt` | 4 | SDL3 backend 포함 |
+| `Source/Editor/GUI/Vulkan/ImGuiExtensionVulkan.cpp` | 4 | SDL3 backend 사용 |
+
+## 빌드 명령
+
+```bash
+# CMake 설정
+cmake -S . -B Build -DHSMR_USE_SDL=ON -DHSMR_ENABLE_IMGUI=ON
+
+# 빌드
+cmake --build Build --config Debug
+```
+
+## 버그 수정
+
+### LNK2019: GetSDLWindow 미해결 외부 심볼 오류 - 해결
+
+**문제**: Editor.dll 빌드 시 `GetSDLWindow()` 링커 오류 발생
+
+```
+LNK2019: unresolved external symbol "struct SDL_Window * __cdecl hs::GetSDLWindow(void)"
+```
+
+**원인**:
+- Editor → Engine → Platform 의존성 구조에서 Platform은 정적 라이브러리
+- `GetSDLWindow()`가 Platform에 정의되어 있지만 Editor에서 직접 호출 불가
+- Platform을 Editor에 추가 링크하면 중복 심볼(LNK2005) 오류 발생
+
+**해결**: `nativeWindow->handle`에 이미 SDL_Window*가 저장되어 있으므로 직접 사용
+
+1. **VulkanContext.cpp** (line 1462)
+   ```cpp
+   // 변경 전
+   SDL_Window* sdlWindow = hs::GetSDLWindow();
+
+   // 변경 후
+   SDL_Window* sdlWindow = static_cast<SDL_Window*>(nativeWindow.handle);
+   ```
+
+2. **ImGuiExtensionVulkan.cpp** (line 92)
+   ```cpp
+   // 변경 전
+   #include "Platform/SDL/SDLPlatform.h"
+   SDL_Window* sdlWindow = hs::GetSDLWindow();
+
+   // 변경 후
+   #include <SDL3/SDL.h>
+   SDL_Window* sdlWindow = static_cast<SDL_Window*>(nativeWindow->handle);
+   ```
+
+**결과**: 빌드 성공 ✅
+
+---
+
+## 검증 체크리스트
+- [x] CMake 설정 성공
+- [x] 빌드 성공
+- [ ] 윈도우 생성 및 표시
+- [ ] Vulkan surface 생성
+- [ ] 스왑체인 동작
+- [ ] ImGui 렌더링
+- [ ] 키보드/마우스 입력

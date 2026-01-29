@@ -138,7 +138,16 @@ if(APPLE)
         ThirdParty/ImGui/imgui_impl_osx.h
         ThirdParty/ImGui/imgui_impl_osx.mm
     )
+elseif(HSMR_USE_SDL)
+    # SDL3 + Vulkan backend
+    list(APPEND THIRDPARTY_IMGUI_BACKENDS
+        ThirdParty/ImGui/imgui_impl_sdl3.h
+        ThirdParty/ImGui/imgui_impl_sdl3.cpp
+        ThirdParty/ImGui/imgui_impl_vulkan.h
+        ThirdParty/ImGui/imgui_impl_vulkan.cpp
+    )
 else()
+    # Native Win32 + Vulkan backend
     list(APPEND THIRDPARTY_IMGUI_BACKENDS
         ThirdParty/ImGui/imgui_impl_win32.h
         ThirdParty/ImGui/imgui_impl_win32.cpp
@@ -173,6 +182,7 @@ if(WIN32)
         PRIVATE
         Engine
         ${HS_DEPS_LIB_DIR}/vulkan-1.lib
+        $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
 else()
     

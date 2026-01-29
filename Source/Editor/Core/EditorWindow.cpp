@@ -54,6 +54,14 @@ bool EditorWindow::onInitialize()
 
 	ImGuiExtension::InitializeBackend(_swapchain);
 
+	// Apply DPI scaling for high-resolution displays (e.g., 4K monitors)
+	GUIContext* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+	float dpiScale = _nativeWindow.scale;
+	if (dpiScale > 1.0f)
+	{
+		guiContext->ApplyDPIScale(dpiScale);
+	}
+
 	// Add Atmosphere Sky Pass (replaces ForwardOpaquePass)
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
 	_renderer->AddPass(std::move(opaquePass));

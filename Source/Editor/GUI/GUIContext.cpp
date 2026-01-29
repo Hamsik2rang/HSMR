@@ -168,6 +168,33 @@ void GUIContext::SetScaleFactor(float scaleFactor)
     io.FontGlobalScale = scaleFactor;
 }
 
+void GUIContext::ApplyDPIScale(float dpiScale)
+{
+    if (dpiScale <= 0.0f || dpiScale == 1.0f)
+    {
+        _scaleFactor = 1.0f;
+        return;
+    }
+
+    _scaleFactor = dpiScale;
+
+    // Scale ImGui style sizes
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(dpiScale);
+
+    // Reload font with scaled size
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
+
+    float scaledFontSize = 16.0f * dpiScale;
+    std::string fontName = "Fonts/Malgun-Gothic.ttf";
+    _font = io.Fonts->AddFontFromFileTTF((_assetDirectory + fontName).c_str(), scaledFontSize);
+
+    io.Fonts->Build();
+
+    HS_LOG(info, "[GUI] Applied DPI scale: %.2f (font size: %.1f)", dpiScale, scaledFontSize);
+}
+
 // Font Push/Pop 어떻게?
 void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
 {
@@ -199,17 +226,12 @@ void GUIContext::SaveLayout(const std::string& layoutPath)
 
 void GUIContext::BeginRender(Swapchain* swapchain)
 {
-    _scaleFactor = swapchain->GetInfo().nativeWindow->scale;
-//    SetScaleFactor(_scaleFactor);
-
     ImGuiExtension::BeginRender(swapchain);
 }
 
 void GUIContext::EndRender()
 {
     ImGuiExtension::EndRender();
-    _scaleFactor = 1.0f / _scaleFactor;
-//    SetScaleFactor(_scaleFactor);
 }
 
 HS_NS_EDITOR_END

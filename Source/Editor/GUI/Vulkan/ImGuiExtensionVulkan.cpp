@@ -10,16 +10,20 @@
 #include "RHI/Vulkan/VulkanCommandHandle.h"
 #include "RHI/Vulkan/VulkanResourceHandle.h"
 
+#ifdef __SDL__
+#include "ImGui/imgui_impl_sdl3.h"
+#include <SDL3/SDL.h>
+#else
 #include "ImGui/imgui_impl_win32.h"
-#include "ImGui/imgui_impl_vulkan.h"
-
 #include "Platform/Win/WinWindow.h"
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+
+#include "ImGui/imgui_impl_vulkan.h"
 
 #include <unordered_map>
 
 using namespace hs;
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 HS_NS_EDITOR_BEGIN
@@ -82,9 +86,16 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 
 	SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
 	const NativeWindow* nativeWindow = swapchainVK->GetInfo().nativeWindow;
-	HWND hWnd = (HWND)nativeWindow->handle;
 
+#ifdef __SDL__
+	// nativeWindow->handle contains SDL_Window*
+	SDL_Window* sdlWindow = static_cast<SDL_Window*>(nativeWindow->handle);
+	ImGui_ImplSDL3_InitForVulkan(sdlWindow);
+	HS_LOG(info, "[ImGui] SDL3 backend initialized");
+#else
+	HWND hWnd = (HWND)nativeWindow->handle;
 	ImGui_ImplWin32_Init(hWnd);
+#endif
 
 	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 	const VulkanDevice* rhiDeviceVK = rhiContextVK->GetDevice();
@@ -140,7 +151,13 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 
 void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
 {
+#ifdef __SDL__
+	// SDL events are processed via ImGui_ImplSDL3_ProcessEvent in the event loop
+	// Return the SDL event processor function
+	*fnHandler = reinterpret_cast<void*>(&ImGui_ImplSDL3_ProcessEvent);
+#else
 	*fnHandler = static_cast<void*>(ImGui_ImplWin32_WndProcHandler);
+#endif
 }
 
 void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
@@ -173,7 +190,11 @@ void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
 	}
 
 	ImGui_ImplVulkan_NewFrame();
+#ifdef __SDL__
+	ImGui_ImplSDL3_NewFrame();
+#else
 	ImGui_ImplWin32_NewFrame();
+#endif
 	ImGui::NewFrame();
 }
 
@@ -202,7 +223,11 @@ void ImGuiExtension::FinalizeBackend()
 	VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
 	rhiContextVK->WaitForIdle();
 	ImGui_ImplVulkan_Shutdown();
+#ifdef __SDL__
+	ImGui_ImplSDL3_Shutdown();
+#else
 	ImGui_ImplWin32_Shutdown();
+#endif
 
 	// Destroy the pipeline cache
 	if (s_pipelineCacheVk != VK_NULL_HANDLE)

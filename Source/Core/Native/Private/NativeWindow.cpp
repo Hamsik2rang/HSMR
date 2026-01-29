@@ -1,6 +1,8 @@
 ﻿#include "Core/Native/NativeWindow.h"
 
-#if defined(__WINDOWS__)
+#if defined(__SDL__)
+#include "Platform/SDL/SDLPlatform.h"
+#elif defined(__WINDOWS__)
 #include "Platform/Win/WinWindow.h"
 #elif defined(__APPLE__)
 // #include "Platform/Mac/MacWindow.h"

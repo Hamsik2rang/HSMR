@@ -12,6 +12,11 @@
 #include "Core/Native/NativeWindow.h"
 #include "Core/HAL/FileSystem.h"
 
+#ifdef __SDL__
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
+#endif
+
 static const std::vector<const char*> s_validationLayers =
     {
 #ifdef _DEBUG
@@ -1352,24 +1357,33 @@ bool VulkanContext::createInstance()
     appInfo.engineVersion      = VK_MAKE_VERSION(1, 3, 0);
     appInfo.apiVersion         = VK_API_VERSION_1_3;
 
+    std::vector<const char*> extensionNames;
+
+#ifdef __SDL__
+    // Get required extensions from SDL
+    uint32 sdlExtCount = 0;
+    const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtCount);
+    for (uint32 i = 0; i < sdlExtCount; i++)
+    {
+        extensionNames.push_back(sdlExtensions[i]);
+        HS_LOG(info, "[SDL] Required Extension: %s", sdlExtensions[i]);
+    }
+#else
+    // Native Win32 extensions
+    extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+    extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif
+
+    // Add debug utils extension if available
     uint32 extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
-    std::vector<const char*> extensionNames;
     for (const auto& extension : availableExtensions)
     {
         HS_LOG(info, "Available Extension: %s", extension.extensionName);
-        if (strcmp(extension.extensionName, VK_KHR_WIN32_SURFACE_EXTENSION_NAME) == 0)
-        {
-            extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-        }
-        else if (strcmp(extension.extensionName, VK_KHR_SURFACE_EXTENSION_NAME) == 0)
-        {
-            extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-        }
-        else if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+        if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
         {
             extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
@@ -1441,6 +1455,19 @@ void VulkanContext::createDefaultCommandPool()
 
 VkSurfaceKHR VulkanContext::createSurface(const NativeWindow& nativeWindow)
 {
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+#ifdef __SDL__
+    // Create surface via SDL - nativeWindow.handle contains SDL_Window*
+    SDL_Window* sdlWindow = static_cast<SDL_Window*>(nativeWindow.handle);
+    if (!SDL_Vulkan_CreateSurface(sdlWindow, _instanceVk, nullptr, &surface))
+    {
+        HS_LOG(crash, "[SDL] Failed to create Vulkan surface: %s", SDL_GetError());
+        return VK_NULL_HANDLE;
+    }
+    HS_LOG(info, "[SDL] Vulkan surface created successfully");
+#else
+    // Native Win32 surface creation
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
     surfaceCreateInfo.sType     = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     surfaceCreateInfo.hinstance = (HINSTANCE)GetModuleHandleW(NULL);
@@ -1448,8 +1475,8 @@ VkSurfaceKHR VulkanContext::createSurface(const NativeWindow& nativeWindow)
     surfaceCreateInfo.pNext     = nullptr;
     surfaceCreateInfo.flags     = 0;
 
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
     VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(_instanceVk, &surfaceCreateInfo, nullptr, &surface));
+#endif
 
     return surface;
 }

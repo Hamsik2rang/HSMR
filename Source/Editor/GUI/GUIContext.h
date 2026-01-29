@@ -37,6 +37,7 @@ public:
 
     HS_FORCEINLINE float GetScaleFactor() const { return _scaleFactor; }
     void SetScaleFactor(float scale);
+    void ApplyDPIScale(float dpiScale); // Call once after backend initialization
     void LoadLayout(const std::string& layoutPath);
     void SaveLayout(const std::string& layoutPath);
 

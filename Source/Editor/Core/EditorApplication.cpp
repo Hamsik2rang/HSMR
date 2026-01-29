@@ -28,7 +28,11 @@ EditorApplication::EditorApplication(const char* appName) noexcept
 	EWindowFlags windowFlags = EWindowFlags::NONE;
 	windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
 	windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
+#if defined(__APPLE__)
 	windowFlags |= EWindowFlags::WINDOW_METAL;
+#else
+	windowFlags |= EWindowFlags::WINDOW_VULKAN;
+#endif
 
 	_window = new EditorWindow(this, "EditorApp BaseWindow", 1920, 1080, windowFlags);
 	if (nullptr == _window->GetNativeWindow().handle)
