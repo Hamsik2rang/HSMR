@@ -67,6 +67,32 @@ else()
     set(HS_DEPS_INCLUDE_DIR "${HS_DEPS_DIR}/include")
 endif()
 
+# =========================================
+# Lightweight Prototyping Framework Options
+# =========================================
+option(HSMR_USE_SDL "Use SDL3 for platform abstraction" ON)
+option(HSMR_ENABLE_IMGUI "Enable ImGui integration" ON)
+
+# SDL3 Configuration
+if(HSMR_USE_SDL)
+    set(HS_SDL3_INCLUDE_DIR "${HS_DEPS_INCLUDE_DIR}/SDL3")
+    if(WIN32)
+        set(HS_SDL3_LIB "${HS_DEPS_LIB_DIR}/SDL3.lib")
+        set(HS_SDL3_DLL "${HS_DEPS_DLL_DIR}/SDL3.dll")
+    else()
+        set(HS_SDL3_LIB "${HS_DEPS_LIB_DIR}/libSDL3.dylib")
+    endif()
+    add_compile_definitions(HSMR_USE_SDL)
+    message(STATUS "[SDL3] Enabled")
+    message(STATUS "[SDL3] Include: ${HS_SDL3_INCLUDE_DIR}")
+    message(STATUS "[SDL3] Lib: ${HS_SDL3_LIB}")
+endif()
+
+if(HSMR_ENABLE_IMGUI)
+    add_compile_definitions(HSMR_ENABLE_IMGUI)
+    message(STATUS "[ImGui] Enabled")
+endif()
+
 if(HS_ARCH_ARM64)
     add_compile_definitions(__ARM64__)
 else()
