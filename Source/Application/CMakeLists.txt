@@ -6,7 +6,6 @@ set(APPLICATION_HEADERS
     SceneObject.h
     MousePicker.h
     PrototypeApplication.h
-    ShaderWatcher.h
     GizmoController.h
 )
 
@@ -18,7 +17,6 @@ set(APPLICATION_SOURCES
     SceneObject.cpp
     MousePicker.cpp
     PrototypeApplication.cpp
-    ShaderWatcher.cpp
     GizmoController.cpp
 )
 
@@ -46,14 +44,12 @@ if(WIN32)
         PRIVATE
         Engine
         Editor
-        Profiler
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
         "-Wl,-all_load" Engine
         Editor
-        Profiler
     )
 endif()
 
@@ -74,7 +70,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Engine Editor Profiler)
+add_dependencies(${TARGET_NAME} Engine Editor)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -85,7 +81,7 @@ target_compile_definitions(${TARGET_NAME}
 
     HS_APPLICATION_API_EXPORT
     HS_EDITOR_API_IMPORT
-    HS_PROFILER_API_IMPORT
+    HS_API_IMPORT
 )
 
 # Install rules

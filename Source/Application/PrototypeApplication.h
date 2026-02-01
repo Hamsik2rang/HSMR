@@ -62,7 +62,7 @@ public:
     Window* GetWindow() const { return _window; }
     Camera* GetCamera() const { return _camera.get(); }
     Scene* GetScene() const { return _scene.get(); }
-    Profiler* GetProfiler() const { return _profiler.get(); }
+//    Profiler* GetProfiler() const { return _profiler.get(); }
     GizmoController* GetGizmo() const { return _gizmo.get(); }
 
     // Settings
@@ -123,15 +123,15 @@ private:
     Scoped<Camera> _camera;
     Scoped<Scene> _scene;
     Scoped<MousePicker> _picker;
-    Scoped<Profiler> _profiler;
+//    Scoped<Profiler> _profiler;
     Scoped<GizmoController> _gizmo;
-    Scoped<ShaderWatcher> _shaderWatcher;
+//    Scoped<ShaderWatcher> _shaderWatcher;
 
     // Rendering
     Scoped<RenderPath> _renderer;
 
     // UI state
-    bool _showProfiler = true;
+    bool _showProfiler = false;
     bool _showGizmo = true;
     bool _showHierarchy = true;
     bool _showInspector = true;

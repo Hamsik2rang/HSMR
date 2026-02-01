@@ -4,7 +4,7 @@
 //
 //  GPU query wrapper for timing and statistics
 //
-#include "GPUQuery.h"
+#include "Core/Profiler/GPUQuery.h"
 #include "Core/Log.h"
 
 // Use HS_LOG macro instead of Log:: methods

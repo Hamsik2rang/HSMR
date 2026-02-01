@@ -4,7 +4,7 @@
 //
 //  File watcher for shader hot reload
 //
-#include "ShaderWatcher.h"
+#include "Editor/Resource/ShaderWatcher.h"
 #include "Core/Log.h"
 
 #include <fstream>

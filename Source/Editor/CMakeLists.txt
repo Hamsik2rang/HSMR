@@ -1,87 +1,101 @@
-set(TARGET_NAME Editor)
+﻿set(TARGET_NAME Editor)
 
 set(TOTAL_FILES)
 
-set(CORE_HEADERS
+set(EDITOR_CORE_HEADERS
     Core/EditorApplication.h
     Core/EditorWindow.h
     Core/EditorCamera.h
 )
 
-source_group("Core\\Public" FILES ${CORE_HEADERS})
+source_group("Core\\Public" FILES ${EDITOR_CORE_HEADERS})
 
-list(APPEND TOTAL_FILES ${CORE_HEADERS})
+list(APPEND TOTAL_FILES ${EDITOR_CORE_HEADERS})
 
-set(CORE_SOURCES
+set(EDITOR_CORE_SOURCES
     Core/EditorApplication.cpp
     Core/EditorWindow.cpp
     Core/EditorCamera.cpp
 )
 
-source_group("Core\\Private" FILES ${CORE_SOURCES})
+source_group("Core\\Private" FILES ${EDITOR_CORE_SOURCES})
 
-list(APPEND TOTAL_FILES ${CORE_SOURCES})
+list(APPEND TOTAL_FILES ${EDITOR_CORE_SOURCES})
 
-set(ENTRY_POINT_HEADERS
+set(EDITOR_ENTRY_POINT_HEADERS
     EntryPoint/EditorMain.h
 )
 
-source_group("EntryPoint\\Public" FILES ${ENTRY_POINT_HEADERS})
+source_group("EntryPoint\\Public" FILES ${EDITOR_ENTRY_POINT_HEADERS})
 
-list(APPEND TOTAL_FILES ${ENTRY_POINT_HEADERS})
+list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_HEADERS})
 
 if(APPLE)
-    set(ENTRY_POINT_SOURCES
+    set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/OSX/EditorMain.mm
     )
 
 else()
-    set(ENTRY_POINT_SOURCES
+    set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/Windows/EditorMain.cpp
     )
 endif()
 
-source_group("EntryPoint\\Private" FILES ${ENTRY_POINT_SOURCES})
+source_group("EntryPoint\\Private" FILES ${EDITOR_ENTRY_POINT_SOURCES})
 
-list(APPEND TOTAL_FILES ${ENTRY_POINT_SOURCES})
+list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_SOURCES})
 
-set(GUI_HEADERS
+set(EDITOR_GUI_HEADERS
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
     GUI/GUIRenderer.h
     GUI/GUIRendererPass.h
 )
 
-source_group("GUI\\Public" FILES ${GUI_HEADERS})
+source_group("GUI\\Public" FILES ${EDITOR_GUI_HEADERS})
 
-list(APPEND TOTAL_FILES ${GUI_HEADERS})
+list(APPEND TOTAL_FILES ${EDITOR_GUI_HEADERS})
 
-set(GUI_SOURCES
+set(EDITOR_GUI_SOURCES
     GUI/GUIContext.cpp
     GUI/GUIRenderer.cpp
     GUI/GUIRendererPass.cpp
 )
 
-list(APPEND TOTAL_FILES ${GUI_SOURCES})
+list(APPEND TOTAL_FILES ${EDITOR_GUI_SOURCES})
 
-source_group("GUI\\Private" FILES ${GUI_SOURCES})
+source_group("GUI\\Private" FILES ${EDITOR_GUI_SOURCES})
 
 if(APPLE)
-    set(GUI_SOURCES_METAL
+    set(EDITOR_GUI_SOURCES_METAL
         GUI/Metal/ImGuiExtensionMetal.mm
     )
 
-    list(APPEND TOTAL_FILES ${GUI_SOURCES_METAL})
-    source_group("GUI\\Private\\Metal" FILES ${GUI_SOURCES_METAL})
+    list(APPEND TOTAL_FILES ${EDITOR_GUI_SOURCES_METAL})
+    source_group("GUI\\Private\\Metal" FILES ${EDITOR_GUI_SOURCES_METAL})
 
 else()
-    set(GUI_SOURCES_VULKAN
+    set(EDITOR_GUI_SOURCES_VULKAN
         GUI/Vulkan/ImGuiExtensionVulkan.cpp
     )
 
-    list(APPEND TOTAL_FILES ${GUI_SOURCES_VULKAN})
-    source_group("GUI\\Private\\Vulkan" FILES ${GUI_SOURCES_VULKAN})
+    list(APPEND TOTAL_FILES ${EDITOR_GUI_SOURCES_VULKAN})
+    source_group("GUI\\Private\\Vulkan" FILES ${EDITOR_GUI_SOURCES_VULKAN})
 endif()
+
+set(EDITOR_RESOURCE_HEADERS
+    Resource/ShaderWatcher.h
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RESOURCE_HEADERS})
+source_group("Resource\\Public" FILES ${EDITOR_RESOURCE_HEADERS})
+
+set(EDITOR_RESOURCE_SOURCES
+    Resource/Private/ShaderWatcher.cpp
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RESOURCE_SOURCES})
+source_group("Resource\\Private" FILES ${EDITOR_RESOURCE_SOURCES})
 
 set(PANEL_HEADERS
     Panel/Panel.h
@@ -184,10 +198,6 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-
-
-
-
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
@@ -196,25 +206,23 @@ if(WIN32)
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
 else()
+    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
 
-list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
-
-# For SDL3 on macOS, link against the framework
-if(HSMR_USE_SDL)
-    target_link_libraries(${TARGET_NAME}
-        PRIVATE
-        "-Wl, -all_load" Engine
-        ${OSX_FRAMEWORK}
-        "-F${HS_SDL3_FRAMEWORK_DIR}/.." "-framework SDL3"
-    )
-else()
-    target_link_libraries(${TARGET_NAME}
-        PRIVATE
-        "-Wl, -all_load" Engine
-        ${OSX_FRAMEWORK}
-    )
-endif()
-
+    # For SDL3 on macOS, link against the framework
+    if(HSMR_USE_SDL)
+        target_link_libraries(${TARGET_NAME}
+            PRIVATE
+            "-Wl, -all_load" Engine
+            ${OSX_FRAMEWORK}
+            "-F${HS_SDL3_FRAMEWORK_DIR}/.." "-framework SDL3"
+        )
+    else()
+        target_link_libraries(${TARGET_NAME}
+            PRIVATE
+            "-Wl, -all_load" Engine
+            ${OSX_FRAMEWORK}
+        )
+    endif()
 endif()
 
 target_include_directories(${TARGET_NAME}

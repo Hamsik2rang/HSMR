@@ -16,7 +16,7 @@
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }
-/*#include "RHI/RHIContext.h"*/ namespace hs { class RHIContext; }
+
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class EditorCamera; } }
@@ -52,9 +52,6 @@ private:
     void updateEditorCamera();
     void processShortcuts();
 
-    std::vector<RenderTarget> _renderTargets;
-
-    RHIContext* _rhiContext;  // Note: RHIContext is managed by global context, don't own
     Scoped<RenderPath> _renderer;
 
     Scoped<Panel> _basePanel;

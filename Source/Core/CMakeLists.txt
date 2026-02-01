@@ -103,6 +103,21 @@ set(CORE_MEMORY_SOURCES
 source_group("Memory\\Private" FILES ${CORE_MEMORY_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
 
+set(CORE_PROFILER_HEADERS
+    Profiler/Profiler.h
+    Profiler/GPUQuery.h
+)
+
+source_group("Profiler\\Public" FILES ${CORE_PROFILER_HEADERS})
+list(APPEND TOTAL_FILES ${CORE_PROFILER_HEADERS})
+
+set(CORE_PROFILER_SOURCES
+    Profiler/Private/Profiler.cpp
+    Profiler/Private/GPUQuery.cpp
+)
+source_group("Profiler\\Private" FILES ${CORE_PROFILER_SOURCES})
+list(APPEND TOTAL_FILES ${CORE_PROFILER_SOURCES})
+
 add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
 
 target_include_directories(${TARGET_NAME}

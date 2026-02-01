@@ -22,10 +22,7 @@ int hs_editor_main(int argc, char* argv[])
     {
         EditorApplication* app = new EditorApplication("HSMR");
         
-        if ([NSApp delegate] == nil)
-        {
-            auto bp = true;
-        }
+        HS_ASSERT([NSApp delegate] != nil, "NSApplication's Delegate is nil");
         
         app->Run();
         

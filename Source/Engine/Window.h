@@ -1,4 +1,4 @@
-﻿//
+//
 //  Window.h
 //  Engine
 //
@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Core/Native/NativeWindow.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 #include <list>
 #include <queue>
@@ -17,6 +18,7 @@
 /*#include "RHI/Swapchain.h"*/ namespace hs { class Swapchain; }
 /*#include "Engine/Application.h"*/ namespace hs { class Application; }
 namespace hs { class Renderer; }
+/*#include "RHI/RHIContext.h"*/ namespace hs { class RHIContext; }
 
 HS_NS_BEGIN
 
@@ -67,7 +69,9 @@ protected:
 
 	NativeWindow _nativeWindow;
 
+    std::vector<RenderTarget> _renderTargets;
 	Application* _ownerApp;
+    RHIContext* _rhiContext = nullptr;
 
 	// For windows
 	void* _preEventHandler;

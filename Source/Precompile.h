@@ -30,15 +30,6 @@
 #include <assert.h>
 #endif
 
-typedef int8_t int8;
-typedef uint8_t uint8;
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef int32_t int32;
-typedef uint32_t uint32;
-typedef int64_t int64;
-typedef uint64_t uint64;
-
 #ifndef HS_DEBUG_BREAK
 #if defined(__APPLE__)
 #define HS_DEBUG_BREAK() __builtin_trap()
@@ -59,6 +50,39 @@ typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
+
+#define HS_INT8_MAX 127
+#define HS_INT8_MIN -128
+
+#define HS_CHAR_MAX 127
+#define HS_CHAR_MIN -128
+
+#define HS_UINT8_MAX 255
+#define HS_UINT8_MIN 0
+
+#define HS_INT16_MAX 32767
+#define HS_INT16_MIN -32768
+
+#define HS_UINT16_MAX 65535
+#define HS_UINT16_MIN 0
+
+#define HS_INT32_MAX 2147483647
+#define HS_INT32_MIN -2147483648
+
+#define HS_UINT32_MAX 4294967295U
+#define HS_UINT32_MIN 0
+
+#define HS_INT64_MAX 9223372036854775807LL
+#define HS_INT64_MIN -9223372036854775807LL - 1
+
+#define HS_UINT64_MAX 18446744073709551615ULL
+#define HS_UINT64_MIN 0
+
+#define HS_FLT_MAX 3.402823466e+38F
+#define HS_FLT_MIN 1.175494351e-38F
+
+#define HS_DBL_MAX 1.7976931348623158e+308
+#define HS_DBL_MIN 2.2250738585072014e-308
 
 #if defined(__APPLE__)
 #if __has_feature(objc_arc)
@@ -192,7 +216,7 @@ constexpr Scoped<Tp> MakeScoped(Args&&... args)
 {
     return std::make_unique<Tp>(std::forward<Args>(args)...);
 }
-} // namespace HS
+} // namespace hs
 
 #endif
 

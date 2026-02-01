@@ -1,210 +1,280 @@
-﻿#include "Engine/Window.h"
+#include "Engine/Window.h"
 
-#include "Engine/Application.h"
 #include "Core/Native/NativeEvent.h"
 #include "Core/Log.h"
+
+#include "RHI/Swapchain.h"
+#include "RHI/RHIContext.h"
+
+#include "Engine/Application.h"
 
 #include <queue>
 
 HS_NS_BEGIN
 
 Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 height, EWindowFlags flags)
-	: _isClosed(false)
-	, _shouldClose(false)
+    : _isClosed(false)
+    , _shouldClose(false)
     , _shouldUpdate(true)
     , _shouldPresent(true)
-	, _ownerApp(ownerApp)
-	, _preEventHandler(nullptr)
+    , _ownerApp(ownerApp)
+    , _preEventHandler(nullptr)
 {
-	if (!CreateNativeWindow(name, width, height, flags, _nativeWindow))
-	{
-		HS_LOG(crash, "Fail to create NativeWindow");
-	}
+    if (!CreateNativeWindow(name, width, height, flags, _nativeWindow))
+    {
+        HS_LOG(crash, "Fail to create NativeWindow");
+    }
+    
+    SwapchainInfo scInfo{};
+    scInfo.nativeWindow = &_nativeWindow;
+    scInfo.useDepth = false;
+    scInfo.useMSAA = false;
+    scInfo.useStencil = false;
+    scInfo.enableVSync  = true;
+    
+#if __WINDOWS__
+    _rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
+#else
+    _rhiContext = RHIContext::Create(ERHIPlatform::METAL);
+#endif
+    
+    _swapchain = _rhiContext->CreateSwapchain(scInfo);
+    _renderTargets.resize(_swapchain->GetMaxFrameCount());
 
-	onInitialize();
+//    static TextureInfo colorTextureInfo{};
+//    colorTextureInfo.arrayLength          = 1;
+//    colorTextureInfo.extent.width         = 1;
+//    colorTextureInfo.extent.height        = 1;
+//    colorTextureInfo.extent.depth         = 1;
+//    colorTextureInfo.format               = EPixelFormat::R8G8B8A8_SRGB;
+//    colorTextureInfo.isCompressed         = false;
+//    colorTextureInfo.isDepthStencilBuffer = false;
+//    colorTextureInfo.mipLevel             = 1;
+//    colorTextureInfo.type                 = ETextureType::TEX_2D;
+//    colorTextureInfo.usage                = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::INPUT_ATTACHMENT;
+//    colorTextureInfo.byteSize             = 4 * colorTextureInfo.extent.width * colorTextureInfo.extent.height * colorTextureInfo.extent.depth;
+//    //...
+//
+//    static RenderTargetInfo bareBondRenderTargetInfo{};
+//    bareBondRenderTargetInfo.width             = 1;
+//    bareBondRenderTargetInfo.height            = 1;
+//    bareBondRenderTargetInfo.colorTextureCount = 1;
+//    bareBondRenderTargetInfo.colorTextureInfos = {colorTextureInfo};
+//    //...
+
+    for (size_t i = 0; i < _renderTargets.size(); i++)
+    {
+        RenderTargetInfo info{};
+        info.colorTextureCount = 1;
+        
+        for (size_t j = 0; j < info.colorTextureCount; j++)
+        {
+            info.colorTextureInfos[j].arrayLength = 1;
+            info.colorTextureInfos[j].extent.width  = width;
+            info.colorTextureInfos[j].extent.height = height;
+            info.colorTextureInfos[j].extent.depth = 1;
+            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
+            info.colorTextureInfos[j].usage         = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::STAGING | ETextureUsage::SAMPLED;
+            info.colorTextureInfos[j].isCompressed  = false;
+            info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
+        }
+
+        info.useDepthStencilTexture                = false;
+        info.depthStencilInfo.extent.width         = width;
+        info.depthStencilInfo.extent.height        = height;
+        info.depthStencilInfo.extent.depth         = 1;
+        info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
+        info.depthStencilInfo.usage                = ETextureUsage::DEPTH_STENCIL_ATTACHMENT | ETextureUsage::STAGING;
+        info.depthStencilInfo.isDepthStencilBuffer = true;
+        info.depthStencilInfo.isCompressed         = false;
+
+        _renderTargets[i].Create(info);
+    }
+
+    onInitialize();
 }
 
 Window::~Window()
 {
-	Shutdown();
+    Shutdown();
 }
 
 void Window::Shutdown()
 {
-	if (_isClosed)
-	{
-		return;
-	}
+    if (_isClosed)
+    {
+        return;
+    }
 
-	onShutdown();
+    onShutdown();
 
-	DestroyNativeWindow(_nativeWindow);
+    DestroyNativeWindow(_nativeWindow);
 
-	_isClosed = true;
+    _isClosed = true;
 }
 
 void Window::ProcessEvent()
 {
-	NativeEvent event;
-	while (PeekNativeEvent(&_nativeWindow, event))
-	{
-		event = PopNativeEvent(&_nativeWindow);
-		switch (event.type)
-		{
-		case NativeEvent::Type::WINDOW_OPEN:
-		{
-			_shouldClose = false;
+    NativeEvent event;
+    while (PeekNativeEvent(&_nativeWindow, event))
+    {
+        event = PopNativeEvent(&_nativeWindow);
+        switch (event.type)
+        {
+        case NativeEvent::Type::WINDOW_OPEN:
+        {
+            _shouldClose   = false;
             _shouldPresent = true;
             _shouldUpdate  = true;
 
-			break;
-		}
-		case NativeEvent::Type::WINDOW_CLOSE:
-		{
-			_shouldClose = true;
-			_shouldUpdate = false;
-			_shouldPresent = false;
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_MAXIMIZE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-            onSuspend();
-			onRestore();
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_MINIMIZE:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_RESIZE:
-		{
-			onSuspend();
-			onRestore();
-			break;
-		}
-		case NativeEvent::Type::WINDOW_MOVE_ENTER:
-		{
-			_shouldUpdate = false;
-			_shouldPresent = false;
-			onSuspend();
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_MOVE_EXIT:
-		case NativeEvent::Type::WINDOW_RESTORE:
-		{
-			_shouldUpdate = true;
-			_shouldPresent = true;
-			onRestore();
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_MOVE:
-		{
-
-			break;
-		}
-		case NativeEvent::Type::WINDOW_FOCUS_IN:
-		{
-            _shouldUpdate = true;
-            _shouldPresent = true;
-			break;
-		}
-		case NativeEvent::Type::WINDOW_FOCUS_OUT:
-		{
+            break;
+        }
+        case NativeEvent::Type::WINDOW_CLOSE:
+        {
+            _shouldClose   = true;
             _shouldUpdate  = false;
             _shouldPresent = false;
-			break;
-		}
-		default:
-			break;
-		}
-	}
 
-	if (_shouldClose)
-	{
-		Flush();
-		return;
-	}
+            break;
+        }
+        case NativeEvent::Type::WINDOW_MAXIMIZE:
+        {
+            _shouldUpdate  = true;
+            _shouldPresent = true;
+            onSuspend();
+            onRestore();
 
-	for (auto* child : _childs)
-	{
-		child->ProcessEvent();
-	}
+            break;
+        }
+        case NativeEvent::Type::WINDOW_MINIMIZE:
+        {
+            _shouldUpdate  = false;
+            _shouldPresent = false;
+
+            break;
+        }
+        case NativeEvent::Type::WINDOW_RESIZE:
+        {
+            onSuspend();
+            onRestore();
+            break;
+        }
+        case NativeEvent::Type::WINDOW_MOVE_ENTER:
+        {
+            _shouldUpdate  = false;
+            _shouldPresent = false;
+            onSuspend();
+
+            break;
+        }
+        case NativeEvent::Type::WINDOW_MOVE_EXIT:
+        case NativeEvent::Type::WINDOW_RESTORE:
+        {
+            _shouldUpdate  = true;
+            _shouldPresent = true;
+            onRestore();
+
+            break;
+        }
+        case NativeEvent::Type::WINDOW_MOVE:
+        {
+
+            break;
+        }
+        case NativeEvent::Type::WINDOW_FOCUS_IN:
+        {
+            _shouldUpdate  = true;
+            _shouldPresent = true;
+            break;
+        }
+        case NativeEvent::Type::WINDOW_FOCUS_OUT:
+        {
+            _shouldUpdate  = false;
+            _shouldPresent = false;
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    if (_shouldClose)
+    {
+        Flush();
+        return;
+    }
+
+    for (auto* child : _childs)
+    {
+        child->ProcessEvent();
+    }
 }
 
 void Window::NextFrame()
 {
-	onNextFrame();
+    onNextFrame();
 }
 
 void Window::Update(float deltaTime)
 {
-	onUpdate(deltaTime);
+    onUpdate(deltaTime);
 }
 
 void Window::Render()
 {
-	onRender();
+    onRender();
 }
 
 void Window::Present()
 {
-	onPresent();
+    onPresent();
 }
 
 void Window::Flush()
 {
-	if (_shouldClose)
-	{
-		Shutdown();
-	}
+    if (_shouldClose)
+    {
+        Shutdown();
+    }
 
-	// 트리 순회하면서 자식들 중에 close된 애들 해제 후 리스트에서 삭제
-	std::list<Window*> deletedChilds(_childs.size());
-	for (auto* child : _childs)
-	{
-		child->Flush();
-		if (child->_isClosed)
-		{
-			deletedChilds.push_back(child);
-		}
-	}
+    // 트리 순회하면서 자식들 중에 close된 애들 해제 후 리스트에서 삭제
+    std::list<Window*> deletedChilds(_childs.size());
+    for (auto* child : _childs)
+    {
+        child->Flush();
+        if (child->_isClosed)
+        {
+            deletedChilds.push_back(child);
+        }
+    }
 
-	for (auto* child : deletedChilds)
-	{
-		for (auto* grandChild : child->_childs)
-		{
-			if (!grandChild->_isClosed)
-			{
-				_childs.push_back(grandChild);
-			}
-		}
-		_childs.remove(child);
-	}
+    for (auto* child : deletedChilds)
+    {
+        for (auto* grandChild : child->_childs)
+        {
+            if (!grandChild->_isClosed)
+            {
+                _childs.push_back(grandChild);
+            }
+        }
+        _childs.remove(child);
+    }
 
-	for (auto* delChild : deletedChilds)
-	{
-		delete delChild;
-	}
+    for (auto* delChild : deletedChilds)
+    {
+        delete delChild;
+    }
 }
 
 Application* Window::GetApplication()
 {
-	return _ownerApp;
+    return _ownerApp;
 }
 
 void Window::SetPreEventHandler(void* handler)
 {
-	_preEventHandler = handler;
-	SetNativePreEventHandler(handler);
+    _preEventHandler = handler;
+    SetNativePreEventHandler(handler);
 }
 
 HS_NS_END

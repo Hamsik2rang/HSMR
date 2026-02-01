@@ -34,21 +34,6 @@ EditorWindow::~EditorWindow()
 
 bool EditorWindow::onInitialize()
 {
-	SwapchainInfo scInfo{};
-	scInfo.nativeWindow = &_nativeWindow;
-	scInfo.useDepth = false;
-	scInfo.useMSAA = false;
-	scInfo.useStencil = false;
-    scInfo.enableVSync  = true;
-
-#if __WINDOWS__
-	_rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
-#else
-	_rhiContext = RHIContext::Create(ERHIPlatform::METAL);
-#endif
-
-	_swapchain = _rhiContext->CreateSwapchain(scInfo);
-
 	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
 	_renderer->Initialize();
 
@@ -65,34 +50,6 @@ bool EditorWindow::onInitialize()
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
 	_renderer->AddPass(std::move(opaquePass));
 
-	_renderTargets.resize(_swapchain->GetMaxFrameCount());
-
-	uint32 width = _swapchain->GetWidth();
-	uint32 height = _swapchain->GetHeight();
-	for (size_t i = 0; i < _renderTargets.size(); i++)
-	{
-		RenderTargetInfo info = _renderer->GetBareboneRenderTargetInfo();
-		for (size_t j = 0; j < info.colorTextureCount; j++)
-		{
-			info.colorTextureInfos[j].extent.width = width;
-			info.colorTextureInfos[j].extent.height = height;
-			info.colorTextureInfos[j].format = EPixelFormat::R8G8B8A8_SRGB;
-			info.colorTextureInfos[j].usage = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::STAGING | ETextureUsage::SAMPLED;
-			info.colorTextureInfos[j].isCompressed = false;
-			info.colorTextureInfos[j].byteSize = 4 * width * height * 1 /*depth*/;
-		}
-
-		info.useDepthStencilTexture = false;
-		info.depthStencilInfo.extent.width = width;
-		info.depthStencilInfo.extent.height = height;
-		info.depthStencilInfo.extent.depth = 1;
-		info.depthStencilInfo.format = EPixelFormat::DEPTH32;
-		info.depthStencilInfo.usage = ETextureUsage::DEPTH_STENCIL_ATTACHMENT | ETextureUsage::STAGING;
-		info.depthStencilInfo.isDepthStencilBuffer = true;
-		info.depthStencilInfo.isCompressed = false;
-
-		_renderTargets[i].Create(info);
-	}
 
 	setupPanels();
 

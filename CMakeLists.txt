@@ -11,7 +11,7 @@ project(${ENGINE_NAME} VERSION 0.1.0)
 set(HS_ROOT_DIR ${HSMR_SOURCE_DIR})
 message(STATUS "HS_ROOT_DIR: ${HS_ROOT_DIR}")
 
-set(HS_EXECUTABLE_DIR "${HSMR_BINARY_DIR}$<CONFIG>")
+set(HS_EXECUTABLE_DIR "${HSMR_BINARY_DIR}/$<CONFIG>")
 message(STATUS "HS_EXECUTABLE_DIR: ${HS_EXECUTABLE_DIR}")
 
 set(HS_PROJECT_BINARY_DIR ${PROJECT_BINARY_DIR})
@@ -136,7 +136,6 @@ set(HS_SHADER_DIR "Shader")
 
 # New lightweight prototyping framework modules
 set(HS_THIRDPARTY_DIR "Source/ThirdParty")
-set(HS_PROFILER_DIR "Source/Profiler")
 set(HS_GIZMO_DIR "Source/Gizmo")
 set(HS_APPLICATION_DIR "Source/Application")
 
@@ -177,7 +176,6 @@ add_subdirectory(${HS_SHADER_DIR})
 
 # New lightweight prototyping framework modules
 add_subdirectory(${HS_THIRDPARTY_DIR})
-add_subdirectory(${HS_PROFILER_DIR})
 
 # Gizmo is now part of Application module
 add_subdirectory(${HS_APPLICATION_DIR})

@@ -1,4 +1,4 @@
-﻿//
+//
 //  main.cpp
 //  HSMR
 //
@@ -17,7 +17,7 @@
 #include <execinfo.h> // For backtrace (optional)
 #include <unistd.h>
 
-#else
+#else // !__APPLE__
 
 #ifndef UNICODE
 #define UNICODE
@@ -25,13 +25,13 @@
 
 #include <windows.h>
 
-#endif
+#endif // __APPLE__
 
-#else
+#else // !__HS_EDITOR_MODE
 // #include ...
 
 // #define hs_main(argc, argv) hs_play_main((argc), (argv))
-#endif
+#endif // __HS_EDITOR_MODE
 
 
 int main(int argc, char* argv[])

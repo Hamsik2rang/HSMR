@@ -5,9 +5,9 @@
 //  Lightweight prototyping application for rendering techniques
 //
 #include "PrototypeApplication.h"
-#include "Profiler/Profiler.h"
+#include "Core/Profiler/Profiler.h"
 #include "GizmoController.h"
-#include "ShaderWatcher.h"
+//#include "Editor/Resource/ShaderWatcher.h"
 
 #include "Core/Log.h"
 #include "Core/HAL/Timer.h"
@@ -79,13 +79,13 @@ bool PrototypeApplication::Init(const char* configPath)
     _picker->SetScreenSize(_config.windowWidth, _config.windowHeight);
 
     // Create profiler
-    _profiler = MakeScoped<Profiler>();
+//    _profiler = MakeScoped<Profiler>();
 
     // Create gizmo controller
     _gizmo = MakeScoped<GizmoController>();
 
     // Create shader watcher
-    _shaderWatcher = MakeScoped<ShaderWatcher>();
+    //_shaderWatcher = MakeScoped<ShaderWatcher>();
 
     // Initialize timer
     Timer::Start();
@@ -163,10 +163,10 @@ void PrototypeApplication::Run()
         }
 
         // Begin profiling frame
-        if (_profiler)
-        {
-            _profiler->BeginFrame();
-        }
+//        if (_profiler)
+//        {
+//            _profiler->BeginFrame();
+//        }
 
         // Update input
         updateInput();
@@ -186,10 +186,10 @@ void PrototypeApplication::Run()
         }
 
         // Update shader watcher
-        if (_shaderWatcher)
-        {
-            _shaderWatcher->Update(_deltaTime);
-        }
+//        if (_shaderWatcher)
+//        {
+//            _shaderWatcher->Update(_deltaTime);
+//        }
 
         // Call derived class update
         OnUpdate(_deltaTime);
@@ -197,20 +197,20 @@ void PrototypeApplication::Run()
         // Render
         _window->NextFrame();
 
-        if (_profiler)
-        {
-            _profiler->BeginGPUTimer("Render");
-        }
+//        if (_profiler)
+//        {
+//            _profiler->BeginGPUTimer("Render");
+//        }
 
         _window->Render();
 
         // Call derived class render
         OnRender();
 
-        if (_profiler)
-        {
-            _profiler->EndGPUTimer("Render");
-        }
+//        if (_profiler)
+//        {
+//            _profiler->EndGPUTimer("Render");
+//        }
 
         // Render GUI
         renderGUI();
@@ -219,10 +219,10 @@ void PrototypeApplication::Run()
         _window->Present();
 
         // End profiling frame
-        if (_profiler)
-        {
-            _profiler->EndFrame();
-        }
+//        if (_profiler)
+//        {
+//            _profiler->EndFrame();
+//        }
     }
 
     Shutdown();
@@ -238,9 +238,9 @@ void PrototypeApplication::Shutdown()
     OnShutdown();
 
     // Cleanup components
-    _shaderWatcher.reset();
+//    _shaderWatcher.reset();
     _gizmo.reset();
-    _profiler.reset();
+//    _profiler.reset();
     _picker.reset();
     _scene.reset();
     _camera.reset();
@@ -468,10 +468,10 @@ void PrototypeApplication::renderGUI()
     ImGui::NewFrame();
 
     // Profiler window
-    if (_showProfiler && _profiler)
-    {
-        _profiler->DrawUI();
-    }
+//    if (_showProfiler && _profiler)
+//    {
+//        _profiler->DrawUI();
+//    }
 
     // Scene hierarchy window
     if (_showHierarchy && _scene)
