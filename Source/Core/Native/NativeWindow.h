@@ -76,7 +76,11 @@ constexpr HS_API EWindowFlags& operator|=(EWindowFlags& lhs, EWindowFlags rhs)
 struct HS_API NativeWindow
 {
 	EWindowFlags flags;
-	void* handle; // HWND for Windows, NSWindow for macOS, etc.
+	void* handle; // HWND for Windows, NSWindow for macOS, SDL_Window* for SDL
+
+	// Graphics layer handles (platform/API specific)
+	void* graphicsLayer; // CAMetalLayer* (Metal), nullptr (Vulkan)
+	void* graphicsView;  // NSView*/SDL_MetalView (Metal), nullptr (Vulkan)
 
 	const char* title;
 	uint16 width;

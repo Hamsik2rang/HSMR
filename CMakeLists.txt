@@ -76,22 +76,40 @@ option(HSMR_ENABLE_IMGUI "Enable ImGui integration" ON)
 # SDL3 Configuration
 if(HSMR_USE_SDL)
     set(HS_SDL3_INCLUDE_DIR "${HS_DEPS_INCLUDE_DIR}/SDL3")
+
     if(WIN32)
         set(HS_SDL3_LIB "${HS_DEPS_LIB_DIR}/SDL3.lib")
         set(HS_SDL3_DLL "${HS_DEPS_DLL_DIR}/SDL3.dll")
     else()
-        set(HS_SDL3_LIB "${HS_DEPS_LIB_DIR}/libSDL3.dylib")
+        set(HS_SDL3_FRAMEWORK_DIR "${HS_DEPS_LIB_DIR}/SDL3.framework")
     endif()
+
     add_compile_definitions(__SDL__)
     message(STATUS "[SDL3] Enabled")
     message(STATUS "[SDL3] Include: ${HS_SDL3_INCLUDE_DIR}")
-    message(STATUS "[SDL3] Lib: ${HS_SDL3_LIB}")
+
+    if(WIN32)
+        message(STATUS "[SDL3] Lib: ${HS_SDL3_LIB}")
+    elseif(APPLE)
+        message(STATUS "[SDL3] Framework Directory: ${HS_SDL3_FRAMEWORK_DIR}")
+    endif()
 endif()
 
 if(HSMR_ENABLE_IMGUI)
     add_compile_definitions(HSMR_ENABLE_IMGUI)
     message(STATUS "[ImGui] Enabled")
 endif()
+
+# Slang Configuration (shader hot-reload support)
+set(HS_SLANG_INCLUDE_DIR "${HS_DEPS_INCLUDE_DIR}/slang")
+
+if(WIN32)
+    set(HS_SLANG_LIB "${HS_DEPS_LIB_DIR}/slang.lib")
+else()
+    set(HS_SLANG_DYLIB "${HS_DEPS_DLL_DIR}/libslang.dylib")
+endif()
+
+message(STATUS "[Slang] Include: ${HS_SLANG_INCLUDE_DIR}")
 
 if(HS_ARCH_ARM64)
     add_compile_definitions(__ARM64__)
@@ -160,6 +178,7 @@ add_subdirectory(${HS_SHADER_DIR})
 # New lightweight prototyping framework modules
 add_subdirectory(${HS_THIRDPARTY_DIR})
 add_subdirectory(${HS_PROFILER_DIR})
+
 # Gizmo is now part of Application module
 add_subdirectory(${HS_APPLICATION_DIR})
 

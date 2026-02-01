@@ -8,6 +8,12 @@ set(TOTAL_FILES
 
 if(APPLE)
     list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+
+    # Add SDL3 framework support
+    if(HSMR_USE_SDL)
+        list(APPEND OSX_FRAMEWORK "-framework SDL3")
+    endif()
+
     add_executable(${TARGET_NAME}
         ${TOTAL_FILES}
     )
@@ -16,6 +22,19 @@ if(APPLE)
         OUTPUT_NAME ${EXECUTABLE_NAME}
         RUNTIME_OUTPUT_DIRECTORY ${HS_PROJECT_BINARY_DIR}
     )
+
+    # Add framework search path for SDL3
+    if(HSMR_USE_SDL)
+        target_compile_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+
+        target_link_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+    endif()
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE

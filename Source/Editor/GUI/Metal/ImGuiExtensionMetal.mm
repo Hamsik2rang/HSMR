@@ -10,10 +10,19 @@
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalSwapchain.h"
 
-#include "Platform/Mac/MacWindow.h"
+#include "Core/Native/NativeWindow.h"
 
+#ifdef __SDL__
+#include <SDL3/SDL.h>
+#include "ImGui/imgui_impl_sdl3.h"
+#include "ImGui/imgui_impl_metal.h"
+#else
+#include "Platform/Mac/MacWindow.h"
 #include "ImGui/imgui_impl_metal.h"
 #include "ImGui/imgui_impl_osx.h"
+#endif
+
+#import <QuartzCore/CAMetalLayer.h>
 
 using namespace hs;
 
@@ -32,14 +41,25 @@ void ImGuiExtension::ImageOffscreen(RHITexture* use_texture, const ImVec2& image
 void ImGuiExtension::InitializeBackend(Swapchain* swapchain)
 {
     const auto& nativeWindow = swapchain->GetInfo().nativeWindow;
-    NSWindow* window         = (__bridge NSWindow*)(nativeWindow->handle);
 
-    NSView* view        = [(HSViewController*)[window delegate] view];
-    CAMetalLayer* layer = (CAMetalLayer*)[view layer];
+#ifdef __SDL__
+    // === SDL3 + Metal path ===
+    SDL_Window* window = (SDL_Window*)(nativeWindow->handle);
+    CAMetalLayer* layer = (__bridge CAMetalLayer*)(nativeWindow->graphicsLayer);
+    id<MTLDevice> device = [layer device];
+
+    ImGui_ImplMetal_Init(device);
+    ImGui_ImplSDL3_InitForMetal(window);
+#else
+    // === Native macOS + Metal path ===
+    NSWindow* window = (__bridge NSWindow*)(nativeWindow->handle);
+    NSView* view = (__bridge NSView*)(nativeWindow->graphicsView);
+    CAMetalLayer* layer = (__bridge CAMetalLayer*)(nativeWindow->graphicsLayer);
 
     id<MTLDevice> device = [layer device];
     ImGui_ImplMetal_Init(device);
     ImGui_ImplOSX_Init(view);
+#endif
 }
 
 void ImGuiExtension::BeginRender(Swapchain* swapchain)
@@ -47,24 +67,45 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
     s_currentSwapchain = swapchain;
 
     SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
-    NSWindow* window        = (__bridge NSWindow*)swMetal->nativeHandle;
-    HSViewController* vc    = (HSViewController*)[window delegate];
-    NSView* view            = [vc view];
-
-    const NativeWindow* nativeWindow = (swapchain->GetInfo().nativeWindow);
-
-    CGSize backingSize       = [vc getBackingViewSize];
-    float backingScaleFactor = [window backingScaleFactor];
-
-    ImGuiIO& io                = ImGui::GetIO();
-    io.DisplaySize.x           = backingSize.width;
-    io.DisplaySize.y           = backingSize.height;
-    io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
+    const NativeWindow* nativeWindow = swapchain->GetInfo().nativeWindow;
 
     MTLRenderPassDescriptor* rpDesc = static_cast<MetalRenderPass*>(swMetal->GetRenderPass())->handle;
 
+#ifdef __SDL__
+    // === SDL3 path ===
+    SDL_Window* window = (SDL_Window*)(nativeWindow->handle);
+
+    // Get drawable size from SDL
+    int drawableWidth, drawableHeight;
+    SDL_GetWindowSizeInPixels(window, &drawableWidth, &drawableHeight);
+
+    float displayScale = SDL_GetWindowDisplayScale(window);
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize.x = static_cast<float>(drawableWidth);
+    io.DisplaySize.y = static_cast<float>(drawableHeight);
+    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f); // SDL already handles scaling
+
+    ImGui_ImplMetal_NewFrame(rpDesc);
+    ImGui_ImplSDL3_NewFrame();
+#else
+    // === Native macOS path ===
+    NSWindow* window = (__bridge NSWindow*)swMetal->nativeHandle;
+    HSViewController* vc = (HSViewController*)[window delegate];
+    NSView* view = [vc view];
+
+    CGSize backingSize = [vc getBackingViewSize];
+    float backingScaleFactor = [window backingScaleFactor];
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize.x = backingSize.width;
+    io.DisplaySize.y = backingSize.height;
+    io.DisplayFramebufferScale = ImVec2(backingScaleFactor, backingScaleFactor);
+
     ImGui_ImplMetal_NewFrame(rpDesc);
     ImGui_ImplOSX_NewFrame(view);
+#endif
+
     ImGui::NewFrame();
 }
 
@@ -82,13 +123,23 @@ void ImGuiExtension::EndRender()
 void ImGuiExtension::FinalizeBackend()
 {
     ImGui_ImplMetal_Shutdown();
+#ifdef __SDL__
+    ImGui_ImplSDL3_Shutdown();
+#else
     ImGui_ImplOSX_Shutdown();
+#endif
 }
 
 void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
 {
-    // empty.
+#ifdef __SDL__
+    // For SDL, we set the pre-event handler to forward events to ImGui
+    // The handler is called in PollNativeEventInternal before processing each event
+    SetNativePreEventHandler(reinterpret_cast<void*>(ImGui_ImplSDL3_ProcessEvent));
+#else
+    // Native macOS path - empty
     // SetNativePreEventHandler(fnHandler);
+#endif
 }
 
 HS_NS_EDITOR_END

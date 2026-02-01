@@ -132,14 +132,25 @@ source_group("ThirdParty\\ImGui" FILES ${THIRDPARTY_IMGUI})
 set(THIRDPARTY_IMGUI_BACKENDS)
 
 if(APPLE)
-    list(APPEND THIRDPARTY_IMGUI_BACKENDS
-        ThirdParty/ImGui/imgui_impl_metal.h
-        ThirdParty/ImGui/imgui_impl_metal.mm
-        ThirdParty/ImGui/imgui_impl_osx.h
-        ThirdParty/ImGui/imgui_impl_osx.mm
-    )
+    if(HSMR_USE_SDL)
+        # macOS + SDL3 + Metal backend
+        list(APPEND THIRDPARTY_IMGUI_BACKENDS
+            ThirdParty/ImGui/imgui_impl_sdl3.h
+            ThirdParty/ImGui/imgui_impl_sdl3.cpp
+            ThirdParty/ImGui/imgui_impl_metal.h
+            ThirdParty/ImGui/imgui_impl_metal.mm
+        )
+    else()
+        # macOS + Native OSX + Metal backend
+        list(APPEND THIRDPARTY_IMGUI_BACKENDS
+            ThirdParty/ImGui/imgui_impl_osx.h
+            ThirdParty/ImGui/imgui_impl_osx.mm
+            ThirdParty/ImGui/imgui_impl_metal.h
+            ThirdParty/ImGui/imgui_impl_metal.mm
+        )
+    endif()
 elseif(HSMR_USE_SDL)
-    # SDL3 + Vulkan backend
+    # Windows + SDL3 + Vulkan backend
     list(APPEND THIRDPARTY_IMGUI_BACKENDS
         ThirdParty/ImGui/imgui_impl_sdl3.h
         ThirdParty/ImGui/imgui_impl_sdl3.cpp
@@ -147,7 +158,7 @@ elseif(HSMR_USE_SDL)
         ThirdParty/ImGui/imgui_impl_vulkan.cpp
     )
 else()
-    # Native Win32 + Vulkan backend
+    # Windows + Native Win32 + Vulkan backend
     list(APPEND THIRDPARTY_IMGUI_BACKENDS
         ThirdParty/ImGui/imgui_impl_win32.h
         ThirdParty/ImGui/imgui_impl_win32.cpp
@@ -185,20 +196,31 @@ if(WIN32)
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
 else()
-    
+
 list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
 
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-    "-Wl, -all_load" Engine
-    ${OSX_FRAMEWORK}
-)
-    
+# For SDL3 on macOS, link against the framework
+if(HSMR_USE_SDL)
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        "-Wl, -all_load" Engine
+        ${OSX_FRAMEWORK}
+        "-F${HS_SDL3_FRAMEWORK_DIR}/.." "-framework SDL3"
+    )
+else()
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        "-Wl, -all_load" Engine
+        ${OSX_FRAMEWORK}
+    )
+endif()
+
 endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     PUBLIC ThirdParty
+    $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_INCLUDE_DIR}>
 )
 
 set_target_properties(${TARGET_PATH} PROPERTIES

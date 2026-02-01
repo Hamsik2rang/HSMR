@@ -108,16 +108,35 @@ add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
     list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+
+    # Add SDL3 framework support
+    if(HSMR_USE_SDL)
+        target_compile_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+
+        target_link_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+
+        list(APPEND OSX_FRAMEWORK "-framework SDL3")
+    endif()
+
     target_link_libraries(${TARGET_NAME}
         PRIVATE
         "-Wl, -all_load" Core Platform RHI
-        "-Wl, -force_load" ${ASSIMP} ${OSX_FRAMEWORK}
+        ${ASSIMP}
+        ${HS_SLANG_DYLIB}
+        ${OSX_FRAMEWORK}
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
         Core Platform RHI
         ${ASSIMP}
+        ${HS_SLANG_LIB}
     )
 endif()
 
@@ -133,6 +152,7 @@ endif()
 target_include_directories(${TARGET_NAME}
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR} ${STB_INCLUDE}
+    ${HS_SLANG_INCLUDE_DIR}
 )
 
 target_compile_definitions(${TARGET_NAME}

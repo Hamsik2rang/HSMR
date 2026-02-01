@@ -1,12 +1,8 @@
 ﻿#include "Core/Native/NativeWindow.h"
 
-#if defined(__SDL__)
-#include "Platform/SDL/SDLPlatform.h"
-#elif defined(__WINDOWS__)
-#include "Platform/Win/WinWindow.h"
-#elif defined(__APPLE__)
-// #include "Platform/Mac/MacWindow.h"
-#endif
+// Platform-specific window implementations are in MacWindow.mm (macOS) and WinWindow.cpp (Windows)
+// SDL support is integrated into those files via #ifdef __SDL__
+// No platform headers needed here - we use forward declarations for the Internal functions
 
 #include <queue>
 #include <cassert>

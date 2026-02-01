@@ -11,8 +11,7 @@
 #include "Core/Native/NativeWindow.h"
 
 #include <Metal/Metal.h>
-
-@class HSViewController;
+#import <QuartzCore/CAMetalLayer.h>
 
 HS_NS_BEGIN
 
@@ -50,10 +49,10 @@ uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
     const uint32 maxFrameCount = swMetal->_maxFrameCount;
     swMetal->_frameIndex       = (swMetal->_frameIndex + 1) % maxFrameCount;
 
-    auto nativeWindow    = swapchain->GetInfo().nativeWindow;
-    HSViewController* vc = (HSViewController*)[(__bridge NSWindow*)(nativeWindow->handle) delegate];
-    NSView* view         = [vc view];
-    CAMetalLayer* layer  = (CAMetalLayer*)[[vc view] layer];
+    auto nativeWindow = swapchain->GetInfo().nativeWindow;
+
+    // Use graphicsLayer directly from NativeWindow (works with both SDL and native paths)
+    CAMetalLayer* layer = (__bridge CAMetalLayer*)(nativeWindow->graphicsLayer);
 
     id<CAMetalDrawable> drawable = [layer nextDrawable];
     swMetal->_drawable           = drawable;

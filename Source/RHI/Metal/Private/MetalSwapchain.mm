@@ -13,8 +13,6 @@
 
 #import <MetalKit/MetalKit.h>
 
-@class HSViewController;
-
 HS_NS_BEGIN
 
 SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
@@ -28,7 +26,6 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     nativeHandle           = nh->handle;
 
     NSWindow* window     = (__bridge NSWindow*)(nh->handle);
-    HSViewController* vc = (HSViewController*)[window delegate];
 
     _commandBuffers = new RHICommandBuffer*[_maxFrameCount];
 

@@ -62,7 +62,6 @@ bool EditorWindow::onInitialize()
 		guiContext->ApplyDPIScale(dpiScale);
 	}
 
-	// Add Atmosphere Sky Pass (replaces ForwardOpaquePass)
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
 	_renderer->AddPass(std::move(opaquePass));
 

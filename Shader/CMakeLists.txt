@@ -77,7 +77,8 @@ foreach(shader ${SLANG_SHADERS})
 endforeach()
 
 # Custom target with SOURCES for IDE visibility
-add_custom_target(${TARGET_NAME}
+# ALL ensures Shader is built before install
+add_custom_target(${TARGET_NAME} ALL
     ${SHADER_COMPILE_COMMANDS}
     COMMAND ${CMAKE_COMMAND} -E remove -f "${HS_DEPS_BIN_DIR}/slang-glsl-module.bin"
     DEPENDS ${SLANG_SHADERS}
@@ -93,16 +94,3 @@ set_source_files_properties(${SLANG_SHADERS} PROPERTIES
     HEADER_FILE_ONLY TRUE
     VS_TOOL_OVERRIDE "None"
 )
-
-# INSTALL 타겟 빌드 시 Shader 타겟도 함께 빌드되도록 설정
-# install(CODE ...) 내부에서는 generator expression이 동작하지 않으므로
-# 변수를 미리 문자열로 치환하여 전달
-install(CODE "
-    execute_process(
-        COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target Shader --config \${CMAKE_INSTALL_CONFIG_NAME}
-        RESULT_VARIABLE result
-    )
-    if(NOT result EQUAL 0)
-        message(FATAL_ERROR \"Shader build failed\")
-    endif()
-")

@@ -22,7 +22,7 @@ struct HS_PROFILER_API TimingData
     std::deque<float> history;  // History of timings (last N frames)
     float current = 0.0f;
     float average = 0.0f;
-    float min = FLT_MAX;
+    float min = 3.40282347E+38;
     float max = 0.0f;
     float total = 0.0f;
 
@@ -61,7 +61,7 @@ private:
 class HS_PROFILER_API Profiler
 {
 public:
-    static const int MAX_HISTORY = 256;
+    static constexpr int MAX_HISTORY = 256;
 
     Profiler();
     ~Profiler();

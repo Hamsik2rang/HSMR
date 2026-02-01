@@ -33,7 +33,7 @@ public:
         World
     };
 
-    GizmoController();
+    GizmoController() = default;
     ~GizmoController() = default;
 
     // Mode control

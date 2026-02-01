@@ -30,17 +30,18 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-# Link dependencies
+# Link dependencies - Profiler sits between Engine and Editor layer
+# Needs Editor for ImGui symbols (ImPlot depends on ImGui)
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core
+        Engine
         Editor
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        "-Wl,-all_load" Core
+        Engine
         Editor
     )
 endif()
@@ -62,7 +63,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${HS_EXECUTABLE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Core Editor)
+add_dependencies(${TARGET_NAME} Engine Editor)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
@@ -72,6 +73,7 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
 
     HS_PROFILER_API_EXPORT
+    HS_API_IMPORT
     HS_EDITOR_API_IMPORT
 )
 

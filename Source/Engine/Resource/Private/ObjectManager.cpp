@@ -996,7 +996,7 @@ bool ObjectManager::LoadModel(const std::string& path,
         return false;
     }
 
-    HS_LOG(info, "Loading model: %s", filePath);
+    HS_LOG(info, "Loading model: %s", filePath.c_str());
     HS_LOG(info, "  - Meshes: %d", scene->mNumMeshes);
     HS_LOG(info, "  - Materials: %d", scene->mNumMaterials);
 

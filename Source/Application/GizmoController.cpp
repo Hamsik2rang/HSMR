@@ -17,10 +17,6 @@
 
 HS_NS_BEGIN
 
-GizmoController::GizmoController()
-{
-}
-
 void GizmoController::ProcessInput()
 {
     ImGuiIO& io = ImGui::GetIO();
