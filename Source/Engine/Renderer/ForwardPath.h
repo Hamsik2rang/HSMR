@@ -15,8 +15,6 @@ public:
     
     //...
     
-    RenderTargetInfo GetBareboneRenderTargetInfo() override;
-
 private:
 };
 

@@ -68,8 +68,6 @@ public:
 
     HS_FORCEINLINE uint32 GetCurrentFrameIndex() { return frameIndex; }
 
-    virtual RenderTargetInfo GetBareboneRenderTargetInfo() = 0;
-
     HS_FORCEINLINE RHIHandleCache* GetHandleCache() const { return _rhiHandleCache; }
 
 protected:

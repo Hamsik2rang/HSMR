@@ -28,9 +28,6 @@ public:
 	{
 		return;
 	}
-
-	// Inherited via RenderPath
-	RenderTargetInfo GetBareboneRenderTargetInfo() final;
 };
 
 

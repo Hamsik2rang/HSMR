@@ -45,7 +45,7 @@ std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
 }
 
 // Convert EFileAccess to Windows access flags
-DWORD get_access_flag(EFileAccess access)
+static DWORD get_access_flag(EFileAccess access)
 {
     switch (access)
     {
@@ -61,7 +61,7 @@ DWORD get_access_flag(EFileAccess access)
 }
 
 // Convert EFileAccess to Windows creation disposition
-DWORD get_createion_disposition(EFileAccess access)
+static DWORD get_createion_disposition(EFileAccess access)
 {
     switch (access)
     {

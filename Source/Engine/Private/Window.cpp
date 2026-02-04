@@ -19,6 +19,7 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     , _shouldPresent(true)
     , _ownerApp(ownerApp)
     , _preEventHandler(nullptr)
+    , _rhiContext(RHIContext::Get())
 {
     if (!CreateNativeWindow(name, width, height, flags, _nativeWindow))
     {
@@ -31,42 +32,15 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     scInfo.useMSAA = false;
     scInfo.useStencil = false;
     scInfo.enableVSync  = true;
-    
-#if __WINDOWS__
-    _rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
-#else
-    _rhiContext = RHIContext::Create(ERHIPlatform::METAL);
-#endif
-    
+
     _swapchain = _rhiContext->CreateSwapchain(scInfo);
     _renderTargets.resize(_swapchain->GetMaxFrameCount());
-
-//    static TextureInfo colorTextureInfo{};
-//    colorTextureInfo.arrayLength          = 1;
-//    colorTextureInfo.extent.width         = 1;
-//    colorTextureInfo.extent.height        = 1;
-//    colorTextureInfo.extent.depth         = 1;
-//    colorTextureInfo.format               = EPixelFormat::R8G8B8A8_SRGB;
-//    colorTextureInfo.isCompressed         = false;
-//    colorTextureInfo.isDepthStencilBuffer = false;
-//    colorTextureInfo.mipLevel             = 1;
-//    colorTextureInfo.type                 = ETextureType::TEX_2D;
-//    colorTextureInfo.usage                = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::INPUT_ATTACHMENT;
-//    colorTextureInfo.byteSize             = 4 * colorTextureInfo.extent.width * colorTextureInfo.extent.height * colorTextureInfo.extent.depth;
-//    //...
-//
-//    static RenderTargetInfo bareBondRenderTargetInfo{};
-//    bareBondRenderTargetInfo.width             = 1;
-//    bareBondRenderTargetInfo.height            = 1;
-//    bareBondRenderTargetInfo.colorTextureCount = 1;
-//    bareBondRenderTargetInfo.colorTextureInfos = {colorTextureInfo};
-//    //...
 
     for (size_t i = 0; i < _renderTargets.size(); i++)
     {
         RenderTargetInfo info{};
         info.colorTextureCount = 1;
-        
+        info.colorTextureInfos.resize(info.colorTextureCount);
         for (size_t j = 0; j < info.colorTextureCount; j++)
         {
             info.colorTextureInfos[j].arrayLength = 1;
@@ -109,6 +83,11 @@ void Window::Shutdown()
     onShutdown();
 
     DestroyNativeWindow(_nativeWindow);
+
+    for (auto& rt : _renderTargets)
+    {
+        rt.Clear();
+    }
 
     _isClosed = true;
 }

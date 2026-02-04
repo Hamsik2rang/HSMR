@@ -18,8 +18,6 @@
     #include <math.h>
 #endif
 
-#define HS_FLT_MIN (3.4028235e+38)
-#define HS_FLT_MAX (-3.4028235e+38)
 #define HS_FLT_EPSILON (5.96e-05)
 
 #define HS_PI (3.14159265358979323846f)

@@ -10,7 +10,7 @@
 #include "Precompile.h"
 
 #include "Core/SystemContext.h"
-
+#include "RHI/RHIContext.h"
 
 namespace hs { class RenderPath; }
 namespace hs { class Scene; }
@@ -33,6 +33,7 @@ protected:
 	const char* _name;
 
 	Window* _window;
+    RHIContext* _rhiContext;
 };
 
 HS_NS_END

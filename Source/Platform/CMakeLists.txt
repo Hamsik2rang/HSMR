@@ -2,26 +2,45 @@ set(TARGET_NAME Platform)
 
 set(TOTAL_FILES)
 
+if(HSMR_USE_SDL)
+    set(PLATFORM_SDL_HEADERS
+        SDL/SDLFileSystem.h
+    )
+    source_group("SDL\\Public" FILES ${PLATFORM_SDL_HEADERS})
+    list(APPEND TOTAL_FILES ${PLATFORM_SDL_HEADERS})
+
+    set(PLATFORM_SDL_SOURCES
+        SDL/Private/SDLFileSystem.cpp
+    )
+    source_group("SDL\\Private" FILES ${PLATFORM_SDL_SOURCES})
+    list(APPEND TOTAL_FILES ${PLATFORM_SDL_SOURCES})
+endif()
+
 if(WIN32)
     set(PLATFORM_WIN_HEADERS
-        Win/WinFileSystem.h
+        # Win/WinFileSystem.h
         Win/WinSystemContext.h
         Win/WinInput.h
         Win/WinWindow.h
     )
 
     set(PLATFORM_WIN_SOURCES
-        Win/Private/WinFileSystem.cpp
+        # Win/Private/WinFileSystem.cpp
         Win/Private/WinSystemContext.cpp
         Win/Private/WinInput.cpp
         Win/Private/WinWindow.cpp
     )
+    if(NOT HSMR_USE_SDL)
+        list(APPEND PLATFORM_WIN_HEADERS Win/Private/WinFileSystem.h)
+        list(APPEND PLATFORM_WIN_SOURCES Win/Private/WinFileSystem.cpp)
+    endif()
 
     source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
     list(APPEND TOTAL_FILES ${PLATFORM_WIN_HEADERS})
 
     source_group("Win\\Private" FILES ${PLATFORM_WIN_SOURCES})
     list(APPEND TOTAL_FILES ${PLATFORM_WIN_SOURCES})
+
 else() # MAC
     set(PLATFORM_MAC_HEADERS
         Mac/AutoReleasePool.h
@@ -38,6 +57,11 @@ else() # MAC
         Mac/Private/MacInput.mm
         Mac/Private/MacWindow.mm
     )
+
+    if(NOT HSMR_USE_SDL)
+        list(APPEND PLATFORM_MAC_HEADERS Win/Private/MacFileSystem.h)
+        list(APPEND PLATFORM_MAC_SOURCES Win/Private/MacFileSystem.mm)
+    endif()
 
     source_group("Mac\\Public" FILES ${PLATFORM_MAC_HEADERS})
     list(APPEND TOTAL_FILES ${PLATFORM_MAC_HEADERS})

@@ -53,6 +53,7 @@ public:
 protected:
 
 	virtual bool onInitialize() { return true; }
+    virtual void onFinalize() {}
 	virtual void onNextFrame() {}
 	virtual void onUpdate(float deltaTime) {}
 	virtual void onRender() {}

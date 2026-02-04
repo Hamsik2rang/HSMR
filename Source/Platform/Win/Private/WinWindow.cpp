@@ -17,12 +17,6 @@ static bool s_sdlInitialized = false;
 // Pre-event handler for ImGui integration
 static bool (*s_preEventHandler)(SDL_Event*) = nullptr;
 
-// Get SDL window for Vulkan surface creation
-SDL_Window* GetSDLWindow()
-{
-    return s_sdlWindow;
-}
-
 namespace {
 // Map SDL scancode to Input::Button enum value
 static uint8 MapSDLScancodeToButton(SDL_Scancode scancode)
@@ -322,17 +316,6 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
 {
 #ifdef __SDL__
     // === SDL3 + Vulkan path ===
-
-    // Initialize SDL if not already done
-    if (!s_sdlInitialized)
-    {
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
-        {
-            HS_LOG(crash, "Failed to initialize SDL: %s", SDL_GetError());
-            return false;
-        }
-        s_sdlInitialized = true;
-    }
 
     // Convert EWindowFlags to SDL_WindowFlags and ensure Vulkan flag is set
     SDL_WindowFlags sdlFlags = static_cast<SDL_WindowFlags>(static_cast<uint64>(flag));
