@@ -20,8 +20,6 @@
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class EditorCamera; } }
-namespace hs { class AtmosphereRenderer; }
-namespace hs { class AtmosphereSkyPass; }
 
 HS_NS_EDITOR_BEGIN
 
@@ -52,6 +50,8 @@ private:
     void updateEditorCamera();
     void processShortcuts();
 
+    void setupResources();
+
     Scoped<RenderPath> _renderer;
 
     Scoped<Panel> _basePanel;
@@ -61,6 +61,9 @@ private:
     Scoped<Panel> _hierarchyPanel;
 
 	Scoped<EditorCamera> _editorCamera;
+
+    std::vector<Scoped<Mesh>> _meshes;
+    std::vector<Scoped<Material>> _materials;
 };
 
 HS_NS_EDITOR_END

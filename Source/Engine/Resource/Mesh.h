@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Resource/Object.h"
+#include "Engine/Resource/Object.h"
 
 #include "Core/Math/Common.h"
 

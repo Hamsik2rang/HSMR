@@ -13,8 +13,6 @@ int hs_editor_main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	SystemContext::Init();
-
 	hs::Application* app = new hs::editor::EditorApplication("HSMR");
 
 	app->Run();

@@ -8,6 +8,10 @@
 #define __HS_RENDERER_DEFINITION_H__
 
 #include "RHI/RHIDefinition.h"
+#include "Engine/Resource/Image.h"
+#include "Engine/Resource/Shader.h"
+#include "Engine/Resource/Material.h"
+#include "Engine/Resource/Mesh.h"
 
 HS_NS_BEGIN
 
@@ -40,6 +44,7 @@ enum class ERenderGroup : uint16
 
 struct HS_API  RenderParameter
 {
+
 };
 
 

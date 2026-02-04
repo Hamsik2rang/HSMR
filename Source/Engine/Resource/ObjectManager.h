@@ -14,10 +14,10 @@
 
 #include "RHI/RHIDefinition.h"
 
-namespace hs { class Image; }
-namespace hs { class Mesh; }
-namespace hs { class Shader; }
-namespace hs { class Material; }
+#include "Engine/Resource/Image.h"
+#include "Engine/Resource/Mesh.h"
+#include "Engine/Resource/Shader.h"
+#include "Engine/Resource/Material.h"
 
 HS_NS_BEGIN
 
@@ -44,6 +44,12 @@ public:
 	                      std::vector<Scoped<Mesh>>& outMeshes,
 	                      std::vector<Scoped<Material>>& outMaterials,
 	                      bool isAbsolutePath = false);
+
+	// Load GLTF/GLB model with PBR materials
+	static bool LoadGLTF(const std::string& path,
+	                     std::vector<Scoped<Mesh>>& outMeshes,
+	                     std::vector<Scoped<Material>>& outMaterials,
+	                     bool isAbsolutePath = false);
 
 
 	static const Image* GetFallbackImage2DWhite();

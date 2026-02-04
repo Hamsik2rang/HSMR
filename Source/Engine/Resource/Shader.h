@@ -2,8 +2,8 @@
 #define __HS_SHADER_H__
 
 #include "Precompile.h"
-#include "Resource/Object.h"
-#include "Resource/ResourceDefinition.h"
+#include "Engine/Resource/Object.h"
+#include "Engine/Resource/ResourceDefinition.h"
 
 #include "RHI/RHIDefinition.h"
 

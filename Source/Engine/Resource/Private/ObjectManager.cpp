@@ -1,6 +1,6 @@
 #include "Resource/ObjectManager.h"
 
-#include "Resource/ResourceDefinition.h"
+#include "Engine/Resource/ResourceDefinition.h"
 
 #include "Core/HAL/FileSystem.h"
 
@@ -475,7 +475,7 @@ Scoped<Image> ObjectManager::LoadImageFromFile(const std::string& path, bool isA
 
 Scoped<Mesh> ObjectManager::LoadMeshFromFile(const std::string& path, bool isAbsolutePath)
 {
-	const char* filePath = nullptr;
+    std::string filePath = "";
 	if (isAbsolutePath)
 	{
 		filePath = path.c_str();
@@ -515,7 +515,7 @@ Scoped<Mesh> ObjectManager::LoadMeshFromFile(const std::string& path, bool isAbs
 		return nullptr;
 	}
 
-	HS_LOG(info, "Loading mesh: %s", filePath);
+	HS_LOG(info, "Loading mesh: %s", filePath.c_str());
 	HS_LOG(info, "  - Meshes: %d", scene->mNumMeshes);
 	HS_LOG(info, "  - Materials: %d", scene->mNumMaterials);
 	HS_LOG(info, "  - Animations: %d", scene->mNumAnimations);
@@ -1130,6 +1130,302 @@ bool ObjectManager::LoadModel(const std::string& path,
     outMaterials = std::move(materials);
 
     return true;
+}
+
+bool ObjectManager::LoadGLTF(const std::string& path,
+                             std::vector<Scoped<Mesh>>& outMeshes,
+                             std::vector<Scoped<Material>>& outMaterials,
+                             bool isAbsolutePath)
+{
+	std::string filePath = path;
+	if (!isAbsolutePath)
+	{
+		filePath = s_resourcePath + path;
+	}
+
+	Assimp::Importer importer;
+
+	uint32 importFlags =
+		aiProcess_Triangulate |
+		aiProcess_CalcTangentSpace |
+		aiProcess_GenNormals |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_ImproveCacheLocality |
+		aiProcess_RemoveRedundantMaterials |
+		aiProcess_OptimizeMeshes |
+		aiProcess_GenUVCoords |
+		aiProcess_TransformUVCoords |
+		aiProcess_SortByPType |
+		aiProcess_FindInvalidData;
+
+	const aiScene* scene = importer.ReadFile(filePath, importFlags);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		HS_LOG(error, "Failed to load GLTF: %s - %s", filePath.c_str(), importer.GetErrorString());
+		return false;
+	}
+
+	HS_LOG(info, "Loading GLTF: %s", filePath.c_str());
+	HS_LOG(info, "  - Meshes: %d", scene->mNumMeshes);
+	HS_LOG(info, "  - Materials: %d", scene->mNumMaterials);
+	HS_LOG(info, "  - Textures (embedded): %d", scene->mNumTextures);
+	HS_LOG(info, "  - Animations: %d", scene->mNumAnimations);
+
+	std::string modelDirectory;
+	size_t lastSlash = filePath.find_last_of(HS_DIR_SEPERATOR);
+	if (lastSlash != std::string::npos)
+	{
+		modelDirectory = filePath.substr(0, lastSlash);
+	}
+
+	// --- Materials (PBR) ---
+	std::vector<Scoped<Material>> materials;
+	materials.reserve(scene->mNumMaterials);
+
+	for (uint32 i = 0; i < scene->mNumMaterials; ++i)
+	{
+		aiMaterial* aiMat = scene->mMaterials[i];
+		Scoped<Material> material = MakeScoped<Material>();
+
+		// Material name
+		aiString matName;
+		if (aiMat->Get(AI_MATKEY_NAME, matName) == AI_SUCCESS)
+		{
+			material->name = matName.C_Str();
+		}
+
+		// Base color (GLTF PBR)
+		aiColor4D baseColor;
+		if (aiMat->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS)
+		{
+			material->SetDiffuseColor(glm::vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a));
+		}
+		else
+		{
+			aiColor4D diffuse;
+			if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS)
+			{
+				material->SetDiffuseColor(glm::vec4(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
+			}
+		}
+
+		// Metallic factor
+		float metallic = 0.0f;
+		if (aiMat->Get(AI_MATKEY_METALLIC_FACTOR, metallic) == AI_SUCCESS)
+		{
+			material->SetMetallic(metallic);
+		}
+
+		// Roughness factor
+		float roughness = 0.5f;
+		if (aiMat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS)
+		{
+			material->SetRoughness(roughness);
+		}
+
+		// Emission color
+		aiColor4D emission;
+		if (aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, emission) == AI_SUCCESS)
+		{
+			material->SetEmissionColor(glm::vec4(emission.r, emission.g, emission.b, emission.a));
+		}
+
+		// Opacity
+		float opacity = 1.0f;
+		if (aiMat->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS)
+		{
+			material->SetOpacity(opacity);
+		}
+
+		// Two-sided
+		int twoSided = 0;
+		if (aiMat->Get(AI_MATKEY_TWOSIDED, twoSided) == AI_SUCCESS)
+		{
+			material->SetTwoSided(twoSided != 0);
+		}
+
+		// GLTF texture type mapping
+		struct TextureMapping
+		{
+			aiTextureType aiType;
+			EMaterialTextureType hsType;
+		};
+
+		TextureMapping textureMappings[] = {
+			{ aiTextureType_BASE_COLOR,         EMaterialTextureType::DIFFUSE },
+			{ aiTextureType_DIFFUSE,            EMaterialTextureType::DIFFUSE },
+			{ aiTextureType_NORMALS,            EMaterialTextureType::NORMAL },
+			{ aiTextureType_METALNESS,          EMaterialTextureType::METALLIC },
+			{ aiTextureType_DIFFUSE_ROUGHNESS,  EMaterialTextureType::ROUGHNESS },
+			{ aiTextureType_EMISSIVE,           EMaterialTextureType::EMISSION },
+			{ aiTextureType_AMBIENT_OCCLUSION,  EMaterialTextureType::AMBIENT_OCCLUSION },
+		};
+
+		for (const auto& mapping : textureMappings)
+		{
+			if (material->HasTexture(mapping.hsType))
+			{
+				continue;
+			}
+
+			uint32 textureCount = aiMat->GetTextureCount(mapping.aiType);
+			if (textureCount == 0)
+			{
+				continue;
+			}
+
+			aiString texPath;
+			if (aiMat->GetTexture(mapping.aiType, 0, &texPath) != AI_SUCCESS)
+			{
+				continue;
+			}
+
+			std::string texturePathStr = texPath.C_Str();
+			Scoped<Image> texture = nullptr;
+
+			// GLB 임베디드 텍스처 처리
+			if (texturePathStr[0] == '*')
+			{
+				int texIndex = std::atoi(texturePathStr.c_str() + 1);
+				if (texIndex >= 0 && static_cast<uint32>(texIndex) < scene->mNumTextures)
+				{
+					const aiTexture* embeddedTex = scene->mTextures[texIndex];
+
+					if (embeddedTex->mHeight == 0)
+					{
+						// 압축된 텍스처 (PNG, JPEG 등)
+						int width = 0, height = 0, channel = 0;
+						uint8* rawData = stbi_load_from_memory(
+							reinterpret_cast<const uint8*>(embeddedTex->pcData),
+							embeddedTex->mWidth,
+							&width, &height, &channel, 0);
+
+						if (rawData)
+						{
+							texture = MakeScoped<Image>(rawData, width, height, channel);
+						}
+					}
+					else
+					{
+						// 비압축 ARGB8888 텍스처
+						uint32 pixelCount = embeddedTex->mWidth * embeddedTex->mHeight;
+						std::vector<uint8> rgbaData(pixelCount * 4);
+
+						for (uint32 p = 0; p < pixelCount; ++p)
+						{
+							rgbaData[p * 4 + 0] = embeddedTex->pcData[p].r;
+							rgbaData[p * 4 + 1] = embeddedTex->pcData[p].g;
+							rgbaData[p * 4 + 2] = embeddedTex->pcData[p].b;
+							rgbaData[p * 4 + 3] = embeddedTex->pcData[p].a;
+						}
+
+						texture = MakeScoped<Image>(rgbaData.data(), embeddedTex->mWidth, embeddedTex->mHeight, 4);
+					}
+				}
+			}
+			else
+			{
+				// 외부 텍스처 파일
+				if (!FileSystem::IsAbsolutePath(texturePathStr))
+				{
+					texturePathStr = modelDirectory + HS_DIR_SEPERATOR + texturePathStr;
+				}
+				texture = LoadImageFromFile(texturePathStr, true);
+			}
+
+			if (texture)
+			{
+				material->SetTexture(mapping.hsType, texture.release());
+				HS_LOG(info, "  Loaded texture [%d]: %s", static_cast<int>(mapping.hsType), texturePathStr.c_str());
+			}
+			else
+			{
+				HS_LOG(warning, "  Failed to load texture: %s", texturePathStr.c_str());
+			}
+		}
+
+		materials.push_back(std::move(material));
+	}
+
+	// --- Meshes ---
+	outMeshes.clear();
+	outMaterials.clear();
+	outMeshes.reserve(scene->mNumMeshes);
+
+	for (uint32 i = 0; i < scene->mNumMeshes; ++i)
+	{
+		aiMesh* mesh = scene->mMeshes[i];
+		Scoped<Mesh> hsMesh = MakeScoped<Mesh>();
+
+		if (mesh->mName.length > 0)
+		{
+			hsMesh->name = mesh->mName.C_Str();
+		}
+
+		// Positions
+		if (mesh->HasPositions())
+		{
+			hsMesh->SetPosition(ConvertToFloatVector(mesh->mVertices, mesh->mNumVertices));
+		}
+
+		// Normals
+		if (mesh->HasNormals())
+		{
+			hsMesh->SetNormal(ConvertToFloatVector(mesh->mNormals, mesh->mNumVertices));
+		}
+
+		// Tangents & Bitangents
+		if (mesh->HasTangentsAndBitangents())
+		{
+			hsMesh->SetTangent(ConvertToFloatVector(mesh->mTangents, mesh->mNumVertices));
+			hsMesh->SetBitangent(ConvertToFloatVector(mesh->mBitangents, mesh->mNumVertices));
+		}
+
+		// Texture coordinates (모든 UV 채널)
+		for (uint32 ch = 0; ch < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++ch)
+		{
+			if (mesh->HasTextureCoords(ch))
+			{
+				hsMesh->SetTexCoord(ConvertToTexCoords(mesh->mTextureCoords[ch], mesh->mNumVertices), ch);
+			}
+		}
+
+		// Vertex colors
+		if (mesh->HasVertexColors(0))
+		{
+			hsMesh->SetColor(ConvertColors(mesh->mColors[0], mesh->mNumVertices));
+		}
+
+		// Indices
+		std::vector<uint32> indices;
+		indices.reserve(mesh->mNumFaces * 3);
+		for (uint32 j = 0; j < mesh->mNumFaces; ++j)
+		{
+			aiFace& face = mesh->mFaces[j];
+			for (uint32 k = 0; k < face.mNumIndices; ++k)
+			{
+				indices.push_back(face.mIndices[k]);
+			}
+		}
+		hsMesh->SetIndices(std::move(indices));
+
+		// Material index
+		if (mesh->mMaterialIndex < materials.size())
+		{
+			hsMesh->SetMaterialIndex(mesh->mMaterialIndex);
+		}
+
+		hsMesh->CalculateBounds();
+		outMeshes.push_back(std::move(hsMesh));
+	}
+
+	outMaterials = std::move(materials);
+
+	HS_LOG(info, "Successfully loaded GLTF: %s (%d meshes, %d materials)",
+		filePath.c_str(), static_cast<int>(outMeshes.size()), static_cast<int>(outMaterials.size()));
+
+	return true;
 }
 
 HS_NS_END

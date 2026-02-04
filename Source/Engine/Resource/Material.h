@@ -9,8 +9,8 @@
 
 #include "Precompile.h"
 
-#include "Resource/Object.h"
-#include "Resource/ResourceDefinition.h"
+#include "Engine/Resource/Object.h"
+#include "Engine/Resource/ResourceDefinition.h"
 
 #include "Core/Math/Common.h"
 #include <unordered_map>

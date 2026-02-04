@@ -1,12 +1,15 @@
 #include "Editor/Core/EditorWindow.h"
 
+#include "Core/HAL/FileSystem.h"
+#include "Core/HAL/Input.h"
+
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
+
 #include "Engine/Renderer/ForwardPath.h"
 #include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
-
-#include "Core/HAL/Input.h"
+#include "Engine/Resource/ObjectManager.h"
 
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/GUI/GUIContext.h"
@@ -59,6 +62,8 @@ bool EditorWindow::onInitialize()
 
 	_editorCamera = MakeScoped<EditorCamera>();
 
+	setupResources();
+
 	return true;
 }
 
@@ -103,6 +108,8 @@ void EditorWindow::onRender()
 
 	uint8         imageIndex = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
+
+	RenderParameter param{};
 
 	//     1. Render Scene to Scene Panel
 	_renderer->Render({}, curRT);
@@ -220,6 +227,17 @@ void EditorWindow::processShortcuts()
 	{
 		sKeyWasPressed = false;
 	}
+}
+
+void EditorWindow::setupResources()
+{
+    std::string gltfPath = std::string("GLTF") +
+                           HS_DIR_SEPERATOR +
+                           "rubber_duck" +
+                           HS_DIR_SEPERATOR +
+                           "scene.gltf";
+
+    ObjectManager::LoadGLTF(gltfPath, _meshes, _materials);
 }
 
 HS_NS_EDITOR_END

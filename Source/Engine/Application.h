@@ -19,7 +19,6 @@ namespace hs { class EngineContext; }
 
 HS_NS_BEGIN
 
-
 class HS_API Application
 {
 public:

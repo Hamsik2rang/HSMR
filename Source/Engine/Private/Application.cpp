@@ -1,5 +1,7 @@
 #include "Engine/Application.h"
 
+#include "Core/SystemContext.h"
+
 #include "RHI/RHIContext.h"
 
 HS_NS_BEGIN
@@ -9,6 +11,8 @@ Application::Application(const char* appName) noexcept
     , _window(nullptr)
     , _rhiContext(nullptr)
 {
+    SystemContext::Init();
+
 #if __WINDOWS__
     _rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
 #else
