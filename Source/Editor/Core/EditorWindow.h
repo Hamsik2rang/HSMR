@@ -62,8 +62,7 @@ private:
 
 	Scoped<EditorCamera> _editorCamera;
 
-    std::vector<Scoped<Mesh>> _meshes;
-    std::vector<Scoped<Material>> _materials;
+    Scoped<Model> _model;
 };
 
 HS_NS_EDITOR_END

@@ -18,6 +18,7 @@
 #include "Engine/Resource/Mesh.h"
 #include "Engine/Resource/Shader.h"
 #include "Engine/Resource/Material.h"
+#include "Engine/Resource/Model.h"
 
 HS_NS_BEGIN
 
@@ -44,13 +45,7 @@ public:
 	                      std::vector<Scoped<Mesh>>& outMeshes,
 	                      std::vector<Scoped<Material>>& outMaterials,
 	                      bool isAbsolutePath = false);
-
-	// Load GLTF/GLB model with PBR materials
-	static bool LoadGLTF(const std::string& path,
-	                     std::vector<Scoped<Mesh>>& outMeshes,
-	                     std::vector<Scoped<Material>>& outMaterials,
-	                     bool isAbsolutePath = false);
-
+    static bool LoadModel(const std::string& path, Scoped<Model>& outModel, bool isAbsolutePath = false);
 
 	static const Image* GetFallbackImage2DWhite();
 	static const Image* GetFallbackImage2DBlack();
@@ -66,6 +61,14 @@ public:
 private:
 	static bool s_isInitialize;
 	static std::string s_resourcePath;
+    
+
+	// Load GLTF/GLB model with PBR materials
+	static bool loadGLTF(const std::string& path,
+	                     std::vector<Scoped<Mesh>>& outMeshes,
+	                     std::vector<Scoped<Material>>& outMaterials,
+	                     bool isAbsolutePath = false);
+	static bool loadGLTF(const std::string& path, Scoped<Model>& outModel, bool isAbsolutePath = false);
 
 	static void calculatePlane();
 	static void calculateCube();

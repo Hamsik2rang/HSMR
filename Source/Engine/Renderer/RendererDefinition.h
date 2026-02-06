@@ -12,6 +12,7 @@
 #include "Engine/Resource/Shader.h"
 #include "Engine/Resource/Material.h"
 #include "Engine/Resource/Mesh.h"
+#include "Engine/Resource/Model.h"
 
 HS_NS_BEGIN
 
@@ -44,7 +45,7 @@ enum class ERenderGroup : uint16
 
 struct HS_API  RenderParameter
 {
-
+    const Model* model = nullptr;
 };
 
 

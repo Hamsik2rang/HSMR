@@ -110,9 +110,10 @@ void EditorWindow::onRender()
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
 	RenderParameter param{};
+    param.model = _model.get();
 
-	//     1. Render Scene to Scene Panel
-	_renderer->Render({}, curRT);
+	// 1. Render Scene to Scene Panel
+	_renderer->Render(param, curRT);
 
 	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
 
@@ -237,7 +238,7 @@ void EditorWindow::setupResources()
                            HS_DIR_SEPERATOR +
                            "scene.gltf";
 
-    ObjectManager::LoadGLTF(gltfPath, _meshes, _materials);
+    ObjectManager::LoadModel(gltfPath, _model);
 }
 
 HS_NS_EDITOR_END

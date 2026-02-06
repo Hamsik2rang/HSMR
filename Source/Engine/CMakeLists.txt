@@ -45,6 +45,7 @@ set(ENGINE_RESOURCE_HEADERS
     Resource/Shader.h
     Resource/Object.h
     Resource/ObjectManager.h
+    Resource/Model.h
 )
 
 source_group("Resource\\Public" FILES ${ENGINE_RESOURCE_HEADERS})
@@ -58,6 +59,7 @@ set(ENGINE_RESOURCE_SOURCES
     Resource/Private/Mesh.cpp
     Resource/Private/Shader.cpp
     Resource/Private/Object.cpp
+    Resource/Private/Model.cpp
 )
 
 source_group("Resource\\Private" FILES ${ENGINE_RESOURCE_SOURCES})

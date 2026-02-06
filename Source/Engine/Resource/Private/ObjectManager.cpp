@@ -969,6 +969,10 @@ bool ObjectManager::LoadModel(const std::string& path,
                               std::vector<Scoped<Material>>& outMaterials,
                               bool isAbsolutePath)
 {
+	if (path.ends_with(".gltf"))
+	{
+        return loadGLTF(path, outMeshes, outMaterials, isAbsolutePath);
+	}
     std::string filePath = path;
     if (!isAbsolutePath)
     {
@@ -1001,7 +1005,7 @@ bool ObjectManager::LoadModel(const std::string& path,
     HS_LOG(info, "  - Materials: %d", scene->mNumMaterials);
 
     std::string modelDirectory;
-    size_t lastSlash = filePath.find_last_of("/\\");
+    size_t lastSlash = filePath.find_last_of(HS_DIR_SEPERATOR);
     if (lastSlash != std::string::npos)
     {
         modelDirectory = filePath.substr(0, lastSlash);
@@ -1132,7 +1136,23 @@ bool ObjectManager::LoadModel(const std::string& path,
     return true;
 }
 
-bool ObjectManager::LoadGLTF(const std::string& path,
+bool ObjectManager::LoadModel(const std::string& path, Scoped<Model>& outModel, bool isAbsolutePath)
+{
+	std::vector<Scoped<Mesh>> meshes;
+	std::vector<Scoped<Material>> materials;
+	if (!LoadModel(path, meshes, materials, isAbsolutePath))
+	{
+		return false;
+	}
+	outModel = MakeScoped<Model>();
+    // TODO: 현재는 첫 번째 메쉬와 머티리얼만 설정
+    outModel->SetMesh(std::move(meshes.front()));
+    outModel->SetMaterial(std::move(materials.front()));
+
+	return true;
+}
+
+bool ObjectManager::loadGLTF(const std::string& path,
                              std::vector<Scoped<Mesh>>& outMeshes,
                              std::vector<Scoped<Material>>& outMaterials,
                              bool isAbsolutePath)
@@ -1425,6 +1445,22 @@ bool ObjectManager::LoadGLTF(const std::string& path,
 	HS_LOG(info, "Successfully loaded GLTF: %s (%d meshes, %d materials)",
 		filePath.c_str(), static_cast<int>(outMeshes.size()), static_cast<int>(outMaterials.size()));
 
+	return true;
+}
+
+bool ObjectManager::loadGLTF(const std::string& path, Scoped<Model>& outModel, bool isAbsolutePath)
+{
+    std::vector<Scoped<Mesh>> meshes;
+    std::vector<Scoped<Material>> materials;
+		if (!loadGLTF(path, meshes, materials, isAbsolutePath))
+	{
+		return false;
+	}
+	outModel = MakeScoped<Model>();
+    // TODO: 현재는 첫 번째 메쉬와 머티리얼만 설정
+	outModel->SetMesh(std::move(meshes.front()));
+	outModel->SetMaterial(std::move(materials.front()));
+    
 	return true;
 }
 
