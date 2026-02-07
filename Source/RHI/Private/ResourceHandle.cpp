@@ -48,7 +48,7 @@ RHIResourceLayout::RHIResourceLayout(const char* name, ResourceBinding* bindings
     HS_ASSERT(bindingCount >= 0, "BindingCount out of range");
     for (size_t i = 0; i < bindingCount; i++)
     {
-        this->bindings.push_back(bindings[i]);
+        this->bindings[i] = bindings[i];
     }
 }
 RHIResourceLayout::~RHIResourceLayout()
