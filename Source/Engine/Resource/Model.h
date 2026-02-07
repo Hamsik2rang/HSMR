@@ -1,4 +1,4 @@
-#ifndef __HS_MODEL_H__
+ï»¿#ifndef __HS_MODEL_H__
 #define __HS_MODEL_H__
 
 #include "Precompile.h"
@@ -51,7 +51,7 @@ public:
     HS_FORCEINLINE const glm::mat4& GetWorldMatrix() const { return _worldMatrix; }
     HS_FORCEINLINE const glm::mat4& GetInverseWorldMatrix() const { return _inverseWorldMatrix; }
 
-    void Update(); // Mesh, Material, Transform µî º¯°æ »çÇ× ¾÷µ¥ÀÌÆ®
+    void Update(); // Mesh, Material, Transform ë“± ë³€ê²½ ì‚¬í•­ ì—…ë°ì´íŠ¸
 
 private:
     bool _isMeshDirty = false;

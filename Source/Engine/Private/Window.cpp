@@ -94,6 +94,12 @@ void Window::Shutdown()
 
 void Window::ProcessEvent()
 {
+    if (_shouldClose) // SDL Event 처리가 ImGui와 연동되지 않아 여기서 이중 처리
+    {
+        Flush();
+        return;
+    }
+
     NativeEvent event;
     while (PeekNativeEvent(&_nativeWindow, event))
     {

@@ -176,7 +176,7 @@ void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
 	size_t rSetCount = s_AddedTexturesPerFrame[s_currentImageIndex].size();
 	if (rSetCount > 0)
 	{
-        g_rhiContext->WaitForIdle();
+        rhiContextVK->WaitForIdle();
 		for (size_t i = 0; i < rSetCount; i++)
 		{
             void* rSet = s_AddedTexturesPerFrame[s_currentImageIndex][i];

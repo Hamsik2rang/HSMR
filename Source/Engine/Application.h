@@ -28,7 +28,11 @@ public:
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;
 
+	static Application* Get();
+
 protected:
+    void init();
+
 	const char* _name;
 
 	Window* _window;

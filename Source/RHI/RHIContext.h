@@ -18,6 +18,7 @@
 
 HS_NS_BEGIN
 
+
 class HS_API RHIContext
 {
 public:
@@ -54,6 +55,8 @@ public:
 	virtual RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) = 0;
 	virtual RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) = 0;
 	virtual void DestroyBuffer(RHIBuffer* buffer) = 0;
+	
+    virtual void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) = 0;
 
 	virtual RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) = 0;
 	virtual RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) = 0;
@@ -88,8 +91,6 @@ public:
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();
 };
-
-extern HS_API RHIContext* g_rhiContext;
 
 HS_NS_END
 

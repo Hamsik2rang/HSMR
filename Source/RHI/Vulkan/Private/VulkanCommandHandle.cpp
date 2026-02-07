@@ -178,7 +178,7 @@ void CommandBufferVulkan::BindIndexBuffer(RHIBuffer* indexBuffer)
 
 	BufferVulkan* indexBufferVK = static_cast<BufferVulkan*>(indexBuffer);
 
-
+	vkCmdBindIndexBuffer(handle, indexBufferVK->handle, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
 }
 
 void CommandBufferVulkan::BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
@@ -203,7 +203,7 @@ void CommandBufferVulkan::DrawArrays(const uint32 firstVertex, const uint32 vert
 
 void CommandBufferVulkan::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
-	// TODO:
+    vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, 0);
 }
 
 void CommandBufferVulkan::EndRenderPass()

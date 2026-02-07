@@ -594,6 +594,21 @@ void VulkanContext::DestroyBuffer(RHIBuffer* buffer)
     delete bufferVK;
 }
 
+void VulkanContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
+{
+    HS_ASSERT(buffer, "Buffer is nullptr");
+    HS_ASSERT(srcData, "Source data is nullptr");
+    HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+    HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
+    BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
+    // vkCmdUpdateBuffer updates buffer contents inline within the command buffer
+    // Note: dataSize must be less than or equal to 65536 bytes
+    // Note: dstOffset and dataSize must be multiples of 4
+    VkCommandBuffer cmdBuffer = beginSingleTimeCommands();
+    vkCmdUpdateBuffer(cmdBuffer, bufferVK->handle, static_cast<VkDeviceSize>(dstOffset), static_cast<VkDeviceSize>(dataSize), srcData);
+    endSingleTimeCommands(cmdBuffer);
+}
+
 RHITexture* VulkanContext::CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
 {
     // Create a Vulkan texture with specific parameters
@@ -1352,9 +1367,9 @@ bool VulkanContext::createInstance()
     VkApplicationInfo appInfo{};
     appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName   = "HSMR";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 3, 0);
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 4, 0);
     appInfo.pEngineName        = "HSMR";
-    appInfo.engineVersion      = VK_MAKE_VERSION(1, 3, 0);
+    appInfo.engineVersion      = VK_MAKE_VERSION(1, 4, 0);
     appInfo.apiVersion         = VK_API_VERSION_1_3;
 
     std::vector<const char*> extensionNames;
