@@ -540,9 +540,9 @@ MTLResourceOptions MetalUtility::ToBufferOption(EBufferMemoryOption option)
 {
     switch (option)
     {
-        case EBufferMemoryOption::STATIC:  return MTLStorageModePrivate;
-        case EBufferMemoryOption::DYNAMIC: return MTLStorageModeShared;
-        case EBufferMemoryOption::MAPPED:  return MTLStorageModeManaged;
+        case EBufferMemoryOption::STATIC:  return MTLResourceStorageModePrivate;
+        case EBufferMemoryOption::DYNAMIC: return MTLResourceStorageModeShared;
+        case EBufferMemoryOption::MAPPED:  return MTLResourceStorageModeManaged;
 
         default:                           break;
     }
@@ -554,9 +554,9 @@ EBufferMemoryOption MetalUtility::FromBufferOption(MTLResourceOptions option)
 {
     switch (option)
     {
-        case MTLStorageModePrivate: return EBufferMemoryOption::STATIC;
-        case MTLStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
-        case MTLStorageModeManaged: return EBufferMemoryOption::MAPPED;
+        case MTLResourceStorageModePrivate: return EBufferMemoryOption::STATIC;
+        case MTLResourceStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
+        case MTLResourceStorageModeManaged: return EBufferMemoryOption::MAPPED;
 
         default:                    break;
     }

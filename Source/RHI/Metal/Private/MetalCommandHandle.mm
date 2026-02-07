@@ -387,6 +387,8 @@ void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstText
 }
 void MetalCommandBuffer::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
+    MetalBuffer* mtlBuffer = static_cast<MetalBuffer*>(buffer);
+    memcpy(static_cast<uint8_t*>([mtlBuffer->handle contents]) + dstOffset, srcData, dataSize);
 }
 
 void MetalCommandBuffer::PushDebugMark(const char* label, float* color)
@@ -409,6 +411,7 @@ void MetalCommandBuffer::bindBuffers(EShaderStage stage, uint8 binding, RHIBuffe
     std::vector<NSUInteger> nsOffsets(arrayCount);
     for (size_t i = 0; i < arrayCount; i++)
     {
+        handles[i] = MetalBuffers[i]->handle;
         nsOffsets[i] = offsets[i];
     }
 

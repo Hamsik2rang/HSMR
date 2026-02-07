@@ -181,6 +181,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     {
         const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
         MTLPixelFormat depthStencilFormat        = MetalUtility::ToPixelFormat(depthStencilAttachment.format);
+        pipelineDesc.depthAttachmentPixelFormat  = depthStencilFormat;
         // TODO: 스텐실 처리 추가
     }
 
@@ -373,7 +374,9 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
         HS_LOG(crash, "Fail to create buffer");
     }
 
-    MetalBuffer->handle = mtlBuffer;
+    MetalBuffer->handle   = mtlBuffer;
+    MetalBuffer->byte     = [mtlBuffer contents];
+    MetalBuffer->byteSize = dataSize;
 
     return static_cast<RHIBuffer*>(MetalBuffer);
 }
