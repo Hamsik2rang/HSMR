@@ -4,10 +4,6 @@
 #include "RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
-#if HAS_IMGUIZMO
-#include "ImGuizmo.h"
-#endif
-
 HS_NS_EDITOR_BEGIN
 
 bool ScenePanel::Setup()
@@ -103,51 +99,124 @@ void ScenePanel::Draw()
 
 void ScenePanel::drawViewGizmo()
 {
-#if HAS_IMGUIZMO
     if (!_camera) return;
 
-    // Bind ImGuizmo to current ImGui window's draw list
-    ImGuizmo::SetDrawlist();
-
-    // Set ImGuizmo rect to ScenePanel window area
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 windowPos = ImGui::GetWindowPos();
     ImVec2 windowSize = ImGui::GetWindowSize();
-    ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
 
-    // Top-right position
-    float x = windowPos.x + windowSize.x - _viewGizmoSize - _viewGizmoMargin;
-    float y = windowPos.y + _viewGizmoMargin;
-
-    // Copy camera view matrix
-    glm::mat4 view = _camera->GetViewMatrix();
-    float camDistance = glm::length(_camera->GetPosition());
-
-    // ViewManipulate modifies view matrix in-place
-    ImGuizmo::ViewManipulate(
-        glm::value_ptr(view),
-        camDistance,
-        ImVec2(x, y),
-        ImVec2(_viewGizmoSize, _viewGizmoSize),
-        0x10101010
+    // Gizmo center: top-right corner
+    float halfSize = _viewGizmoSize * 0.5f;
+    ImVec2 center(
+        windowPos.x + windowSize.x - halfSize - _viewGizmoMargin,
+        windowPos.y + halfSize + (_viewGizmoMargin * 4.0f)
     );
 
-    // Apply changes back to camera when gizmo is being manipulated
-    if (ImGuizmo::IsUsingViewManipulate())
+    float axisLength  = halfSize;
+    float coneHeight  = 14.0f;
+    float coneRadius  = 6.0f;
+
+    // Background
+    drawList->AddCircleFilled(center, halfSize, IM_COL32(20, 20, 20, 140), 32);
+    drawList->AddCircle(center, halfSize, IM_COL32(80, 80, 80, 180), 32, 1.0f);
+
+    // View rotation (world -> view upper 3x3)
+    glm::mat3 viewRot(_camera->GetViewMatrix());
+
+    struct Axis
     {
-        glm::mat4 invView = glm::inverse(view);
-        glm::vec3 newPosition = glm::vec3(invView[3]);
-        glm::vec3 forward = glm::normalize(-glm::vec3(invView[2]));
+        glm::vec3 worldDir;
+        ImU32     color;
+        float     sx, sy, depth;
+    };
 
-        // Reverse euler angles from forward vector
-        // Camera convention: front.x = cos(pitch)*sin(yaw), front.y = sin(pitch), front.z = cos(pitch)*cos(yaw)
-        float pitch = asin(forward.y);
-        float yaw   = atan2(forward.x, forward.z);
+    Axis axes[3] = {
+        { {1, 0, 0}, IM_COL32(220, 60, 60, 255),  0, 0, 0 },
+        { {0, 1, 0}, IM_COL32(60, 190, 60, 255),   0, 0, 0 },
+        { {0, 0, 1}, IM_COL32(80, 130, 230, 255),  0, 0, 0 },
+    };
 
-        _camera->SetPosition(newPosition);
-        _camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
-        _camera->Update();
+    // Project each axis through view rotation
+    for (auto& a : axes)
+    {
+        glm::vec3 v = viewRot * a.worldDir;
+        a.sx    = v.x;
+        a.sy    = -v.y; // screen Y flipped
+        a.depth = v.z;  // +z = toward camera
     }
-#endif
+
+    // Sort back-to-front (ascending depth)
+    int order[3] = { 0, 1, 2 };
+    for (int i = 0; i < 2; i++)
+        for (int j = i + 1; j < 3; j++)
+            if (axes[order[i]].depth > axes[order[j]].depth)
+            {
+                int tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+            }
+
+    bool windowHovered = ImGui::IsWindowHovered();
+    ImGuiIO& io = ImGui::GetIO();
+
+    for (int idx = 0; idx < 3; idx++)
+    {
+        Axis& a = axes[order[idx]];
+
+        // Dim axes pointing away from camera
+        float alpha = (a.depth < 0.0f) ? 0.35f : 1.0f;
+        uint8_t cr = (a.color >> IM_COL32_R_SHIFT) & 0xFF;
+        uint8_t cg = (a.color >> IM_COL32_G_SHIFT) & 0xFF;
+        uint8_t cb = (a.color >> IM_COL32_B_SHIFT) & 0xFF;
+        ImU32 col = IM_COL32(cr, cg, cb, static_cast<uint8_t>(255 * alpha));
+
+        ImVec2 tip(center.x + a.sx * axisLength, center.y + a.sy * axisLength);
+
+        float len = sqrtf(a.sx * a.sx + a.sy * a.sy);
+        if (len > 0.001f)
+        {
+            float dx = a.sx / len;
+            float dy = a.sy / len;
+            float px = -dy, py = dx; // perpendicular
+
+            // Cone base
+            ImVec2 coneBase(tip.x - dx * coneHeight, tip.y - dy * coneHeight);
+
+            // Shaft line: center to cone base
+            drawList->AddLine(center, coneBase, col, 3.0f);
+
+            // Cone body: filled triangle
+            ImVec2 p1(tip.x, tip.y);
+            ImVec2 p2(coneBase.x + px * coneRadius, coneBase.y + py * coneRadius);
+            ImVec2 p3(coneBase.x - px * coneRadius, coneBase.y - py * coneRadius);
+            drawList->AddTriangleFilled(p1, p2, p3, col);
+        }
+        else
+        {
+            // Axis pointing directly at/away from camera: draw a dot
+            drawList->AddCircleFilled(center, coneRadius, col, 12);
+        }
+
+        // Click cone -> snap camera to that axis view
+        if (windowHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            float mx = io.MousePos.x - tip.x;
+            float my = io.MousePos.y - tip.y;
+            if (mx * mx + my * my < 14.0f * 14.0f)
+            {
+                float camDist = glm::length(_camera->GetPosition());
+                if (camDist < 0.1f) camDist = 5.0f;
+
+                glm::vec3 newPos  = a.worldDir * camDist;
+                glm::vec3 forward = -a.worldDir;
+
+                float pitch = asinf(forward.y);
+                float yaw   = atan2f(forward.x, forward.z);
+
+                _camera->SetPosition(newPos);
+                _camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+                _camera->Update();
+            }
+        }
+    }
 }
 
 HS_NS_EDITOR_END

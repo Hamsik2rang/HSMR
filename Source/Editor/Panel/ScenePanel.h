@@ -51,7 +51,7 @@ private:
     bool _isMouseTracking = false;
 
     // View gizmo settings
-    float _viewGizmoSize = 128.0f;
+    float _viewGizmoSize = 76.8;
     float _viewGizmoMargin = 10.0f;
 
     void drawViewGizmo();
