@@ -53,7 +53,7 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
             info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
         }
 
-        info.useDepthStencilTexture                = false;
+        info.useDepthStencilTexture                = true;
         info.depthStencilInfo.extent.width         = width;
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;

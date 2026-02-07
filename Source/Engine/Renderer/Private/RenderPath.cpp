@@ -152,7 +152,7 @@ void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget
 
         RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(pass->GetFixedSettingForCurrentPass());
 
-        pass->Execute(_curCommandBuffer, renderPass);
+        pass->Execute(_curCommandBuffer, renderPass, param);
     }
 
     for (auto* pass : _rendererPasses)

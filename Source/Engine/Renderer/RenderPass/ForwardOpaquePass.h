@@ -1,4 +1,4 @@
-﻿//
+//
 //  ForwardOpaquePass.h
 //  HSMR
 //
@@ -10,9 +10,17 @@
 #include "Precompile.h"
 #include "Engine/Renderer/RenderPass/ForwardRenderPass.h"
 
-/*#include "RHI/RenderHandle.h"*/ namespace hs { class RHIRenderPass; }
-/*#include "RHI/RenderHandle.h"*/ namespace hs { class RHIFramebuffer; }
-/*#include "RHI/RenderHandle.h"*/ namespace hs { class RHIGraphicsPipeline; }
+#include <unordered_map>
+
+namespace hs
+{
+/*#include "RHI/RenderHandle.h"*/ class RHIRenderPass;
+/*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
+/*#include "RHI/RenderHandle.h"*/ class RHIGraphicsPipeline;
+/*#include "RHI/RenderHandle.h"*/ class RHIResourceLayout;
+/*#include "RHI/RenderHandle.h"*/ class RHIResourceSet;
+/*#include "RHI/Resource/Mesh.h*/ class Mesh;
+} // namespace hs
 
 HS_NS_BEGIN
 
@@ -36,13 +44,18 @@ private:
     void createPipelineHandles(RHIRenderPass* renderPass);
 
     RenderTarget* _currentRenderTarget = nullptr;
-    RHIBuffer* _vertexBuffer[2];
-    RHIBuffer* _indexBuffer;
-    RHIShader* _vertexShader        = nullptr;
-    RHIShader* _fragmentShader      = nullptr;
-    RHIGraphicsPipeline* _gPipeline = nullptr;
+    RHIShader* _vertexShader           = nullptr;
+    RHIShader* _fragmentShader         = nullptr;
+    RHIGraphicsPipeline* _gPipeline    = nullptr;
 
-    size_t _indexCount = 0;
+    RHIBuffer* _perViewBuffer          = nullptr;
+    RHIBuffer* _perDrawBuffer          = nullptr;
+    RHIResourceLayout* _resourceLayout = nullptr;
+    RHIResourceSet* _resourceSet       = nullptr;
+
+    std::unordered_map<Mesh*, RHIBuffer*> _meshVertexBuffers;
+    std::unordered_map<Mesh*, RHIBuffer*> _meshIndexBuffers;
+    std::unordered_map<Mesh*, uint32> _meshIndexCounts;
 };
 
 HS_NS_END
