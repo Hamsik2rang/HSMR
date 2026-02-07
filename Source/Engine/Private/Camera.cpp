@@ -6,9 +6,9 @@
 HS_NS_BEGIN
 
 Camera::Camera()
-    : _position(0.0f, 2.0f, 5.0f)
-    , _rotation(0.0f, glm::pi<float>(), 0.0f)
-    , _frontDir(0.0f, 0.0f, -1.0f)
+    : _position(0.0f, 2.0f, -5.0f)
+    , _rotation(0.0f, 0.0f, 0.0f)
+    , _frontDir(0.0f, 0.0f, 1.0f)
     , _upDir(0.0f, 1.0f, 0.0f)
     , _projectionType(EProjectionType::PERSPECTIVE)
     , _fovY(glm::radians(60.0f))

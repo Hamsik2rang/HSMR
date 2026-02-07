@@ -50,6 +50,11 @@ private:
     uint16 _lastMouseY = 0;
     bool _isMouseTracking = false;
 
+    // View gizmo settings
+    float _viewGizmoSize = 128.0f;
+    float _viewGizmoMargin = 10.0f;
+
+    void drawViewGizmo();
 };
 
 HS_NS_EDITOR_END

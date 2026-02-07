@@ -4,6 +4,10 @@
 #include "RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
+#if HAS_IMGUIZMO
+#include "ImGuizmo.h"
+#endif
+
 HS_NS_EDITOR_BEGIN
 
 bool ScenePanel::Setup()
@@ -90,9 +94,60 @@ void ScenePanel::Draw()
         _camera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
     }
 
+    drawViewGizmo();
+
     ImGui::End();
 
     ImGui::PopStyleVar();
+}
+
+void ScenePanel::drawViewGizmo()
+{
+#if HAS_IMGUIZMO
+    if (!_camera) return;
+
+    // Bind ImGuizmo to current ImGui window's draw list
+    ImGuizmo::SetDrawlist();
+
+    // Set ImGuizmo rect to ScenePanel window area
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 windowSize = ImGui::GetWindowSize();
+    ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+
+    // Top-right position
+    float x = windowPos.x + windowSize.x - _viewGizmoSize - _viewGizmoMargin;
+    float y = windowPos.y + _viewGizmoMargin;
+
+    // Copy camera view matrix
+    glm::mat4 view = _camera->GetViewMatrix();
+    float camDistance = glm::length(_camera->GetPosition());
+
+    // ViewManipulate modifies view matrix in-place
+    ImGuizmo::ViewManipulate(
+        glm::value_ptr(view),
+        camDistance,
+        ImVec2(x, y),
+        ImVec2(_viewGizmoSize, _viewGizmoSize),
+        0x10101010
+    );
+
+    // Apply changes back to camera when gizmo is being manipulated
+    if (ImGuizmo::IsUsingViewManipulate())
+    {
+        glm::mat4 invView = glm::inverse(view);
+        glm::vec3 newPosition = glm::vec3(invView[3]);
+        glm::vec3 forward = glm::normalize(-glm::vec3(invView[2]));
+
+        // Reverse euler angles from forward vector
+        // Camera convention: front.x = cos(pitch)*sin(yaw), front.y = sin(pitch), front.z = cos(pitch)*cos(yaw)
+        float pitch = asin(forward.y);
+        float yaw   = atan2(forward.x, forward.z);
+
+        _camera->SetPosition(newPosition);
+        _camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+        _camera->Update();
+    }
+#endif
 }
 
 HS_NS_EDITOR_END

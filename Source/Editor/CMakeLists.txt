@@ -193,6 +193,11 @@ set(THIRDPARTY
 
 list(APPEND TOTAL_FILES ${THIRDPARTY})
 
+if(IMGUIZMO_FOUND)
+    list(APPEND TOTAL_FILES ${IMGUIZMO_SOURCES})
+    source_group("ThirdParty\\ImGuizmo" FILES ${IMGUIZMO_SOURCES})
+endif()
+
 add_library(${TARGET_NAME}
     SHARED
     ${TOTAL_FILES}
@@ -229,6 +234,8 @@ target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     PUBLIC ThirdParty
     $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_INCLUDE_DIR}>
+    $<$<BOOL:${IMGUIZMO_FOUND}>:${IMGUIZMO_INCLUDE_DIR}>
+    $<$<BOOL:${IMGUIZMO_FOUND}>:${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/ImGui>
 )
 
 set_target_properties(${TARGET_PATH} PROPERTIES
@@ -252,6 +259,8 @@ target_compile_definitions(${TARGET_NAME}
     HS_EDITOR_API_EXPORT
 
     HS_API_IMPORT
+
+    $<$<BOOL:${IMGUIZMO_FOUND}>:HAS_IMGUIZMO=1>
 )
 
 if(APPLE)
