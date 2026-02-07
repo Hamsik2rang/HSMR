@@ -1,4 +1,4 @@
-﻿//
+//
 //  Input.h
 //  Core
 //
@@ -163,7 +163,6 @@ public:
 };
 
 HS_NS_END
-
 
 #ifdef _WIN32
 #pragma pop_macro("DELETE")

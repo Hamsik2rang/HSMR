@@ -25,6 +25,8 @@ public:
     virtual bool Setup() = 0;
 
     virtual void Cleanup() = 0;
+    
+    virtual void Update(float deltaTime) {}
 
     void InsertPanel(Panel* panel);
     void RemovePanel(Panel* panel);

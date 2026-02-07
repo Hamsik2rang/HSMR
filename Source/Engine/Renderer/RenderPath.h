@@ -1,4 +1,4 @@
-﻿//
+//
 //  RenderPath.h
 //  HSMR
 //
@@ -17,10 +17,13 @@
 #include <vector>
 #include <unordered_map>
 
-/*#include "Renderer/RenderPass/RenderPass.h"*/ namespace hs { class RenderPass; }
-/*#include "RHI/Swapchain.h"*/ namespace hs { class Swapchain; }
-/*#include "RHI/RenderHandle.h"*/ namespace hs { class RHIFramebuffer; }
-/*#include "Platform/NativeWindow.h"*/ namespace hs { struct NativeWindow; }
+namespace hs
+{
+/*#include "Renderer/RenderPass/RenderPass.h"*/ class RenderPass;
+/*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
+/*#include "RHI/Swapchain.h"*/ class Swapchain;
+/*#include "Platform/NativeWindow.h"*/ struct NativeWindow;
+} // namespace hs
 
 HS_NS_BEGIN
 
@@ -73,10 +76,10 @@ public:
 protected:
     RHIContext* _rhiContext;
     RHIHandleCache* _rhiHandleCache;
-    RHICommandBuffer*  _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
+    RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
 
     std::vector<RenderPass*> _rendererPasses;
-    uint32 frameIndex       = 0;
+    uint32 frameIndex      = 0;
     bool _isInitialized    = false;
     bool _isPassListSorted = true;
 

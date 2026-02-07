@@ -18,6 +18,7 @@ endif()
 
 if(WIN32)
     set(PLATFORM_WIN_HEADERS
+
         # Win/WinFileSystem.h
         Win/WinSystemContext.h
         Win/WinInput.h
@@ -25,11 +26,13 @@ if(WIN32)
     )
 
     set(PLATFORM_WIN_SOURCES
+
         # Win/Private/WinFileSystem.cpp
         Win/Private/WinSystemContext.cpp
         Win/Private/WinInput.cpp
         Win/Private/WinWindow.cpp
     )
+
     if(NOT HSMR_USE_SDL)
         list(APPEND PLATFORM_WIN_HEADERS Win/Private/WinFileSystem.h)
         list(APPEND PLATFORM_WIN_SOURCES Win/Private/WinFileSystem.cpp)
@@ -44,7 +47,8 @@ if(WIN32)
 else() # MAC
     set(PLATFORM_MAC_HEADERS
         Mac/AutoReleasePool.h
-        Mac/MacFileSystem.h
+
+        # Mac/MacFileSystem.h
         Mac/MacSystemContext.h
         Mac/MacInput.h
         Mac/MacWindow.h
@@ -52,7 +56,8 @@ else() # MAC
 
     set(PLATFORM_MAC_SOURCES
         Mac/Private/AutoReleasePool.mm
-        Mac/Private/MacFileSystem.mm
+
+        # Mac/Private/MacFileSystem.mm
         Mac/Private/MacSystemContext.mm
         Mac/Private/MacInput.mm
         Mac/Private/MacWindow.mm
@@ -72,7 +77,6 @@ endif()
 
 # Note: SDL-specific file (SDLPlatform.cpp) has been removed.
 # SDL support is now integrated into MacWindow.mm and WinWindow.cpp via #ifdef __SDL__
-
 if(HS_ARCH STREQUAL "x64")
     set(PLATFORM_X64_HEADERS
         x64/SSESimd.h

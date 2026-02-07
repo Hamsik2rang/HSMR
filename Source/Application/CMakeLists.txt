@@ -1,7 +1,6 @@
 set(TARGET_NAME Application)
 
 set(APPLICATION_HEADERS
-    Camera.h
     Scene.h
     SceneObject.h
     MousePicker.h
@@ -12,7 +11,6 @@ set(APPLICATION_HEADERS
 source_group("Public" FILES ${APPLICATION_HEADERS})
 
 set(APPLICATION_SOURCES
-    Camera.cpp
     Scene.cpp
     SceneObject.cpp
     MousePicker.cpp

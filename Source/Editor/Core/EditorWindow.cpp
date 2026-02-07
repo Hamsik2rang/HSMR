@@ -24,12 +24,14 @@
 
 #include "Editor/Core/EditorCamera.h"
 
+#include <vector>
+
 HS_NS_EDITOR_BEGIN
 
 EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
-	: Window(ownerApp, name, width, height, flags)
+    : Window(ownerApp, name, width, height, flags)
 {
-	onInitialize();
+    onInitialize();
 }
 
 EditorWindow::~EditorWindow()
@@ -37,197 +39,202 @@ EditorWindow::~EditorWindow()
 
 bool EditorWindow::onInitialize()
 {
-	_renderer = MakeScoped<ForwardRenderer>(_rhiContext);
-	_renderer->Initialize();
+    _renderer = MakeScoped<ForwardRenderer>(_rhiContext);
+    _renderer->Initialize();
 
-	ImGuiExtension::InitializeBackend(_swapchain);
+    ImGuiExtension::InitializeBackend(_swapchain);
 
-	// Apply DPI scaling for high-resolution displays (e.g., 4K monitors)
-	GUIContext* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
-	float dpiScale = _nativeWindow.scale;
-	if (dpiScale > 1.0f)
-	{
-		guiContext->ApplyDPIScale(dpiScale);
-	}
+    // Apply DPI scaling for high-resolution displays (e.g., 4K monitors)
+    GUIContext* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+    float dpiScale         = _nativeWindow.scale;
+    if (dpiScale > 1.0f)
+    {
+        guiContext->ApplyDPIScale(dpiScale);
+    }
 
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
-	_renderer->AddPass(std::move(opaquePass));
+    _renderer->AddPass(std::move(opaquePass));
 
+    setupPanels();
 
-	setupPanels();
+    void* handler = nullptr;
+    ImGuiExtension::SetProcessEventHandler(&handler);
+    SetPreEventHandler(handler);
 
-	void* handler = nullptr;
-	ImGuiExtension::SetProcessEventHandler(&handler);
-	SetPreEventHandler(handler);
+    _editorCamera = MakeScoped<EditorCamera>();
 
-	_editorCamera = MakeScoped<EditorCamera>();
+    setupResources();
 
-	setupResources();
-
-	return true;
+    return true;
 }
 
 void EditorWindow::onNextFrame()
 {
-	if (false == _shouldPresent)
-	{
-		return;
-	}
+    if (false == _shouldPresent)
+    {
+        return;
+    }
 
-	_renderer->NextFrame(_swapchain);
+    _renderer->NextFrame(_swapchain);
 
-	Resolution resolution = static_cast<ScenePanel*>(_scenePanel.get())->GetResolution();
-	uint32     width = static_cast<uint32>(resolution.width / _nativeWindow.scale);
-	uint32     height = static_cast<uint32>(resolution.height / _nativeWindow.scale);
+    Resolution resolution = static_cast<ScenePanel*>(_scenePanel.get())->GetResolution();
+    uint32 width          = static_cast<uint32>(resolution.width / _nativeWindow.scale);
+    uint32 height         = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 
-	for (auto& renderTarget : _renderTargets)
-	{
-		renderTarget.Update(resolution.width, resolution.height);
-	}
+    for (auto& renderTarget : _renderTargets)
+    {
+        renderTarget.Update(resolution.width, resolution.height);
+    }
 }
 
 void EditorWindow::onUpdate(float deltaTime)
 {
-	processShortcuts();
-	updateEditorCamera();
+    processShortcuts();
+    updateSceneCamera(deltaTime);
 }
 
 void EditorWindow::onResize()
 {
-
 }
 
 void EditorWindow::onRender()
 {
-	if (false == _shouldPresent)
-	{
-		return;
-	}
-	RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
-	cmdBuffer->Begin();
+    if (false == _shouldPresent)
+    {
+        return;
+    }
+    RHICommandBuffer* cmdBuffer = _swapchain->GetCommandBufferForCurrentFrame();
+    cmdBuffer->Begin();
 
-	uint8         imageIndex = _swapchain->GetCurrentImageIndex();
+    uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
-	RenderParameter param{};
-    param.model = _model.get();
+    RenderParameter param{};
 
-	// 1. Render Scene to Scene Panel
-	_renderer->Render(param, curRT);
+    param.models.push_back(_model.get());
 
-	static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
+    Camera* sceneCamera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
+    if (sceneCamera)
+    {
+        param.cameras.push_back(sceneCamera);
+    }
 
-	// 2. Render GUI
-	onRenderGUI();
+    // 1. Render Scene to Scene Panel
+    _renderer->Render(param, curRT);
 
-	cmdBuffer->End();
+    static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
 
-	_rhiContext->Submit(_swapchain, &cmdBuffer, 1);
+    // 2. Render GUI
+    onRenderGUI();
+
+    cmdBuffer->End();
+
+    _rhiContext->Submit(_swapchain, &cmdBuffer, 1);
 }
 
 void EditorWindow::onPresent()
 {
-	if (!_shouldPresent)
-	{
-		return;
-	}
-	RHIContext::Get()->Present(_swapchain);
+    if (!_shouldPresent)
+    {
+        return;
+    }
+    RHIContext::Get()->Present(_swapchain);
 }
 
 void EditorWindow::onShutdown()
 {
-	ImGuiExtension::FinalizeBackend();
+    ImGuiExtension::FinalizeBackend();
 
-	if (_renderer)
-	{
-		_renderer->Shutdown();
-		_renderer.reset();  // Automatic cleanup with Scoped<>
-	}
+    if (_renderer)
+    {
+        _renderer->Shutdown();
+        _renderer.reset(); // Automatic cleanup with Scoped<>
+    }
 }
 
 void EditorWindow::onRenderGUI()
 {
     GUIContext* guiContext = static_cast<EditorApplication*>(GetApplication())->GetGUIContext();
 
-//	guiContext->SetScaleFactor(_nativeWindow.scale);
+    //	guiContext->SetScaleFactor(_nativeWindow.scale);
 
-	// TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
-	guiContext->BeginRender(_swapchain);
+    // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
+    guiContext->BeginRender(_swapchain);
 
-	_basePanel->Draw(); // Draw panel tree.
+    _basePanel->Draw(); // Draw panel tree.
 
-	guiContext->EndRender();
+    guiContext->EndRender();
 
-//	guiContext->SetScaleFactor(1.0f / _nativeWindow.scale);
+    //	guiContext->SetScaleFactor(1.0f / _nativeWindow.scale);
 }
 
 void EditorWindow::onSuspend()
 {
-	_rhiContext->Suspend(_swapchain);
+    _rhiContext->Suspend(_swapchain);
 }
 
 void EditorWindow::onRestore()
 {
-	_rhiContext->Restore(_swapchain);
+    _rhiContext->Restore(_swapchain);
 }
 
 void EditorWindow::setupPanels()
 {
-	_basePanel = MakeScoped<DockspacePanel>(this);
-	_basePanel->Setup();
+    _basePanel = MakeScoped<DockspacePanel>(this);
+    _basePanel->Setup();
 
-	_menuPanel = MakeScoped<MenuPanel>(this);
-	_menuPanel->Setup();
-	_basePanel->InsertPanel(_menuPanel.get());
+    _menuPanel = MakeScoped<MenuPanel>(this);
+    _menuPanel->Setup();
+    _basePanel->InsertPanel(_menuPanel.get());
 
-	_scenePanel = MakeScoped<ScenePanel>(this);
-	_scenePanel->Setup();
-	_basePanel->InsertPanel(_scenePanel.get());
+    _scenePanel = MakeScoped<ScenePanel>(this);
+    _scenePanel->Setup();
+    _basePanel->InsertPanel(_scenePanel.get());
 
-	_profilerPanel = MakeScoped<ProfilerPanel>(this);
-	_profilerPanel->Setup();
-	_basePanel->InsertPanel(_profilerPanel.get());
+    _profilerPanel = MakeScoped<ProfilerPanel>(this);
+    _profilerPanel->Setup();
+    _basePanel->InsertPanel(_profilerPanel.get());
 
-	//_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
-	//_hierarchyPanel->Setup();
-	//_basePanel->InsertPanel(_hierarchyPanel.get());
+    //_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
+    //_hierarchyPanel->Setup();
+    //_basePanel->InsertPanel(_hierarchyPanel.get());
 }
 
-void EditorWindow::updateEditorCamera()
+void EditorWindow::updateSceneCamera(float deltaTime)
 {
-	if (_editorCamera)
-	{
-
-	}
+    if (_scenePanel)
+    {
+        _scenePanel->Update(deltaTime);
+    }
 }
 
 void EditorWindow::processShortcuts()
 {
-	// Ctrl+S (Windows) or Cmd+S (Mac) to save layout
+    // Ctrl+S (Windows) or Cmd+S (Mac) to save layout
 #if defined(__APPLE__)
-	bool modifierPressed = Input::IsPressed(Input::Button::LWIN_OR_COMMAND);
+    bool modifierPressed = Input::IsPressed(Input::Button::LWIN_OR_COMMAND);
 #else
-	bool modifierPressed = Input::IsPressed(Input::Button::CONTROL);
+    bool modifierPressed = Input::IsPressed(Input::Button::CONTROL);
 #endif
 
-	static bool sKeyWasPressed = false;
+    static bool sKeyWasPressed = false;
 
-	if (modifierPressed && Input::IsPressed(Input::Button::S))
-	{
-		if (!sKeyWasPressed)
-		{
-			auto* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
-			if (guiContext)
-			{
-				guiContext->SaveLayout("");
-			}
-			sKeyWasPressed = true;
-		}
-	}
-	else
-	{
-		sKeyWasPressed = false;
-	}
+    if (modifierPressed && Input::IsPressed(Input::Button::S))
+    {
+        if (!sKeyWasPressed)
+        {
+            auto* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+            if (guiContext)
+            {
+                guiContext->SaveLayout("");
+            }
+            sKeyWasPressed = true;
+        }
+    }
+    else
+    {
+        sKeyWasPressed = false;
+    }
 }
 
 void EditorWindow::setupResources()

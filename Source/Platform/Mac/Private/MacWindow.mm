@@ -25,16 +25,9 @@
 static SDL_Window* s_sdlWindow           = nullptr;
 static SDL_MetalView s_metalView         = nullptr;
 static hs::NativeWindow* s_boundHsWindow = nullptr;
-static bool s_sdlInitialized             = false;
 
 // Pre-event handler for ImGui integration
 static bool (*s_preEventHandler)(SDL_Event*) = nullptr;
-
-// Get SDL window for external use
-SDL_Window* GetSDLWindow()
-{
-    return s_sdlWindow;
-}
 
 namespace
 {
@@ -462,17 +455,6 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
 #ifdef __SDL__
     // === SDL3 + Metal path ===
 
-    // Initialize SDL if not already done
-    if (!s_sdlInitialized)
-    {
-        if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
-        {
-            HS_LOG(crash, "Failed to initialize SDL: %s", SDL_GetError());
-            return false;
-        }
-        s_sdlInitialized = true;
-    }
-
     // Convert EWindowFlags to SDL_WindowFlags and ensure Metal flag is set
     SDL_WindowFlags sdlFlags = static_cast<SDL_WindowFlags>(static_cast<uint64>(flag));
     sdlFlags |= SDL_WINDOW_METAL;
@@ -578,12 +560,6 @@ void DestroyNativeWindowInternal(NativeWindow& nativeWindow)
     {
         SDL_DestroyWindow(s_sdlWindow);
         s_sdlWindow = nullptr;
-    }
-
-    if (s_sdlInitialized)
-    {
-        SDL_Quit();
-        s_sdlInitialized = false;
     }
 
     s_boundHsWindow            = nullptr;

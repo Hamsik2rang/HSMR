@@ -1,4 +1,4 @@
-﻿#ifndef __HS_FORWARD_RENDERER_H__
+#ifndef __HS_FORWARD_RENDERER_H__
 #define __HS_FORWARD_RENDERER_H__
 
 #include "Precompile.h"

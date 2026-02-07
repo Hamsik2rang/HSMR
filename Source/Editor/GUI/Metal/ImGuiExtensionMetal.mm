@@ -133,12 +133,9 @@ void ImGuiExtension::FinalizeBackend()
 void ImGuiExtension::SetProcessEventHandler(void** fnHandler)
 {
 #ifdef __SDL__
-    // For SDL, we set the pre-event handler to forward events to ImGui
-    // The handler is called in PollNativeEventInternal before processing each event
-    SetNativePreEventHandler(reinterpret_cast<void*>(ImGui_ImplSDL3_ProcessEvent));
+    *fnHandler = reinterpret_cast<void*>(ImGui_ImplSDL3_ProcessEvent);
 #else
     // Native macOS path - empty
-    // SetNativePreEventHandler(fnHandler);
 #endif
 }
 

@@ -133,6 +133,14 @@ void RenderPath::NextFrame(Swapchain* swapchain)
 
 void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget)
 {
+    
+    
+    // TODO: Renderer쪽으로 빼긴 했는데...
+    for(auto* model : param.models)
+    {
+        model->Update();
+    }
+    
     for (auto* pass : _rendererPasses)
     {
         pass->OnBeforeRendering(frameIndex);

@@ -12,6 +12,7 @@ set(TOTAL_FILES)
 set(ENGINE_COMMON_HEADERS
     Application.h
     Window.h
+    Camera.h
 )
 
 source_group("Public" FILES ${ENGINE_COMMON_HEADERS})
@@ -20,6 +21,7 @@ list(APPEND TOTAL_FILES ${ENGINE_COMMON_HEADERS})
 set(ENGINE_COMMON_SOURCES
     Private/Application.cpp
     Private/Window.cpp
+    Private/Camera.cpp
 )
 
 source_group("Private" FILES ${ENGINE_COMMON_SOURCES})

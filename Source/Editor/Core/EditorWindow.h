@@ -47,7 +47,7 @@ private:
 
     void onRenderGUI();
 
-    void updateEditorCamera();
+    void updateSceneCamera(float deltaTime);
     void processShortcuts();
 
     void setupResources();

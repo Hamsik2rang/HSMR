@@ -511,7 +511,7 @@ Scoped<Mesh> ObjectManager::LoadMeshFromFile(const std::string& path, bool isAbs
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		HS_LOG(error, "ObjectManager cannot import mesh (%s): %s", filePath, importer.GetErrorString());
+		HS_LOG(error, "ObjectManager cannot import mesh (%s): %s", filePath.c_str(), importer.GetErrorString());
 		return nullptr;
 	}
 
@@ -536,11 +536,11 @@ Scoped<Mesh> ObjectManager::LoadMeshFromFile(const std::string& path, bool isAbs
 
 	if (!rootMesh || rootMesh->GetPosition().empty())
 	{
-		HS_LOG(error, "Failed to process any meshes from file: %s", filePath);
+		HS_LOG(error, "Failed to process any meshes from file: %s", filePath.c_str());
 		return nullptr;
 	}
 
-	HS_LOG(info, "Successfully loaded mesh: %s", filePath);
+	HS_LOG(info, "Successfully loaded mesh: %s", filePath.c_str());
 
 	return rootMesh;
 }

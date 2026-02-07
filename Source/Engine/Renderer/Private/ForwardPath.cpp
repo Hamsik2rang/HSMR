@@ -1,4 +1,4 @@
-﻿#include "Renderer/ForwardPath.h"
+#include "Renderer/ForwardPath.h"
 #include "RHI/RHIContext.h"
 HS_NS_BEGIN
 

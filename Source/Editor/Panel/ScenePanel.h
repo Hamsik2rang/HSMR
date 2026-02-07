@@ -1,4 +1,4 @@
-﻿//
+//
 //  ScenePanel.hpp
 //  Editor
 //
@@ -15,6 +15,8 @@
 #include "Engine/Renderer/RenderTarget.h"
 #include "Engine/Geometry/GeometryDefinition.h"
 
+#include "Engine/Camera.h"
+
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API ScenePanel : public Panel
@@ -28,16 +30,26 @@ public:
 
     bool Setup() override;
     void Cleanup() override;
-
+    void Update(float deltaTime) override;
+    
     void Draw() override;
 
     HS_FORCEINLINE void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
 
     HS_FORCEINLINE Resolution GetResolution() const { return _resolution; }
-    
+
+    HS_FORCEINLINE Camera* GetCamera() const { return _camera.get(); }
+
 private:
     Resolution _resolution;
     RenderTarget* _currentRenderTarget;
+    
+    Scoped<Camera> _camera;
+
+    uint16 _lastMouseX = 0;
+    uint16 _lastMouseY = 0;
+    bool _isMouseTracking = false;
+
 };
 
 HS_NS_EDITOR_END
