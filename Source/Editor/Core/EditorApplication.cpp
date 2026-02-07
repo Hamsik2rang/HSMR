@@ -86,7 +86,7 @@ void EditorApplication::Run()
 		}
 
 		float curTime = Timer::GetElapsedMilliseconds();
-        _deltaTime    = curTime - lastTime;
+        _deltaTime    = (curTime - lastTime) / 1000.0f;
         lastTime      = curTime;
         
 		_window->NextFrame();
