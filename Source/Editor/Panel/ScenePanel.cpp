@@ -42,8 +42,8 @@ void ScenePanel::Update(float deltaTime)
         }
     }
 
-    _lastMouseX = mouseX;
-    _lastMouseY = mouseY;
+    _lastMouseX      = mouseX;
+    _lastMouseY      = mouseY;
     _isMouseTracking = true;
 
     // --- Keyboard movement ---
@@ -57,9 +57,7 @@ void ScenePanel::Update(float deltaTime)
 
     if (front != 0 || right != 0 || up != 0)
     {
-        glm::vec3 moveDir = _camera->GetForward() * static_cast<float>(front)
-                          + _camera->GetRight()   * static_cast<float>(right)
-                          + glm::vec3(0.0f, 1.0f, 0.0f) * static_cast<float>(up);
+        glm::vec3 moveDir = _camera->GetForward() * static_cast<float>(front) + _camera->GetRight() * static_cast<float>(right) + glm::vec3(0.0f, 1.0f, 0.0f) * static_cast<float>(up);
         _camera->Move(moveDir * deltaTime * _camera->GetMoveSpeed());
     }
 
@@ -102,8 +100,8 @@ void ScenePanel::drawViewGizmo()
     if (!_camera) return;
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 windowSize = ImGui::GetWindowSize();
+    ImVec2 windowPos     = ImGui::GetWindowPos();
+    ImVec2 windowSize    = ImGui::GetWindowSize();
 
     // Gizmo center: top-right corner
     float halfSize = _viewGizmoSize * 0.5f;
@@ -112,9 +110,9 @@ void ScenePanel::drawViewGizmo()
         windowPos.y + halfSize + (_viewGizmoMargin * 4.0f)
     );
 
-    float axisLength  = halfSize;
-    float coneHeight  = 14.0f;
-    float coneRadius  = 6.0f;
+    float axisLength = halfSize;
+    float coneHeight = 14.0f;
+    float coneRadius = 6.0f;
 
     // Background
     drawList->AddCircleFilled(center, halfSize, IM_COL32(20, 20, 20, 140), 32);
@@ -126,36 +124,42 @@ void ScenePanel::drawViewGizmo()
     struct Axis
     {
         glm::vec3 worldDir;
-        ImU32     color;
-        float     sx, sy, depth;
+        ImU32 color;
+        float sx, sy, depth;
     };
 
     Axis axes[3] = {
-        { {1, 0, 0}, IM_COL32(220, 60, 60, 255),  0, 0, 0 },
-        { {0, 1, 0}, IM_COL32(60, 190, 60, 255),   0, 0, 0 },
-        { {0, 0, 1}, IM_COL32(80, 130, 230, 255),  0, 0, 0 },
+        {{1, 0, 0}, IM_COL32(220, 60, 60, 255), 0, 0, 0},
+        {{0, 1, 0}, IM_COL32(60, 190, 60, 255), 0, 0, 0},
+        {{0, 0, 1}, IM_COL32(80, 130, 230, 255), 0, 0, 0},
     };
 
     // Project each axis through view rotation
     for (auto& a : axes)
     {
         glm::vec3 v = viewRot * a.worldDir;
-        a.sx    = v.x;
-        a.sy    = -v.y; // screen Y flipped
-        a.depth = v.z;  // +z = toward camera
+        a.sx        = v.x;
+        a.sy        = -v.y; // screen Y flipped
+        a.depth     = v.z;  // +z = toward camera
     }
 
     // Sort back-to-front (ascending depth)
-    int order[3] = { 0, 1, 2 };
+    int order[3] = {0, 1, 2};
     for (int i = 0; i < 2; i++)
+    {
         for (int j = i + 1; j < 3; j++)
+        {
             if (axes[order[i]].depth > axes[order[j]].depth)
             {
-                int tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+                int tmp  = order[i];
+                order[i] = order[j];
+                order[j] = tmp;
             }
+        }
+    }
 
     bool windowHovered = ImGui::IsWindowHovered();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io        = ImGui::GetIO();
 
     for (int idx = 0; idx < 3; idx++)
     {
@@ -163,10 +167,10 @@ void ScenePanel::drawViewGizmo()
 
         // Dim axes pointing away from camera
         float alpha = (a.depth < 0.0f) ? 0.35f : 1.0f;
-        uint8_t cr = (a.color >> IM_COL32_R_SHIFT) & 0xFF;
-        uint8_t cg = (a.color >> IM_COL32_G_SHIFT) & 0xFF;
-        uint8_t cb = (a.color >> IM_COL32_B_SHIFT) & 0xFF;
-        ImU32 col = IM_COL32(cr, cg, cb, static_cast<uint8_t>(255 * alpha));
+        uint8_t cr  = (a.color >> IM_COL32_R_SHIFT) & 0xFF;
+        uint8_t cg  = (a.color >> IM_COL32_G_SHIFT) & 0xFF;
+        uint8_t cb  = (a.color >> IM_COL32_B_SHIFT) & 0xFF;
+        ImU32 col   = IM_COL32(cr, cg, cb, static_cast<uint8_t>(255 * alpha));
 
         ImVec2 tip(center.x + a.sx * axisLength, center.y + a.sy * axisLength);
 
