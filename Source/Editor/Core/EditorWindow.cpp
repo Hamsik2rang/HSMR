@@ -205,6 +205,8 @@ void EditorWindow::updateSceneCamera(float deltaTime)
     if (_scenePanel)
     {
         _scenePanel->Update(deltaTime);
+        Camera* camera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
+        static_cast<ProfilerPanel*>(_profilerPanel.get())->SetSceneCamera(camera);
     }
 }
 
@@ -241,11 +243,13 @@ void EditorWindow::setupResources()
 {
     std::string gltfPath = std::string("GLTF") +
                            HS_DIR_SEPERATOR +
-                           "rubber_duck" +
+                           "DamagedHelmet" +
                            HS_DIR_SEPERATOR +
-                           "scene.gltf";
+                           "DamagedHelmet.gltf";
 
     ObjectManager::LoadModel(gltfPath, _model);
+
+    //_model->SetRotation(glm::vec3(0.0f, glm::radians(240.0f), 0.0f));
 }
 
 HS_NS_EDITOR_END

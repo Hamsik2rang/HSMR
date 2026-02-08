@@ -30,7 +30,9 @@ void Mesh::CalculateBounds()
     minX = minY = minZ = HS_FLT_MIN;
     maxX = maxY = maxZ = HS_FLT_MAX;
 
-    for (int i = 0; i < _position.size(); i += 4)
+    int stride = 3; // TEMP
+
+    for (int i = 0; i < _position.size(); i += stride)
     {
         minX = std::min(minX, _position[i + 0]);
         minY = std::min(minX, _position[i + 1]);

@@ -11,6 +11,8 @@ bool ScenePanel::Setup()
     _camera = MakeScoped<Camera>();
     _camera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
 
+    
+
     return true;
 }
 
@@ -38,7 +40,7 @@ void ScenePanel::Update(float deltaTime)
         if (dx != 0.0f || dy != 0.0f)
         {
             float rotateSpeed = _camera->GetRotateSpeed();
-            _camera->Rotate(glm::vec3(-dy * rotateSpeed, -dx * rotateSpeed, 0.0f));
+            _camera->Rotate(glm::vec3(-dy * rotateSpeed, dx * rotateSpeed, 0.0f));
         }
     }
 
@@ -129,9 +131,9 @@ void ScenePanel::drawViewGizmo()
     };
 
     Axis axes[3] = {
-        {{1, 0, 0}, IM_COL32(220, 60, 60, 255), 0, 0, 0},
-        {{0, 1, 0}, IM_COL32(60, 190, 60, 255), 0, 0, 0},
-        {{0, 0, 1}, IM_COL32(80, 130, 230, 255), 0, 0, 0},
+        {{1, 0, 0}, IM_COL32(250, 60, 60, 255), 0, 0, 0},
+        {{0, 1, 0}, IM_COL32(60, 210, 60, 255), 0, 0, 0},
+        {{0, 0, 1}, IM_COL32(80, 130, 250, 255), 0, 0, 0},
     };
 
     // Project each axis through view rotation
@@ -140,7 +142,7 @@ void ScenePanel::drawViewGizmo()
         glm::vec3 v = viewRot * a.worldDir;
         a.sx        = v.x;
         a.sy        = -v.y; // screen Y flipped
-        a.depth     = v.z;  // +z = toward camera
+        a.depth     = -v.z;  // -z = Front
     }
 
     // Sort back-to-front (ascending depth)

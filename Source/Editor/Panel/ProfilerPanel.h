@@ -10,6 +10,7 @@
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
+#include "Engine/Camera.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -24,9 +25,13 @@ public:
 
 	void Draw() override;
 
+	void SetSceneCamera(const Camera* camera) { _sceneCamera = camera; }
+
 
 private:
 	double _lastFrameTime = 0.0;
+
+	const Camera* _sceneCamera;
 
 };
 

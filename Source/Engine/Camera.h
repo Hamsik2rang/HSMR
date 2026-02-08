@@ -55,7 +55,7 @@ public:
     // Direction vectors
     HS_FORCEINLINE glm::vec3 GetForward() const { return _frontDir; }
     HS_FORCEINLINE glm::vec3 GetUp() const { return _upDir; }
-    HS_FORCEINLINE glm::vec3 GetRight() const { return glm::normalize(glm::cross(_frontDir, _upDir)); }
+    HS_FORCEINLINE glm::vec3 GetRight() const { return glm::normalize(glm::cross(_upDir, _frontDir)); }
 
     // Camera manipulation helpers
     HS_FORCEINLINE void Move(const glm::vec3& offset)

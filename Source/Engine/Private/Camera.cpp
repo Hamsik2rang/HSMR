@@ -87,7 +87,7 @@ void Camera::updateDirectionVectors()
 
 void Camera::updateViewMatrix()
 {
-    _viewMatrix        = glm::lookAt(_position, _position + _frontDir, _upDir);
+    _viewMatrix        = glm::lookAtLH(_position, _position + _frontDir, _upDir);
     _inverseViewMatrix = glm::inverse(_viewMatrix);
 }
 
@@ -97,12 +97,12 @@ void Camera::updateProjectionMatrix()
     {
     case EProjectionType::PERSPECTIVE:
     {
-        _projectionMatrix = glm::perspective(_fovY, _aspectRatio, _nearZ, _farZ);
+        _projectionMatrix = glm::perspectiveLH(_fovY, _aspectRatio, _nearZ, _farZ);
         break;
     }
     case EProjectionType::ORTHOGRAPHIC:
     {
-        _projectionMatrix = glm::ortho(_left, _right, _bottom, _top, _nearZ, _farZ);
+        _projectionMatrix = glm::orthoLH(_left, _right, _bottom, _top, _nearZ, _farZ);
         break;
     }
     }
