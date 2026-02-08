@@ -32,6 +32,9 @@ public:
 
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
+    VkPhysicalDeviceVulkan12Features features12{};
+    VkPhysicalDeviceVulkan13Features features13{};
+
 	VkPhysicalDeviceMemoryProperties memoryProperties;
 	VkSurfaceKHR surface;
 

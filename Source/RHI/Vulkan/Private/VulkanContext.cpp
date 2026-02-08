@@ -1370,7 +1370,7 @@ bool VulkanContext::createInstance()
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 4, 0);
     appInfo.pEngineName        = "HSMR";
     appInfo.engineVersion      = VK_MAKE_VERSION(1, 4, 0);
-    appInfo.apiVersion         = VK_API_VERSION_1_4;
+    appInfo.apiVersion         = VK_API_VERSION_1_3;
 
     std::vector<const char*> extensionNames;
 
