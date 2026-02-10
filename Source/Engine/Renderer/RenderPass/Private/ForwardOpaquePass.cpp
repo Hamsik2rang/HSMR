@@ -19,6 +19,11 @@
 
 #include "Engine/Camera.h"
 
+// ECS Scene support
+#include "Scene/Scene.h"
+#include "Scene/Entity.h"
+#include "Scene/Components/Components.h"
+
 HS_NS_BEGIN
 
 ForwardOpaquePass::ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
@@ -73,7 +78,10 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
 void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const RenderParameter& param)
 {
-    if (param.cameras.empty() || param.models.empty())
+    bool hasModels = !param.models.empty();
+    bool hasScene = param.scene != nullptr;
+
+    if (param.cameras.empty() || (!hasModels && !hasScene))
     {
         return;
     }
@@ -112,11 +120,13 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
     float debugColor[4]{0.2f, 0.5f, 0.8f, 1.0f};
     commandBuffer->PushDebugMark("Opaque Pass", debugColor);
 
-    for (auto* model : param.models)
+    Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+    bool renderPassStarted = false;
+
+    // Helper lambda to render a single mesh/material pair with transform
+    auto renderMeshMaterial = [&](Mesh* mesh, Material* mat, const glm::mat4& worldMatrix, const glm::mat4& invWorldMatrix, Model* model = nullptr)
     {
-        Material* mat = model->GetMaterial();
-        Mesh* mesh    = model->GetMesh();
-        if (!mat || !mesh) continue;
+        if (!mat || !mesh) return;
 
         // Assign default shader if material has no compiled shader
         Shader* shader = mat->GetShader();
@@ -130,35 +140,50 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
             }
         }
 
-        if (!shader || !shader->IsCompiledEx()) continue;
+        if (!shader || !shader->IsCompiledEx()) return;
 
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
-        // Get or create model resource (PerDraw UBO)
-        ModelResource* modelRes = resMgr->GetOrCreateModelResource(model);
-        if (!modelRes) continue;
+        // Get or create model resource (PerDraw UBO) - use Model if available, otherwise create from entity
+        ModelResource* modelRes = nullptr;
+        if (model)
+        {
+            modelRes = resMgr->GetOrCreateModelResource(model);
+        }
+        else
+        {
+            // For ECS entities without Model, we need a temporary approach
+            // TODO: Create EntityResource similar to ModelResource for ECS
+            // For now, skip ECS entities (they won't render until EntityResource is implemented)
+            return;
+        }
+
+        if (!modelRes) return;
         resMgr->SetActiveModelResource(modelRes);
 
         // Update PerDraw
         PerDraw perDrawData{};
-        perDrawData.modelMatrix        = model->GetWorldMatrix();
-        perDrawData.inverseModelMatrix = model->GetInverseWorldMatrix();
+        perDrawData.modelMatrix        = worldMatrix;
+        perDrawData.inverseModelMatrix = invWorldMatrix;
         commandBuffer->UpdateBuffer(modelRes->perDrawBuffer, 0, &perDrawData, sizeof(PerDraw));
 
         // Get or create all resources from the manager
         MaterialResource* matRes = resMgr->GetOrCreateMaterialResources(mat);
-        if (!matRes) continue;
+        if (!matRes) return;
 
         MeshResource* meshRes = resMgr->GetOrCreateMeshResources(mesh, reflection);
-        if (!meshRes) continue;
+        if (!meshRes) return;
 
         RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, renderPass);
-        if (!pipeline) continue;
+        if (!pipeline) return;
 
-        Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-        commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
-        commandBuffer->SetViewport(Viewport{0.0f, 0.0f, static_cast<float>(framebuffer->info.width), static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-        commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+        if (!renderPassStarted)
+        {
+            commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
+            commandBuffer->SetViewport(Viewport{0.0f, 0.0f, static_cast<float>(framebuffer->info.width), static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
+            commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+            renderPassStarted = true;
+        }
 
         // Bind and draw
         commandBuffer->BindPipeline(pipeline);
@@ -169,9 +194,57 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
         commandBuffer->BindVertexBuffers(&vb, &vbOffset, 1);
         commandBuffer->BindIndexBuffer(meshRes->indexBuffer);
         commandBuffer->DrawIndexed(0, meshRes->indexCount, 1, 0);
+    };
+
+    // Render legacy Model objects
+    for (auto* model : param.models)
+    {
+        Material* mat = model->GetMaterial();
+        Mesh* mesh    = model->GetMesh();
+        renderMeshMaterial(mesh, mat, model->GetWorldMatrix(), model->GetInverseWorldMatrix(), model);
     }
 
-    commandBuffer->EndRenderPass();
+    // Render ECS Scene entities with MeshRendererComponent
+    if (hasScene)
+    {
+        auto& registry = param.scene->GetRegistry();
+        auto view = registry.view<TransformComponent, MeshRendererComponent>();
+
+        for (auto entity : view)
+        {
+            auto& transform = view.get<TransformComponent>(entity);
+            auto& meshRenderer = view.get<MeshRendererComponent>(entity);
+
+            if (!meshRenderer.IsValidForRendering())
+                continue;
+
+            // Check visibility
+            if (!meshRenderer.isVisible)
+                continue;
+
+            // Render each submesh with its material
+            Mesh* mesh = meshRenderer.mesh;
+            uint32 submeshCount = mesh ? 1 : 0; // TODO: Get actual submesh count from Mesh
+
+            for (uint32 i = 0; i < submeshCount; ++i)
+            {
+                Material* mat = meshRenderer.GetMaterial(i);
+                if (!mat) continue;
+
+                const glm::mat4& worldMatrix = transform.worldMatrix;
+                glm::mat4 invWorldMatrix = glm::inverse(worldMatrix);
+
+                // TODO: Need EntityResource for proper GPU resource management
+                // For now, ECS entities won't render - this is a placeholder
+                // renderMeshMaterial(mesh, mat, worldMatrix, invWorldMatrix, nullptr);
+            }
+        }
+    }
+
+    if (renderPassStarted)
+    {
+        commandBuffer->EndRenderPass();
+    }
     commandBuffer->PopDebugMark();
 }
 

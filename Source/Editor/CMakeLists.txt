@@ -6,6 +6,7 @@ set(EDITOR_CORE_HEADERS
     Core/EditorApplication.h
     Core/EditorWindow.h
     Core/EditorCamera.h
+    Core/EditorContext.h
 )
 
 source_group("Core\\Public" FILES ${EDITOR_CORE_HEADERS})
@@ -16,6 +17,7 @@ set(EDITOR_CORE_SOURCES
     Core/EditorApplication.cpp
     Core/EditorWindow.cpp
     Core/EditorCamera.cpp
+    Core/EditorContext.cpp
 )
 
 source_group("Core\\Private" FILES ${EDITOR_CORE_SOURCES})
@@ -232,6 +234,7 @@ endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Engine
     PUBLIC ThirdParty
     $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_INCLUDE_DIR}>
     $<$<BOOL:${IMGUIZMO_FOUND}>:${IMGUIZMO_INCLUDE_DIR}>

@@ -1,4 +1,5 @@
 #include "Editor/Core/EditorWindow.h"
+#include "Editor/Core/EditorContext.h"
 
 #include "Core/HAL/FileSystem.h"
 #include "Core/HAL/Input.h"
@@ -8,9 +9,13 @@
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 
-#include "Engine/Renderer/ForwardPath.h"
-#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
-#include "Engine/Resource/ObjectManager.h"
+#include "Renderer/ForwardPath.h"
+#include "Renderer/RenderPass/ForwardOpaquePass.h"
+#include "Resource/ObjectManager.h"
+
+#include "Scene/Scene.h"
+#include "Scene/Entity.h"
+#include "Scene/Components/Components.h"
 
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/GUI/GUIContext.h"
@@ -22,6 +27,7 @@
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Panel/ProfilerPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
+#include "Editor/Panel/InspectorPanel.h"
 
 #include "Editor/Core/EditorCamera.h"
 
@@ -55,6 +61,9 @@ bool EditorWindow::onInitialize()
 
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
     _renderer->AddPass(std::move(opaquePass));
+
+    // Setup test scene before panels (so EditorContext has a scene)
+    setupTestScene();
 
     setupPanels();
 
@@ -93,6 +102,12 @@ void EditorWindow::onUpdate(float deltaTime)
     HS_PROFILE_FUNCTION();
     processShortcuts();
     updateSceneCamera(deltaTime);
+
+    // Update scene transforms
+    if (_testScene)
+    {
+        _testScene->Update(deltaTime);
+    }
 }
 
 void EditorWindow::onResize()
@@ -116,6 +131,9 @@ void EditorWindow::onRender()
     RenderParameter param{};
 
     param.models.push_back(_model.get());
+
+    // Pass ECS Scene for MeshRendererComponent-based rendering
+    param.scene = _testScene.get();
 
     Camera* sceneCamera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
     if (sceneCamera)
@@ -155,27 +173,29 @@ void EditorWindow::onShutdown()
 {
     ImGuiExtension::FinalizeBackend();
 
+    // Clear editor context
+    EditorContext::Get().SetActiveScene(nullptr);
+    EditorContext::Get().RemoveAllSelectionListeners();
+
     if (_renderer)
     {
         _renderer->Shutdown();
-        _renderer.reset(); // Automatic cleanup with Scoped<>
+        _renderer.reset();
     }
+
+    // Cleanup test scene
+    _testScene.reset();
 }
 
 void EditorWindow::onRenderGUI()
 {
     GUIContext* guiContext = static_cast<EditorApplication*>(GetApplication())->GetGUIContext();
 
-    //	guiContext->SetScaleFactor(_nativeWindow.scale);
-
-    // TODO: 어차피 필요하니 스왑체인이 렌더패스 핸들을 들고있도록 하고 이 함수가 인자로 렌더패스 핸들을 받도록 하기
     guiContext->BeginRender(_swapchain);
 
     _basePanel->Draw(); // Draw panel tree.
 
     guiContext->EndRender();
-
-    //	guiContext->SetScaleFactor(1.0f / _nativeWindow.scale);
 }
 
 void EditorWindow::onSuspend()
@@ -205,9 +225,60 @@ void EditorWindow::setupPanels()
     _profilerPanel->Setup();
     _basePanel->InsertPanel(_profilerPanel.get());
 
-    //_hierarchyPanel = MakeScoped<HierarchyPanel>(this);
-    //_hierarchyPanel->Setup();
-    //_basePanel->InsertPanel(_hierarchyPanel.get());
+    _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
+    _hierarchyPanel->Setup();
+    _basePanel->InsertPanel(_hierarchyPanel.get());
+
+    _inspectorPanel = MakeScoped<InspectorPanel>(this);
+    _inspectorPanel->Setup();
+    _basePanel->InsertPanel(_inspectorPanel.get());
+}
+
+void EditorWindow::setupTestScene()
+{
+    // Create test scene
+    _testScene = MakeScoped<Scene>("Test Scene");
+
+    // Set as active scene in EditorContext
+    EditorContext::Get().SetActiveScene(_testScene.get());
+
+    // Create some test entities
+    Entity mainCamera = _testScene->CreateEntity("Main Camera");
+    mainCamera.AddComponent<CameraComponent>();
+    auto& camTransform = mainCamera.GetComponent<TransformComponent>();
+    camTransform.SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));
+
+    Entity directionalLight = _testScene->CreateEntity("Directional Light");
+    directionalLight.AddComponent<LightComponent>(ELightType::Directional);
+    auto& lightTransform = directionalLight.GetComponent<TransformComponent>();
+    lightTransform.SetPosition(glm::vec3(0.0f, 10.0f, 0.0f));
+    lightTransform.SetEulerAngles(glm::vec3(-45.0f, 0.0f, 0.0f));
+
+    Entity cube = _testScene->CreateEntity("Cube");
+    cube.AddComponent<MeshRendererComponent>();
+    auto& cubeTransform = cube.GetComponent<TransformComponent>();
+    cubeTransform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    Entity sphere = _testScene->CreateEntity("Sphere");
+    sphere.AddComponent<MeshRendererComponent>();
+    auto& sphereTransform = sphere.GetComponent<TransformComponent>();
+    sphereTransform.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f));
+
+    // Create a parent-child hierarchy for testing
+    Entity parent = _testScene->CreateEntity("Parent Object");
+    auto& parentTransform = parent.GetComponent<TransformComponent>();
+    parentTransform.SetPosition(glm::vec3(-3.0f, 0.0f, 0.0f));
+
+    Entity child1 = _testScene->CreateChildEntity(parent, "Child 1");
+    auto& child1Transform = child1.GetComponent<TransformComponent>();
+    child1Transform.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+
+    Entity child2 = _testScene->CreateChildEntity(parent, "Child 2");
+    auto& child2Transform = child2.GetComponent<TransformComponent>();
+    child2Transform.SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+
+    // Initial update to calculate world transforms
+    _testScene->Update(0.0f);
 }
 
 void EditorWindow::updateSceneCamera(float deltaTime)
@@ -247,6 +318,40 @@ void EditorWindow::processShortcuts()
     {
         sKeyWasPressed = false;
     }
+
+    // Gizmo operation shortcuts (W/E/R for Translate/Rotate/Scale)
+    auto& context = EditorContext::Get();
+
+    if (Input::IsPressed(Input::Button::W) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    {
+        context.SetGizmoOperation(EditorContext::GizmoOperation::Translate);
+    }
+    if (Input::IsPressed(Input::Button::E) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    {
+        context.SetGizmoOperation(EditorContext::GizmoOperation::Rotate);
+    }
+    if (Input::IsPressed(Input::Button::R))
+    {
+        context.SetGizmoOperation(EditorContext::GizmoOperation::Scale);
+    }
+
+    // Toggle local/world space with Q (when not moving camera)
+    static bool qKeyWasPressed = false;
+    if (Input::IsPressed(Input::Button::Q) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    {
+        if (!qKeyWasPressed)
+        {
+            auto currentSpace = context.GetGizmoSpace();
+            context.SetGizmoSpace(currentSpace == EditorContext::GizmoSpace::Local
+                ? EditorContext::GizmoSpace::World
+                : EditorContext::GizmoSpace::Local);
+            qKeyWasPressed = true;
+        }
+    }
+    else
+    {
+        qKeyWasPressed = false;
+    }
 }
 
 void EditorWindow::setupResources()
@@ -258,8 +363,6 @@ void EditorWindow::setupResources()
                            "DamagedHelmet.gltf";
 
     ObjectManager::LoadModel(gltfPath, _model);
-
-    //_model->SetRotation(glm::vec3(0.0f, glm::radians(240.0f), 0.0f));
 }
 
 HS_NS_EDITOR_END

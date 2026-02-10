@@ -20,6 +20,7 @@ HS_NS_BEGIN
 
 class RenderResourceManager;
 class ShaderLibrary;
+class Scene;
 
 struct HS_API RenderTargetInfo
 {
@@ -50,8 +51,13 @@ enum class ERenderGroup : uint16
 
 struct HS_API RenderParameter
 {
+    // Legacy: Direct model list (for backward compatibility)
     std::vector<Model*> models;
     std::vector<Camera*> cameras;
+
+    // ECS Scene for MeshRendererComponent-based rendering
+    Scene* scene = nullptr;
+
     RenderResourceManager* resourceManager = nullptr;
     ShaderLibrary* shaderLibrary = nullptr;
 };

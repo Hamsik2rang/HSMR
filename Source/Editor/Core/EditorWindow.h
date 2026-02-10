@@ -16,6 +16,7 @@
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }
+/*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
@@ -33,6 +34,7 @@ public:
 
 private:
     void setupPanels();
+    void setupTestScene();
 
     bool onInitialize() override;
     void onNextFrame() override;
@@ -42,7 +44,7 @@ private:
     void onShutdown() override;
     void onResize() override;
     void onSuspend() override;
-   
+
     void onRestore() override;
 
     void onRenderGUI();
@@ -59,10 +61,14 @@ private:
     Scoped<Panel> _scenePanel;
     Scoped<Panel> _profilerPanel;
     Scoped<Panel> _hierarchyPanel;
+    Scoped<Panel> _inspectorPanel;
 
-	Scoped<EditorCamera> _editorCamera;
+    Scoped<EditorCamera> _editorCamera;
 
     Scoped<Model> _model;
+
+    // Test scene for editor
+    Scoped<Scene> _testScene;
 };
 
 HS_NS_EDITOR_END

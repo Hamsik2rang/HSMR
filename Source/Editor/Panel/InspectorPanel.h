@@ -1,32 +1,48 @@
-﻿//
+//
 //  InspectorPanel.h
 //  Editor
 //
-//  Created by Yongsik Im on 2/8/25.
+//  Component editor panel for selected entity
 //
+
 #ifndef __HS_INSPECTOR_PANEL_H__
 #define __HS_INSPECTOR_PANEL_H__
 
 #include "Precompile.h"
 
 #include "Editor/Panel/Panel.h"
+#include "Scene/Entity.h"
 
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API InspectorPanel : public Panel
 {
 public:
-    InspectorPanel(Window* window)
-        : Panel(window)
-    {}
+    InspectorPanel(Window* window);
     ~InspectorPanel() override;
 
     bool Setup() override;
     void Cleanup() override;
-
     void Draw() override;
 
 private:
+    // Component editors
+    void drawTagComponent(Entity entity);
+    void drawTransformComponent(Entity entity);
+    void drawMeshRendererComponent(Entity entity);
+    void drawCameraComponent(Entity entity);
+    void drawLightComponent(Entity entity);
+
+    // Helper widgets
+    bool drawVec3Control(const char* label, glm::vec3& values, float resetValue = 0.0f, float speed = 0.1f);
+    void drawColorEdit(const char* label, glm::vec3& color);
+
+    // Add component popup
+    void drawAddComponentButton(Entity entity);
+
+    // Component header with remove button
+    template<typename T>
+    bool drawComponentHeader(const char* name, Entity entity, bool canRemove = true);
 };
 
 HS_NS_EDITOR_END

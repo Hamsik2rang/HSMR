@@ -12,10 +12,11 @@
 
 #include "Editor/Panel/Panel.h"
 
-#include "Engine/Renderer/RenderTarget.h"
-#include "Engine/Geometry/GeometryDefinition.h"
+#include "Renderer/RenderTarget.h"
+#include "Geometry/GeometryDefinition.h"
 
-#include "Engine/Camera.h"
+#include "Camera.h"
+#include "Scene/Entity.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -31,7 +32,7 @@ public:
     bool Setup() override;
     void Cleanup() override;
     void Update(float deltaTime) override;
-    
+
     void Draw() override;
 
     HS_FORCEINLINE void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
@@ -42,8 +43,8 @@ public:
 
 private:
     Resolution _resolution;
-    RenderTarget* _currentRenderTarget;
-    
+    RenderTarget* _currentRenderTarget = nullptr;
+
     Scoped<Camera> _camera;
 
     uint16 _lastMouseX = 0;
@@ -51,10 +52,24 @@ private:
     bool _isMouseTracking = false;
 
     // View gizmo settings
-    float _viewGizmoSize = 76.8;
+    float _viewGizmoSize = 76.8f;
     float _viewGizmoMargin = 10.0f;
 
+    // Viewport bounds for mouse picking and gizmo
+    ImVec2 _viewportMin;
+    ImVec2 _viewportMax;
+    bool _viewportHovered = false;
+    bool _viewportFocused = false;
+
     void drawViewGizmo();
+    void drawTransformGizmo();
+    void handlePicking();
+
+    // Ray generation for picking
+    glm::vec3 screenToWorldRay(float mouseX, float mouseY);
+
+    // Simple picking (requires mesh bounds)
+    Entity pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDir);
 };
 
 HS_NS_EDITOR_END

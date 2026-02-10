@@ -1,525 +1,290 @@
-# Tracy Profiler 통합 및 Profiler 패널 고도화 계획
+# 컴포넌트 구조 리팩토링 계획
 
 ## 현재 상태 분석
 
-### 기존 프로파일링 시스템
-| 파일 | 상태 | 설명 |
-|:-----|:-----|:-----|
-| `Core/Profiler/Profiler.h` | **전체 주석 처리** | ImPlot 기반 자체 구현 시도 흔적 |
-| `Core/Profiler/GPUQuery.h/.cpp` | 스켈레톤 | RHI 연동 없음, placeholder 상태 |
-| `Editor/Panel/ProfilerPanel.h/.cpp` | 최소 기능 | FPS + Camera 정보만 표시 |
+### 현재 구조 (분리형)
+
+```
+Entity
+├── TagComponent
+├── TransformComponent
+├── MeshComponent       ← mesh*, submeshIndex, castShadow
+└── MaterialComponent   ← material*
+```
+
+### 렌더링 파이프라인 현황
+
+현재 **두 개의 분리된 시스템**이 존재:
+
+1. **Model 클래스** (실제 렌더링에 사용)
+   ```cpp
+   class Model {
+       Scoped<Mesh> _mesh;
+       Scoped<Material> _material;  // Mesh + Material 이미 통합!
+       glm::vec3 _position, _rotation, _scale;
+       glm::mat4 _worldMatrix;
+   };
+   ```
+   - `ForwardOpaquePass`에서 `param.models` 순회
+   - `model->GetMesh()`, `model->GetMaterial()` 사용
+
+2. **ECS Scene/Entity** (에디터 UI용, 렌더링 미연결)
+   ```cpp
+   struct MeshComponent { Mesh* mesh; };
+   struct MaterialComponent { Material* material; };
+   ```
+   - Hierarchy/Inspector UI에서만 사용
+   - 실제 렌더링과 **완전히 분리**됨
 
 ### 문제점
-1. GPU 프로파일링 미구현 (GPUQuery가 placeholder)
-2. CPU 프로파일링 비활성화 (전체 주석)
-3. ProfilerPanel이 단순 오버레이 수준
-4. 외부 도구 연동 없음
+
+1. **이중 구조**: Model과 ECS가 따로 놂
+2. **데이터 불일치**: ECS에서 Transform 수정해도 렌더링에 반영 안 됨
+3. **불필요한 분리**: MeshComponent, MaterialComponent가 별도인데 의미 없음
+4. **Submesh-Material 매핑 불가**: 현재 구조로는 불가능
 
 ---
 
-## Tracy 도입 근거
+## 리팩토링 목표
 
-### Tracy란?
-- **실시간 프레임 프로파일러** (게임/실시간 그래픽스 특화)
-- CPU/GPU 동시 프로파일링 지원
-- Vulkan 네이티브 지원 (`VK_EXT_calibrated_timestamps`)
-- 메모리 할당 추적
-- Lock contention 분석
-- 원격 프로파일링 (별도 GUI 앱)
+### 통합형 구조 (Unity/Unreal 스타일)
 
-### 상용 엔진과의 비교
-| 엔진 | 프로파일러 |
-|:-----|:----------|
-| Unreal | Unreal Insights (자체) |
-| Unity | Unity Profiler + external tools |
-| Godot | Tracy 내장 |
-| HSMR (목표) | **Tracy 통합** |
+```
+Entity
+├── TagComponent
+├── TransformComponent
+└── MeshRendererComponent    ← 새로운 통합 컴포넌트
+    ├── mesh*
+    ├── materials[]          ← submesh별 머티리얼 배열
+    ├── castShadow
+    ├── receiveShadow
+    └── bounds (AABB)
+```
 
-### 학습 가치
-- 프로파일러 **사용법**은 학습 가치 있음 ✅
-- 프로파일러 **구현**은 핵심 목표 아님 → Tracy 채택 적절
-- GPU timestamp 쿼리 연동은 RHI 이해에 도움 (보호 영역 경계)
+### 핵심 변경
+
+1. **MeshComponent + MaterialComponent → MeshRendererComponent** 통합
+2. **렌더러가 ECS를 직접 쿼리**: `View<TransformComponent, MeshRendererComponent>`
+3. **Model 클래스 역할 축소**: 에셋 로딩용으로만 사용, 런타임은 ECS
 
 ---
 
-## 아키텍처 설계
+## 상세 설계
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Tracy Server (GUI)                       │
-│                   (별도 프로세스 실행)                         │
-└────────────────────────────┬────────────────────────────────┘
-                             │ TCP (localhost:8086)
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        HSMR Engine                           │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  HS_ZONE(name)  │  │ HS_GPU_ZONE(cmd)│  │ HS_ALLOC(ptr)│ │
-│  │  CPU 구간 측정   │  │  GPU 구간 측정   │  │ 메모리 추적   │ │
-│  └────────┬────────┘  └────────┬────────┘  └──────┬───────┘ │
-│           │                    │                   │         │
-│           └──────────┬─────────┴───────────────────┘         │
-│                      ▼                                       │
-│           ┌──────────────────────┐                           │
-│           │    TracyClient.cpp   │                           │
-│           │   (Tracy 네트워크)    │                           │
-│           └──────────────────────┘                           │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │              ProfilerPanel (고도화)                     │  │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐  │  │
-│  │  │Frame Time│ │CPU Zones │ │GPU Zones │ │Memory Info│  │  │
-│  │  │  Graph   │ │  Table   │ │  Table   │ │   Stats   │  │  │
-│  │  └──────────┘ └──────────┘ └──────────┘ └───────────┘  │  │
-│  └────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 구현 범위 분류
-
-### AI 구현 가능 (보일러플레이트)
-| 작업 | 이유 |
-|:-----|:-----|
-| Tracy 라이브러리 다운로드/통합 | 외부 라이브러리 설정 |
-| 매크로 래퍼 정의 | 단순 래핑 |
-| ProfilerPanel UI 고도화 | ImGui 위젯 |
-| CMake 설정 | 빌드 스크립트 |
-
-### 사용자 직접 구현 권장 (보호 영역 경계)
-| 작업 | 이유 |
-|:-----|:-----|
-| GPU Timestamp Query 연동 | Vulkan 동기화/쿼리 이해 필요 |
-| Calibrated Timestamps 활용 | CPU-GPU 시간 동기화 학습 |
-| VulkanCommandHandle 확장 | RHI 아키텍처 이해 |
-
----
-
-## 1단계: Tracy 라이브러리 통합
-
-### 1.1 다운로드
-```
-Dependency/
-├── include/
-│   └── tracy/
-│       ├── Tracy.hpp              (메인 헤더)
-│       ├── TracyVulkan.hpp        (Vulkan GPU 프로파일링)
-│       └── ...
-└── lib/
-    └── tracy/
-        └── TracyClient.cpp        (단일 소스 - 정적 빌드)
-```
-
-**버전**: v0.11.1 (최신 안정)
-**URL**: https://github.com/wolfpld/tracy/releases
-
-### 1.2 CMake 설정
-
-```cmake
-# Dependency/CMakeLists.txt 또는 root CMakeLists.txt
-
-option(HS_ENABLE_TRACY "Enable Tracy profiler" ON)
-
-if(HS_ENABLE_TRACY)
-    add_library(TracyClient STATIC
-        ${HS_DEPS_DIR}/lib/tracy/TracyClient.cpp
-    )
-    target_include_directories(TracyClient PUBLIC
-        ${HS_DEPS_INCLUDE_DIR}/tracy
-    )
-    target_compile_definitions(TracyClient PUBLIC
-        TRACY_ENABLE
-        TRACY_ON_DEMAND          # 서버 연결 시에만 프로파일링
-        TRACY_NO_EXIT            # 종료 시 데이터 손실 방지
-        TRACY_CALLSTACK=16       # 콜스택 깊이
-    )
-
-    # Vulkan GPU 프로파일링 활성화
-    if(VULKAN_FOUND)
-        target_compile_definitions(TracyClient PUBLIC
-            TRACY_VK_USE_SYMBOL_TABLE
-        )
-    endif()
-endif()
-```
-
-### 1.3 Engine 링크
-
-```cmake
-# Source/Engine/CMakeLists.txt
-if(HS_ENABLE_TRACY)
-    target_link_libraries(Engine PUBLIC TracyClient)
-endif()
-```
-
----
-
-## 2단계: 프로파일링 매크로 래퍼
-
-### 2.1 헤더 파일
-
-**파일**: `Source/Core/Profiler/ProfilerMacros.h`
+### 1. MeshRendererComponent
 
 ```cpp
-#pragma once
+// Source/Engine/Scene/Components/MeshRendererComponent.h
 
-#include "Precompile.h"
-
-#if defined(TRACY_ENABLE)
-    #include <tracy/Tracy.hpp>
-    #include <tracy/TracyVulkan.hpp>
-
-    // CPU 프로파일링
-    #define HS_PROFILE_FRAME_MARK       FrameMark
-    #define HS_PROFILE_ZONE(name)       ZoneScoped
-    #define HS_PROFILE_ZONE_N(name)     ZoneScopedN(name)
-    #define HS_PROFILE_ZONE_C(name, color) ZoneScopedNC(name, color)
-    #define HS_PROFILE_FUNCTION()       ZoneScoped
-
-    // GPU 프로파일링 (Vulkan)
-    #define HS_PROFILE_GPU_CONTEXT(ctx, device, queue, cmdBuffer, ...) \
-        TracyVkContext(ctx, device, queue, cmdBuffer, ##__VA_ARGS__)
-    #define HS_PROFILE_GPU_ZONE(ctx, cmdBuffer, name) \
-        TracyVkZone(ctx, cmdBuffer, name)
-    #define HS_PROFILE_GPU_COLLECT(ctx, cmdBuffer) \
-        TracyVkCollect(ctx, cmdBuffer)
-
-    // 메모리 프로파일링
-    #define HS_PROFILE_ALLOC(ptr, size)   TracyAlloc(ptr, size)
-    #define HS_PROFILE_FREE(ptr)          TracyFree(ptr)
-
-    // 값 플로팅
-    #define HS_PROFILE_PLOT(name, value)  TracyPlot(name, value)
-
-    // 메시지/로그
-    #define HS_PROFILE_MESSAGE(text)      TracyMessage(text, strlen(text))
-
-#else
-    // Tracy 비활성화 시 no-op
-    #define HS_PROFILE_FRAME_MARK
-    #define HS_PROFILE_ZONE(name)
-    #define HS_PROFILE_ZONE_N(name)
-    #define HS_PROFILE_ZONE_C(name, color)
-    #define HS_PROFILE_FUNCTION()
-
-    #define HS_PROFILE_GPU_CONTEXT(...)
-    #define HS_PROFILE_GPU_ZONE(...)
-    #define HS_PROFILE_GPU_COLLECT(...)
-
-    #define HS_PROFILE_ALLOC(ptr, size)
-    #define HS_PROFILE_FREE(ptr)
-
-    #define HS_PROFILE_PLOT(name, value)
-    #define HS_PROFILE_MESSAGE(text)
-#endif
-```
-
-### 2.2 사용 예시
-
-```cpp
-// Application 메인 루프
-void PrototypeApplication::Tick()
+struct HS_API MeshRendererComponent
 {
-    HS_PROFILE_FRAME_MARK;  // 프레임 경계 표시
+    Mesh* mesh = nullptr;
+    std::vector<Material*> materials;  // submesh별 머티리얼
 
+    bool castShadow = true;
+    bool receiveShadow = true;
+    bool isVisible = true;
+
+    // Bounds (피킹, 컬링용)
+    AABB localBounds;
+    AABB worldBounds;  // TransformComponent와 연동하여 계산
+
+    // 렌더링 레이어/마스크
+    uint32 renderLayerMask = 0xFFFFFFFF;
+
+    MeshRendererComponent() = default;
+    MeshRendererComponent(Mesh* m, Material* mat = nullptr)
+        : mesh(m)
     {
-        HS_PROFILE_ZONE_N("Update");
-        Update();
+        if (mat) materials.push_back(mat);
     }
 
-    {
-        HS_PROFILE_ZONE_N("Render");
-        Render();
-    }
-}
-
-// 렌더링 함수 내부
-void Renderer::DrawScene(RHICommandBuffer* cmd)
-{
-    HS_PROFILE_FUNCTION();
-
-    // GPU 프로파일링 (사용자 구현 필요)
-    // HS_PROFILE_GPU_ZONE(_tracyVkCtx, cmd->handle, "DrawScene");
-
-    for (auto& object : objects)
-    {
-        HS_PROFILE_ZONE_N("DrawObject");
-        DrawObject(object);
-    }
-}
-```
-
----
-
-## 3단계: ProfilerPanel 고도화
-
-### 3.1 새로운 구조
-
-**파일**: `Source/Editor/Panel/ProfilerPanel.h`
-
-```cpp
-#pragma once
-#include "Precompile.h"
-#include "Editor/Panel/Panel.h"
-
-HS_NS_EDITOR_BEGIN
-
-class HS_EDITOR_API ProfilerPanel : public Panel
-{
-public:
-    ProfilerPanel(Window* window);
-    ~ProfilerPanel() override;
-
-    bool Setup() override;
-    void Cleanup() override;
-    void Draw() override;
-
-private:
-    // UI 섹션 그리기
-    void DrawFrameTimeSection();
-    void DrawCPUSection();
-    void DrawGPUSection();
-    void DrawMemorySection();
-    void DrawSettingsSection();
-
-    // 데이터
-    struct FrameData
-    {
-        float frameTime = 0.0f;
-        float cpuTime = 0.0f;
-        float gpuTime = 0.0f;
-        float fps = 0.0f;
-    };
-
-    static constexpr int HISTORY_SIZE = 256;
-    std::array<FrameData, HISTORY_SIZE> _frameHistory;
-    int _frameIndex = 0;
-
-    // 설정
-    bool _showCPU = true;
-    bool _showGPU = true;
-    bool _showMemory = true;
-    bool _pauseProfiling = false;
-    float _targetFrameTime = 16.67f;  // 60 FPS
-};
-
-HS_NS_EDITOR_END
-```
-
-### 3.2 UI 구현 개요
-
-```cpp
-void ProfilerPanel::Draw()
-{
-    ImGui::Begin("Profiler", nullptr, ImGuiWindowFlags_MenuBar);
-
-    // 메뉴바
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("View"))
-        {
-            ImGui::Checkbox("CPU Timings", &_showCPU);
-            ImGui::Checkbox("GPU Timings", &_showGPU);
-            ImGui::Checkbox("Memory", &_showMemory);
-            ImGui::EndMenu();
-        }
-
-        // Tracy 연결 상태
-        if (ImGui::MenuItem(_pauseProfiling ? "Resume" : "Pause"))
-        {
-            _pauseProfiling = !_pauseProfiling;
-        }
-
-        ImGui::EndMenuBar();
-    }
-
-    // 프레임 타임 그래프 (항상 표시)
-    DrawFrameTimeSection();
-
-    ImGui::Separator();
-
-    // 탭으로 섹션 구분
-    if (ImGui::BeginTabBar("ProfilerTabs"))
-    {
-        if (_showCPU && ImGui::BeginTabItem("CPU"))
-        {
-            DrawCPUSection();
-            ImGui::EndTabItem();
-        }
-
-        if (_showGPU && ImGui::BeginTabItem("GPU"))
-        {
-            DrawGPUSection();
-            ImGui::EndTabItem();
-        }
-
-        if (_showMemory && ImGui::BeginTabItem("Memory"))
-        {
-            DrawMemorySection();
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Settings"))
-        {
-            DrawSettingsSection();
-            ImGui::EndTabItem();
-        }
-
-        ImGui::EndTabBar();
-    }
-
-    ImGui::End();
-}
-```
-
----
-
-## 4단계: GPU 프로파일링 (사용자 직접 구현)
-
-### 4.1 VulkanDevice 확장 (직접 구현 권장)
-
-```cpp
-// Source/RHI/Vulkan/VulkanDevice.h 에 추가
-class VulkanDevice
-{
-public:
-    // ... 기존 코드 ...
-
-    // [사용자 직접 구현] GPU 프로파일링 지원
-    float timestampPeriod = 0.0f;  // 나노초/틱
-    bool supportsTimestamps = false;
-
-    // Tracy Vulkan Context (optional)
-    #if defined(TRACY_ENABLE)
-    TracyVkCtx tracyVkContext = nullptr;
-    #endif
+    // Submesh 개수와 Material 개수 동기화
+    void SetMesh(Mesh* m);
+    Material* GetMaterial(uint32 submeshIndex = 0) const;
+    void SetMaterial(Material* mat, uint32 submeshIndex = 0);
 };
 ```
 
-### 4.2 Tracy Vulkan Context 초기화 (직접 구현 권장)
+### 2. Components.h 수정
 
 ```cpp
-// VulkanDevice::Create() 또는 별도 함수
-void VulkanDevice::InitializeTracyContext(VkCommandBuffer setupCmdBuffer)
-{
-    #if defined(TRACY_ENABLE)
-    // 1. Timestamp period 가져오기
-    timestampPeriod = properties.limits.timestampPeriod;
-    supportsTimestamps = (timestampPeriod > 0);
+// Source/Engine/Scene/Components/Components.h
 
-    if (!supportsTimestamps)
+#include "Scene/Components/TagComponent.h"
+#include "Scene/Components/TransformComponent.h"
+#include "Scene/Components/MeshRendererComponent.h"  // 새로 추가
+#include "Scene/Components/CameraComponent.h"
+#include "Scene/Components/LightComponent.h"
+
+// MeshComponent, MaterialComponent 제거 또는 deprecated
+```
+
+### 3. 렌더러 통합
+
+```cpp
+// ForwardOpaquePass::Execute() 수정
+
+void ForwardOpaquePass::Execute(RHICommandBuffer* cmd, RHIRenderPass* pass, const RenderParameter& param)
+{
+    Scene* scene = param.scene;  // Scene 직접 전달
+    if (!scene) return;
+
+    // ECS 쿼리로 렌더링 대상 수집
+    auto view = scene->View<TransformComponent, MeshRendererComponent>();
+
+    for (auto entity : view)
     {
-        HS_LOG(warning, "GPU timestamps not supported");
-        return;
+        auto& transform = view.get<TransformComponent>(entity);
+        auto& renderer = view.get<MeshRendererComponent>(entity);
+
+        if (!renderer.mesh || !renderer.isVisible) continue;
+
+        // Frustum culling
+        if (!camera->IsBoundsVisible(renderer.worldBounds)) continue;
+
+        // 각 submesh 렌더링
+        for (uint32 i = 0; i < renderer.mesh->GetSubmeshCount(); ++i)
+        {
+            Material* mat = renderer.GetMaterial(i);
+            if (!mat) continue;
+
+            // 렌더링 로직...
+        }
     }
-
-    // 2. Tracy Vulkan Context 생성
-    tracyVkContext = TracyVkContext(
-        physicalDevice,
-        logicalDevice,
-        graphicsQueue,
-        setupCmdBuffer
-    );
-    #endif
 }
 ```
 
-### 4.3 GPU Zone 삽입 위치 (직접 구현 권장)
+### 4. RenderParameter 수정
 
 ```cpp
-// RenderPass 시작/끝 또는 주요 렌더링 구간에 삽입
-void Renderer::ExecuteRenderGraph(...)
+struct HS_API RenderParameter
 {
-    auto* cmd = GetCommandBuffer();
+    Scene* scene = nullptr;              // ECS Scene 직접 참조
+    std::vector<Camera*> cameras;
+    RenderResourceManager* resourceManager = nullptr;
+    ShaderLibrary* shaderLibrary = nullptr;
 
-    #if defined(TRACY_ENABLE)
-    TracyVkZone(g_device->tracyVkContext, cmd->handle, "RenderGraph");
-    #endif
-
-    // ... 렌더링 코드 ...
-
-    #if defined(TRACY_ENABLE)
-    TracyVkCollect(g_device->tracyVkContext, cmd->handle);
-    #endif
-}
+    // std::vector<Model*> models;       // 제거 또는 legacy용
+};
 ```
 
 ---
 
-## 5단계: 메모리 프로파일링
+## 마이그레이션 단계
 
-### 5.1 할당자 연동 (선택사항)
+### Phase 1: MeshRendererComponent 추가 (하위 호환 유지)
 
-```cpp
-// 커스텀 할당자 사용 시
-void* CustomAllocator::Allocate(size_t size)
-{
-    void* ptr = malloc(size);
-    HS_PROFILE_ALLOC(ptr, size);
-    return ptr;
-}
+| 순서 | 작업 | 파일 |
+|:----:|:-----|:-----|
+| 1-1 | MeshRendererComponent 정의 | `Components/MeshRendererComponent.h` |
+| 1-2 | Components.h에 추가 | `Components/Components.h` |
+| 1-3 | InspectorPanel에 MeshRenderer 편집 UI 추가 | `InspectorPanel.cpp` |
+| 1-4 | 빌드 및 테스트 | - |
 
-void CustomAllocator::Free(void* ptr)
-{
-    HS_PROFILE_FREE(ptr);
-    free(ptr);
-}
-```
+### Phase 2: 렌더러 ECS 통합
+
+| 순서 | 작업 | 파일 |
+|:----:|:-----|:-----|
+| 2-1 | RenderParameter에 Scene* 추가 | `RendererDefinition.h` |
+| 2-2 | ForwardOpaquePass에서 Scene 쿼리 지원 | `ForwardOpaquePass.cpp` |
+| 2-3 | EditorWindow에서 Scene 전달 | `EditorWindow.cpp` |
+| 2-4 | Model 기반 렌더링과 병행 지원 | - |
+| 2-5 | 빌드 및 테스트 | - |
+
+### Phase 3: 기존 구조 제거 (선택)
+
+| 순서 | 작업 | 파일 |
+|:----:|:-----|:-----|
+| 3-1 | MeshComponent, MaterialComponent deprecated | 헤더에 주석 |
+| 3-2 | Model 클래스를 에셋 로딩 전용으로 변경 | `Model.h/.cpp` |
+| 3-3 | ObjectManager가 Model → Entity 변환 지원 | `ObjectManager.cpp` |
 
 ---
 
-## 구현 순서
+## 영향받는 파일
 
-| 순서 | 작업 | 담당 | 파일 |
-|:----:|:-----|:----:|:-----|
-| 1 | Tracy 라이브러리 다운로드 | AI | `Dependency/include/tracy/` |
-| 2 | CMake 설정 (TracyClient 빌드) | AI | `CMakeLists.txt` |
-| 3 | ProfilerMacros.h 작성 | AI | `Source/Core/Profiler/` |
-| 4 | 기존 Profiler.h 정리/제거 | AI | 주석 제거 or 삭제 |
-| 5 | Application에 Frame Mark 삽입 | AI | `PrototypeApplication.cpp` |
-| 6 | 주요 함수에 Zone 삽입 | AI | 엔진 전반 |
-| 7 | ProfilerPanel UI 고도화 | AI | `ProfilerPanel.cpp` |
-| 8 | **VulkanDevice Tracy 초기화** | **사용자** | `VulkanDevice.cpp` |
-| 9 | **GPU Zone 삽입** | **사용자** | 렌더링 코드 |
-| 10 | 빌드 및 테스트 | 공동 | - |
+### 수정 필요
+
+```
+Source/Engine/Scene/Components/
+├── MeshRendererComponent.h    (신규)
+├── Components.h               (수정: include 추가)
+├── MeshComponent.h            (deprecated 마킹)
+└── MaterialComponent.h        (deprecated 마킹)
+
+Source/Engine/Renderer/
+├── RendererDefinition.h       (RenderParameter 수정)
+└── RenderPass/Private/ForwardOpaquePass.cpp  (ECS 쿼리)
+
+Source/Editor/
+├── Panel/InspectorPanel.cpp   (MeshRenderer UI)
+├── Panel/HierarchyPanel.cpp   (아이콘 변경)
+└── Core/EditorWindow.cpp      (Scene 전달)
+```
+
+### 하위 호환
+
+- Model 클래스는 유지 (에셋 로딩용)
+- 기존 `param.models` 방식도 당분간 지원
+
+---
+
+## 트레이드오프 분석
+
+### 장점
+
+1. **논리적 일관성**: Mesh 없이 Material 의미 없음
+2. **Submesh-Material 매핑**: `materials[submeshIdx]` 자연스러움
+3. **렌더러 단순화**: 한 컴포넌트만 쿼리
+4. **Unity/Unreal 패턴**: 검증된 설계
+
+### 단점
+
+1. **마이그레이션 비용**: 기존 코드 수정 필요
+2. **Material 공유 복잡**: 여러 Entity가 같은 Material 인스턴스 사용 시 관리 필요
+
+### 결론
+
+**통합형 권장**. Mesh와 Material은 렌더링에서 분리 불가능한 쌍이며,
+현재 Model 클래스도 이미 이 방식을 사용 중.
+ECS도 이에 맞춰 정리하는 것이 일관성 있음.
+
+---
+
+## 구현 우선순위
+
+1. **[필수] MeshRendererComponent 추가** - 새 컴포넌트로 병행 사용
+2. **[권장] 렌더러 ECS 통합** - Scene 직접 쿼리
+3. **[선택] 기존 구조 제거** - 안정화 후 진행
 
 ---
 
 ## 예상 결과
 
-### Tracy Server에서 확인 가능
-1. **프레임 타임라인**: CPU/GPU 병렬 실행 시각화
-2. **Zone 히트맵**: 핫스팟 식별
-3. **메모리 사용량**: 할당 패턴 분석
-4. **콜스택**: 성능 병목 추적
-5. **Lock 경합**: 멀티스레드 분석
+리팩토링 후:
 
-### ProfilerPanel에서 확인 가능
-1. FPS / Frame Time 그래프
-2. CPU 주요 구간 소요 시간
-3. GPU 렌더패스별 소요 시간 (사용자 구현 후)
-4. 메모리 통계
+```cpp
+// Entity 생성
+Entity cube = scene->CreateEntity("Cube");
+auto& renderer = cube.AddComponent<MeshRendererComponent>();
+renderer.mesh = meshAsset;
+renderer.materials.push_back(materialAsset);
 
----
+// 렌더링 (ForwardOpaquePass)
+auto view = scene->View<TransformComponent, MeshRendererComponent>();
+for (auto entity : view) {
+    // Transform + MeshRenderer 바로 사용
+}
+```
 
-## 참고 자료
-
-- [Tracy GitHub](https://github.com/wolfpld/tracy)
-- [Tracy Manual (PDF)](https://github.com/wolfpld/tracy/releases/download/v0.11.1/tracy.pdf)
-- [Tracy Vulkan Example](https://github.com/wolfpld/tracy/blob/master/examples/OpenGLVulkan/)
-- [Godot Tracy Integration](https://github.com/godotengine/godot/blob/master/core/profiler)
-
----
-
-## 대안 검토
-
-| 도구 | 장점 | 단점 |
-|:-----|:-----|:-----|
-| **Tracy** ✅ | 게임 특화, GPU 지원, 경량 | 별도 GUI 필요 |
-| RenderDoc | GPU 디버깅 특화 | CPU 프로파일링 없음 |
-| Intel VTune | 심층 분석 | 무겁고 복잡 |
-| Optick | Tracy 유사 | 업데이트 느림 |
-| 자체 구현 | 완전한 커스터마이징 | 시간 소모 큼 |
-
-**결론**: Tracy가 이 프로젝트 목적에 가장 적합
+Inspector UI:
+```
+▼ Mesh Renderer
+  Mesh: [Cube.fbx]
+  ▼ Materials
+    [0] DefaultPBR
+    [1] GlassMaterial
+  ☑ Cast Shadow
+  ☑ Receive Shadow
+```

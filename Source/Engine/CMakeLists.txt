@@ -118,8 +118,7 @@ set(ENGINE_SCENE_HEADERS
     Scene/Components/Components.h
     Scene/Components/TransformComponent.h
     Scene/Components/TagComponent.h
-    Scene/Components/MeshComponent.h
-    Scene/Components/MaterialComponent.h
+    Scene/Components/MeshRendererComponent.h
     Scene/Components/CameraComponent.h
     Scene/Components/LightComponent.h
 )

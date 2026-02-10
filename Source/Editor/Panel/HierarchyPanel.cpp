@@ -1,31 +1,371 @@
-﻿#include "Editor/Panel/HierarchyPanel.h"
+//
+//  HierarchyPanel.cpp
+//  Editor
+//
+//  Entity hierarchy tree view with selection support
+//
 
+#include "Editor/Panel/HierarchyPanel.h"
+#include "Editor/Core/EditorContext.h"
+
+#include "Scene/Scene.h"
+#include "Scene/Components/Components.h"
+
+#include <algorithm>
+#include <cstring>
+
+// Temporary icon definitions if FontAwesome not available
+#ifndef ICON_FA_VIDEO
+#define ICON_FA_VIDEO "[C]"
+#endif
+#ifndef ICON_FA_LIGHTBULB
+#define ICON_FA_LIGHTBULB "[L]"
+#endif
+#ifndef ICON_FA_CUBE
+#define ICON_FA_CUBE "[M]"
+#endif
+#ifndef ICON_FA_CIRCLE
+#define ICON_FA_CIRCLE "[o]"
+#endif
 
 HS_NS_EDITOR_BEGIN
 
 HierarchyPanel::HierarchyPanel(Window* window)
     : Panel(window)
 {
-
 }
 
 bool HierarchyPanel::Setup()
 {
-	return false;
+    return true;
 }
 
 void HierarchyPanel::Cleanup()
-{}
+{
+}
 
 void HierarchyPanel::Draw()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
     ImGui::Begin("Hierarchy", nullptr);
-  
-    ImGui::End();
 
-    ImGui::PopStyleVar();
+    Scene* scene = EditorContext::Get().GetActiveScene();
+    if (!scene)
+    {
+        ImGui::TextDisabled("No active scene");
+        ImGui::End();
+        return;
+    }
+
+    // Search bar
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::InputTextWithHint("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer)))
+    {
+        // Search text changed
+    }
+
+    ImGui::Separator();
+
+    // Scene header
+    bool sceneOpen = ImGui::TreeNodeEx(
+        scene->GetName().c_str(),
+        ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth
+    );
+
+    // Right-click on scene header for context menu
+    if (ImGui::BeginPopupContextItem("SceneContextMenu"))
+    {
+        if (ImGui::MenuItem("Create Empty Entity"))
+        {
+            scene->CreateEntity("Entity");
+        }
+        ImGui::EndPopup();
+    }
+
+    if (sceneOpen)
+    {
+        // Traverse root entities
+        auto& sceneGraph = scene->GetSceneGraph();
+        const auto& roots = sceneGraph.GetRoots();
+
+        for (entt::entity handle : roots)
+        {
+            if (scene->GetRegistry().valid(handle))
+            {
+                Entity entity = scene->GetEntity(handle);
+                if (matchesSearch(entity))
+                {
+                    drawEntityNode(entity, 0);
+                }
+            }
+        }
+
+        ImGui::TreePop();
+    }
+
+    // Handle context menu popup
+    drawContextMenu();
+
+    // Click on empty space to deselect
+    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
+    {
+        EditorContext::Get().ClearSelection();
+    }
+
+    ImGui::End();
+}
+
+void HierarchyPanel::drawEntityNode(Entity entity, int depth)
+{
+    if (!entity.IsValid())
+        return;
+
+    Scene* scene = entity.GetScene();
+    auto& registry = scene->GetRegistry();
+    entt::entity handle = entity.GetHandle();
+
+    // Get entity name
+    std::string name = "Entity";
+    if (entity.HasComponent<TagComponent>())
+    {
+        name = entity.GetComponent<TagComponent>().name;
+    }
+
+    // Get icon based on components
+    const char* icon = getEntityIcon(entity);
+    std::string displayName = std::string(icon) + " " + name;
+
+    // Check if this entity is selected
+    bool isSelected = (EditorContext::Get().GetSelectedEntity() == entity);
+
+    // Determine tree node flags
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+                                ImGuiTreeNodeFlags_OpenOnDoubleClick |
+                                ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (isSelected)
+    {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    // Check if entity has children
+    bool hasChildren = false;
+    if (entity.HasComponent<TransformComponent>())
+    {
+        hasChildren = entity.GetComponent<TransformComponent>().HasChildren();
+    }
+
+    if (!hasChildren)
+    {
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    // Push unique ID for this entity
+    ImGui::PushID(static_cast<int>(handle));
+
+    // If renaming this entity
+    if (_renamingEntity == entity)
+    {
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::InputText("##Rename", _renameBuffer, sizeof(_renameBuffer),
+            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+        {
+            if (entity.HasComponent<TagComponent>())
+            {
+                entity.GetComponent<TagComponent>().name = _renameBuffer;
+            }
+            _renamingEntity = Entity();
+        }
+
+        // Cancel on escape or lose focus
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+            (!ImGui::IsItemFocused() && !ImGui::IsItemActive()))
+        {
+            _renamingEntity = Entity();
+        }
+
+        ImGui::PopID();
+        return;
+    }
+
+    // Draw tree node
+    bool nodeOpen = ImGui::TreeNodeEx(displayName.c_str(), flags);
+
+    // Click to select
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    {
+        EditorContext::Get().SetSelectedEntity(entity);
+    }
+
+    // Double-click to rename
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+    {
+        _renamingEntity = entity;
+        if (entity.HasComponent<TagComponent>())
+        {
+            strncpy(_renameBuffer, entity.GetComponent<TagComponent>().name.c_str(), sizeof(_renameBuffer) - 1);
+            _renameBuffer[sizeof(_renameBuffer) - 1] = '\0';
+        }
+    }
+
+    // Right-click context menu
+    if (ImGui::BeginPopupContextItem())
+    {
+        if (ImGui::MenuItem("Create Empty Child"))
+        {
+            scene->CreateChildEntity(entity, "Entity");
+        }
+
+        if (ImGui::MenuItem("Duplicate"))
+        {
+            // TODO: Implement entity duplication
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Rename"))
+        {
+            _renamingEntity = entity;
+            if (entity.HasComponent<TagComponent>())
+            {
+                strncpy(_renameBuffer, entity.GetComponent<TagComponent>().name.c_str(), sizeof(_renameBuffer) - 1);
+                _renameBuffer[sizeof(_renameBuffer) - 1] = '\0';
+            }
+        }
+
+        if (ImGui::MenuItem("Delete"))
+        {
+            // Clear selection if deleting selected entity
+            if (EditorContext::Get().GetSelectedEntity() == entity)
+            {
+                EditorContext::Get().ClearSelection();
+            }
+            scene->DestroyEntity(entity);
+            ImGui::EndPopup();
+            ImGui::PopID();
+            if (nodeOpen)
+                ImGui::TreePop();
+            return;
+        }
+
+        ImGui::EndPopup();
+    }
+
+    // Drag source for reparenting
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+    {
+        ImGui::SetDragDropPayload("ENTITY_HANDLE", &handle, sizeof(entt::entity));
+        ImGui::Text("%s", name.c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    // Drop target for reparenting
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_HANDLE"))
+        {
+            entt::entity droppedHandle = *static_cast<const entt::entity*>(payload->Data);
+            if (droppedHandle != handle)
+            {
+                scene->GetSceneGraph().SetParent(droppedHandle, handle);
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    // Draw children if node is open
+    if (nodeOpen)
+    {
+        if (entity.HasComponent<TransformComponent>())
+        {
+            const auto& transform = entity.GetComponent<TransformComponent>();
+            for (entt::entity childHandle : transform.children)
+            {
+                if (registry.valid(childHandle))
+                {
+                    Entity child = scene->GetEntity(childHandle);
+                    if (matchesSearch(child))
+                    {
+                        drawEntityNode(child, depth + 1);
+                    }
+                }
+            }
+        }
+        ImGui::TreePop();
+    }
+
+    ImGui::PopID();
+}
+
+void HierarchyPanel::drawContextMenu()
+{
+    // This function handles any deferred context menu operations
+}
+
+const char* HierarchyPanel::getEntityIcon(Entity entity) const
+{
+    if (!entity.IsValid())
+        return "";
+
+    // Check components and return appropriate icon
+    if (entity.HasComponent<CameraComponent>())
+        return ICON_FA_VIDEO;
+
+    if (entity.HasComponent<LightComponent>())
+        return ICON_FA_LIGHTBULB;
+
+    if (entity.HasComponent<MeshRendererComponent>())
+        return ICON_FA_CUBE;
+
+    // Default icon
+    return ICON_FA_CIRCLE;
+}
+
+bool HierarchyPanel::matchesSearch(Entity entity) const
+{
+    // If no search text, show everything
+    if (_searchBuffer[0] == '\0')
+        return true;
+
+    if (!entity.IsValid())
+        return false;
+
+    // Check name
+    if (entity.HasComponent<TagComponent>())
+    {
+        const std::string& name = entity.GetComponent<TagComponent>().name;
+        // Case-insensitive search
+        std::string lowerName = name;
+        std::string lowerSearch = _searchBuffer;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(), ::tolower);
+
+        if (lowerName.find(lowerSearch) != std::string::npos)
+            return true;
+    }
+
+    // If this entity doesn't match, check if any child matches
+    if (entity.HasComponent<TransformComponent>())
+    {
+        const auto& transform = entity.GetComponent<TransformComponent>();
+        Scene* scene = entity.GetScene();
+
+        for (entt::entity childHandle : transform.children)
+        {
+            if (scene->GetRegistry().valid(childHandle))
+            {
+                Entity child = scene->GetEntity(childHandle);
+                if (matchesSearch(child))
+                    return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void HierarchyPanel::handleDragDrop(Entity entity)
+{
+    // Handled inline in drawEntityNode
 }
 
 HS_NS_EDITOR_END
