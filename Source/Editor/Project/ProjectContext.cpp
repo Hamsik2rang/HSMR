@@ -10,12 +10,12 @@
 #include "Core/HAL/FileSystem.h"
 #include "Core/Log.h"
 
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 #include <fstream>
 
 using json = nlohmann::json;
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 ProjectContext& ProjectContext::Get()
 {
@@ -237,4 +237,4 @@ void ProjectContext::createDefaultDirectories()
     hs::FileSystem::CreateDirectoryRecursive(GetSettingsPath());
 }
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END

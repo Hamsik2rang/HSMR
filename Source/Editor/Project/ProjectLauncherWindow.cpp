@@ -29,12 +29,18 @@
 #include <Windows.h>
 #include <commdlg.h>
 #include <ShlObj.h>
+#include <shellapi.h>
 #endif
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
-    : Window(ownerApp, "HSMR Project Launcher", 900, 600, EWindowFlags::RESIZABLE)
+    : Window(ownerApp, "HSMR Project Launcher", 900, 600,
+#if defined(__APPLE__)
+             EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_METAL)
+#else
+             EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_VULKAN)
+#endif
 {
     onInitialize();
 }
@@ -460,4 +466,4 @@ bool ProjectLauncherWindow::openFileDialog(char* outPath, size_t pathSize)
     return false;
 }
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END

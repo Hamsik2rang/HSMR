@@ -17,6 +17,10 @@
 
 #if defined(__APPLE__)
 #include "Platform/Mac/AutoReleasePool.h"
+#else
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <shellapi.h>
 #endif
 
 HS_NS_EDITOR_BEGIN

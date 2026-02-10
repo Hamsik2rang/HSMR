@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 #include <sys/stat.h>
 
@@ -351,10 +352,222 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
 
 std::wstring FileSystem::Utf8ToUtf16(const std::string& utf8)
 {
+    // macOS에서는 wchar_t가 32비트이므로 UTF-32로 변환
+    if (utf8.empty()) return std::wstring();
+
+    std::wstring result;
+    result.reserve(utf8.size());
+
+    size_t i = 0;
+    while (i < utf8.size())
+    {
+        uint32_t codepoint = 0;
+        unsigned char c = static_cast<unsigned char>(utf8[i]);
+
+        if (c < 0x80)
+        {
+            codepoint = c;
+            i += 1;
+        }
+        else if ((c & 0xE0) == 0xC0)
+        {
+            codepoint = c & 0x1F;
+            if (i + 1 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 1] & 0x3F);
+            i += 2;
+        }
+        else if ((c & 0xF0) == 0xE0)
+        {
+            codepoint = c & 0x0F;
+            if (i + 1 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 1] & 0x3F);
+            if (i + 2 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 2] & 0x3F);
+            i += 3;
+        }
+        else if ((c & 0xF8) == 0xF0)
+        {
+            codepoint = c & 0x07;
+            if (i + 1 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 1] & 0x3F);
+            if (i + 2 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 2] & 0x3F);
+            if (i + 3 < utf8.size()) codepoint = (codepoint << 6) | (utf8[i + 3] & 0x3F);
+            i += 4;
+        }
+        else
+        {
+            i += 1;
+            continue;
+        }
+
+        result.push_back(static_cast<wchar_t>(codepoint));
+    }
+
+    return result;
 }
 
 std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
 {
+    if (utf16.empty()) return std::string();
+
+    std::string result;
+    result.reserve(utf16.size() * 4);
+
+    for (wchar_t wc : utf16)
+    {
+        uint32_t codepoint = static_cast<uint32_t>(wc);
+
+        if (codepoint < 0x80)
+        {
+            result.push_back(static_cast<char>(codepoint));
+        }
+        else if (codepoint < 0x800)
+        {
+            result.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
+            result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+        }
+        else if (codepoint < 0x10000)
+        {
+            result.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
+            result.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+        }
+        else
+        {
+            result.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+            result.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+        }
+    }
+
+    return result;
+}
+
+// 파일명 얻기 함수
+std::string FileSystem::GetFileName(const std::string& absolutePath)
+{
+    @autoreleasepool
+    {
+        NSString* path     = [NSString stringWithUTF8String:absolutePath.c_str()];
+        NSString* fileName = [path lastPathComponent];
+        return [fileName UTF8String];
+    }
+}
+
+// 확장자 없는 파일명 얻기 함수
+std::string FileSystem::GetFileNameWithoutExtension(const std::string& absolutePath)
+{
+    @autoreleasepool
+    {
+        NSString* path     = [NSString stringWithUTF8String:absolutePath.c_str()];
+        NSString* fileName = [[path lastPathComponent] stringByDeletingPathExtension];
+        return [fileName UTF8String];
+    }
+}
+
+// 디렉토리 확인 함수
+bool FileSystem::IsDirectory(const std::string& path)
+{
+    @autoreleasepool
+    {
+        NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
+        BOOL isDir       = NO;
+        BOOL exists      = [[NSFileManager defaultManager] fileExistsAtPath:nsPath isDirectory:&isDir];
+        return exists && isDir;
+    }
+}
+
+// 디렉토리 재귀 생성 함수
+bool FileSystem::CreateDirectoryRecursive(const std::string& path)
+{
+    @autoreleasepool
+    {
+        if (path.empty())
+        {
+            return false;
+        }
+
+        NSString* nsPath = [NSString stringWithUTF8String:path.c_str()];
+        NSError* error   = nil;
+
+        BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath:nsPath
+                                                 withIntermediateDirectories:YES
+                                                                  attributes:nil
+                                                                       error:&error];
+        return success && !error;
+    }
+}
+
+// 디렉토리 내 파일 목록 얻기 함수
+std::vector<std::string> FileSystem::GetFilesInDirectory(const std::string& directory, bool recursive)
+{
+    std::vector<std::string> files;
+
+    @autoreleasepool
+    {
+        NSString* nsPath        = [NSString stringWithUTF8String:directory.c_str()];
+        NSFileManager* fileMgr  = [NSFileManager defaultManager];
+
+        if (recursive)
+        {
+            NSDirectoryEnumerator* enumerator = [fileMgr enumeratorAtPath:nsPath];
+            NSString* fileName;
+            while ((fileName = [enumerator nextObject]))
+            {
+                NSString* fullPath = [nsPath stringByAppendingPathComponent:fileName];
+                BOOL isDir         = NO;
+                if ([fileMgr fileExistsAtPath:fullPath isDirectory:&isDir] && !isDir)
+                {
+                    files.push_back([fullPath UTF8String]);
+                }
+            }
+        }
+        else
+        {
+            NSError* error    = nil;
+            NSArray* contents = [fileMgr contentsOfDirectoryAtPath:nsPath error:&error];
+            if (!error)
+            {
+                for (NSString* fileName in contents)
+                {
+                    NSString* fullPath = [nsPath stringByAppendingPathComponent:fileName];
+                    BOOL isDir         = NO;
+                    if ([fileMgr fileExistsAtPath:fullPath isDirectory:&isDir] && !isDir)
+                    {
+                        files.push_back([fullPath UTF8String]);
+                    }
+                }
+            }
+        }
+    }
+
+    return files;
+}
+
+// 하위 디렉토리 목록 얻기 함수
+std::vector<std::string> FileSystem::GetSubDirectories(const std::string& directory)
+{
+    std::vector<std::string> directories;
+
+    @autoreleasepool
+    {
+        NSString* nsPath       = [NSString stringWithUTF8String:directory.c_str()];
+        NSFileManager* fileMgr = [NSFileManager defaultManager];
+        NSError* error         = nil;
+
+        NSArray* contents = [fileMgr contentsOfDirectoryAtPath:nsPath error:&error];
+        if (!error)
+        {
+            for (NSString* fileName in contents)
+            {
+                NSString* fullPath = [nsPath stringByAppendingPathComponent:fileName];
+                BOOL isDir         = NO;
+                if ([fileMgr fileExistsAtPath:fullPath isDirectory:&isDir] && isDir)
+                {
+                    directories.push_back([fullPath UTF8String]);
+                }
+            }
+        }
+    }
+
+    return directories;
 }
 
 HS_NS_END

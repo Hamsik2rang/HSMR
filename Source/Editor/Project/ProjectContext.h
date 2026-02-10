@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 struct ProjectSettings
 {
@@ -65,6 +65,6 @@ private:
     ProjectSettings _settings;
 };
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END
 
 #endif // __HS_PROJECT_CONTEXT_H__

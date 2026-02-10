@@ -28,10 +28,34 @@ bool SystemContext::initializePlatform()
         }
         s_sdlInitialized = true;
     }
-    
+
     executableDirectory = std::string(SDL_GetBasePath());
-    executablePath      = executableDirectory + "HSMR.exe";
+    executablePath      = executableDirectory + "HSMR";
     assetDirectory      = executableDirectory + "Assets" + HS_DIR_SEPERATOR;
+
+    // Initialize AppData directory (~/Library/Application Support/HSMR/)
+    @autoreleasepool
+    {
+        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+        if ([paths count] > 0)
+        {
+            NSString* appSupportDir = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"HSMR"];
+            appDataDirectory = std::string([appSupportDir UTF8String]) + HS_DIR_SEPERATOR;
+
+            // Create directory if not exists
+            FileSystem::CreateDirectoryRecursive(appDataDirectory);
+        }
+
+        // Initialize Documents directory
+        paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        if ([paths count] > 0)
+        {
+            NSString* documentsDir = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"HSMR Projects"];
+            userDocumentsDir = std::string([documentsDir UTF8String]) + HS_DIR_SEPERATOR;
+        }
+    }
+
+    return true;
 }
 
 void SystemContext::finalizePlatform()
@@ -112,6 +136,25 @@ bool SystemContext::initializePlatform()
         executableDirectory = FileSystem::GetDirectory(executablePath);
 
         assetDirectory = executableDirectory + "Assets" + HS_DIR_SEPERATOR;
+
+        // Initialize AppData directory (~/Library/Application Support/HSMR/)
+        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+        if ([paths count] > 0)
+        {
+            NSString* appSupportDir = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"HSMR"];
+            appDataDirectory = std::string([appSupportDir UTF8String]) + HS_DIR_SEPERATOR;
+
+            // Create directory if not exists
+            FileSystem::CreateDirectoryRecursive(appDataDirectory);
+        }
+
+        // Initialize Documents directory
+        paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        if ([paths count] > 0)
+        {
+            NSString* documentsDir = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"HSMR Projects"];
+            userDocumentsDir = std::string([documentsDir UTF8String]) + HS_DIR_SEPERATOR;
+        }
     }
 
     return true;

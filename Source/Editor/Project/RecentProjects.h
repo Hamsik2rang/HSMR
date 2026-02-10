@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 struct RecentProjectEntry
 {
@@ -49,6 +49,6 @@ private:
     std::vector<RecentProjectEntry> _projects;
 };
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END
 
 #endif // __HS_RECENT_PROJECTS_H__

@@ -11,14 +11,14 @@
 #include "Core/HAL/FileSystem.h"
 #include "Core/Log.h"
 
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 #include <fstream>
 #include <chrono>
 #include <algorithm>
 
 using json = nlohmann::json;
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 RecentProjects& RecentProjects::Get()
 {
@@ -186,4 +186,4 @@ std::string RecentProjects::getConfigPath() const
     return sysContext->executableDirectory + "RecentProjects.json";
 }
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END

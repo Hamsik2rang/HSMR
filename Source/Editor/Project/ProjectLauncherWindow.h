@@ -15,7 +15,7 @@
 /*#include "RHI/Swapchain.h"*/ namespace hs { class Swapchain; }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 
-HS_EDITOR_NS_BEGIN
+HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API ProjectLauncherWindow : public Window
 {
@@ -63,6 +63,6 @@ private:
     GUIContext* _guiContext = nullptr;
 };
 
-HS_EDITOR_NS_END
+HS_NS_EDITOR_END
 
 #endif // __HS_PROJECT_LAUNCHER_WINDOW_H__

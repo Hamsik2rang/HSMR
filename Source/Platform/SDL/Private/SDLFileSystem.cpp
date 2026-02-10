@@ -449,4 +449,190 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
     return baseDir + relativePath;
 }
 
+// 파일명 얻기 함수
+std::string FileSystem::GetFileName(const std::string& absolutePath)
+{
+    if (absolutePath.empty())
+    {
+        return "";
+    }
+
+    size_t lastSeparator = absolutePath.find_last_of("/\\");
+    if (lastSeparator == std::string::npos)
+    {
+        return absolutePath;
+    }
+
+    return absolutePath.substr(lastSeparator + 1);
+}
+
+// 확장자 없는 파일명 얻기 함수
+std::string FileSystem::GetFileNameWithoutExtension(const std::string& absolutePath)
+{
+    std::string fileName = GetFileName(absolutePath);
+    if (fileName.empty())
+    {
+        return "";
+    }
+
+    size_t lastDot = fileName.find_last_of('.');
+    if (lastDot == std::string::npos)
+    {
+        return fileName;
+    }
+
+    return fileName.substr(0, lastDot);
+}
+
+// 디렉토리 확인 함수
+bool FileSystem::IsDirectory(const std::string& path)
+{
+    SDL_PathInfo info;
+    if (!SDL_GetPathInfo(path.c_str(), &info))
+    {
+        return false;
+    }
+    return info.type == SDL_PATHTYPE_DIRECTORY;
+}
+
+// 디렉토리 재귀 생성 함수
+bool FileSystem::CreateDirectoryRecursive(const std::string& path)
+{
+    if (path.empty())
+    {
+        return false;
+    }
+
+    // Normalize path
+    std::string normalizedPath = path;
+    for (char& c : normalizedPath)
+    {
+        if (c == '\\')
+        {
+            c = '/';
+        }
+    }
+
+    // Remove trailing separator
+    while (!normalizedPath.empty() && normalizedPath.back() == '/')
+    {
+        normalizedPath.pop_back();
+    }
+
+    // Check if already exists
+    if (IsDirectory(normalizedPath))
+    {
+        return true;
+    }
+
+    // Create parent directory first
+    size_t lastSeparator = normalizedPath.find_last_of('/');
+    if (lastSeparator != std::string::npos && lastSeparator > 2) // Skip drive letter
+    {
+        std::string parentPath = normalizedPath.substr(0, lastSeparator);
+        if (!CreateDirectoryRecursive(parentPath))
+        {
+            return false;
+        }
+    }
+
+    // Create this directory using SDL
+    return SDL_CreateDirectory(normalizedPath.c_str());
+}
+
+// 디렉토리 내 파일 목록 얻기 함수
+std::vector<std::string> FileSystem::GetFilesInDirectory(const std::string& directory, bool recursive)
+{
+    std::vector<std::string> files;
+
+    // SDL3에서는 SDL_EnumerateDirectory 사용
+    struct EnumData
+    {
+        std::vector<std::string>* files;
+        std::string directory;
+        bool recursive;
+    };
+
+    EnumData data;
+    data.files     = &files;
+    data.directory = directory;
+    data.recursive = recursive;
+
+    auto callback = [](void* userdata, const char* dirname, const char* fname) -> SDL_EnumerationResult
+    {
+        EnumData* data = static_cast<EnumData*>(userdata);
+
+        std::string fullPath = std::string(dirname);
+        if (!fullPath.empty() && fullPath.back() != '/' && fullPath.back() != '\\')
+        {
+            fullPath += '/';
+        }
+        fullPath += fname;
+
+        SDL_PathInfo info;
+        if (SDL_GetPathInfo(fullPath.c_str(), &info))
+        {
+            if (info.type == SDL_PATHTYPE_DIRECTORY)
+            {
+                if (data->recursive)
+                {
+                    auto subFiles = FileSystem::GetFilesInDirectory(fullPath, true);
+                    data->files->insert(data->files->end(), subFiles.begin(), subFiles.end());
+                }
+            }
+            else if (info.type == SDL_PATHTYPE_FILE)
+            {
+                data->files->push_back(fullPath);
+            }
+        }
+        return SDL_ENUM_CONTINUE;
+    };
+
+    SDL_EnumerateDirectory(directory.c_str(), callback, &data);
+
+    return files;
+}
+
+// 하위 디렉토리 목록 얻기 함수
+std::vector<std::string> FileSystem::GetSubDirectories(const std::string& directory)
+{
+    std::vector<std::string> directories;
+
+    struct EnumData
+    {
+        std::vector<std::string>* directories;
+        std::string parentDir;
+    };
+
+    EnumData data;
+    data.directories = &directories;
+    data.parentDir   = directory;
+
+    auto callback = [](void* userdata, const char* dirname, const char* fname) -> SDL_EnumerationResult
+    {
+        EnumData* data = static_cast<EnumData*>(userdata);
+
+        std::string fullPath = std::string(dirname);
+        if (!fullPath.empty() && fullPath.back() != '/' && fullPath.back() != '\\')
+        {
+            fullPath += '/';
+        }
+        fullPath += fname;
+
+        SDL_PathInfo info;
+        if (SDL_GetPathInfo(fullPath.c_str(), &info))
+        {
+            if (info.type == SDL_PATHTYPE_DIRECTORY)
+            {
+                data->directories->push_back(fullPath);
+            }
+        }
+        return SDL_ENUM_CONTINUE;
+    };
+
+    SDL_EnumerateDirectory(directory.c_str(), callback, &data);
+
+    return directories;
+}
+
 HS_NS_END
