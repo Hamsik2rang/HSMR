@@ -7,9 +7,14 @@
 
 #include "Editor/Panel/InspectorPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Asset/AssetDatabase.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Components/Components.h"
+
+#include "Resource/Model.h"
+#include "Resource/Mesh.h"
+#include "Resource/Material.h"
 
 #include "ImGui/imgui_internal.h"
 
@@ -18,6 +23,9 @@
 // Temporary icon definitions if FontAwesome not available
 #ifndef ICON_FA_TIMES
 #define ICON_FA_TIMES "X"
+#endif
+#ifndef ICON_FA_CUBE
+#define ICON_FA_CUBE "\xef\x86\xb2"
 #endif
 
 HS_NS_EDITOR_BEGIN
@@ -169,9 +177,49 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
 
         ImGui::Indent();
 
-        // Mesh reference display
-        const char* meshName = meshRenderer.mesh ? "Assigned" : "None";
-        ImGui::Text("Mesh: %s", meshName);
+        // Mesh reference display with drag & drop
+        {
+            const char* meshName = meshRenderer.mesh ? "Assigned" : "None (Drop Model Here)";
+
+            ImGui::Text("Mesh:");
+            ImGui::SameLine();
+
+            // Make a drop target button
+            ImVec4 buttonColor = meshRenderer.mesh
+                ? ImVec4(0.2f, 0.4f, 0.2f, 1.0f)
+                : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
+
+            ImGui::Button(meshName, ImVec2(ImGui::GetContentRegionAvail().x, 0));
+
+            ImGui::PopStyleColor();
+
+            // Drag & Drop target for Model assets
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
+                {
+                    std::string assetPath(static_cast<const char*>(payload->Data));
+
+                    // Load the model and assign mesh
+                    hs::Model* model = AssetDatabase::Get().LoadModel(assetPath);
+                    if (model)
+                    {
+                        meshRenderer.mesh = model->GetMesh();
+
+                        // Also assign material if available and no materials set
+                        if (meshRenderer.materials.empty() && model->GetMaterial())
+                        {
+                            meshRenderer.materials.push_back(model->GetMaterial());
+                        }
+
+                        // Update bounds from mesh if available
+                        // TODO: Get bounds from mesh when Mesh::GetBounds() is implemented
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+        }
 
         // Materials section
         if (ImGui::TreeNodeEx("Materials", ImGuiTreeNodeFlags_DefaultOpen))

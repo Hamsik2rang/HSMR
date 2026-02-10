@@ -436,4 +436,213 @@ std::string FileSystem::GetAbsolutePath(const std::string& relativePath)
     return baseDir + relativePath;
 }
 
+// 파일명 얻기 함수
+std::string FileSystem::GetFileName(const std::string& absolutePath)
+{
+    if (absolutePath.empty())
+    {
+        return "";
+    }
+
+    size_t lastSeparator = absolutePath.find_last_of("\\/");
+    if (lastSeparator == std::string::npos)
+    {
+        return absolutePath;
+    }
+
+    return absolutePath.substr(lastSeparator + 1);
+}
+
+// 확장자 없는 파일명 얻기 함수
+std::string FileSystem::GetFileNameWithoutExtension(const std::string& absolutePath)
+{
+    std::string fileName = GetFileName(absolutePath);
+    if (fileName.empty())
+    {
+        return "";
+    }
+
+    size_t lastDot = fileName.find_last_of('.');
+    if (lastDot == std::string::npos)
+    {
+        return fileName;
+    }
+
+    return fileName.substr(0, lastDot);
+}
+
+// 디렉토리 확인 함수
+bool FileSystem::IsDirectory(const std::string& path)
+{
+    std::wstring pathW = Utf8ToUtf16(path);
+    if (pathW.empty())
+    {
+        return false;
+    }
+
+    DWORD attributes = GetFileAttributesW(pathW.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES)
+    {
+        return false;
+    }
+
+    return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+// 디렉토리 재귀 생성 함수
+bool FileSystem::CreateDirectoryRecursive(const std::string& path)
+{
+    if (path.empty())
+    {
+        return false;
+    }
+
+    // Normalize path
+    std::string normalizedPath = path;
+    for (char& c : normalizedPath)
+    {
+        if (c == '/')
+        {
+            c = '\\';
+        }
+    }
+
+    // Remove trailing separator
+    while (!normalizedPath.empty() && normalizedPath.back() == '\\')
+    {
+        normalizedPath.pop_back();
+    }
+
+    // Check if already exists
+    if (IsDirectory(normalizedPath))
+    {
+        return true;
+    }
+
+    // Create parent directory first
+    size_t lastSeparator = normalizedPath.find_last_of('\\');
+    if (lastSeparator != std::string::npos && lastSeparator > 2) // Skip drive letter
+    {
+        std::string parentPath = normalizedPath.substr(0, lastSeparator);
+        if (!CreateDirectoryRecursive(parentPath))
+        {
+            return false;
+        }
+    }
+
+    // Create this directory
+    std::wstring pathW = Utf8ToUtf16(normalizedPath);
+    BOOL success = CreateDirectoryW(pathW.c_str(), nullptr);
+    if (!success)
+    {
+        DWORD error = GetLastError();
+        if (error != ERROR_ALREADY_EXISTS)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// 디렉토리 내 파일 목록 얻기 함수
+std::vector<std::string> FileSystem::GetFilesInDirectory(const std::string& directory, bool recursive)
+{
+    std::vector<std::string> files;
+
+    std::string searchPath = directory;
+    if (!searchPath.empty() && searchPath.back() != '\\' && searchPath.back() != '/')
+    {
+        searchPath += '\\';
+    }
+    searchPath += '*';
+
+    std::wstring searchPathW = Utf8ToUtf16(searchPath);
+
+    WIN32_FIND_DATAW findData;
+    HANDLE hFind = FindFirstFileW(searchPathW.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        return files;
+    }
+
+    do
+    {
+        std::wstring fileNameW = findData.cFileName;
+        if (fileNameW == L"." || fileNameW == L"..")
+        {
+            continue;
+        }
+
+        std::string fileName = Utf16ToUtf8(fileNameW);
+        std::string fullPath = directory;
+        if (!fullPath.empty() && fullPath.back() != '\\' && fullPath.back() != '/')
+        {
+            fullPath += '\\';
+        }
+        fullPath += fileName;
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if (recursive)
+            {
+                auto subFiles = GetFilesInDirectory(fullPath, true);
+                files.insert(files.end(), subFiles.begin(), subFiles.end());
+            }
+        }
+        else
+        {
+            files.push_back(fullPath);
+        }
+    } while (FindNextFileW(hFind, &findData));
+
+    FindClose(hFind);
+    return files;
+}
+
+// 하위 디렉토리 목록 얻기 함수
+std::vector<std::string> FileSystem::GetSubDirectories(const std::string& directory)
+{
+    std::vector<std::string> directories;
+
+    std::string searchPath = directory;
+    if (!searchPath.empty() && searchPath.back() != '\\' && searchPath.back() != '/')
+    {
+        searchPath += '\\';
+    }
+    searchPath += '*';
+
+    std::wstring searchPathW = Utf8ToUtf16(searchPath);
+
+    WIN32_FIND_DATAW findData;
+    HANDLE hFind = FindFirstFileW(searchPathW.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        return directories;
+    }
+
+    do
+    {
+        std::wstring fileNameW = findData.cFileName;
+        if (fileNameW == L"." || fileNameW == L"..")
+        {
+            continue;
+        }
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            std::string fullPath = directory;
+            if (!fullPath.empty() && fullPath.back() != '\\' && fullPath.back() != '/')
+            {
+                fullPath += '\\';
+            }
+            fullPath += Utf16ToUtf8(fileNameW);
+            directories.push_back(fullPath);
+        }
+    } while (FindNextFileW(hFind, &findData));
+
+    FindClose(hFind);
+    return directories;
+}
+
 HS_NS_END

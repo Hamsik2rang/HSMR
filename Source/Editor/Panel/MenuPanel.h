@@ -12,6 +12,8 @@
 
 #include "Editor/Panel/Panel.h"
 
+#include <string>
+
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API MenuPanel : public Panel
@@ -19,13 +21,23 @@ class HS_EDITOR_API MenuPanel : public Panel
 public:
     MenuPanel(Window* window) : Panel(window) {}
     ~MenuPanel() override = default;
-    
+
     bool Setup() override;
     void Cleanup() override;
-    
+
     void Draw() override;
+
 private:
-    //...
+    void drawFileMenu();
+    void drawEditMenu();
+
+    void newScene();
+    void openScene();
+    void saveScene();
+    void saveSceneAs();
+
+    std::string _currentScenePath;
+    bool _sceneDirty = false;
 };
 
 

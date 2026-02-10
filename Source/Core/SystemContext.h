@@ -20,6 +20,10 @@ public:
     std::string executableDirectory = "";
     std::string assetDirectory      = "";
 
+    // Project system paths
+    std::string appDataDirectory    = "";   // %APPDATA%/HSMR/ (Windows) or ~/Library/HSMR/ (Mac)
+    std::string userDocumentsDir    = "";   // Default project creation location
+
     static SystemContext* Get();
 
     static bool Init();

@@ -5,6 +5,8 @@
 
 #include "Core/Log.h"
 
+#include <ShlObj.h>
+
 HS_NS_BEGIN
 
 #ifdef __SDL__
@@ -59,6 +61,25 @@ bool SystemContext::initializePlatform()
     executableDirectory = FileSystem::GetDirectory(executablePath);
     assetDirectory      = executableDirectory + "Assets" + HS_DIR_SEPERATOR;
 #endif
+
+    // Initialize AppData directory (%APPDATA%/HSMR/)
+    PWSTR appDataPath = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &appDataPath)))
+    {
+        appDataDirectory = FileSystem::Utf16ToUtf8(std::wstring(appDataPath)) + HS_DIR_SEPERATOR + "HSMR" + HS_DIR_SEPERATOR;
+        CoTaskMemFree(appDataPath);
+
+        // Create directory if not exists
+        FileSystem::CreateDirectoryRecursive(appDataDirectory);
+    }
+
+    // Initialize Documents directory
+    PWSTR documentsPath = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsPath)))
+    {
+        userDocumentsDir = FileSystem::Utf16ToUtf8(std::wstring(documentsPath)) + HS_DIR_SEPERATOR + "HSMR Projects" + HS_DIR_SEPERATOR;
+        CoTaskMemFree(documentsPath);
+    }
 
     return true;
 }

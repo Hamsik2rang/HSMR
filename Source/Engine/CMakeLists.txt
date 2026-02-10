@@ -115,6 +115,7 @@ set(ENGINE_SCENE_HEADERS
     Scene/Scene.h
     Scene/SceneGraph.h
     Scene/Entity.h
+    Scene/SceneSerializer.h
     Scene/Components/Components.h
     Scene/Components/TransformComponent.h
     Scene/Components/TagComponent.h
@@ -130,6 +131,7 @@ set(ENGINE_SCENE_SOURCES
     Scene/Private/Scene.cpp
     Scene/Private/SceneGraph.cpp
     Scene/Private/Entity.cpp
+    Scene/Private/SceneSerializer.cpp
 )
 
 source_group("Scene\\Private" FILES ${ENGINE_SCENE_SOURCES})

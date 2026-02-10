@@ -99,6 +99,39 @@ set(EDITOR_RESOURCE_SOURCES
 list(APPEND TOTAL_FILES ${EDITOR_RESOURCE_SOURCES})
 source_group("Resource\\Private" FILES ${EDITOR_RESOURCE_SOURCES})
 
+set(EDITOR_ASSET_HEADERS
+    Asset/AssetTypes.h
+    Asset/AssetDatabase.h
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_ASSET_HEADERS})
+source_group("Asset\\Public" FILES ${EDITOR_ASSET_HEADERS})
+
+set(EDITOR_ASSET_SOURCES
+    Asset/AssetDatabase.cpp
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_ASSET_SOURCES})
+source_group("Asset\\Private" FILES ${EDITOR_ASSET_SOURCES})
+
+set(EDITOR_PROJECT_HEADERS
+    Project/ProjectContext.h
+    Project/RecentProjects.h
+    Project/ProjectLauncherWindow.h
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_PROJECT_HEADERS})
+source_group("Project\\Public" FILES ${EDITOR_PROJECT_HEADERS})
+
+set(EDITOR_PROJECT_SOURCES
+    Project/ProjectContext.cpp
+    Project/RecentProjects.cpp
+    Project/ProjectLauncherWindow.cpp
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_PROJECT_SOURCES})
+source_group("Project\\Private" FILES ${EDITOR_PROJECT_SOURCES})
+
 set(PANEL_HEADERS
     Panel/Panel.h
     Panel/DockspacePanel.h

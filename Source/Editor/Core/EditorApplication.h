@@ -13,6 +13,7 @@
 #include "Engine/Window.h"
 
 namespace hs { namespace editor { class GUIContext; } }
+namespace hs { namespace editor { class ProjectLauncherWindow; } }
 namespace hs { struct EngineContext; }
 
 HS_NS_EDITOR_BEGIN
@@ -28,8 +29,20 @@ public:
 
 	GUIContext* GetGUIContext();
 
+	// Command line project path (for double-clicking .hsproj)
+	void SetProjectPath(const std::string& path) { _commandLineProjectPath = path; }
+
 private:
-	GUIContext* _guiContext;
+	bool runLauncher();           // Phase 1: Project Launcher
+	void runEditor();             // Phase 2: Editor Window
+
+	std::string getProjectFromCommandLine();
+
+	GUIContext* _guiContext = nullptr;
+	ProjectLauncherWindow* _launcherWindow = nullptr;
+
+	std::string _commandLineProjectPath;
+	std::string _selectedProjectPath;
 
 	float _deltaTime = 0.0f;
 };

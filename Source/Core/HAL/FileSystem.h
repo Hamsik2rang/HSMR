@@ -44,10 +44,17 @@ public:
 
     static std::string GetDirectory(const std::string& absolutePath);
     static std::string GetExtension(const std::string& fileNmae);
+    static std::string GetFileName(const std::string& absolutePath);
+    static std::string GetFileNameWithoutExtension(const std::string& absolutePath);
 
     static bool IsAbsolutePath(const std::string& path);
     static std::string GetRelativePath(const std::string& absolutePath);
     static std::string GetAbsolutePath(const std::string& relativePath);
+
+    static bool IsDirectory(const std::string& path);
+    static bool CreateDirectoryRecursive(const std::string& path);
+    static std::vector<std::string> GetFilesInDirectory(const std::string& directory, bool recursive = false);
+    static std::vector<std::string> GetSubDirectories(const std::string& directory);
 
     static std::wstring Utf8ToUtf16(const std::string& utf8);
     static std::string Utf16ToUtf8(const std::wstring& utf16);
