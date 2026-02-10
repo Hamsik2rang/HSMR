@@ -2,6 +2,7 @@
 
 #include "Core/HAL/FileSystem.h"
 #include "Core/HAL/Input.h"
+#include "Core/Profiler/Profiler.h"
 
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
@@ -89,6 +90,7 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate(float deltaTime)
 {
+    HS_PROFILE_FUNCTION();
     processShortcuts();
     updateSceneCamera(deltaTime);
 }
@@ -99,6 +101,8 @@ void EditorWindow::onResize()
 
 void EditorWindow::onRender()
 {
+    HS_PROFILE_ZONE_NC("EditorWindow::onRender", HS::Profile::ColorRender);
+
     if (false == _shouldPresent)
     {
         return;
@@ -120,12 +124,18 @@ void EditorWindow::onRender()
     }
 
     // 1. Render Scene to Scene Panel
-    _renderer->Render(param, curRT);
+    {
+        HS_PROFILE_ZONE_NC("Scene Render", HS::Profile::ColorRender);
+        _renderer->Render(param, curRT);
+    }
 
     static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
 
     // 2. Render GUI
-    onRenderGUI();
+    {
+        HS_PROFILE_ZONE_NC("GUI Render", HS::Profile::ColorUI);
+        onRenderGUI();
+    }
 
     cmdBuffer->End();
 

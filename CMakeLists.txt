@@ -72,6 +72,7 @@ endif()
 # =========================================
 option(HSMR_USE_SDL "Use SDL3 for platform abstraction" ON)
 option(HSMR_ENABLE_IMGUI "Enable ImGui integration" ON)
+option(HSMR_ENABLE_TRACY "Enable Tracy profiler" ON)
 
 # SDL3 Configuration
 if(HSMR_USE_SDL)
@@ -98,6 +99,34 @@ endif()
 if(HSMR_ENABLE_IMGUI)
     add_compile_definitions(HSMR_ENABLE_IMGUI)
     message(STATUS "[ImGui] Enabled")
+endif()
+
+# Tracy Profiler Configuration
+if(HSMR_ENABLE_TRACY)
+    set(HS_TRACY_INCLUDE_DIR "${HS_DEPS_INCLUDE_DIR}/tracy")
+    set(HS_TRACY_CLIENT_SRC "${HS_TRACY_INCLUDE_DIR}/TracyClient.cpp")
+
+    add_library(TracyClient STATIC ${HS_TRACY_CLIENT_SRC})
+    target_include_directories(TracyClient PUBLIC ${HS_TRACY_INCLUDE_DIR})
+    target_compile_definitions(TracyClient PUBLIC
+        TRACY_ENABLE
+        TRACY_ON_DEMAND
+        TRACY_NO_EXIT
+    )
+
+    # Windows-specific settings
+    if(WIN32)
+        target_link_libraries(TracyClient PUBLIC ws2_32 dbghelp)
+    endif()
+
+    # Disable some warnings for Tracy on MSVC
+    if(MSVC)
+        target_compile_options(TracyClient PRIVATE /wd4996 /wd4267)
+    endif()
+
+    set_property(TARGET TracyClient PROPERTY FOLDER "ThirdParty")
+    message(STATUS "[Tracy] Enabled (v0.11.1)")
+    message(STATUS "[Tracy] Include: ${HS_TRACY_INCLUDE_DIR}")
 endif()
 
 # Slang Configuration (shader hot-reload support)

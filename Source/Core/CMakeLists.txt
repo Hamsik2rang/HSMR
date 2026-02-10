@@ -105,6 +105,7 @@ list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
 
 set(CORE_PROFILER_HEADERS
     Profiler/Profiler.h
+    Profiler/ProfilerMacros.h
     Profiler/GPUQuery.h
 )
 
@@ -134,6 +135,11 @@ target_compile_definitions(${TARGET_NAME}
     HS_CORE
     HS_API_EXPORT
 )
+
+# Link Tracy if enabled
+if(HSMR_ENABLE_TRACY)
+    target_link_libraries(${TARGET_NAME} PUBLIC TracyClient)
+endif()
 
 install(TARGETS ${TARGET_NAME}
     ARCHIVE DESTINATION "${INSTALL_FOLDER}/dev/lib"

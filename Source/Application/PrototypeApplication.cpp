@@ -144,6 +144,9 @@ void PrototypeApplication::Run()
 
     while (_window->IsOpened())
     {
+        // Tracy frame mark - call at start of each frame
+        HS_PROFILE_FRAME_MARK;
+
         // Process window events
         _window->ProcessEvent();
 
@@ -162,21 +165,22 @@ void PrototypeApplication::Run()
             continue;
         }
 
-        // Begin profiling frame
-//        if (_profiler)
-//        {
-//            _profiler->BeginFrame();
-//        }
-
         // Update input
-        updateInput();
+        {
+            HS_PROFILE_ZONE_NC("Input", HS::Profile::ColorUI);
+            updateInput();
+        }
 
         // Update camera
-        updateCamera(_deltaTime);
+        {
+            HS_PROFILE_ZONE_NC("Camera", HS::Profile::ColorScene);
+            updateCamera(_deltaTime);
+        }
 
         // Update gizmo
         if (_gizmo && _showGizmo)
         {
+            HS_PROFILE_ZONE_NC("Gizmo", HS::Profile::ColorUI);
             _gizmo->ProcessInput();
 
             if (SceneObject* selected = _scene ? _scene->GetSelectedObject() : nullptr)
@@ -185,44 +189,37 @@ void PrototypeApplication::Run()
             }
         }
 
-        // Update shader watcher
-//        if (_shaderWatcher)
-//        {
-//            _shaderWatcher->Update(_deltaTime);
-//        }
-
         // Call derived class update
-        OnUpdate(_deltaTime);
+        {
+            HS_PROFILE_ZONE_NC("OnUpdate", HS::Profile::ColorScene);
+            OnUpdate(_deltaTime);
+        }
 
         // Render
-        _window->NextFrame();
+        {
+            HS_PROFILE_ZONE_NC("NextFrame", HS::Profile::ColorRender);
+            _window->NextFrame();
+        }
 
-//        if (_profiler)
-//        {
-//            _profiler->BeginGPUTimer("Render");
-//        }
+        {
+            HS_PROFILE_ZONE_NC("Render", HS::Profile::ColorRender);
+            _window->Render();
 
-        _window->Render();
-
-        // Call derived class render
-        OnRender();
-
-//        if (_profiler)
-//        {
-//            _profiler->EndGPUTimer("Render");
-//        }
+            // Call derived class render
+            OnRender();
+        }
 
         // Render GUI
-        renderGUI();
+        {
+            HS_PROFILE_ZONE_NC("GUI", HS::Profile::ColorUI);
+            renderGUI();
+        }
 
         // Present
-        _window->Present();
-
-        // End profiling frame
-//        if (_profiler)
-//        {
-//            _profiler->EndFrame();
-//        }
+        {
+            HS_PROFILE_ZONE_NC("Present", HS::Profile::ColorRender);
+            _window->Present();
+        }
     }
 
     Shutdown();

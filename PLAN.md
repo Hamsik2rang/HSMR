@@ -1,482 +1,525 @@
-# ECS + Scene 시스템 구현 계획
+# Tracy Profiler 통합 및 Profiler 패널 고도화 계획
 
-## 결정 사항
+## 현재 상태 분석
 
-### EnTT vs Scratch 비교 결과
+### 기존 프로파일링 시스템
+| 파일 | 상태 | 설명 |
+|:-----|:-----|:-----|
+| `Core/Profiler/Profiler.h` | **전체 주석 처리** | ImPlot 기반 자체 구현 시도 흔적 |
+| `Core/Profiler/GPUQuery.h/.cpp` | 스켈레톤 | RHI 연동 없음, placeholder 상태 |
+| `Editor/Panel/ProfilerPanel.h/.cpp` | 최소 기능 | FPS + Camera 정보만 표시 |
 
-| 기준 | EnTT | Scratch 구현 |
-|:-----|:-----|:-------------|
-| **개발 시간** | 1-2일 (통합) | 1-2주 |
-| **성능** | 최적화됨 (Minecraft 사용) | 직접 최적화 필요 |
-| **C++ 버전** | C++20 필요 ✅ | 제약 없음 |
-| **학습 가치** | 낮음 | 높음 (하지만 핵심 목표 아님) |
-| **SceneGraph 통합** | 별도 구현 필요 | 처음부터 설계 |
-
-### 결론: **EnTT 사용**
-
-**이유:**
-1. ECS 자체는 학습 보호 영역이 아님
-2. 시간을 GPU-Driven/RenderGraph 등 핵심 영역에 투자하는 것이 목적에 부합
-3. 검증된 라이브러리로 안정성 확보
-4. SceneGraph는 어차피 별도 구현 필요
+### 문제점
+1. GPU 프로파일링 미구현 (GPUQuery가 placeholder)
+2. CPU 프로파일링 비활성화 (전체 주석)
+3. ProfilerPanel이 단순 오버레이 수준
+4. 외부 도구 연동 없음
 
 ---
 
-## 아키텍처 개요
+## Tracy 도입 근거
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Scene                              │
-│  ┌─────────────────┐    ┌─────────────────────────────┐ │
-│  │  entt::registry │    │     SceneGraph              │ │
-│  │  (ECS 저장소)    │    │  (계층 구조, Transform 전파) │ │
-│  └────────┬────────┘    └──────────────┬──────────────┘ │
-│           │                            │                │
-│           └────────────┬───────────────┘                │
-│                        ▼                                │
-│              ┌─────────────────┐                        │
-│              │  Scene Query API │                        │
-│              │  (통합 인터페이스) │                        │
-│              └────────┬────────┘                        │
-└───────────────────────┼─────────────────────────────────┘
-                        │
-                        ▼ [직접 구현 - 보호 영역]
-              ┌─────────────────┐
-              │  SceneResource  │
-              │  - Flatten      │
-              │  - GPU 버퍼 관리  │
-              │  - Culling 연동  │
-              └─────────────────┘
-```
+### Tracy란?
+- **실시간 프레임 프로파일러** (게임/실시간 그래픽스 특화)
+- CPU/GPU 동시 프로파일링 지원
+- Vulkan 네이티브 지원 (`VK_EXT_calibrated_timestamps`)
+- 메모리 할당 추적
+- Lock contention 분석
+- 원격 프로파일링 (별도 GUI 앱)
+
+### 상용 엔진과의 비교
+| 엔진 | 프로파일러 |
+|:-----|:----------|
+| Unreal | Unreal Insights (자체) |
+| Unity | Unity Profiler + external tools |
+| Godot | Tracy 내장 |
+| HSMR (목표) | **Tracy 통합** |
+
+### 학습 가치
+- 프로파일러 **사용법**은 학습 가치 있음 ✅
+- 프로파일러 **구현**은 핵심 목표 아님 → Tracy 채택 적절
+- GPU timestamp 쿼리 연동은 RHI 이해에 도움 (보호 영역 경계)
 
 ---
 
-## 구현 범위
+## 아키텍처 설계
 
-### AI 구현 (이 계획의 범위)
-- [x] EnTT 라이브러리 통합
-- [ ] 기본 Component 정의
-- [ ] SceneGraph 노드 구조
-- [ ] Scene 클래스 (통합 관리)
-- [ ] Transform 컴포넌트 및 계층 전파
-
-### 직접 구현 (보호 영역 - 범위 외)
-- SceneResource (GPU Flat Buffer)
-- Flatten 전략 및 Dirty 관리
-- GPU Culling 연동
-
----
-
-## 1단계: EnTT 라이브러리 통합
-
-### 1.1 라이브러리 다운로드
-**위치**: `Dependency/include/entt/`
-
-```bash
-# EnTT는 header-only, 단일 헤더 사용
-# https://github.com/skypjack/entt/releases 에서 최신 버전 다운로드
-# entt.hpp → Dependency/include/entt/entt.hpp
 ```
-
-### 1.2 CMake 설정 확인
-EnTT는 header-only이므로 추가 링크 불필요. 기존 include 경로에 포함됨:
-```cmake
-include_directories(SYSTEM ${HS_DEPS_INCLUDE_DIR})  # 이미 존재
+┌─────────────────────────────────────────────────────────────┐
+│                     Tracy Server (GUI)                       │
+│                   (별도 프로세스 실행)                         │
+└────────────────────────────┬────────────────────────────────┘
+                             │ TCP (localhost:8086)
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        HSMR Engine                           │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
+│  │  HS_ZONE(name)  │  │ HS_GPU_ZONE(cmd)│  │ HS_ALLOC(ptr)│ │
+│  │  CPU 구간 측정   │  │  GPU 구간 측정   │  │ 메모리 추적   │ │
+│  └────────┬────────┘  └────────┬────────┘  └──────┬───────┘ │
+│           │                    │                   │         │
+│           └──────────┬─────────┴───────────────────┘         │
+│                      ▼                                       │
+│           ┌──────────────────────┐                           │
+│           │    TracyClient.cpp   │                           │
+│           │   (Tracy 네트워크)    │                           │
+│           └──────────────────────┘                           │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │              ProfilerPanel (고도화)                     │  │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐  │  │
+│  │  │Frame Time│ │CPU Zones │ │GPU Zones │ │Memory Info│  │  │
+│  │  │  Graph   │ │  Table   │ │  Table   │ │   Stats   │  │  │
+│  │  └──────────┘ └──────────┘ └──────────┘ └───────────┘  │  │
+│  └────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2단계: 디렉터리 구조
+## 구현 범위 분류
 
-```
-Source/Engine/Scene/
-├── CMakeLists.txt          (신규)
-├── Scene.h                  (Scene 클래스)
-├── SceneGraph.h             (계층 구조)
-├── Entity.h                 (Entity wrapper)
-├── Components/
-│   ├── TransformComponent.h
-│   ├── MeshComponent.h
-│   ├── MaterialComponent.h
-│   ├── CameraComponent.h
-│   └── LightComponent.h
-└── Private/
-    ├── Scene.cpp
-    ├── SceneGraph.cpp
-    └── Components/
-        └── TransformComponent.cpp
-```
+### AI 구현 가능 (보일러플레이트)
+| 작업 | 이유 |
+|:-----|:-----|
+| Tracy 라이브러리 다운로드/통합 | 외부 라이브러리 설정 |
+| 매크로 래퍼 정의 | 단순 래핑 |
+| ProfilerPanel UI 고도화 | ImGui 위젯 |
+| CMake 설정 | 빌드 스크립트 |
+
+### 사용자 직접 구현 권장 (보호 영역 경계)
+| 작업 | 이유 |
+|:-----|:-----|
+| GPU Timestamp Query 연동 | Vulkan 동기화/쿼리 이해 필요 |
+| Calibrated Timestamps 활용 | CPU-GPU 시간 동기화 학습 |
+| VulkanCommandHandle 확장 | RHI 아키텍처 이해 |
 
 ---
 
-## 3단계: Entity Wrapper
+## 1단계: Tracy 라이브러리 통합
 
-**파일**: `Source/Engine/Scene/Entity.h`
-
-```cpp
-#pragma once
-#include "Precompile.h"
-#include <entt/entt.hpp>
-
-HS_NS_BEGIN
-
-class Scene;
-
-// EnTT entity를 감싸는 편의 클래스
-class HS_API Entity
-{
-public:
-    Entity() = default;
-    Entity(entt::entity handle, Scene* scene);
-    Entity(const Entity&) = default;
-
-    template<typename T, typename... Args>
-    T& AddComponent(Args&&... args);
-
-    template<typename T>
-    T& GetComponent();
-
-    template<typename T>
-    const T& GetComponent() const;
-
-    template<typename T>
-    bool HasComponent() const;
-
-    template<typename T>
-    void RemoveComponent();
-
-    bool IsValid() const;
-
-    entt::entity GetHandle() const { return _handle; }
-
-    bool operator==(const Entity& other) const;
-    bool operator!=(const Entity& other) const;
-
-private:
-    entt::entity _handle{ entt::null };
-    Scene* _scene = nullptr;
-};
-
-HS_NS_END
+### 1.1 다운로드
+```
+Dependency/
+├── include/
+│   └── tracy/
+│       ├── Tracy.hpp              (메인 헤더)
+│       ├── TracyVulkan.hpp        (Vulkan GPU 프로파일링)
+│       └── ...
+└── lib/
+    └── tracy/
+        └── TracyClient.cpp        (단일 소스 - 정적 빌드)
 ```
 
----
+**버전**: v0.11.1 (최신 안정)
+**URL**: https://github.com/wolfpld/tracy/releases
 
-## 4단계: Transform Component
-
-**파일**: `Source/Engine/Scene/Components/TransformComponent.h`
-
-```cpp
-#pragma once
-#include "Precompile.h"
-#include "Core/Math/Common.h"
-
-HS_NS_BEGIN
-
-struct HS_API TransformComponent
-{
-    // Local transform (부모 기준)
-    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
-    glm::quat rotation{ 1.0f, 0.0f, 0.0f, 0.0f };  // identity
-    glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
-
-    // Cached world transform (SceneGraph에서 계산)
-    glm::mat4 worldMatrix{ 1.0f };
-
-    // Hierarchy (SceneGraph 연동)
-    entt::entity parent{ entt::null };
-    std::vector<entt::entity> children;
-
-    // Dirty flag (변경 감지)
-    bool isDirty = true;
-
-    // Local matrix 계산
-    glm::mat4 GetLocalMatrix() const;
-
-    // Transform 조작
-    void SetPosition(const glm::vec3& pos);
-    void SetRotation(const glm::quat& rot);
-    void SetScale(const glm::vec3& scl);
-    void SetEulerAngles(const glm::vec3& euler);
-
-    glm::vec3 GetForward() const;
-    glm::vec3 GetRight() const;
-    glm::vec3 GetUp() const;
-};
-
-HS_NS_END
-```
-
----
-
-## 5단계: 기타 Component
-
-### MeshComponent
-```cpp
-struct HS_API MeshComponent
-{
-    Mesh* mesh = nullptr;
-    uint32 submeshIndex = 0;
-};
-```
-
-### MaterialComponent
-```cpp
-struct HS_API MaterialComponent
-{
-    Material* material = nullptr;
-};
-```
-
-### CameraComponent
-```cpp
-struct HS_API CameraComponent
-{
-    float fov = 60.0f;
-    float nearPlane = 0.1f;
-    float farPlane = 1000.0f;
-    bool isActive = false;
-};
-```
-
-### LightComponent
-```cpp
-enum class ELightType : uint8 { Directional, Point, Spot };
-
-struct HS_API LightComponent
-{
-    ELightType type = ELightType::Directional;
-    glm::vec3 color{ 1.0f, 1.0f, 1.0f };
-    float intensity = 1.0f;
-    float range = 10.0f;        // Point/Spot
-    float spotAngle = 45.0f;    // Spot only
-};
-```
-
-### TagComponent
-```cpp
-struct HS_API TagComponent
-{
-    std::string name;
-    uint32 layer = 0;
-    bool isStatic = false;
-};
-```
-
----
-
-## 6단계: SceneGraph
-
-**파일**: `Source/Engine/Scene/SceneGraph.h`
-
-```cpp
-#pragma once
-#include "Precompile.h"
-#include <entt/entt.hpp>
-
-HS_NS_BEGIN
-
-class HS_API SceneGraph
-{
-public:
-    SceneGraph(entt::registry& registry);
-
-    // 계층 관계 설정
-    void SetParent(entt::entity child, entt::entity parent);
-    void RemoveParent(entt::entity child);
-
-    // 계층 쿼리
-    entt::entity GetParent(entt::entity entity) const;
-    const std::vector<entt::entity>& GetChildren(entt::entity entity) const;
-    std::vector<entt::entity> GetDescendants(entt::entity entity) const;
-    entt::entity GetRoot(entt::entity entity) const;
-
-    // Transform 전파
-    void UpdateWorldTransforms();
-    void MarkDirty(entt::entity entity);
-
-    // 계층 순회
-    template<typename Func>
-    void TraverseDepthFirst(entt::entity root, Func&& func);
-
-    template<typename Func>
-    void TraverseBreadthFirst(entt::entity root, Func&& func);
-
-private:
-    void updateWorldTransformRecursive(entt::entity entity, const glm::mat4& parentWorld);
-    void markDirtyRecursive(entt::entity entity);
-
-    entt::registry& _registry;
-    std::vector<entt::entity> _roots;  // 루트 엔티티 목록
-};
-
-HS_NS_END
-```
-
----
-
-## 7단계: Scene 클래스
-
-**파일**: `Source/Engine/Scene/Scene.h`
-
-```cpp
-#pragma once
-#include "Precompile.h"
-#include "Scene/Entity.h"
-#include "Scene/SceneGraph.h"
-#include <entt/entt.hpp>
-
-HS_NS_BEGIN
-
-class HS_API Scene
-{
-public:
-    Scene(const std::string& name = "Untitled");
-    ~Scene();
-
-    // Entity 생성/삭제
-    Entity CreateEntity(const std::string& name = "Entity");
-    Entity CreateChildEntity(Entity parent, const std::string& name = "Entity");
-    void DestroyEntity(Entity entity);
-
-    // Entity 검색
-    Entity FindEntityByName(const std::string& name);
-    std::vector<Entity> FindEntitiesByTag(const std::string& tag);
-
-    // Component 쿼리 (EnTT view 래핑)
-    template<typename... Components>
-    auto View();
-
-    template<typename... Components>
-    auto View() const;
-
-    // SceneGraph 접근
-    SceneGraph& GetSceneGraph() { return _sceneGraph; }
-    const SceneGraph& GetSceneGraph() const { return _sceneGraph; }
-
-    // 매 프레임 호출
-    void Update(float deltaTime);
-
-    // Scene 정보
-    const std::string& GetName() const { return _name; }
-    void SetName(const std::string& name) { _name = name; }
-
-    // Registry 직접 접근 (고급 사용)
-    entt::registry& GetRegistry() { return _registry; }
-    const entt::registry& GetRegistry() const { return _registry; }
-
-private:
-    std::string _name;
-    entt::registry _registry;
-    SceneGraph _sceneGraph;
-};
-
-HS_NS_END
-```
-
----
-
-## 8단계: CMake 통합
-
-### Scene 모듈 CMakeLists.txt
-
-**파일**: `Source/Engine/Scene/CMakeLists.txt`
+### 1.2 CMake 설정
 
 ```cmake
-set(SCENE_SOURCES
-    Private/Scene.cpp
-    Private/SceneGraph.cpp
-    Private/Components/TransformComponent.cpp
-)
+# Dependency/CMakeLists.txt 또는 root CMakeLists.txt
 
-set(SCENE_HEADERS
-    Scene.h
-    SceneGraph.h
-    Entity.h
-    Components/TransformComponent.h
-    Components/MeshComponent.h
-    Components/MaterialComponent.h
-    Components/CameraComponent.h
-    Components/LightComponent.h
-    Components/TagComponent.h
-)
+option(HS_ENABLE_TRACY "Enable Tracy profiler" ON)
 
-# Engine 라이브러리에 포함
-target_sources(Engine PRIVATE ${SCENE_SOURCES} ${SCENE_HEADERS})
+if(HS_ENABLE_TRACY)
+    add_library(TracyClient STATIC
+        ${HS_DEPS_DIR}/lib/tracy/TracyClient.cpp
+    )
+    target_include_directories(TracyClient PUBLIC
+        ${HS_DEPS_INCLUDE_DIR}/tracy
+    )
+    target_compile_definitions(TracyClient PUBLIC
+        TRACY_ENABLE
+        TRACY_ON_DEMAND          # 서버 연결 시에만 프로파일링
+        TRACY_NO_EXIT            # 종료 시 데이터 손실 방지
+        TRACY_CALLSTACK=16       # 콜스택 깊이
+    )
+
+    # Vulkan GPU 프로파일링 활성화
+    if(VULKAN_FOUND)
+        target_compile_definitions(TracyClient PUBLIC
+            TRACY_VK_USE_SYMBOL_TABLE
+        )
+    endif()
+endif()
 ```
 
-### Engine CMakeLists.txt 수정
+### 1.3 Engine 링크
 
 ```cmake
-# 기존 add_subdirectory 또는 source 추가에 Scene 포함
-add_subdirectory(Scene)
+# Source/Engine/CMakeLists.txt
+if(HS_ENABLE_TRACY)
+    target_link_libraries(Engine PUBLIC TracyClient)
+endif()
 ```
 
 ---
 
-## 9단계: 기존 시스템 연동
+## 2단계: 프로파일링 매크로 래퍼
 
-### Model → Entity 변환 유틸리티
+### 2.1 헤더 파일
+
+**파일**: `Source/Core/Profiler/ProfilerMacros.h`
 
 ```cpp
-// SceneLoader.h
-class HS_API SceneLoader
+#pragma once
+
+#include "Precompile.h"
+
+#if defined(TRACY_ENABLE)
+    #include <tracy/Tracy.hpp>
+    #include <tracy/TracyVulkan.hpp>
+
+    // CPU 프로파일링
+    #define HS_PROFILE_FRAME_MARK       FrameMark
+    #define HS_PROFILE_ZONE(name)       ZoneScoped
+    #define HS_PROFILE_ZONE_N(name)     ZoneScopedN(name)
+    #define HS_PROFILE_ZONE_C(name, color) ZoneScopedNC(name, color)
+    #define HS_PROFILE_FUNCTION()       ZoneScoped
+
+    // GPU 프로파일링 (Vulkan)
+    #define HS_PROFILE_GPU_CONTEXT(ctx, device, queue, cmdBuffer, ...) \
+        TracyVkContext(ctx, device, queue, cmdBuffer, ##__VA_ARGS__)
+    #define HS_PROFILE_GPU_ZONE(ctx, cmdBuffer, name) \
+        TracyVkZone(ctx, cmdBuffer, name)
+    #define HS_PROFILE_GPU_COLLECT(ctx, cmdBuffer) \
+        TracyVkCollect(ctx, cmdBuffer)
+
+    // 메모리 프로파일링
+    #define HS_PROFILE_ALLOC(ptr, size)   TracyAlloc(ptr, size)
+    #define HS_PROFILE_FREE(ptr)          TracyFree(ptr)
+
+    // 값 플로팅
+    #define HS_PROFILE_PLOT(name, value)  TracyPlot(name, value)
+
+    // 메시지/로그
+    #define HS_PROFILE_MESSAGE(text)      TracyMessage(text, strlen(text))
+
+#else
+    // Tracy 비활성화 시 no-op
+    #define HS_PROFILE_FRAME_MARK
+    #define HS_PROFILE_ZONE(name)
+    #define HS_PROFILE_ZONE_N(name)
+    #define HS_PROFILE_ZONE_C(name, color)
+    #define HS_PROFILE_FUNCTION()
+
+    #define HS_PROFILE_GPU_CONTEXT(...)
+    #define HS_PROFILE_GPU_ZONE(...)
+    #define HS_PROFILE_GPU_COLLECT(...)
+
+    #define HS_PROFILE_ALLOC(ptr, size)
+    #define HS_PROFILE_FREE(ptr)
+
+    #define HS_PROFILE_PLOT(name, value)
+    #define HS_PROFILE_MESSAGE(text)
+#endif
+```
+
+### 2.2 사용 예시
+
+```cpp
+// Application 메인 루프
+void PrototypeApplication::Tick()
+{
+    HS_PROFILE_FRAME_MARK;  // 프레임 경계 표시
+
+    {
+        HS_PROFILE_ZONE_N("Update");
+        Update();
+    }
+
+    {
+        HS_PROFILE_ZONE_N("Render");
+        Render();
+    }
+}
+
+// 렌더링 함수 내부
+void Renderer::DrawScene(RHICommandBuffer* cmd)
+{
+    HS_PROFILE_FUNCTION();
+
+    // GPU 프로파일링 (사용자 구현 필요)
+    // HS_PROFILE_GPU_ZONE(_tracyVkCtx, cmd->handle, "DrawScene");
+
+    for (auto& object : objects)
+    {
+        HS_PROFILE_ZONE_N("DrawObject");
+        DrawObject(object);
+    }
+}
+```
+
+---
+
+## 3단계: ProfilerPanel 고도화
+
+### 3.1 새로운 구조
+
+**파일**: `Source/Editor/Panel/ProfilerPanel.h`
+
+```cpp
+#pragma once
+#include "Precompile.h"
+#include "Editor/Panel/Panel.h"
+
+HS_NS_EDITOR_BEGIN
+
+class HS_EDITOR_API ProfilerPanel : public Panel
 {
 public:
-    // 기존 Model을 Scene의 Entity 계층으로 변환
-    static Entity LoadModelAsEntity(Scene& scene, Model* model);
+    ProfilerPanel(Window* window);
+    ~ProfilerPanel() override;
 
-    // GLTF 직접 로드 (향후)
-    static Entity LoadGLTF(Scene& scene, const std::string& path);
+    bool Setup() override;
+    void Cleanup() override;
+    void Draw() override;
+
+private:
+    // UI 섹션 그리기
+    void DrawFrameTimeSection();
+    void DrawCPUSection();
+    void DrawGPUSection();
+    void DrawMemorySection();
+    void DrawSettingsSection();
+
+    // 데이터
+    struct FrameData
+    {
+        float frameTime = 0.0f;
+        float cpuTime = 0.0f;
+        float gpuTime = 0.0f;
+        float fps = 0.0f;
+    };
+
+    static constexpr int HISTORY_SIZE = 256;
+    std::array<FrameData, HISTORY_SIZE> _frameHistory;
+    int _frameIndex = 0;
+
+    // 설정
+    bool _showCPU = true;
+    bool _showGPU = true;
+    bool _showMemory = true;
+    bool _pauseProfiling = false;
+    float _targetFrameTime = 16.67f;  // 60 FPS
+};
+
+HS_NS_EDITOR_END
+```
+
+### 3.2 UI 구현 개요
+
+```cpp
+void ProfilerPanel::Draw()
+{
+    ImGui::Begin("Profiler", nullptr, ImGuiWindowFlags_MenuBar);
+
+    // 메뉴바
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("View"))
+        {
+            ImGui::Checkbox("CPU Timings", &_showCPU);
+            ImGui::Checkbox("GPU Timings", &_showGPU);
+            ImGui::Checkbox("Memory", &_showMemory);
+            ImGui::EndMenu();
+        }
+
+        // Tracy 연결 상태
+        if (ImGui::MenuItem(_pauseProfiling ? "Resume" : "Pause"))
+        {
+            _pauseProfiling = !_pauseProfiling;
+        }
+
+        ImGui::EndMenuBar();
+    }
+
+    // 프레임 타임 그래프 (항상 표시)
+    DrawFrameTimeSection();
+
+    ImGui::Separator();
+
+    // 탭으로 섹션 구분
+    if (ImGui::BeginTabBar("ProfilerTabs"))
+    {
+        if (_showCPU && ImGui::BeginTabItem("CPU"))
+        {
+            DrawCPUSection();
+            ImGui::EndTabItem();
+        }
+
+        if (_showGPU && ImGui::BeginTabItem("GPU"))
+        {
+            DrawGPUSection();
+            ImGui::EndTabItem();
+        }
+
+        if (_showMemory && ImGui::BeginTabItem("Memory"))
+        {
+            DrawMemorySection();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Settings"))
+        {
+            DrawSettingsSection();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+
+    ImGui::End();
+}
+```
+
+---
+
+## 4단계: GPU 프로파일링 (사용자 직접 구현)
+
+### 4.1 VulkanDevice 확장 (직접 구현 권장)
+
+```cpp
+// Source/RHI/Vulkan/VulkanDevice.h 에 추가
+class VulkanDevice
+{
+public:
+    // ... 기존 코드 ...
+
+    // [사용자 직접 구현] GPU 프로파일링 지원
+    float timestampPeriod = 0.0f;  // 나노초/틱
+    bool supportsTimestamps = false;
+
+    // Tracy Vulkan Context (optional)
+    #if defined(TRACY_ENABLE)
+    TracyVkCtx tracyVkContext = nullptr;
+    #endif
 };
 ```
 
-### Camera 통합
-기존 `Camera` 클래스와 `CameraComponent` 연동:
+### 4.2 Tracy Vulkan Context 초기화 (직접 구현 권장)
+
 ```cpp
-// Camera 클래스를 CameraComponent의 데이터 소스로 활용
-// 또는 CameraComponent가 Camera 인스턴스를 참조
+// VulkanDevice::Create() 또는 별도 함수
+void VulkanDevice::InitializeTracyContext(VkCommandBuffer setupCmdBuffer)
+{
+    #if defined(TRACY_ENABLE)
+    // 1. Timestamp period 가져오기
+    timestampPeriod = properties.limits.timestampPeriod;
+    supportsTimestamps = (timestampPeriod > 0);
+
+    if (!supportsTimestamps)
+    {
+        HS_LOG(warning, "GPU timestamps not supported");
+        return;
+    }
+
+    // 2. Tracy Vulkan Context 생성
+    tracyVkContext = TracyVkContext(
+        physicalDevice,
+        logicalDevice,
+        graphicsQueue,
+        setupCmdBuffer
+    );
+    #endif
+}
+```
+
+### 4.3 GPU Zone 삽입 위치 (직접 구현 권장)
+
+```cpp
+// RenderPass 시작/끝 또는 주요 렌더링 구간에 삽입
+void Renderer::ExecuteRenderGraph(...)
+{
+    auto* cmd = GetCommandBuffer();
+
+    #if defined(TRACY_ENABLE)
+    TracyVkZone(g_device->tracyVkContext, cmd->handle, "RenderGraph");
+    #endif
+
+    // ... 렌더링 코드 ...
+
+    #if defined(TRACY_ENABLE)
+    TracyVkCollect(g_device->tracyVkContext, cmd->handle);
+    #endif
+}
+```
+
+---
+
+## 5단계: 메모리 프로파일링
+
+### 5.1 할당자 연동 (선택사항)
+
+```cpp
+// 커스텀 할당자 사용 시
+void* CustomAllocator::Allocate(size_t size)
+{
+    void* ptr = malloc(size);
+    HS_PROFILE_ALLOC(ptr, size);
+    return ptr;
+}
+
+void CustomAllocator::Free(void* ptr)
+{
+    HS_PROFILE_FREE(ptr);
+    free(ptr);
+}
 ```
 
 ---
 
 ## 구현 순서
 
-| 순서 | 작업 | 파일 |
-|:----:|:-----|:-----|
-| 1 | EnTT 헤더 다운로드 및 배치 | `Dependency/include/entt/` |
-| 2 | Scene 디렉터리 구조 생성 | `Source/Engine/Scene/` |
-| 3 | Entity wrapper 구현 | `Entity.h` |
-| 4 | TransformComponent 구현 | `TransformComponent.h/.cpp` |
-| 5 | 기타 Component 정의 | `*Component.h` |
-| 6 | SceneGraph 구현 | `SceneGraph.h/.cpp` |
-| 7 | Scene 클래스 구현 | `Scene.h/.cpp` |
-| 8 | CMake 통합 | `CMakeLists.txt` |
-| 9 | 빌드 및 테스트 | - |
-| 10 | 기존 시스템 연동 (선택) | `SceneLoader.h` |
+| 순서 | 작업 | 담당 | 파일 |
+|:----:|:-----|:----:|:-----|
+| 1 | Tracy 라이브러리 다운로드 | AI | `Dependency/include/tracy/` |
+| 2 | CMake 설정 (TracyClient 빌드) | AI | `CMakeLists.txt` |
+| 3 | ProfilerMacros.h 작성 | AI | `Source/Core/Profiler/` |
+| 4 | 기존 Profiler.h 정리/제거 | AI | 주석 제거 or 삭제 |
+| 5 | Application에 Frame Mark 삽입 | AI | `PrototypeApplication.cpp` |
+| 6 | 주요 함수에 Zone 삽입 | AI | 엔진 전반 |
+| 7 | ProfilerPanel UI 고도화 | AI | `ProfilerPanel.cpp` |
+| 8 | **VulkanDevice Tracy 초기화** | **사용자** | `VulkanDevice.cpp` |
+| 9 | **GPU Zone 삽입** | **사용자** | 렌더링 코드 |
+| 10 | 빌드 및 테스트 | 공동 | - |
 
 ---
 
-## 향후 작업 (직접 구현 - 보호 영역)
+## 예상 결과
 
-구현 완료 후 사용자가 직접 작업할 영역:
+### Tracy Server에서 확인 가능
+1. **프레임 타임라인**: CPU/GPU 병렬 실행 시각화
+2. **Zone 히트맵**: 핫스팟 식별
+3. **메모리 사용량**: 할당 패턴 분석
+4. **콜스택**: 성능 병목 추적
+5. **Lock 경합**: 멀티스레드 분석
 
-1. **SceneResource 구조 설계**
-   - GPU에 전달할 Flat 버퍼 레이아웃
-   - `GPUObjectData` 구조체 정의
-
-2. **Flatten 전략**
-   - Dirty flag 기반 부분 업데이트
-   - 배치 처리 최적화
-
-3. **렌더링 연동**
-   - Scene → RenderPath 데이터 흐름
-   - Culling 시스템 통합
+### ProfilerPanel에서 확인 가능
+1. FPS / Frame Time 그래프
+2. CPU 주요 구간 소요 시간
+3. GPU 렌더패스별 소요 시간 (사용자 구현 후)
+4. 메모리 통계
 
 ---
 
 ## 참고 자료
 
-- [EnTT GitHub](https://github.com/skypjack/entt)
-- [EnTT Crash Course](https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system)
-- [EnTT in Minecraft](https://www.codingwiththomas.com/blog/use-entt-when-you-need-an-ecs)
+- [Tracy GitHub](https://github.com/wolfpld/tracy)
+- [Tracy Manual (PDF)](https://github.com/wolfpld/tracy/releases/download/v0.11.1/tracy.pdf)
+- [Tracy Vulkan Example](https://github.com/wolfpld/tracy/blob/master/examples/OpenGLVulkan/)
+- [Godot Tracy Integration](https://github.com/godotengine/godot/blob/master/core/profiler)
+
+---
+
+## 대안 검토
+
+| 도구 | 장점 | 단점 |
+|:-----|:-----|:-----|
+| **Tracy** ✅ | 게임 특화, GPU 지원, 경량 | 별도 GUI 필요 |
+| RenderDoc | GPU 디버깅 특화 | CPU 프로파일링 없음 |
+| Intel VTune | 심층 분석 | 무겁고 복잡 |
+| Optick | Tracy 유사 | 업데이트 느림 |
+| 자체 구현 | 완전한 커스터마이징 | 시간 소모 큼 |
+
+**결론**: Tracy가 이 프로젝트 목적에 가장 적합
