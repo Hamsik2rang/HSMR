@@ -1,352 +1,482 @@
-# ImageResource 구현 및 텍스처 렌더링 파이프라인 완성 계획
+# ECS + Scene 시스템 구현 계획
 
-## 목표
-GLTF에서 로드된 텍스처를 실제로 GPU에서 렌더링할 수 있도록 텍스처 바인딩 파이프라인을 완성합니다.
+## 결정 사항
 
-## 완료된 작업
+### EnTT vs Scratch 비교 결과
 
-### Proxy 레거시 시스템 제거 (완료)
-다음 파일들이 삭제되었습니다:
-- `Source/Engine/Resource/Proxy/ObjectProxy.h`
-- `Source/Engine/Resource/Proxy/ImageProxy.h`
-- `Source/Engine/Resource/Proxy/MeshProxy.h`
-- `Source/Engine/Resource/Proxy/MaterialProxy.h`
-- `Source/Engine/Resource/Proxy/ShaderProxy.h`
-- `Source/Engine/Resource/Proxy/Private/ImageProxy.cpp`
-- `Source/Engine/Resource/Proxy/Private/MeshProxy.cpp`
-- `Source/Engine/Resource/Proxy/Private/MaterialProxy.cpp`
-- `Source/Engine/Resource/Proxy/Private/ShaderProxy.cpp`
+| 기준 | EnTT | Scratch 구현 |
+|:-----|:-----|:-------------|
+| **개발 시간** | 1-2일 (통합) | 1-2주 |
+| **성능** | 최적화됨 (Minecraft 사용) | 직접 최적화 필요 |
+| **C++ 버전** | C++20 필요 ✅ | 제약 없음 |
+| **학습 가치** | 낮음 | 높음 (하지만 핵심 목표 아님) |
+| **SceneGraph 통합** | 별도 구현 필요 | 처음부터 설계 |
 
-> 참고: 이 파일들은 CMakeLists.txt에 포함되어 있지 않아 빌드에 영향 없음
+### 결론: **EnTT 사용**
 
-## 현황 분석
+**이유:**
+1. ECS 자체는 학습 보호 영역이 아님
+2. 시간을 GPU-Driven/RenderGraph 등 핵심 영역에 투자하는 것이 목적에 부합
+3. 검증된 라이브러리로 안정성 확보
+4. SceneGraph는 어차피 별도 구현 필요
 
-### 현재 상태
-- **정상 작동**: GLTF 로드 → Image 객체 생성 → Material에 저장
-- **정상 작동**: ShaderCompiler가 `textureBindings`, `samplerBindings` 리플렉션 정보 생성
-- **정상 작동**: ResourceBinding 구조체가 textures, samplers 필드 지원
-- **누락**: Image → RHITexture 변환 없음
-- **누락**: createResourceLayoutFromReflection()에서 텍스처 바인딩 처리 없음
-- **삭제 완료**: 미사용 Proxy 시스템 (ImageProxy, MeshProxy 등)
+---
 
-### 기존 패턴
+## 아키텍처 개요
+
 ```
-Mesh     → MeshResource     { RHIBuffer* VB/IB }
-Material → MaterialResource { RHIShader*, RHIResourceLayout*, RHIResourceSet* }
-Camera   → CameraResource   { RHIBuffer* perView }
-Model    → ModelResource    { RHIBuffer* perDraw }
-Image    → ??? (없음)       → ImageResource 추가 필요
+┌─────────────────────────────────────────────────────────┐
+│                      Scene                              │
+│  ┌─────────────────┐    ┌─────────────────────────────┐ │
+│  │  entt::registry │    │     SceneGraph              │ │
+│  │  (ECS 저장소)    │    │  (계층 구조, Transform 전파) │ │
+│  └────────┬────────┘    └──────────────┬──────────────┘ │
+│           │                            │                │
+│           └────────────┬───────────────┘                │
+│                        ▼                                │
+│              ┌─────────────────┐                        │
+│              │  Scene Query API │                        │
+│              │  (통합 인터페이스) │                        │
+│              └────────┬────────┘                        │
+└───────────────────────┼─────────────────────────────────┘
+                        │
+                        ▼ [직접 구현 - 보호 영역]
+              ┌─────────────────┐
+              │  SceneResource  │
+              │  - Flatten      │
+              │  - GPU 버퍼 관리  │
+              │  - Culling 연동  │
+              └─────────────────┘
 ```
 
 ---
 
-## 구현 단계
+## 구현 범위
 
-### 1단계: ImageResource 구조체 정의
-**파일**: `Source/Engine/Renderer/RenderResourceManager.h`
+### AI 구현 (이 계획의 범위)
+- [x] EnTT 라이브러리 통합
+- [ ] 기본 Component 정의
+- [ ] SceneGraph 노드 구조
+- [ ] Scene 클래스 (통합 관리)
+- [ ] Transform 컴포넌트 및 계층 전파
+
+### 직접 구현 (보호 영역 - 범위 외)
+- SceneResource (GPU Flat Buffer)
+- Flatten 전략 및 Dirty 관리
+- GPU Culling 연동
+
+---
+
+## 1단계: EnTT 라이브러리 통합
+
+### 1.1 라이브러리 다운로드
+**위치**: `Dependency/include/entt/`
+
+```bash
+# EnTT는 header-only, 단일 헤더 사용
+# https://github.com/skypjack/entt/releases 에서 최신 버전 다운로드
+# entt.hpp → Dependency/include/entt/entt.hpp
+```
+
+### 1.2 CMake 설정 확인
+EnTT는 header-only이므로 추가 링크 불필요. 기존 include 경로에 포함됨:
+```cmake
+include_directories(SYSTEM ${HS_DEPS_INCLUDE_DIR})  # 이미 존재
+```
+
+---
+
+## 2단계: 디렉터리 구조
+
+```
+Source/Engine/Scene/
+├── CMakeLists.txt          (신규)
+├── Scene.h                  (Scene 클래스)
+├── SceneGraph.h             (계층 구조)
+├── Entity.h                 (Entity wrapper)
+├── Components/
+│   ├── TransformComponent.h
+│   ├── MeshComponent.h
+│   ├── MaterialComponent.h
+│   ├── CameraComponent.h
+│   └── LightComponent.h
+└── Private/
+    ├── Scene.cpp
+    ├── SceneGraph.cpp
+    └── Components/
+        └── TransformComponent.cpp
+```
+
+---
+
+## 3단계: Entity Wrapper
+
+**파일**: `Source/Engine/Scene/Entity.h`
 
 ```cpp
-// Image에 대한 GPU 리소스 캐시
-struct HS_API ImageResource
+#pragma once
+#include "Precompile.h"
+#include <entt/entt.hpp>
+
+HS_NS_BEGIN
+
+class Scene;
+
+// EnTT entity를 감싸는 편의 클래스
+class HS_API Entity
 {
-    RHITexture* texture = nullptr;
-    RHISampler* sampler = nullptr;
-    uint32 width = 0;
-    uint32 height = 0;
-    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
-    bool isValid = false;
+public:
+    Entity() = default;
+    Entity(entt::entity handle, Scene* scene);
+    Entity(const Entity&) = default;
+
+    template<typename T, typename... Args>
+    T& AddComponent(Args&&... args);
+
+    template<typename T>
+    T& GetComponent();
+
+    template<typename T>
+    const T& GetComponent() const;
+
+    template<typename T>
+    bool HasComponent() const;
+
+    template<typename T>
+    void RemoveComponent();
+
+    bool IsValid() const;
+
+    entt::entity GetHandle() const { return _handle; }
+
+    bool operator==(const Entity& other) const;
+    bool operator!=(const Entity& other) const;
+
+private:
+    entt::entity _handle{ entt::null };
+    Scene* _scene = nullptr;
+};
+
+HS_NS_END
+```
+
+---
+
+## 4단계: Transform Component
+
+**파일**: `Source/Engine/Scene/Components/TransformComponent.h`
+
+```cpp
+#pragma once
+#include "Precompile.h"
+#include "Core/Math/Common.h"
+
+HS_NS_BEGIN
+
+struct HS_API TransformComponent
+{
+    // Local transform (부모 기준)
+    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+    glm::quat rotation{ 1.0f, 0.0f, 0.0f, 0.0f };  // identity
+    glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+
+    // Cached world transform (SceneGraph에서 계산)
+    glm::mat4 worldMatrix{ 1.0f };
+
+    // Hierarchy (SceneGraph 연동)
+    entt::entity parent{ entt::null };
+    std::vector<entt::entity> children;
+
+    // Dirty flag (변경 감지)
+    bool isDirty = true;
+
+    // Local matrix 계산
+    glm::mat4 GetLocalMatrix() const;
+
+    // Transform 조작
+    void SetPosition(const glm::vec3& pos);
+    void SetRotation(const glm::quat& rot);
+    void SetScale(const glm::vec3& scl);
+    void SetEulerAngles(const glm::vec3& euler);
+
+    glm::vec3 GetForward() const;
+    glm::vec3 GetRight() const;
+    glm::vec3 GetUp() const;
+};
+
+HS_NS_END
+```
+
+---
+
+## 5단계: 기타 Component
+
+### MeshComponent
+```cpp
+struct HS_API MeshComponent
+{
+    Mesh* mesh = nullptr;
+    uint32 submeshIndex = 0;
+};
+```
+
+### MaterialComponent
+```cpp
+struct HS_API MaterialComponent
+{
+    Material* material = nullptr;
+};
+```
+
+### CameraComponent
+```cpp
+struct HS_API CameraComponent
+{
+    float fov = 60.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 1000.0f;
+    bool isActive = false;
+};
+```
+
+### LightComponent
+```cpp
+enum class ELightType : uint8 { Directional, Point, Spot };
+
+struct HS_API LightComponent
+{
+    ELightType type = ELightType::Directional;
+    glm::vec3 color{ 1.0f, 1.0f, 1.0f };
+    float intensity = 1.0f;
+    float range = 10.0f;        // Point/Spot
+    float spotAngle = 45.0f;    // Spot only
+};
+```
+
+### TagComponent
+```cpp
+struct HS_API TagComponent
+{
+    std::string name;
+    uint32 layer = 0;
+    bool isStatic = false;
 };
 ```
 
 ---
 
-### 2단계: RenderResourceManager 확장
-**파일**: `Source/Engine/Renderer/RenderResourceManager.h`, `.cpp`
+## 6단계: SceneGraph
 
-**헤더 추가**:
+**파일**: `Source/Engine/Scene/SceneGraph.h`
+
 ```cpp
-class Image;  // forward declaration
+#pragma once
+#include "Precompile.h"
+#include <entt/entt.hpp>
 
-// public 메서드
-ImageResource* GetOrCreateImageResource(Image* image);
+HS_NS_BEGIN
 
-// private 멤버
-std::unordered_map<Image*, ImageResource> _imageResources;
-
-// private 헬퍼
-ImageResource createImageResource(Image* image);
-```
-
-**구현** (`RenderResourceManager.cpp`):
-```cpp
-ImageResource* RenderResourceManager::GetOrCreateImageResource(Image* image)
+class HS_API SceneGraph
 {
-    if (!image) return nullptr;
+public:
+    SceneGraph(entt::registry& registry);
 
-    auto it = _imageResources.find(image);
-    if (it != _imageResources.end() && it->second.isValid)
-    {
-        return &it->second;
-    }
+    // 계층 관계 설정
+    void SetParent(entt::entity child, entt::entity parent);
+    void RemoveParent(entt::entity child);
 
-    ImageResource resource = createImageResource(image);
-    if (resource.isValid)
-    {
-        _imageResources[image] = std::move(resource);
-        return &_imageResources[image];
-    }
-    return nullptr;
-}
+    // 계층 쿼리
+    entt::entity GetParent(entt::entity entity) const;
+    const std::vector<entt::entity>& GetChildren(entt::entity entity) const;
+    std::vector<entt::entity> GetDescendants(entt::entity entity) const;
+    entt::entity GetRoot(entt::entity entity) const;
 
-ImageResource RenderResourceManager::createImageResource(Image* image)
-{
-    ImageResource resource;
+    // Transform 전파
+    void UpdateWorldTransforms();
+    void MarkDirty(entt::entity entity);
 
-    uint32 width = image->GetWidth();
-    uint32 height = image->GetHeight();
-    uint8 channels = image->GetChannel();
+    // 계층 순회
+    template<typename Func>
+    void TraverseDepthFirst(entt::entity root, Func&& func);
 
-    // 포맷 결정
-    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
-    if (channels == 1) format = EPixelFormat::R8_UNORM;
-    else if (channels == 2) format = EPixelFormat::RG8_UNORM;
-    // 3채널도 RGBA로 처리 (RGB8은 Vulkan에서 비효율적)
+    template<typename Func>
+    void TraverseBreadthFirst(entt::entity root, Func&& func);
 
-    // 3채널 이미지는 4채널로 확장 필요
-    const void* imageData = image->GetRawData();
-    std::vector<uint8> rgbaData;
-    if (channels == 3)
-    {
-        rgbaData.resize(width * height * 4);
-        const uint8* src = static_cast<const uint8*>(imageData);
-        for (uint32 i = 0; i < width * height; ++i)
-        {
-            rgbaData[i * 4 + 0] = src[i * 3 + 0];
-            rgbaData[i * 4 + 1] = src[i * 3 + 1];
-            rgbaData[i * 4 + 2] = src[i * 3 + 2];
-            rgbaData[i * 4 + 3] = 255;
-        }
-        imageData = rgbaData.data();
-    }
+private:
+    void updateWorldTransformRecursive(entt::entity entity, const glm::mat4& parentWorld);
+    void markDirtyRecursive(entt::entity entity);
 
-    // RHITexture 생성
-    TextureInfo texInfo{};
-    texInfo.format = format;
-    texInfo.type = ETextureType::TEX_2D;
-    texInfo.usage = ETextureUsage::SAMPLED;
-    texInfo.extent.width = width;
-    texInfo.extent.height = height;
-    texInfo.extent.depth = 1;
-    texInfo.mipLevel = 1;
-    texInfo.arrayLength = 1;
+    entt::registry& _registry;
+    std::vector<entt::entity> _roots;  // 루트 엔티티 목록
+};
 
-    resource.texture = _rhiContext->CreateTexture("ImageTex",
-        const_cast<void*>(imageData), texInfo);
-
-    // RHISampler 생성
-    SamplerInfo sampInfo{};
-    sampInfo.type = ETextureType::TEX_2D;
-    sampInfo.minFilter = EFilterMode::LINEAR;
-    sampInfo.magFilter = EFilterMode::LINEAR;
-    sampInfo.mipmapMode = EFilterMode::LINEAR;
-    sampInfo.addressU = EAddressMode::REPEAT;
-    sampInfo.addressV = EAddressMode::REPEAT;
-    sampInfo.addressW = EAddressMode::REPEAT;
-
-    resource.sampler = _rhiContext->CreateSampler("ImageSampler", sampInfo);
-
-    resource.width = width;
-    resource.height = height;
-    resource.format = format;
-    resource.isValid = (resource.texture != nullptr && resource.sampler != nullptr);
-
-    return resource;
-}
-```
-
-**ReleaseAll() 수정**:
-```cpp
-// _imageResources 정리 추가
-for (auto& [img, res] : _imageResources)
-{
-    if (res.texture) _rhiContext->DestroyTexture(res.texture);
-    if (res.sampler) _rhiContext->DestroySampler(res.sampler);
-}
-_imageResources.clear();
+HS_NS_END
 ```
 
 ---
 
-### 3단계: MaterialResource에 텍스처 참조 추가
-**파일**: `Source/Engine/Renderer/RenderResourceManager.h`
+## 7단계: Scene 클래스
+
+**파일**: `Source/Engine/Scene/Scene.h`
 
 ```cpp
-struct HS_API MaterialResource
+#pragma once
+#include "Precompile.h"
+#include "Scene/Entity.h"
+#include "Scene/SceneGraph.h"
+#include <entt/entt.hpp>
+
+HS_NS_BEGIN
+
+class HS_API Scene
 {
-    // 기존 필드들...
-    RHIShader* vertexShader = nullptr;
-    RHIShader* fragmentShader = nullptr;
-    RHIResourceLayout* resourceLayout = nullptr;
-    RHIResourceSet* resourceSet = nullptr;
-    std::vector<RHIBuffer*> materialBuffers;
-    std::unordered_map<size_t, RHIGraphicsPipeline*> pipelineCache;
+public:
+    Scene(const std::string& name = "Untitled");
+    ~Scene();
 
-    // 추가: 텍스처 리소스 참조
-    std::unordered_map<EMaterialTextureType, ImageResource*> textureResources;
+    // Entity 생성/삭제
+    Entity CreateEntity(const std::string& name = "Entity");
+    Entity CreateChildEntity(Entity parent, const std::string& name = "Entity");
+    void DestroyEntity(Entity entity);
 
-    bool isValid = false;
+    // Entity 검색
+    Entity FindEntityByName(const std::string& name);
+    std::vector<Entity> FindEntitiesByTag(const std::string& tag);
+
+    // Component 쿼리 (EnTT view 래핑)
+    template<typename... Components>
+    auto View();
+
+    template<typename... Components>
+    auto View() const;
+
+    // SceneGraph 접근
+    SceneGraph& GetSceneGraph() { return _sceneGraph; }
+    const SceneGraph& GetSceneGraph() const { return _sceneGraph; }
+
+    // 매 프레임 호출
+    void Update(float deltaTime);
+
+    // Scene 정보
+    const std::string& GetName() const { return _name; }
+    void SetName(const std::string& name) { _name = name; }
+
+    // Registry 직접 접근 (고급 사용)
+    entt::registry& GetRegistry() { return _registry; }
+    const entt::registry& GetRegistry() const { return _registry; }
+
+private:
+    std::string _name;
+    entt::registry _registry;
+    SceneGraph _sceneGraph;
+};
+
+HS_NS_END
+```
+
+---
+
+## 8단계: CMake 통합
+
+### Scene 모듈 CMakeLists.txt
+
+**파일**: `Source/Engine/Scene/CMakeLists.txt`
+
+```cmake
+set(SCENE_SOURCES
+    Private/Scene.cpp
+    Private/SceneGraph.cpp
+    Private/Components/TransformComponent.cpp
+)
+
+set(SCENE_HEADERS
+    Scene.h
+    SceneGraph.h
+    Entity.h
+    Components/TransformComponent.h
+    Components/MeshComponent.h
+    Components/MaterialComponent.h
+    Components/CameraComponent.h
+    Components/LightComponent.h
+    Components/TagComponent.h
+)
+
+# Engine 라이브러리에 포함
+target_sources(Engine PRIVATE ${SCENE_SOURCES} ${SCENE_HEADERS})
+```
+
+### Engine CMakeLists.txt 수정
+
+```cmake
+# 기존 add_subdirectory 또는 source 추가에 Scene 포함
+add_subdirectory(Scene)
+```
+
+---
+
+## 9단계: 기존 시스템 연동
+
+### Model → Entity 변환 유틸리티
+
+```cpp
+// SceneLoader.h
+class HS_API SceneLoader
+{
+public:
+    // 기존 Model을 Scene의 Entity 계층으로 변환
+    static Entity LoadModelAsEntity(Scene& scene, Model* model);
+
+    // GLTF 직접 로드 (향후)
+    static Entity LoadGLTF(Scene& scene, const std::string& path);
 };
 ```
 
----
-
-### 4단계: createResourceLayoutFromReflection 수정
-**파일**: `Source/Engine/Renderer/Private/RenderResourceManager.cpp`
-
-**수정 사항**:
-- 기존 버퍼 바인딩 로직 유지
-- 텍스처 바인딩 로직 추가
-- 샘플러 바인딩 로직 추가 (Vulkan의 combined image sampler 고려)
-
+### Camera 통합
+기존 `Camera` 클래스와 `CameraComponent` 연동:
 ```cpp
-RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
-    const ShaderReflectionDataEx& reflection,
-    Material* material)  // 파라미터 추가
-{
-    std::vector<ResourceBinding> bindings;
-
-    // 1. 기존 버퍼 바인딩 (perView, perDraw)
-    for (const auto& buf : reflection.bufferBindings)
-    {
-        // ... 기존 코드 유지 ...
-    }
-
-    // 2. 텍스처 바인딩 추가
-    for (const auto& tex : reflection.textureBindings)
-    {
-        // 텍스처 이름에서 Material 텍스처 타입 매핑
-        EMaterialTextureType texType = mapTextureNameToType(tex.name);
-        Image* image = material->GetTexture(texType);
-
-        if (!image) continue;
-
-        ImageResource* imgRes = GetOrCreateImageResource(image);
-        if (!imgRes || !imgRes->isValid) continue;
-
-        ResourceBinding binding{};
-        binding.type = EResourceType::COMBINED_IMAGE_SAMPLER;  // 또는 SAMPLED_IMAGE
-        binding.stage = tex.stages;
-        binding.binding = static_cast<uint8>(tex.binding);
-        binding.arrayCount = 1;
-        binding.resource.textures.push_back(imgRes->texture);
-        binding.resource.samplers.push_back(imgRes->sampler);
-        bindings.push_back(std::move(binding));
-    }
-
-    return _rhiContext->CreateResourceLayout(
-        "AutoLayout",
-        bindings.data(),
-        static_cast<uint32>(bindings.size()));
-}
-
-// 헬퍼 함수
-EMaterialTextureType RenderResourceManager::mapTextureNameToType(const std::string& name)
-{
-    // 셰이더의 텍스처 이름 → Material 텍스처 타입 매핑
-    if (name.find("albedo") != std::string::npos ||
-        name.find("diffuse") != std::string::npos ||
-        name.find("baseColor") != std::string::npos)
-        return EMaterialTextureType::DIFFUSE;
-
-    if (name.find("normal") != std::string::npos)
-        return EMaterialTextureType::NORMAL;
-
-    if (name.find("metallic") != std::string::npos ||
-        name.find("metalness") != std::string::npos)
-        return EMaterialTextureType::METALLIC;
-
-    if (name.find("roughness") != std::string::npos)
-        return EMaterialTextureType::ROUGHNESS;
-
-    if (name.find("emission") != std::string::npos ||
-        name.find("emissive") != std::string::npos)
-        return EMaterialTextureType::EMISSION;
-
-    if (name.find("ao") != std::string::npos ||
-        name.find("occlusion") != std::string::npos)
-        return EMaterialTextureType::AMBIENT_OCCLUSION;
-
-    return EMaterialTextureType::DIFFUSE;  // 기본값
-}
+// Camera 클래스를 CameraComponent의 데이터 소스로 활용
+// 또는 CameraComponent가 Camera 인스턴스를 참조
 ```
 
 ---
 
-### 5단계: createMaterialResources 수정
-**파일**: `Source/Engine/Renderer/Private/RenderResourceManager.cpp`
+## 구현 순서
 
-Material 포인터를 `createResourceLayoutFromReflection`에 전달하도록 수정:
-
-```cpp
-MaterialResource RenderResourceManager::createMaterialResources(Material* material)
-{
-    // ... 기존 코드 ...
-
-    // 수정: material 파라미터 추가
-    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material);
-
-    // ... 기존 코드 ...
-}
-```
+| 순서 | 작업 | 파일 |
+|:----:|:-----|:-----|
+| 1 | EnTT 헤더 다운로드 및 배치 | `Dependency/include/entt/` |
+| 2 | Scene 디렉터리 구조 생성 | `Source/Engine/Scene/` |
+| 3 | Entity wrapper 구현 | `Entity.h` |
+| 4 | TransformComponent 구현 | `TransformComponent.h/.cpp` |
+| 5 | 기타 Component 정의 | `*Component.h` |
+| 6 | SceneGraph 구현 | `SceneGraph.h/.cpp` |
+| 7 | Scene 클래스 구현 | `Scene.h/.cpp` |
+| 8 | CMake 통합 | `CMakeLists.txt` |
+| 9 | 빌드 및 테스트 | - |
+| 10 | 기존 시스템 연동 (선택) | `SceneLoader.h` |
 
 ---
 
-### 6단계: 시그니처 변경에 따른 수정
-`createResourceLayoutFromReflection` 시그니처 변경:
+## 향후 작업 (직접 구현 - 보호 영역)
 
-**헤더**:
-```cpp
-RHIResourceLayout* createResourceLayoutFromReflection(
-    const ShaderReflectionDataEx& reflection,
-    Material* material = nullptr);
-```
+구현 완료 후 사용자가 직접 작업할 영역:
 
----
+1. **SceneResource 구조 설계**
+   - GPU에 전달할 Flat 버퍼 레이아웃
+   - `GPUObjectData` 구조체 정의
 
-## 파일 수정 목록
+2. **Flatten 전략**
+   - Dirty flag 기반 부분 업데이트
+   - 배치 처리 최적화
 
-1. **`Source/Engine/Renderer/RenderResourceManager.h`**
-   - `ImageResource` 구조체 추가
-   - `MaterialResource`에 `textureResources` 필드 추가
-   - `GetOrCreateImageResource()` 메서드 추가
-   - `_imageResources` 캐시 맵 추가
-   - `createResourceLayoutFromReflection` 시그니처 수정
-
-2. **`Source/Engine/Renderer/Private/RenderResourceManager.cpp`**
-   - `GetOrCreateImageResource()` 구현
-   - `createImageResource()` 구현
-   - `createResourceLayoutFromReflection()` 수정 (텍스처 바인딩 추가)
-   - `createMaterialResources()` 수정
-   - `mapTextureNameToType()` 헬퍼 추가
-   - `ReleaseAll()` 수정 (ImageResource 정리)
-   - `#include "Resource/Image.h"` 추가
-
-3. **`Source/Engine/Resource/Material.h`** (필요시)
-   - `GetTextures()` 메서드 추가 (전체 텍스처 맵 접근용)
+3. **렌더링 연동**
+   - Scene → RenderPath 데이터 흐름
+   - Culling 시스템 통합
 
 ---
 
-## 검증 사항
+## 참고 자료
 
-1. **빌드 테스트**: Windows(Vulkan) 빌드 확인
-2. **런타임 테스트**: DamagedHelmet GLTF 로드 및 텍스처 렌더링 확인
-3. **로그 확인**: ImageResource 생성 로그 출력
-
----
-
-## 향후 고려 사항
-
-- Mipmap 생성 지원
-- 텍스처 압축 포맷 지원 (DXT, BC)
-- 텍스처 스트리밍
-- Mac(Metal) 플랫폼 호환성 검증
+- [EnTT GitHub](https://github.com/skypjack/entt)
+- [EnTT Crash Course](https://github.com/skypjack/entt/wiki/Crash-Course:-entity-component-system)
+- [EnTT in Minecraft](https://www.codingwiththomas.com/blog/use-entt-when-you-need-an-ecs)

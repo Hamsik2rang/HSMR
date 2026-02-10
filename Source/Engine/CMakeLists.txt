@@ -110,6 +110,32 @@ set(ENGINE_RENDERER_RENDER_PASS_SOURCES
 source_group("Renderer\\RenderPass\\Private" FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 list(APPEND TOTAL_FILES ${ENGINE_RENDERER_RENDER_PASS_SOURCES})
 
+# Scene System (ECS + SceneGraph)
+set(ENGINE_SCENE_HEADERS
+    Scene/Scene.h
+    Scene/SceneGraph.h
+    Scene/Entity.h
+    Scene/Components/Components.h
+    Scene/Components/TransformComponent.h
+    Scene/Components/TagComponent.h
+    Scene/Components/MeshComponent.h
+    Scene/Components/MaterialComponent.h
+    Scene/Components/CameraComponent.h
+    Scene/Components/LightComponent.h
+)
+
+source_group("Scene\\Public" FILES ${ENGINE_SCENE_HEADERS})
+list(APPEND TOTAL_FILES ${ENGINE_SCENE_HEADERS})
+
+set(ENGINE_SCENE_SOURCES
+    Scene/Private/Scene.cpp
+    Scene/Private/SceneGraph.cpp
+    Scene/Private/Entity.cpp
+)
+
+source_group("Scene\\Private" FILES ${ENGINE_SCENE_SOURCES})
+list(APPEND TOTAL_FILES ${ENGINE_SCENE_SOURCES})
+
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
