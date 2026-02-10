@@ -66,16 +66,16 @@ void ProfilerPanel::Draw()
 
     // Draw overlay window
     ImGuiWindowFlags windowFlags =
-        ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoDocking |
         ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoSavedSettings |
         ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoNav;
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoTitleBar;
 
     const float padding = 10.0f;
     ImVec2 windowPos(padding, padding);
-    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Once);  // Only set position initially, allow dragging
     ImGui::SetNextWindowBgAlpha(0.75f);
 
     if (ImGui::Begin("Profiler", nullptr, windowFlags))

@@ -50,6 +50,7 @@ private:
     uint16 _lastMouseX = 0;
     uint16 _lastMouseY = 0;
     bool _isMouseTracking = false;
+    bool _rightClickStartedInViewport = false;  // Track if right-click started in this viewport
 
     // View gizmo settings
     float _viewGizmoSize = 76.8f;

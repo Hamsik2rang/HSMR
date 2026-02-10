@@ -42,13 +42,29 @@ void ScenePanel::Update(float deltaTime)
     if (ImGuizmo::IsUsing())
     {
         _isMouseTracking = false;
+        _rightClickStartedInViewport = false;
         return;
     }
 #endif
 
+    // Check if right-click just started (using ImGui to detect click event)
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    {
+        // Only start camera control if click started in this viewport
+        _rightClickStartedInViewport = _viewportHovered;
+    }
+
+    // Reset state when right-click is released
     if (!Input::IsPressed(Input::Button::MOUSE_RIGHT))
     {
         _isMouseTracking = false;
+        _rightClickStartedInViewport = false;
+        return;
+    }
+
+    // Only process camera input if right-click started in this viewport
+    if (!_rightClickStartedInViewport)
+    {
         return;
     }
 
