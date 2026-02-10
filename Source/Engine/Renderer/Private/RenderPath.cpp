@@ -7,9 +7,12 @@
 #include "Renderer/RenderPath.h"
 
 #include "Core/Log.h"
+#include "Core/SystemContext.h"
 
 #include "RHI/Swapchain.h"
 #include "Renderer/RenderPass/RenderPass.h"
+#include "Renderer/RenderResourceManager.h"
+#include "Renderer/ShaderLibrary.h"
 
 HS_NS_BEGIN
 
@@ -115,6 +118,16 @@ RenderPath::~RenderPath()
 bool RenderPath::Initialize()
 {
     _rhiHandleCache = new RHIHandleCache(this);
+
+    _resourceManager = new RenderResourceManager(_rhiContext);
+
+    _shaderLibrary = new ShaderLibrary();
+    std::string shaderSourceDir = SystemContext::Get()->assetDirectory + "Shaders";
+    if (!_shaderLibrary->Initialize(shaderSourceDir))
+    {
+        HS_LOG(error, "[RenderPath] ShaderLibrary initialization failed");
+    }
+
     _isInitialized = true;
 
     return _isInitialized;
@@ -138,7 +151,11 @@ void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget
     {
         model->Update();
     }
-    
+
+    RenderParameter extParam = param;
+    extParam.resourceManager = _resourceManager;
+    extParam.shaderLibrary = _shaderLibrary;
+
     for (auto* pass : _rendererPasses)
     {
         pass->OnBeforeRendering(frameIndex);
@@ -150,7 +167,7 @@ void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget
 
         RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(pass->GetFixedSettingForCurrentPass());
 
-        pass->Execute(_curCommandBuffer, renderPass, param);
+        pass->Execute(_curCommandBuffer, renderPass, extParam);
     }
 
     for (auto* pass : _rendererPasses)
@@ -171,6 +188,19 @@ void RenderPath::Shutdown()
     }
     _rendererPasses.clear();
     _curCommandBuffer = nullptr;
+
+    if (_shaderLibrary)
+    {
+        _shaderLibrary->Shutdown();
+        delete _shaderLibrary;
+        _shaderLibrary = nullptr;
+    }
+
+    if (_resourceManager)
+    {
+        delete _resourceManager;
+        _resourceManager = nullptr;
+    }
 
     _isInitialized = false;
 }

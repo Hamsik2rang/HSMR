@@ -1,5 +1,4 @@
-﻿#include "GlobalInputLayout.hlsli"
-
+#include "GlobalInputLayout.hlsli"
 
 [shader("vertex")]
 FSInput VertexMain(VSInput input)
@@ -10,4 +9,10 @@ FSInput VertexMain(VSInput input)
     output.color = input.color;
 
     return output;
+}
+
+[shader("fragment")]
+float4 FragmentMain(FSInput input) : SV_Target
+{
+    return input.color;
 }

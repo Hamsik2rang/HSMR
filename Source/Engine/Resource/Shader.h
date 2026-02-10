@@ -6,6 +6,7 @@
 #include "Engine/Resource/ResourceDefinition.h"
 
 #include "RHI/RHIDefinition.h"
+#include "ShaderSystem/ShaderSystemDefinition.h"
 
 #include <unordered_map>
 #include <string>
@@ -17,7 +18,13 @@ HS_NS_BEGIN
 class HS_API Shader : public Object
 {
 public:
+    // Legacy constructor: single-stage shader from source string
     Shader(const std::string& source, EShaderStage stage, const std::string& entryPointName);
+
+    // New constructor: multi-stage shader from .slang source for runtime compilation
+    Shader(const std::string& shaderName, const std::string& sourceCode, EShaderStage requestedStages,
+           const std::vector<std::string>& includePaths);
+
     ~Shader() override;
 
     EShaderStage GetShaderStage() const { return _shaderType; }
@@ -25,14 +32,9 @@ public:
     // =======================
     // SIMPLIFIED INTERFACE (1:1 Shader-Cache mapping)
     // =======================
-    
-    // Simple compilation interface - bypasses variant system
+
     bool IsCompiledSimple() const { return _useSimpleMode && _simpleCompiledData.isValid; }
-    
-    // Get compiled shader data directly
     const ShaderCompileOutput* GetCompiledData() const;
-    
-    // Enable simple mode (disables variant system)
     void EnableSimpleMode() { _useSimpleMode = true; }
     bool IsSimpleModeEnabled() const { return _useSimpleMode; }
 
@@ -40,37 +42,56 @@ public:
     bool CompileVariants();
     bool CompileVariant(const std::string& variantName);
     bool IsCompiled() const;
-    
-    // Compilation options
+
     void SetCompilationOptions(const ShaderCompileOption& options) { _compileOptions = options; }
     const ShaderCompileOption& GetCompilationOptions() const { return _compileOptions; }
 
-    // Utility
-    uint32 GetVariantCount() const { return 0; }  // Simplified: always 0 variants
+    uint32 GetVariantCount() const { return 0; }
+
+    // =======================
+    // NEW: Runtime compilation via ShaderSystem
+    // =======================
+
+    // Compile using ShaderCompiler (Slang runtime)
+    bool Compile();
+
+    // Access reflection and bytecode from ShaderCompileOutputEx
+    const ShaderReflectionDataEx& GetReflection() const { return _compileOutputEx.reflection; }
+    const std::vector<uint8>* GetBytecode(EShaderStage stage) const;
+    const char* GetEntryPoint(EShaderStage stage) const;
+    bool IsCompiledEx() const { return _compileOutputEx.isValid; }
+    const ShaderCompileOutputEx& GetCompileOutputEx() const { return _compileOutputEx; }
+
+    // Allow ShaderLibrary to inject compile results directly
+    void SetCompileOutputEx(ShaderCompileOutputEx&& output) { _compileOutputEx = std::move(output); }
+
+    const std::string& GetShaderName() const { return _shaderName; }
 
 private:
-    // Simple mode compilation
- 
     void extractParametersFromReflection(const ShaderReflectionData& reflection);
-    
+
     // Shader source storage
     std::string _source;           // Original shader source
     std::string _entryPointName;   // Entry point function name
     EShaderStage _shaderType;      // Shader stage type
-    
+
     // Simple mode data (1:1 mapping)
     bool _useSimpleMode = false;
     ShaderCompileOutput _simpleCompiledData;
-    
-    // Legacy variant system data (will be removed)
+
+    // Legacy variant system data
     std::string _vertexSource;
     std::string _fragmentSource;
     std::string _computeSource;
-    // std::unordered_map<ShaderVariant, ShaderCache*> _variants;  // Temporarily disabled
     bool _isCompiled = false;
-    
-    // Common data
+
     ShaderCompileOption _compileOptions;
+
+    // NEW: Runtime compilation data
+    std::string _shaderName;
+    std::vector<std::string> _includePaths;
+    EShaderStage _requestedStages = EShaderStage::NONE;
+    ShaderCompileOutputEx _compileOutputEx;
 };
 
 HS_NS_END

@@ -94,13 +94,26 @@ public:
     // Two-sided rendering
     void SetTwoSided(bool twoSided) { _isTwoSided = twoSided; }
     HS_FORCEINLINE bool IsTwoSided() const { return _isTwoSided; }
-    
+
     // Shader variant support
     void SetShaderDefines(const std::vector<std::string>& defines) { _shaderDefines = defines; }
     const std::vector<std::string>& GetShaderDefines() const { return _shaderDefines; }
     void AddShaderDefine(const std::string& define);
     void RemoveShaderDefine(const std::string& define);
-    
+
+    // NEW: Reflection-based parameter block
+    void InitializeParameterBlock();
+    MaterialParameterBlock* GetParameterBlock() { return _parameterBlock.IsInitialized() ? &_parameterBlock : nullptr; }
+    const MaterialParameterBlock* GetParameterBlock() const { return _parameterBlock.IsInitialized() ? &_parameterBlock : nullptr; }
+
+    // Type-safe parameter setters (write into parameter block)
+    void SetParameter(const std::string& name, float value);
+    void SetParameter(const std::string& name, const glm::vec2& value);
+    void SetParameter(const std::string& name, const glm::vec3& value);
+    void SetParameter(const std::string& name, const glm::vec4& value);
+    void SetParameter(const std::string& name, const glm::mat4& value);
+    void SetParameter(const std::string& name, int32 value);
+
 private:
     Shader* _shader;
     
@@ -121,8 +134,10 @@ private:
     bool _isTwoSided = false;
     
     // Dynamic shader parameters
-    
     std::vector<std::string> _shaderDefines;
+
+    // NEW: Reflection-based parameter block
+    MaterialParameterBlock _parameterBlock;
 };
 
 

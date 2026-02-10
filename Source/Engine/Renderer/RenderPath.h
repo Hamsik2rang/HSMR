@@ -23,6 +23,7 @@ namespace hs
 /*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
 /*#include "RHI/Swapchain.h"*/ class Swapchain;
 /*#include "Platform/NativeWindow.h"*/ struct NativeWindow;
+/*#include "Renderer/ShaderLibrary.h"*/ class ShaderLibrary;
 } // namespace hs
 
 HS_NS_BEGIN
@@ -73,10 +74,16 @@ public:
 
     HS_FORCEINLINE RHIHandleCache* GetHandleCache() const { return _rhiHandleCache; }
 
+    HS_FORCEINLINE RenderResourceManager* GetResourceManager() const { return _resourceManager; }
+
+    HS_FORCEINLINE ShaderLibrary* GetShaderLibrary() const { return _shaderLibrary; }
+
 protected:
     RHIContext* _rhiContext;
     RHIHandleCache* _rhiHandleCache;
     RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
+    RenderResourceManager* _resourceManager = nullptr;
+    ShaderLibrary* _shaderLibrary = nullptr;
 
     std::vector<RenderPass*> _rendererPasses;
     uint32 frameIndex      = 0;

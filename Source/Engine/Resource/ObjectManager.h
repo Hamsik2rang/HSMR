@@ -35,6 +35,9 @@ public:
 	static void FreeMesh(Mesh* mesh);
 
 	static Scoped<Shader> LoadShaderFromFile(const std::string& path, EShaderStage stage, const char* entryPointName, bool isAbsolutePath = false);
+	static Scoped<Shader> LoadShaderFromSource(const std::string& shaderName, const std::string& sourceCode,
+	                                           EShaderStage requestedStages = EShaderStage::VERTEX | EShaderStage::FRAGMENT,
+	                                           const std::vector<std::string>& includePaths = {});
 	static void FreeShader(Shader* shader);
 
 	static Scoped<Material> LoadMaterialFromFile(const std::string& path, bool isAbsolutePath = false);

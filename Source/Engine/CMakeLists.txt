@@ -73,6 +73,8 @@ set(ENGINE_RENDERER_HEADERS
     Renderer/RenderPath.h
     Renderer/RendererDefinition.h
     Renderer/RenderTarget.h
+    Renderer/RenderResourceManager.h
+    Renderer/ShaderLibrary.h
 )
 
 source_group("Renderer\\Public" FILES ${ENGINE_RENDERER_HEADERS})
@@ -83,6 +85,8 @@ set(ENGINE_RENDERER_SOURCES
     Renderer/Private/ForwardPath.cpp
     Renderer/Private/RenderPath.cpp
     Renderer/Private/RenderTarget.cpp
+    Renderer/Private/RenderResourceManager.cpp
+    Renderer/Private/ShaderLibrary.cpp
 )
 
 source_group("Renderer\\Private" FILES ${ENGINE_RENDERER_SOURCES})
@@ -128,17 +132,15 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        "-Wl, -all_load" Core Platform RHI
+        "-Wl, -all_load" Core Platform RHI ShaderSystem
         ${ASSIMP}
-        ${HS_SLANG_DYLIB}
         ${OSX_FRAMEWORK}
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core Platform RHI
+        Core Platform RHI ShaderSystem
         ${ASSIMP}
-        ${HS_SLANG_LIB}
     )
 endif()
 
@@ -149,12 +151,12 @@ if(WIN32)
         "/WHOLEARCHIVE:Platform"
         "/WHOLEARCHIVE:RHI"
     )
+    # ShaderSystem is SHARED, no WHOLEARCHIVE needed
 endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR} ${STB_INCLUDE}
-    ${HS_SLANG_INCLUDE_DIR}
 )
 
 target_compile_definitions(${TARGET_NAME}
@@ -166,6 +168,7 @@ target_compile_definitions(${TARGET_NAME}
     HS_ENGINE
 
     HS_API_EXPORT
+    HS_SHADER_SYSTEM_API_IMPORT
 )
 
 install(TARGETS ${TARGET_NAME}

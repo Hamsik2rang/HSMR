@@ -18,6 +18,9 @@
 
 HS_NS_BEGIN
 
+class RenderResourceManager;
+class ShaderLibrary;
+
 struct HS_API RenderTargetInfo
 {
     uint32 width;
@@ -49,6 +52,8 @@ struct HS_API RenderParameter
 {
     std::vector<Model*> models;
     std::vector<Camera*> cameras;
+    RenderResourceManager* resourceManager = nullptr;
+    ShaderLibrary* shaderLibrary = nullptr;
 };
 
 HS_NS_END

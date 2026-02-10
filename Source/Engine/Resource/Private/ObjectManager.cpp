@@ -603,6 +603,20 @@ Scoped<Shader> ObjectManager::LoadShaderFromFile(const std::string& path, EShade
     return shader;
 }
 
+Scoped<Shader> ObjectManager::LoadShaderFromSource(const std::string& shaderName, const std::string& sourceCode,
+                                                    EShaderStage requestedStages,
+                                                    const std::vector<std::string>& includePaths)
+{
+    if (sourceCode.empty())
+    {
+        HS_LOG(error, "Shader source code is empty for '%s'", shaderName.c_str());
+        return nullptr;
+    }
+
+    Scoped<Shader> shader = MakeScoped<Shader>(shaderName, sourceCode, requestedStages, includePaths);
+    return shader;
+}
+
 void ObjectManager::FreeShader(Shader* shader)
 {
     // The shader destructor should handle cleanup
