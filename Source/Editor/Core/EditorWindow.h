@@ -42,10 +42,6 @@ private:
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
-    void onResize() override;
-    void onSuspend() override;
-
-    void onRestore() override;
 
     void onRenderGUI();
 

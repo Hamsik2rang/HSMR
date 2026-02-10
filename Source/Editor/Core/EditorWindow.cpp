@@ -110,10 +110,6 @@ void EditorWindow::onUpdate(float deltaTime)
     }
 }
 
-void EditorWindow::onResize()
-{
-}
-
 void EditorWindow::onRender()
 {
     HS_PROFILE_ZONE_NC("EditorWindow::onRender", HS::Profile::ColorRender);
@@ -196,16 +192,6 @@ void EditorWindow::onRenderGUI()
     _basePanel->Draw(); // Draw panel tree.
 
     guiContext->EndRender();
-}
-
-void EditorWindow::onSuspend()
-{
-    _rhiContext->Suspend(_swapchain);
-}
-
-void EditorWindow::onRestore()
-{
-    _rhiContext->Restore(_swapchain);
 }
 
 void EditorWindow::setupPanels()

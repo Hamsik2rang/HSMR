@@ -251,6 +251,16 @@ void Window::Flush()
     }
 }
 
+void Window::onSuspend()
+{
+    _rhiContext->Suspend(_swapchain);
+}
+
+void Window::onRestore()
+{
+    _rhiContext->Restore(_swapchain);
+}
+
 Application* Window::GetApplication()
 {
     return _ownerApp;

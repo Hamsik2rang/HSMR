@@ -53,6 +53,11 @@ bool ProjectLauncherWindow::onInitialize()
 {
     // Get GUI context from application
     _guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+    float dpiScale = _nativeWindow.scale;
+    if (dpiScale > 1.0f)
+    {
+        _guiContext->ApplyDPIScale(dpiScale);
+    }
 
     ImGuiExtension::InitializeBackend(_swapchain);
 
@@ -80,6 +85,8 @@ void ProjectLauncherWindow::onNextFrame()
     {
         return;
     }
+
+    _rhiContext->AcquireNextImage(_swapchain);
 }
 
 void ProjectLauncherWindow::onUpdate(float deltaTime)
@@ -287,22 +294,22 @@ void ProjectLauncherWindow::drawProjectList()
             ImGui::TextDisabled("%s", timeStr);
         }
 
-        // Right-click context menu
-        if (ImGui::BeginPopupContextItem())
-        {
-            if (ImGui::MenuItem("Open in Explorer"))
-            {
-                std::string folder = hs::FileSystem::GetDirectory(project.path);
-#ifdef _WIN32
-                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#endif
-            }
-            if (ImGui::MenuItem("Remove from List"))
-            {
-                RecentProjects::Get().RemoveProject(project.path);
-            }
-            ImGui::EndPopup();
-        }
+//        // Right-click context menu
+//        if (ImGui::BeginPopupContextItem())
+//        {
+//            if (ImGui::MenuItem("Open in Explorer"))
+//            {
+//                std::string folder = hs::FileSystem::GetDirectory(project.path);
+//#ifdef _WIN32
+//                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+//#endif
+//            }
+//            if (ImGui::MenuItem("Remove from List"))
+//            {
+//                RecentProjects::Get().RemoveProject(project.path);
+//            }
+//            ImGui::EndPopup();
+//        }
 
         ImGui::PopID();
 

@@ -60,8 +60,9 @@ protected:
 	virtual void onPresent() {}
 	virtual void onShutdown() {}
 	virtual void onResize() {}
-	virtual void onSuspend() {}
-	virtual void onRestore() {}
+    
+	virtual void onSuspend();
+    virtual void onRestore();
 
 	std::list<Window*> _childs;
 	Window* _parent = nullptr;
