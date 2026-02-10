@@ -66,7 +66,6 @@ float4 FragmentMain(FSInput input) : SV_Target
     float3 V = normalize(perView.cameraPosition.xyz - input.positionWS);
     float3 H = normalize(L + V);
 
-    float3 objectColor = float3(0.8, 0.8, 0.8);
     float3 lightColor  = float3(1.0, 0.98, 0.95);
 
     float ambient  = 0.15;
@@ -74,7 +73,7 @@ float4 FragmentMain(FSInput input) : SV_Target
     float specular = pow(max(dot(N, H), 0.0), 64.0);
 
     float3 albedo = albedoSampler.Sample(input.uv).rgb;
-    float3 color = objectColor * (ambient + diffuse) * lightColor + specular * lightColor * 0.5;
+    float3 color = albedo * (ambient + diffuse) * lightColor + specular * lightColor * 0.5;
 
     return float4(color, 1.0);
 }

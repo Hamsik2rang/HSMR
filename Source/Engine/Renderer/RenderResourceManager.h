@@ -19,6 +19,8 @@ namespace hs
 class RHIContext;
 class RHIShader;
 class RHIBuffer;
+class RHITexture;
+class RHISampler;
 class RHIResourceLayout;
 class RHIResourceSet;
 class RHIGraphicsPipeline;
@@ -28,9 +30,21 @@ class Mesh;
 class Shader;
 class Camera;
 class Model;
+class Image;
 } // namespace hs
 
 HS_NS_BEGIN
+
+// Cached RHI resources per image (GPU texture + sampler)
+struct HS_API ImageResource
+{
+    RHITexture* texture = nullptr;
+    RHISampler* sampler = nullptr;
+    uint32 width = 0;
+    uint32 height = 0;
+    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
+    bool isValid = false;
+};
 
 // Cached RHI resources per material
 struct HS_API MaterialResource
@@ -41,6 +55,7 @@ struct HS_API MaterialResource
     RHIResourceSet* resourceSet = nullptr;
     std::vector<RHIBuffer*> materialBuffers;
     std::unordered_map<size_t, RHIGraphicsPipeline*> pipelineCache;
+    std::vector<ImageResource*> textureResources;  // Referenced textures
     bool isValid = false;
 };
 
@@ -88,11 +103,15 @@ public:
     // Mesh resources (cached)
     MeshResource* GetOrCreateMeshResources(Mesh* mesh, const ShaderReflectionDataEx& reflection);
 
+    // Image resources (cached)
+    ImageResource* GetOrCreateImageResource(Image* image);
+
     void ReleaseAll();
 
 private:
     MaterialResource createMaterialResources(Material* material);
-    RHIResourceLayout* createResourceLayoutFromReflection(const ShaderReflectionDataEx& reflection);
+    ImageResource createImageResource(Image* image);
+    RHIResourceLayout* createResourceLayoutFromReflection(const ShaderReflectionDataEx& reflection, Material* material);
     std::vector<float> buildInterleavedVertexData(Mesh* mesh, const ShaderVertexInputLayout& vertexLayout);
 
     RHIContext* _rhiContext;
@@ -104,6 +123,7 @@ private:
     std::unordered_map<Model*, ModelResource> _modelResources;
     std::unordered_map<Material*, MaterialResource> _materialResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
+    std::unordered_map<Image*, ImageResource> _imageResources;
 };
 
 HS_NS_END

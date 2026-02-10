@@ -626,10 +626,18 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 {
     bool isColorRenderTarget = ((info.usage & ETextureUsage::COLOR_ATTACHMENT) != 0);
     bool isStorageTexture    = (info.usage & ETextureUsage::STORAGE) != 0;
+    bool isSampledTexture    = (info.usage & ETextureUsage::SAMPLED) != 0;
     bool isSwapchainTexture  = info.isSwapchainTexture;
-    if (false == isStorageTexture)
+
+    // Validate texture usage: render targets cannot be both color and depth
+    // But sampled-only textures (for shader sampling) don't need this check
+    if (!isStorageTexture && !isSampledTexture)
     {
         HS_ASSERT((isColorRenderTarget ^ info.isDepthStencilBuffer), "Texture cannot be both color render target and depth stencil buffer.");
+    }
+    else if (isColorRenderTarget && info.isDepthStencilBuffer)
+    {
+        HS_ASSERT(false, "Texture cannot be both color render target and depth stencil buffer.");
     }
     HS_ASSERT(!(info.isSwapchainTexture ^ (info.swapchain != nullptr)), "Texture swapchain mismatch. Texture isSwapchainTexture must match with swapchain.");
 
@@ -1081,8 +1089,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
                 TextureVulkan* texVK = static_cast<TextureVulkan*>(binding.resource.textures[0]);
                 VkDescriptorImageInfo imgInfo{};
                 imgInfo.imageView = texVK->imageViewVk;
-                // Use GENERAL layout for compute shader compatibility (textures may be written as STORAGE_IMAGE)
-                imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                // Use the actual current layout of the texture
+                imgInfo.imageLayout = texVK->layoutVk;
                 imgInfo.sampler = VK_NULL_HANDLE;
                 imageInfos.push_back(imgInfo);
 
@@ -1132,8 +1140,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
                 SamplerVulkan* samplerVK = static_cast<SamplerVulkan*>(binding.resource.samplers[0]);
                 VkDescriptorImageInfo imgInfo{};
                 imgInfo.imageView = texVK->imageViewVk;
-                // Use GENERAL layout for compute shader compatibility
-                imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                // Use the actual current layout of the texture
+                imgInfo.imageLayout = texVK->layoutVk;
                 imgInfo.sampler = samplerVK->handle;
                 imageInfos.push_back(imgInfo);
 

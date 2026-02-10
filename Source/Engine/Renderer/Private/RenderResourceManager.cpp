@@ -10,6 +10,7 @@
 #include "Resource/Material.h"
 #include "Resource/Mesh.h"
 #include "Resource/Shader.h"
+#include "Resource/Image.h"
 
 HS_NS_BEGIN
 
@@ -230,6 +231,124 @@ MeshResource* RenderResourceManager::GetOrCreateMeshResources(Mesh* mesh, const 
     return &_meshResources[mesh];
 }
 
+ImageResource* RenderResourceManager::GetOrCreateImageResource(Image* image)
+{
+    if (!image) return nullptr;
+
+    auto it = _imageResources.find(image);
+    if (it != _imageResources.end() && it->second.isValid)
+    {
+        return &it->second;
+    }
+
+    ImageResource resource = createImageResource(image);
+    if (resource.isValid)
+    {
+        _imageResources[image] = std::move(resource);
+        HS_LOG(info, "[RenderResourceManager] ImageResource created (%ux%u)",
+               _imageResources[image].width, _imageResources[image].height);
+        return &_imageResources[image];
+    }
+
+    return nullptr;
+}
+
+ImageResource RenderResourceManager::createImageResource(Image* image)
+{
+    ImageResource resource;
+
+    if (!image || !image->GetRawData())
+    {
+        HS_LOG(error, "[RenderResourceManager] Invalid image data");
+        return resource;
+    }
+
+    uint32 width = image->GetWidth();
+    uint32 height = image->GetHeight();
+    uint8 channels = image->GetChannel();
+
+    // Determine pixel format
+    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
+    if (channels == 1)
+        format = EPixelFormat::R8_UNORM;
+    else if (channels == 2)
+        format = EPixelFormat::RG8_UNORM;
+    // 3 and 4 channels both use RGBA (RGB8 is inefficient in Vulkan)
+
+    // Prepare image data (convert RGB to RGBA if needed)
+    const void* imageData = image->GetRawData();
+    std::vector<uint8> rgbaData;
+    size_t dataSize = 0;
+
+    if (channels == 3)
+    {
+        // Convert RGB to RGBA
+        rgbaData.resize(width * height * 4);
+        const uint8* src = static_cast<const uint8*>(imageData);
+        for (uint32 i = 0; i < width * height; ++i)
+        {
+            rgbaData[i * 4 + 0] = src[i * 3 + 0];
+            rgbaData[i * 4 + 1] = src[i * 3 + 1];
+            rgbaData[i * 4 + 2] = src[i * 3 + 2];
+            rgbaData[i * 4 + 3] = 255;
+        }
+        imageData = rgbaData.data();
+        dataSize = rgbaData.size();
+    }
+    else
+    {
+        dataSize = width * height * channels;
+    }
+
+    // Create RHITexture
+    TextureInfo texInfo{};
+    texInfo.format = format;
+    texInfo.type = ETextureType::TEX_2D;
+    texInfo.usage = ETextureUsage::SAMPLED | ETextureUsage::STATIC;  // STATIC adds TRANSFER_DST for data upload
+    texInfo.extent.width = width;
+    texInfo.extent.height = height;
+    texInfo.extent.depth = 1;
+    texInfo.mipLevel = 1;
+    texInfo.arrayLength = 1;
+    texInfo.byteSize = dataSize;
+
+    resource.texture = _rhiContext->CreateTexture(
+        "ImageTex", const_cast<void*>(imageData), texInfo);
+
+    if (!resource.texture)
+    {
+        HS_LOG(error, "[RenderResourceManager] Failed to create RHITexture");
+        return resource;
+    }
+
+    // Create RHISampler
+    SamplerInfo sampInfo{};
+    sampInfo.type = ETextureType::TEX_2D;
+    sampInfo.minFilter = EFilterMode::LINEAR;
+    sampInfo.magFilter = EFilterMode::LINEAR;
+    sampInfo.mipmapMode = EFilterMode::LINEAR;
+    sampInfo.addressU = EAddressMode::REPEAT;
+    sampInfo.addressV = EAddressMode::REPEAT;
+    sampInfo.addressW = EAddressMode::REPEAT;
+
+    resource.sampler = _rhiContext->CreateSampler("ImageSampler", sampInfo);
+
+    if (!resource.sampler)
+    {
+        HS_LOG(error, "[RenderResourceManager] Failed to create RHISampler");
+        _rhiContext->DestroyTexture(resource.texture);
+        resource.texture = nullptr;
+        return resource;
+    }
+
+    resource.width = width;
+    resource.height = height;
+    resource.format = format;
+    resource.isValid = true;
+
+    return resource;
+}
+
 MaterialResource RenderResourceManager::createMaterialResources(Material* material)
 {
     MaterialResource resources;
@@ -242,6 +361,19 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     const ShaderReflectionDataEx& reflection = shader->GetReflection();
+
+    // Debug: Log reflection info
+    HS_LOG(info, "[RenderResourceManager] Shader '%s' reflection: %zu buffers, %zu textures, %zu samplers",
+           shader->GetShaderName().c_str(),
+           reflection.bufferBindings.size(),
+           reflection.textureBindings.size(),
+           reflection.samplerBindings.size());
+
+    for (const auto& tex : reflection.textureBindings)
+    {
+        HS_LOG(info, "[RenderResourceManager]   Texture: '%s' binding=%u set=%u",
+               tex.name.c_str(), tex.binding, tex.set);
+    }
 
     // Create RHI shaders from bytecode
     const auto* vsBytecode = shader->GetBytecode(EShaderStage::VERTEX);
@@ -276,7 +408,7 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     // Create resource layout from reflection (uses active camera/model resources)
-    resources.resourceLayout = createResourceLayoutFromReflection(reflection);
+    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material);
 
     if (!resources.resourceLayout)
     {
@@ -297,11 +429,51 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     return resources;
 }
 
+// Helper function to map shader texture name to material texture type
+static EMaterialTextureType mapTextureNameToType(const std::string& name)
+{
+    // Convert to lowercase for comparison
+    std::string lowerName = name;
+    for (auto& c : lowerName) c = static_cast<char>(tolower(c));
+
+    if (lowerName.find("albedo") != std::string::npos ||
+        lowerName.find("diffuse") != std::string::npos ||
+        lowerName.find("basecolor") != std::string::npos ||
+        lowerName.find("base_color") != std::string::npos)
+        return EMaterialTextureType::DIFFUSE;
+
+    if (lowerName.find("normal") != std::string::npos)
+        return EMaterialTextureType::NORMAL;
+
+    if (lowerName.find("metallic") != std::string::npos ||
+        lowerName.find("metalness") != std::string::npos)
+        return EMaterialTextureType::METALLIC;
+
+    if (lowerName.find("roughness") != std::string::npos)
+        return EMaterialTextureType::ROUGHNESS;
+
+    if (lowerName.find("emission") != std::string::npos ||
+        lowerName.find("emissive") != std::string::npos)
+        return EMaterialTextureType::EMISSION;
+
+    if (lowerName.find("ao") != std::string::npos ||
+        lowerName.find("occlusion") != std::string::npos ||
+        lowerName.find("ambient") != std::string::npos)
+        return EMaterialTextureType::AMBIENT_OCCLUSION;
+
+    if (lowerName.find("specular") != std::string::npos)
+        return EMaterialTextureType::SPECULAR;
+
+    // Default to diffuse
+    return EMaterialTextureType::DIFFUSE;
+}
+
 RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
-    const ShaderReflectionDataEx& reflection)
+    const ShaderReflectionDataEx& reflection, Material* material)
 {
     std::vector<ResourceBinding> bindings;
 
+    // 1. Buffer bindings (perView, perDraw)
     for (const auto& buf : reflection.bufferBindings)
     {
         // Determine which RHI buffer to bind
@@ -357,6 +529,75 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         binding.resource.offsets.push_back(0);
         bindings.push_back(std::move(binding));
 #endif
+    }
+
+    // 2. Texture bindings (combined image sampler)
+    if (material)
+    {
+        for (const auto& tex : reflection.textureBindings)
+        {
+            // Map shader texture name to material texture type
+            EMaterialTextureType texType = mapTextureNameToType(tex.name);
+            Image* image = material->GetTexture(texType);
+
+            if (!image)
+            {
+                HS_LOG(debug, "[RenderResourceManager] No texture for '%s' (type %d)",
+                       tex.name.c_str(), static_cast<int>(texType));
+                continue;
+            }
+
+            ImageResource* imgRes = GetOrCreateImageResource(image);
+            if (!imgRes || !imgRes->isValid)
+            {
+                HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'",
+                       tex.name.c_str());
+                continue;
+            }
+
+#ifdef __APPLE__
+            // Metal: separate texture and sampler bindings per stage
+            if ((tex.stages & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+            {
+                ResourceBinding texBinding{};
+                texBinding.type = EResourceType::SAMPLED_IMAGE;
+                texBinding.stage = EShaderStage::FRAGMENT;
+                texBinding.binding = static_cast<uint8>(tex.binding);
+                texBinding.arrayCount = 1;
+                texBinding.resource.textures.push_back(imgRes->texture);
+                bindings.push_back(std::move(texBinding));
+
+                // Find matching sampler binding
+                for (const auto& samp : reflection.samplerBindings)
+                {
+                    if ((samp.stages & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+                    {
+                        ResourceBinding sampBinding{};
+                        sampBinding.type = EResourceType::SAMPLER;
+                        sampBinding.stage = EShaderStage::FRAGMENT;
+                        sampBinding.binding = static_cast<uint8>(samp.binding);
+                        sampBinding.arrayCount = 1;
+                        sampBinding.resource.samplers.push_back(imgRes->sampler);
+                        bindings.push_back(std::move(sampBinding));
+                        break;  // Use first matching sampler
+                    }
+                }
+            }
+#elif __WINDOWS__
+            // Vulkan: combined image sampler
+            ResourceBinding binding{};
+            binding.type = EResourceType::COMBINED_IMAGE_SAMPLER;
+            binding.stage = tex.stages;
+            binding.binding = static_cast<uint8>(tex.binding);
+            binding.arrayCount = 1;
+            binding.resource.textures.push_back(imgRes->texture);
+            binding.resource.samplers.push_back(imgRes->sampler);
+            bindings.push_back(std::move(binding));
+
+            HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u",
+                   tex.name.c_str(), tex.binding);
+#endif
+        }
     }
 
     if (bindings.empty())
@@ -482,6 +723,13 @@ void RenderResourceManager::ReleaseAll()
         if (res.perDrawBuffer) _rhiContext->DestroyBuffer(res.perDrawBuffer);
     }
     _modelResources.clear();
+
+    for (auto& [image, res] : _imageResources)
+    {
+        if (res.texture) _rhiContext->DestroyTexture(res.texture);
+        if (res.sampler) _rhiContext->DestroySampler(res.sampler);
+    }
+    _imageResources.clear();
 
     _activeCameraResource = nullptr;
     _activeModelResource = nullptr;

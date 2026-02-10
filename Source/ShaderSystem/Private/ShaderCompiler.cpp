@@ -390,6 +390,14 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
         slang::TypeLayoutReflection* typeLayout = param->getTypeLayout();
         slang::TypeReflection* type = typeLayout->getType();
         auto kind = type->getKind();
+        auto category = typeLayout->getParameterCategory();
+
+        // Debug: log all parameters
+        HS_LOG(debug, "[ShaderCompiler] Param '%s': kind=%d, category=%d, binding=%d",
+               param->getName() ? param->getName() : "(null)",
+               static_cast<int>(kind),
+               static_cast<int>(category),
+               static_cast<int>(param->getBindingIndex()));
 
         if (kind == slang::TypeReflection::Kind::ConstantBuffer ||
             kind == slang::TypeReflection::Kind::ParameterBlock)
@@ -450,6 +458,21 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                 sampInfo.set = static_cast<uint32>(param->getBindingSpace());
                 sampInfo.stages = request.requestedStages;
                 outReflection.samplerBindings.push_back(std::move(sampInfo));
+            }
+            else if (bindingType == slang::ParameterCategory::DescriptorTableSlot)
+            {
+                // Combined image sampler (e.g., Sampler2D in Slang)
+                // Treat as texture binding - sampler is combined
+                ShaderTextureBindingInfo texInfo;
+                texInfo.name = param->getName() ? param->getName() : "";
+                texInfo.binding = static_cast<uint32>(param->getBindingIndex());
+                texInfo.set = static_cast<uint32>(param->getBindingSpace());
+                texInfo.stages = request.requestedStages;
+                texInfo.dimension = 2; // Default to 2D
+                outReflection.textureBindings.push_back(std::move(texInfo));
+
+                HS_LOG(info, "[ShaderCompiler] Combined sampler '%s' at binding %u",
+                       texInfo.name.c_str(), texInfo.binding);
             }
         }
         else if (kind == slang::TypeReflection::Kind::SamplerState)
