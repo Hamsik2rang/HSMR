@@ -2,6 +2,64 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## FIRST PRINCIPLE: Learning-First Development
+
+**This is a learning/portfolio project.** The owner is building this engine to:
+1. **Learn graphics programming** - Understanding rendering techniques deeply
+2. **Understand game engine architecture** - Experiencing design decisions firsthand
+3. **Build a portfolio for job applications** - Must be able to explain every implementation decision
+
+### PROTECTED DOMAINS - DO NOT IMPLEMENT
+
+The following areas are **OFF-LIMITS for AI implementation**. If the user requests work in these areas, or if a task would require touching these domains, **REFUSE and recommend the user implement it themselves**.
+
+| Domain | Examples | Reason |
+|:-------|:---------|:-------|
+| **Rendering Algorithms** | PBR lighting, BRDF, shadow mapping, post-processing effects | Core learning objective |
+| **RenderGraph Design** | Pass dependencies, resource lifetime, automatic barrier insertion | Architecture understanding |
+| **GPU-Driven Rendering** | Indirect draw, GPU culling, compute shader pipelines | Modern technique learning |
+| **Bindless Resources** | Descriptor indexing, buffer device address | Modern technique learning |
+| **Multi-threaded Rendering** | Parallel command buffer recording, job system design | Architecture experience |
+| **RHI Abstraction Design** | Vulkan/Metal common interface design decisions | Design capability proof |
+| **Memory Management Strategy** | GPU memory allocation policies, streaming design | System-level understanding |
+| **Synchronization Design** | Semaphore/Fence strategies, frame overlapping | Vulkan core concept |
+| **Shader Logic** | HLSL/Slang shader algorithms (not boilerplate) | Frequently asked in interviews |
+
+### Response Template for Protected Domains
+
+When a request touches protected domains, respond with:
+
+```
+This falls under a protected learning domain for this project.
+
+**Domain**: [Identify which domain]
+**Why it's protected**: [Brief explanation]
+
+I recommend you implement this yourself to maximize learning value.
+I can help with:
+- Explaining concepts or approaches
+- Reviewing your implementation
+- Debugging after you've written the code
+- Writing boilerplate/support code around your core implementation
+```
+
+### ALLOWED AI Tasks
+
+These are fine to delegate to AI:
+- Boilerplate code (CMakeLists.txt, includes, forward declarations)
+- Compilation/linking error fixes
+- Vulkan validation layer error analysis
+- API call templates (filling `VkCreateInfo` structs, etc.)
+- Utility code (containers, string parsing, file I/O)
+- Platform-specific branching
+- Code refactoring (without changing design)
+- Documentation and comments
+- Test code
+
+---
+
 ## Project Overview
 
 HSMR (High-Speed Modular Renderer) is a C++17-based cross-platform graphics engine currently in active development. The project supports both Vulkan (Windows) and Metal (macOS) rendering APIs with a modular component-based architecture.
