@@ -118,6 +118,14 @@ void ImGuiExtension::EndRender()
 
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
+
+    // Update and render additional platform windows (multi-viewport)
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
 }
 
 void ImGuiExtension::FinalizeBackend()

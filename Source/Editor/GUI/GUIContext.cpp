@@ -32,9 +32,7 @@ void GUIContext::Initialize()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-#if defined(__WINDOWS__)
-    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport
-#endif
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport (drag windows outside main window)
     std::string layoutPath = _assetDirectory + "imgui.ini";
     const char* filePath   = layoutPath.c_str();
 
@@ -47,6 +45,7 @@ void GUIContext::Initialize()
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
+        style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 

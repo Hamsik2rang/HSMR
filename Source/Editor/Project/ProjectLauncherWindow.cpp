@@ -35,7 +35,7 @@
 HS_NS_EDITOR_BEGIN
 
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
-    : Window(ownerApp, "HSMR Project Launcher", 900, 600,
+    : Window(ownerApp, "HSMR", 900, 600,
 #if defined(__APPLE__)
              EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_METAL)
 #else
@@ -141,13 +141,23 @@ void ProjectLauncherWindow::drawLauncherUI()
     ImGui::Begin("##Launcher", nullptr, windowFlags);
 
     // Left sidebar - Actions
-    ImGui::BeginChild("Actions", ImVec2(220, 0), true);
+    ImGui::BeginChild("Actions", ImVec2(250, 0), true);
     {
+        std::string titleText = "HSMR";
+        if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::VULKAN)
+        {
+            titleText += " - Vulkan";
+        }
+        else if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::METAL)
+        {
+            titleText += " - Metal";
+        }
+
         // Logo/Title area
         ImGui::PushFont(nullptr); // Use default font for now
         ImGui::SetCursorPosY(20);
         ImGui::SetCursorPosX(20);
-        ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "HSMR Engine");
+        ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), titleText.c_str());
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(50);
@@ -179,7 +189,6 @@ void ProjectLauncherWindow::drawLauncherUI()
         ImGui::SetCursorPosX(10);
         ImGui::TextDisabled("Version 0.1.0");
         ImGui::SetCursorPosX(10);
-        ImGui::TextDisabled("Vulkan Renderer");
     }
     ImGui::EndChild();
 
@@ -294,22 +303,22 @@ void ProjectLauncherWindow::drawProjectList()
             ImGui::TextDisabled("%s", timeStr);
         }
 
-//        // Right-click context menu
-//        if (ImGui::BeginPopupContextItem())
-//        {
-//            if (ImGui::MenuItem("Open in Explorer"))
-//            {
-//                std::string folder = hs::FileSystem::GetDirectory(project.path);
-//#ifdef _WIN32
-//                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-//#endif
-//            }
-//            if (ImGui::MenuItem("Remove from List"))
-//            {
-//                RecentProjects::Get().RemoveProject(project.path);
-//            }
-//            ImGui::EndPopup();
-//        }
+        // Right-click context menu
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Open in Explorer"))
+            {
+                std::string folder = hs::FileSystem::GetDirectory(project.path);
+#ifdef _WIN32
+                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+#endif
+            }
+            if (ImGui::MenuItem("Remove from List"))
+            {
+                RecentProjects::Get().RemoveProject(project.path);
+            }
+            ImGui::EndPopup();
+        }
 
         ImGui::PopID();
 
@@ -326,7 +335,7 @@ void ProjectLauncherWindow::drawNewProjectDialog()
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(550, 220));
 
-    if (ImGui::BeginPopupModal("New Project", &_showNewProjectDialog, ImGuiWindowFlags_NoResize))
+    if (ImGui::BeginPopupModal("New Project", &_showNewProjectDialog, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Spacing();
 

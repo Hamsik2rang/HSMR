@@ -216,6 +216,14 @@ void ImGuiExtension::EndRender()
 	ImGui_ImplVulkan_RenderDrawData(draw_data, cmdBufferVK->handle);
 
 	cmdBufferVK->EndRenderPass();
+
+	// Update and render additional platform windows (multi-viewport)
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
 }
 
 void ImGuiExtension::FinalizeBackend()
