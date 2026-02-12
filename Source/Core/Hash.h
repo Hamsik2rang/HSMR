@@ -67,29 +67,62 @@ HS_FORCEINLINE HS_API size_t PointerHash(const void* p)
 	return Hash64(reinterpret_cast<uint64>(p));
 }
 
-// 64bit FNV-1a hash function
-HS_FORCEINLINE HS_API uint64 StringHash64(const std::string& str)
+// ===== constexpr FNV-1a (const char*) =====
+
+// 64bit FNV-1a hash function (constexpr)
+constexpr uint64 StringHash64(const char* str)
 {
 	uint64 hash = 14695981039346656037ULL;
-	for (char c : str)
+	while (*str)
 	{
-		hash ^= static_cast<uint64>(c);
+		hash ^= static_cast<uint64>(*str);
 		hash *= 1099511628211ULL;
+		++str;
 	}
 	return hash;
 }
 
-// 32bit FNV-1a hash function
-HS_FORCEINLINE HS_API uint32 StringHash(const std::string& str)
+// 32bit FNV-1a hash function (constexpr)
+constexpr uint32 StringHash(const char* str)
 {
 	uint32 hash = 2166136261U;
-	for (char c : str)
+	while (*str)
 	{
-		hash ^= static_cast<uint32>(c);
+		hash ^= static_cast<uint32>(*str);
 		hash *= 16777619U;
+		++str;
 	}
 	return hash;
 }
+
+// ===== Runtime FNV-1a (std::string) =====
+
+// 64bit FNV-1a hash function (std::string, delegates to constexpr version)
+HS_FORCEINLINE HS_API uint64 StringHash64(const std::string& str)
+{
+	return StringHash64(str.c_str());
+}
+
+// 32bit FNV-1a hash function (std::string, delegates to constexpr version)
+HS_FORCEINLINE HS_API uint32 StringHash(const std::string& str)
+{
+	return StringHash(str.c_str());
+}
+
+// ===== User-Defined Literals =====
+
+namespace literals
+{
+	constexpr uint32 operator""_hash(const char* str, size_t)
+	{
+		return StringHash(str);
+	}
+
+	constexpr uint64 operator""_hash64(const char* str, size_t)
+	{
+		return StringHash64(str);
+	}
+} // namespace literals
 
 HS_NS_END
 
