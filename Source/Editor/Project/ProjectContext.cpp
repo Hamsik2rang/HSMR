@@ -40,7 +40,7 @@ bool ProjectContext::CreateProject(const std::string& folderPath, const std::str
 
     if (!hs::FileSystem::CreateDirectoryRecursive(projectPath))
     {
-        HS_LOG(error, "Failed to create project directory: {}", projectPath);
+        HS_LOG(error, "Failed to create project directory: {}", projectPath.c_str());
         return false;
     }
 
@@ -68,7 +68,7 @@ bool ProjectContext::CreateProject(const std::string& folderPath, const std::str
 
     _isOpen = true;
 
-    HS_LOG(info, "Project created: {} at {}", name, projectPath);
+    HS_LOG(info, "Project created: {} at {}", name.c_str(), projectPath.c_str());
     return true;
 }
 
@@ -82,13 +82,13 @@ bool ProjectContext::OpenProject(const std::string& projectFilePath)
 
     if (!hs::FileSystem::Exist(projectFilePath))
     {
-        HS_LOG(error, "Project file not found: {}", projectFilePath);
+        HS_LOG(error, "Project file not found: {}", projectFilePath.c_str());
         return false;
     }
 
     if (!loadProjectFile(projectFilePath))
     {
-        HS_LOG(error, "Failed to load project file: {}", projectFilePath);
+        HS_LOG(error, "Failed to load project file: {}", projectFilePath.c_str());
         return false;
     }
 
@@ -96,7 +96,7 @@ bool ProjectContext::OpenProject(const std::string& projectFilePath)
     _projectPath     = hs::FileSystem::GetDirectory(projectFilePath);
     _isOpen          = true;
 
-    HS_LOG(info, "Project opened: {} at {}", _settings.name, _projectPath);
+    HS_LOG(info, "Project opened: {} at {}", _settings.name.c_str(), _projectPath.c_str());
     return true;
 }
 

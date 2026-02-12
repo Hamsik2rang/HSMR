@@ -13,13 +13,13 @@ Scene::Scene(const std::string& name)
     : _name(name)
     , _sceneGraph(_registry)
 {
-    HS_LOG(info, "[Scene] Created scene: {}", name);
+    HS_LOG(info, "[Scene] Created scene: {}", _name.c_str());
 }
 
 Scene::~Scene()
 {
     Clear();
-    HS_LOG(info, "[Scene] Destroyed scene: {}", _name);
+    HS_LOG(info, "[Scene] Destroyed scene: {}", _name.c_str());
 }
 
 Entity Scene::CreateEntity(const std::string& name)

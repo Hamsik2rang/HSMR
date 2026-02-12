@@ -66,7 +66,7 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
 {
     s_currentSwapchain = swapchain;
 
-    SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
+    MetalSwapchain* swMetal = static_cast<MetalSwapchain*>(swapchain);
     const NativeWindow* nativeWindow = swapchain->GetInfo().nativeWindow;
 
     MTLRenderPassDescriptor* rpDesc = static_cast<MetalRenderPass*>(swMetal->GetRenderPass())->handle;

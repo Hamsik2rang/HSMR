@@ -24,13 +24,19 @@ add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 if(APPLE)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        "-Wl,-all_load" Core Platform RHI
+        Core Platform
         ${HS_SLANG_DYLIB}
     )
+
+    if(HSMR_USE_SDL)
+        target_compile_options(${TARGET_NAME} PRIVATE -F${HS_DEPS_LIB_DIR})
+        target_link_options(${TARGET_NAME} PRIVATE -F${HS_DEPS_LIB_DIR})
+        target_link_libraries(${TARGET_NAME} PRIVATE "-framework SDL3")
+    endif()
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core Platform RHI
+        Core Platform
         ${HS_SLANG_LIB}
     )
 endif()
@@ -40,7 +46,6 @@ if(WIN32)
         PRIVATE
         "/WHOLEARCHIVE:Core"
         "/WHOLEARCHIVE:Platform"
-        "/WHOLEARCHIVE:RHI"
     )
 endif()
 

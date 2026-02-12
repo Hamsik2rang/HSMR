@@ -43,7 +43,7 @@ void AssetDatabase::Scan()
         _rootPath.pop_back();
     }
 
-    HS_LOG(info, "[AssetDatabase] Scanning root: {}", _rootPath);
+    HS_LOG(info, "[AssetDatabase] Scanning root: {}", _rootPath.c_str());
 
     Refresh();
 }
@@ -70,7 +70,7 @@ void AssetDatabase::Refresh()
     std::filesystem::path rootFsPath(_rootPath);
     if (!std::filesystem::exists(rootFsPath))
     {
-        HS_LOG(warning, "[AssetDatabase] Root path does not exist: {}", _rootPath);
+        HS_LOG(warning, "[AssetDatabase] Root path does not exist: {}", _rootPath.c_str());
         return;
     }
 

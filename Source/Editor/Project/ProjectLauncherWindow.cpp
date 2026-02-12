@@ -14,6 +14,7 @@
 #include "Editor/Core/EditorApplication.h"
 
 #include "Core/SystemContext.h"
+#include "Core/HAL/FileDialog.h"
 #include "Core/HAL/FileSystem.h"
 #include "Core/Log.h"
 
@@ -23,14 +24,6 @@
 
 #include <chrono>
 #include <ctime>
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <commdlg.h>
-#include <ShlObj.h>
-#include <shellapi.h>
-#endif
 
 HS_NS_EDITOR_BEGIN
 
@@ -354,7 +347,12 @@ void ProjectLauncherWindow::drawNewProjectDialog()
         ImGui::SameLine();
         if (ImGui::Button("Browse...", ImVec2(80, 0)))
         {
-            openFolderDialog(_newProjectPathBuffer, sizeof(_newProjectPathBuffer));
+            std::string folder = hs::FileDialog::OpenFolder();
+            if (!folder.empty())
+            {
+                strncpy(_newProjectPathBuffer, folder.c_str(), sizeof(_newProjectPathBuffer) - 1);
+                _newProjectPathBuffer[sizeof(_newProjectPathBuffer) - 1] = '\0';
+            }
         }
 
         // Full path preview
@@ -417,69 +415,20 @@ void ProjectLauncherWindow::drawNewProjectDialog()
 
 void ProjectLauncherWindow::drawOpenProjectDialog()
 {
-    char filePath[512] = {0};
-    if (openFileDialog(filePath, sizeof(filePath)))
+    hs::FileDialogFilter filters[] = {
+        {"HSMR Project", "*.hsproj"},
+        {"All Files", "*.*"}
+    };
+
+    std::string path = hs::FileDialog::OpenFile(filters, 2);
+    if (!path.empty() && hs::FileSystem::Exist(path))
     {
-        std::string path(filePath);
-        if (hs::FileSystem::Exist(path))
-        {
-            _selectedProjectPath = path;
+        _selectedProjectPath = path;
 
-            // Extract project name from path
-            std::string name = hs::FileSystem::GetFileNameWithoutExtension(path);
-            RecentProjects::Get().AddProject(path, name);
-        }
+        // Extract project name from path
+        std::string name = hs::FileSystem::GetFileNameWithoutExtension(path);
+        RecentProjects::Get().AddProject(path, name);
     }
-}
-
-bool ProjectLauncherWindow::openFolderDialog(char* outPath, size_t pathSize)
-{
-#ifdef _WIN32
-    BROWSEINFOA bi = {0};
-    bi.lpszTitle   = "Select Project Location";
-    bi.ulFlags     = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-
-    LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
-    if (pidl != nullptr)
-    {
-        char path[MAX_PATH];
-        if (SHGetPathFromIDListA(pidl, path))
-        {
-            strncpy(outPath, path, pathSize - 1);
-            outPath[pathSize - 1] = '\0';
-
-            CoTaskMemFree(pidl);
-            return true;
-        }
-        CoTaskMemFree(pidl);
-    }
-#endif
-    return false;
-}
-
-bool ProjectLauncherWindow::openFileDialog(char* outPath, size_t pathSize)
-{
-#ifdef _WIN32
-    OPENFILENAMEA ofn = {0};
-    char fileName[MAX_PATH] = {0};
-
-    ofn.lStructSize     = sizeof(ofn);
-    ofn.hwndOwner       = nullptr;
-    ofn.lpstrFilter     = "HSMR Project (*.hsproj)\0*.hsproj\0All Files (*.*)\0*.*\0";
-    ofn.lpstrFile       = fileName;
-    ofn.nMaxFile        = MAX_PATH;
-    ofn.lpstrTitle      = "Open Project";
-    ofn.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-    ofn.lpstrDefExt     = "hsproj";
-
-    if (GetOpenFileNameA(&ofn))
-    {
-        strncpy(outPath, fileName, pathSize - 1);
-        outPath[pathSize - 1] = '\0';
-        return true;
-    }
-#endif
-    return false;
 }
 
 HS_NS_EDITOR_END

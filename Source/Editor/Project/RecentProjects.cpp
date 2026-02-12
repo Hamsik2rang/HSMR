@@ -38,7 +38,7 @@ void RecentProjects::Load()
     std::ifstream file(configPath);
     if (!file.is_open())
     {
-        HS_LOG(warning, "Failed to open recent projects file: {}", configPath);
+        HS_LOG(warning, "Failed to open recent projects file: {}", configPath.c_str());
         return;
     }
 
@@ -102,7 +102,7 @@ void RecentProjects::Save()
     std::ofstream file(configPath);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to save recent projects file: {}", configPath);
+        HS_LOG(error, "Failed to save recent projects file: {}", configPath.c_str());
         return;
     }
 

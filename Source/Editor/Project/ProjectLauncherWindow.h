@@ -45,9 +45,6 @@ private:
     void drawNewProjectDialog();
     void drawOpenProjectDialog();
 
-    bool openFolderDialog(char* outPath, size_t pathSize);
-    bool openFileDialog(char* outPath, size_t pathSize);
-
     std::string _selectedProjectPath;
 
     // New project creation
