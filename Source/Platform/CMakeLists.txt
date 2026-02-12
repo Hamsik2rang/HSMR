@@ -4,14 +4,19 @@ set(TOTAL_FILES)
 
 if(HSMR_USE_SDL)
     set(PLATFORM_SDL_HEADERS
+        SDL/SDLFileDialog.h
         SDL/SDLFileSystem.h
     )
     source_group("SDL\\Public" FILES ${PLATFORM_SDL_HEADERS})
     list(APPEND TOTAL_FILES ${PLATFORM_SDL_HEADERS})
 
     set(PLATFORM_SDL_SOURCES
+        SDL/Private/SDLFileDialog.cpp
         SDL/Private/SDLFileSystem.cpp
     )
+    if(APPLE)
+        list(APPEND PLATFORM_SDL_SOURCES SDL/Private/SDLFileDialog_Mac.mm)
+    endif()
     source_group("SDL\\Private" FILES ${PLATFORM_SDL_SOURCES})
     list(APPEND TOTAL_FILES ${PLATFORM_SDL_SOURCES})
 endif()
@@ -34,8 +39,8 @@ if(WIN32)
     )
 
     if(NOT HSMR_USE_SDL)
-        list(APPEND PLATFORM_WIN_HEADERS Win/Private/WinFileSystem.h)
-        list(APPEND PLATFORM_WIN_SOURCES Win/Private/WinFileSystem.cpp)
+        list(APPEND PLATFORM_WIN_HEADERS Win/WinFileDialog.h Win/Private/WinFileSystem.h)
+        list(APPEND PLATFORM_WIN_SOURCES Win/Private/WinFileDialog.cpp Win/Private/WinFileSystem.cpp)
     endif()
 
     source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
@@ -64,8 +69,8 @@ else() # MAC
     )
 
     if(NOT HSMR_USE_SDL)
-        list(APPEND PLATFORM_MAC_HEADERS Win/Private/MacFileSystem.h)
-        list(APPEND PLATFORM_MAC_SOURCES Win/Private/MacFileSystem.mm)
+        list(APPEND PLATFORM_MAC_HEADERS Mac/MacFileDialog.h Mac/MacFileSystem.h)
+        list(APPEND PLATFORM_MAC_SOURCES Mac/Private/MacFileDialog.mm Mac/Private/MacFileSystem.mm)
     endif()
 
     source_group("Mac\\Public" FILES ${PLATFORM_MAC_HEADERS})

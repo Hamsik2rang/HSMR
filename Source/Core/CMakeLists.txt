@@ -43,6 +43,7 @@ source_group("Native\\Private" FILES ${CORE_NATIVE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_NATIVE_SOURCES})
 
 set(CORE_HAL_HEADERS
+    HAL/FileDialog.h
     HAL/FileSystem.h
     HAL/Input.h
     HAL/Timer.h
