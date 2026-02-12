@@ -35,7 +35,7 @@
 HS_NS_EDITOR_BEGIN
 
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
-    : Window(ownerApp, "HSMR", 900, 600,
+    : Window(ownerApp, "HSMR", 1024, 600,
 #if defined(__APPLE__)
              EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_METAL)
 #else
@@ -141,7 +141,7 @@ void ProjectLauncherWindow::drawLauncherUI()
     ImGui::Begin("##Launcher", nullptr, windowFlags);
 
     // Left sidebar - Actions
-    ImGui::BeginChild("Actions", ImVec2(250, 0), true);
+    ImGui::BeginChild("Actions", ImVec2(220, 0), true);
     {
         std::string titleText = "HSMR";
         if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::VULKAN)
@@ -240,7 +240,7 @@ void ProjectLauncherWindow::drawProjectList()
 
         // Project card
         ImVec2 cardStart = ImGui::GetCursorScreenPos();
-        ImVec2 cardSize(ImGui::GetContentRegionAvail().x - 20, 70);
+        ImVec2 cardSize(ImGui::GetContentRegionAvail().x - 20, 80);
 
         // Hover effect
         ImVec2 mousePos  = ImGui::GetMousePos();
@@ -268,6 +268,23 @@ void ProjectLauncherWindow::drawProjectList()
             {
                 _selectedProjectPath = project.path;
             }
+        }
+
+        // Right-click context menu (must be right after InvisibleButton so it's the "last item")
+        if (ImGui::BeginPopupContextItem("##cardcontext"))
+        {
+            if (ImGui::MenuItem("Open in Explorer"))
+            {
+                std::string folder = hs::FileSystem::GetDirectory(project.path);
+#ifdef _WIN32
+                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+#endif
+            }
+            if (ImGui::MenuItem("Remove from List"))
+            {
+                RecentProjects::Get().RemoveProject(project.path);
+            }
+            ImGui::EndPopup();
         }
 
         // Card content
@@ -301,23 +318,6 @@ void ProjectLauncherWindow::drawProjectList()
 #endif
             strftime(timeStr, sizeof(timeStr), "Last opened: %Y-%m-%d %H:%M", &timeInfo);
             ImGui::TextDisabled("%s", timeStr);
-        }
-
-        // Right-click context menu
-        if (ImGui::BeginPopupContextItem())
-        {
-            if (ImGui::MenuItem("Open in Explorer"))
-            {
-                std::string folder = hs::FileSystem::GetDirectory(project.path);
-#ifdef _WIN32
-                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#endif
-            }
-            if (ImGui::MenuItem("Remove from List"))
-            {
-                RecentProjects::Get().RemoveProject(project.path);
-            }
-            ImGui::EndPopup();
         }
 
         ImGui::PopID();
