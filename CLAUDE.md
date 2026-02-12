@@ -62,7 +62,7 @@ These are fine to delegate to AI:
 
 ## Project Overview
 
-HSMR (High-Speed Modular Renderer) is a C++17-based cross-platform graphics engine currently in active development. The project supports both Vulkan (Windows) and Metal (macOS) rendering APIs with a modular component-based architecture.
+HSMR (High-Speed Modular Renderer) is a C++20-based cross-platform graphics engine currently in active development. The project supports both Vulkan (Windows) and Metal (macOS) rendering APIs with a modular component-based architecture.
 
 **Current Status**: Active development on `feature/refactor-architecture` branch - memory management and architecture improvements in progress.
 
@@ -92,7 +92,7 @@ cmake --build Build --target RegenerateCMake
 ```
 
 ### Build Configuration
-- **C++ Standard**: C++17 (required)
+- **C++ Standard**: C++20 (required)
 - **Build Types**: Debug, Release, MinSizeRel, RelWithDebInfo
 - **Architecture Detection**: Automatic (ARM64 on Apple Silicon, x64 on others)
 - **Platform Definitions**: `__APPLE__` or `__WINDOWS__`, plus `__ARM64__` or `__X64__`
@@ -154,7 +154,7 @@ The project uses platform-specific visibility macros:
 
 ### Compiler Settings
 - **RTTI**: Disabled (`-fno-rtti`)
-- **Standards**: C11 for C, C++17 for C++
+- **Standards**: C11 for C, C++20 for C++
 - **Warnings**: Specific warning suppressions for inline new/delete
 - **ARC**: Objective-C ARC disabled for mixed C++/ObjC code
 
