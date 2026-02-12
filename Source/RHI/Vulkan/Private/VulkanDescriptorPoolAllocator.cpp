@@ -2,143 +2,140 @@
 
 #include "RHI/Vulkan/VulkanDevice.h"
 
-
 HS_NS_BEGIN
 
-DescriptorPoolAllocatorVulkan::DescriptorPoolAllocatorVulkan()
-	: _instanceVk(nullptr)
-	, _device(nullptr)
-	, _setsPerPool(0)
+VulkanDescriptorPoolAllocator::VulkanDescriptorPoolAllocator()
+    : _instanceVk(nullptr)
+    , _device(nullptr)
+    , _setsPerPool(0)
 {
-	
 }
-DescriptorPoolAllocatorVulkan::~DescriptorPoolAllocatorVulkan()
+VulkanDescriptorPoolAllocator::~VulkanDescriptorPoolAllocator()
 {
-	Finalize();
+    Finalize();
 
-	for (auto& p : _readyPools)
-	{
-		vkDestroyDescriptorPool(_device->logicalDevice, p, nullptr);
-		p = nullptr;
-	}
-	_readyPools.clear();
-}
-
-
-bool DescriptorPoolAllocatorVulkan::Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios)
-{
-	_instanceVk = instanceVk;
-	_device = device;
-	_ratios.clear();
-	_setsPerPool = maxSets;
-
-	for (auto& ratio : poolRatios)
-	{
-		if (ratio.ratio > 0.0f)
-		{
-			_ratios.push_back(ratio);
-		}
-	}
-
-	return true;
+    for (auto& p : _readyPools)
+    {
+        vkDestroyDescriptorPool(_device->logicalDevice, p, nullptr);
+        p = nullptr;
+    }
+    _readyPools.clear();
 }
 
-void DescriptorPoolAllocatorVulkan::Finalize()
+bool VulkanDescriptorPoolAllocator::Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios)
 {
-	for (auto& p : _readyPools)
-	{
-		vkResetDescriptorPool(_device->logicalDevice, p, 0);
-	}
-	for (auto& p : _fullPools)
-	{
-		vkResetDescriptorPool(_device->logicalDevice, p, 0);
-		_readyPools.push_back(p);
-	}
-	_fullPools.clear();
+    _instanceVk = instanceVk;
+    _device     = device;
+    _ratios.clear();
+    _setsPerPool = maxSets;
+
+    for (auto& ratio : poolRatios)
+    {
+        if (ratio.ratio > 0.0f)
+        {
+            _ratios.push_back(ratio);
+        }
+    }
+
+    return true;
 }
 
-VkDescriptorSet DescriptorPoolAllocatorVulkan::AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next)
+void VulkanDescriptorPoolAllocator::Finalize()
 {
-	VkDescriptorPool pool = acquirePool();
-
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.pNext = next;
-	allocInfo.descriptorPool = pool;
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = &layout;
-
-	VkDescriptorSet descriptorSet;
-	VkResult result = vkAllocateDescriptorSets(_device->logicalDevice, &allocInfo, &descriptorSet);
-	if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL)
-	{
-
-		_fullPools.push_back(pool);
-
-		pool = acquirePool();
-		allocInfo.descriptorPool = pool;
-
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(_device->logicalDevice, &allocInfo, &descriptorSet));
-	}
-
-	_readyPools.push_back(pool);
-
-	return descriptorSet;
+    for (auto& p : _readyPools)
+    {
+        vkResetDescriptorPool(_device->logicalDevice, p, 0);
+    }
+    for (auto& p : _fullPools)
+    {
+        vkResetDescriptorPool(_device->logicalDevice, p, 0);
+        _readyPools.push_back(p);
+    }
+    _fullPools.clear();
 }
 
-void DescriptorPoolAllocatorVulkan::FreeDescriptorSet(VkDescriptorSet set)
+VkDescriptorSet VulkanDescriptorPoolAllocator::AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next)
 {
-	if (set == VK_NULL_HANDLE)
-	{
-		return;
-	}
-	// Reset the descriptor set
-	vkFreeDescriptorSets(_device->logicalDevice, _readyPools.back(), 1, &set);
-	// Add the pool back to the ready pools
-	if (!_readyPools.empty())
-	{
-		vkResetDescriptorPool(_device->logicalDevice, _readyPools.back(), 0);
-	}
-	else
-	{
-		vkResetDescriptorPool(_device->logicalDevice, _fullPools.back(), 0);
-	}
+    VkDescriptorPool pool = acquirePool();
+
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.pNext              = next;
+    allocInfo.descriptorPool     = pool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts        = &layout;
+
+    VkDescriptorSet descriptorSet;
+    VkResult result = vkAllocateDescriptorSets(_device->logicalDevice, &allocInfo, &descriptorSet);
+    if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL)
+    {
+
+        _fullPools.push_back(pool);
+
+        pool                     = acquirePool();
+        allocInfo.descriptorPool = pool;
+
+        VK_CHECK_RESULT(vkAllocateDescriptorSets(_device->logicalDevice, &allocInfo, &descriptorSet));
+    }
+
+    _readyPools.push_back(pool);
+
+    return descriptorSet;
 }
 
-VkDescriptorPool DescriptorPoolAllocatorVulkan::acquirePool()
+void VulkanDescriptorPoolAllocator::FreeDescriptorSet(VkDescriptorSet set)
 {
-	VkDescriptorPool pool;
-	if (false == _readyPools.empty())
-	{
-		pool = _readyPools.back();
-		_readyPools.pop_back();
-	}
-	else
-	{
-		std::vector<VkDescriptorPoolSize> poolSizes;
-		for (const PoolSizeRatio& r : _ratios)
-		{
-			poolSizes.push_back({ r.type,static_cast<uint32>(r.ratio * _setsPerPool) });
-		}
+    if (set == VK_NULL_HANDLE)
+    {
+        return;
+    }
+    // Reset the descriptor set
+    vkFreeDescriptorSets(_device->logicalDevice, _readyPools.back(), 1, &set);
+    // Add the pool back to the ready pools
+    if (!_readyPools.empty())
+    {
+        vkResetDescriptorPool(_device->logicalDevice, _readyPools.back(), 0);
+    }
+    else
+    {
+        vkResetDescriptorPool(_device->logicalDevice, _fullPools.back(), 0);
+    }
+}
 
-		VkDescriptorPoolCreateInfo poolCreateInfo{};
-		poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolCreateInfo.pNext = nullptr;
-		poolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		poolCreateInfo.maxSets = _setsPerPool;
-		poolCreateInfo.poolSizeCount = static_cast<uint32>(poolSizes.size());
-		poolCreateInfo.pPoolSizes = poolSizes.data();
+VkDescriptorPool VulkanDescriptorPoolAllocator::acquirePool()
+{
+    VkDescriptorPool pool;
+    if (false == _readyPools.empty())
+    {
+        pool = _readyPools.back();
+        _readyPools.pop_back();
+    }
+    else
+    {
+        std::vector<VkDescriptorPoolSize> poolSizes;
+        for (const PoolSizeRatio& r : _ratios)
+        {
+            poolSizes.push_back({r.type, static_cast<uint32>(r.ratio * _setsPerPool)});
+        }
 
-		vkCreateDescriptorPool(_device->logicalDevice, &poolCreateInfo, nullptr, &pool);
+        VkDescriptorPoolCreateInfo poolCreateInfo{};
+        poolCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolCreateInfo.pNext         = nullptr;
+        poolCreateInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolCreateInfo.maxSets       = _setsPerPool;
+        poolCreateInfo.poolSizeCount = static_cast<uint32>(poolSizes.size());
+        poolCreateInfo.pPoolSizes    = poolSizes.data();
 
-		_setsPerPool *= 1.5f;
-		if (_setsPerPool > 4092)
-		{
-			_setsPerPool = 4092; // custom limit
-		}
-	}
+        vkCreateDescriptorPool(_device->logicalDevice, &poolCreateInfo, nullptr, &pool);
 
-	return pool;
+        _setsPerPool *= 1.5f;
+        if (_setsPerPool > 4092)
+        {
+            _setsPerPool = 4092; // custom limit
+        }
+    }
+
+    return pool;
 }
 
 HS_NS_END

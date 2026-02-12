@@ -11,34 +11,34 @@ HS_NS_BEGIN
 
 class VulkanDevice;
 
-class HS_API DescriptorPoolAllocatorVulkan
+class HS_API VulkanDescriptorPoolAllocator
 {
 public:
-	struct PoolSizeRatio
-	{
-		VkDescriptorType type;
-		float ratio;
-	};
-	
-	DescriptorPoolAllocatorVulkan();
-	~DescriptorPoolAllocatorVulkan();
+    struct PoolSizeRatio
+    {
+        VkDescriptorType type;
+        float ratio;
+    };
 
-	bool Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios);
-	void Finalize();
+    VulkanDescriptorPoolAllocator();
+    ~VulkanDescriptorPoolAllocator();
 
-	VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next);
-	void FreeDescriptorSet(VkDescriptorSet set);
+    bool Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios);
+    void Finalize();
+
+    VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next);
+    void FreeDescriptorSet(VkDescriptorSet set);
 
 private:
-	VkDescriptorPool acquirePool();
-	
-	VkInstance _instanceVk;
-	VulkanDevice* _device = nullptr;
+    VkDescriptorPool acquirePool();
 
-	std::vector<PoolSizeRatio> _ratios;
-	std::vector<VkDescriptorPool> _readyPools;
-	std::vector<VkDescriptorPool> _fullPools;
-	uint32 _setsPerPool;
+    VkInstance _instanceVk;
+    VulkanDevice* _device = nullptr;
+
+    std::vector<PoolSizeRatio> _ratios;
+    std::vector<VkDescriptorPool> _readyPools;
+    std::vector<VkDescriptorPool> _fullPools;
+    uint32 _setsPerPool;
 };
 
 HS_NS_END

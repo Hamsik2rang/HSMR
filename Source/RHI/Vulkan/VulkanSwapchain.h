@@ -1,7 +1,7 @@
 ﻿#ifndef __HS_SWAPCHAIN_VULKAN_H__
 #define __HS_SWAPCHAIN_VULKAN_H__
 
-#include "Precompile.h"	
+#include "Precompile.h"
 
 #include "Core/Log.h"
 
@@ -12,60 +12,64 @@
 
 HS_NS_BEGIN
 
-class CommandBufferVulkan;
+class VulkanCommandBuffer;
 class RHIContext;
 
-class HS_API SwapchainVulkan final : public Swapchain
+class HS_API VulkanSwapchain final : public Swapchain
 {
 public:
-	friend class VulkanContext;
-	SwapchainVulkan(const SwapchainInfo& info, VkSurfaceKHR surface);
-	~SwapchainVulkan() override;
+    friend class VulkanContext;
+    VulkanSwapchain(const SwapchainInfo& info, VkSurfaceKHR surface);
+    ~VulkanSwapchain() override;
 
-	HS_FORCEINLINE uint8          GetMaxFrameCount() const override { return _maxFrameCount; }
-	HS_FORCEINLINE uint8          GetCurrentFrameIndex() const override { return _frameIndex; }
-	HS_FORCEINLINE uint8		  GetCurrentImageIndex() const override { return _curImageIndex; }
-	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override 
-	{
-		return static_cast<RHICommandBuffer*>(_commandBufferVKs[_frameIndex]); 
-	}
+    HS_FORCEINLINE uint8 GetMaxFrameCount() const override { return _maxFrameCount; }
+    HS_FORCEINLINE uint8 GetCurrentFrameIndex() const override { return _frameIndex; }
+    HS_FORCEINLINE uint8 GetCurrentImageIndex() const override { return _curImageIndex; }
+    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferForCurrentFrame() const override
+    {
+        return static_cast<RHICommandBuffer*>(_commandBufferVKs[_frameIndex]);
+    }
 
-	HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override { HS_ASSERT(index < _maxFrameCount, "out of index"); return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]); }
-	HS_FORCEINLINE RHIFramebuffer*   GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
+    HS_FORCEINLINE RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const override
+    {
+        HS_ASSERT(index < _maxFrameCount, "out of index");
+        return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]);
+    }
+    HS_FORCEINLINE RHIFramebuffer* GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
 
-	VkSwapchainKHR handle = VK_NULL_HANDLE;
+    VkSwapchainKHR handle = VK_NULL_HANDLE;
 
-	VkSurfaceKHR surface;
-	VkSurfaceFormatKHR surfaceFormat;
-	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+    VkSurfaceKHR surface;
+    VkSurfaceFormatKHR surfaceFormat;
+    VkSurfaceCapabilitiesKHR surfaceCapabilities;
 
-	std::vector<VkImage> imageVks;
-	std::vector<VkImageView> imageViewVks;
-	struct
-	{
-		VkSemaphore* imageAvailableSemaphores;
-		VkSemaphore* renderFinishedSemaphores;
-		VkFence* inFlightFences;
-	}syncObjects;
+    std::vector<VkImage> imageVks;
+    std::vector<VkImageView> imageViewVks;
+    struct
+    {
+        VkSemaphore* imageAvailableSemaphores;
+        VkSemaphore* renderFinishedSemaphores;
+        VkFence* inFlightFences;
+    } syncObjects;
 
 private:
-	bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
-	void destroySwapchainVK();
+    bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
+    void destroySwapchainVK();
 
-	void setRenderPass();
-	void setFramebuffers();
-	void getSwapchainImages();
+    void setRenderPass();
+    void setFramebuffers();
+    void getSwapchainImages();
 
-	void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
-	uint8 _frameIndex = static_cast<uint8>(-1);
-	uint8 _maxFrameCount = 2;
-	uint32 _curImageIndex = static_cast<uint32>(-1);
-	VulkanDevice* _deviceVulkan;
-	CommandBufferVulkan** _commandBufferVKs;
-	RHIFramebuffer** _framebuffers;
-	bool _isSuspended;
-	bool _isInitialized = false;
+    uint8 _frameIndex     = static_cast<uint8>(-1);
+    uint8 _maxFrameCount  = 2;
+    uint32 _curImageIndex = static_cast<uint32>(-1);
+    VulkanDevice* _deviceVulkan;
+    VulkanCommandBuffer** _commandBufferVKs;
+    RHIFramebuffer** _framebuffers;
+    bool _isSuspended;
+    bool _isInitialized = false;
 };
 
 HS_NS_END

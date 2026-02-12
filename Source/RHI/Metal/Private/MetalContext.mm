@@ -44,7 +44,7 @@ void MetalContext::Restore(Swapchain* swapchain)
 
 uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
+    MetalSwapchain* swMetal = static_cast<MetalSwapchain*>(swapchain);
 
     const uint32 maxFrameCount = swMetal->_maxFrameCount;
     swMetal->_frameIndex       = (swMetal->_frameIndex + 1) % maxFrameCount;
@@ -69,14 +69,14 @@ uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
 
 Swapchain* MetalContext::CreateSwapchain(SwapchainInfo info)
 {
-    SwapchainMetal* swMetal = new SwapchainMetal(info);
+    MetalSwapchain* swMetal = new MetalSwapchain(info);
 
     return static_cast<Swapchain*>(swMetal);
 }
 
 void MetalContext::DestroySwapchain(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal = static_cast<SwapchainMetal*>(swapchain);
+    MetalSwapchain* swMetal = static_cast<MetalSwapchain*>(swapchain);
     // Swapchain에 들어간 view, layer등은 모두 reference이기 때문에 별도로 제거할 필요가 없다.
     swMetal->nativeHandle   = nullptr;
     delete swMetal;
@@ -289,15 +289,26 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     //
     //    MetalShader* MetalShader = new struct MetalShader(name, info);
     //
-    NSError* error            = nil;
+    NSError* error   = nil;
     //    NSURL* url     = [NSURL fileURLWithPath:[NSString stringWithCString:metalLibPath.c_str() encoding:NSUTF8StringEncoding]];
     //
-    NSString* source          = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
-    MTLCompileOptions* option = [MTLCompileOptions new];
-    //
-    //    //        id<MTLLibrary> library = [s_device newLibraryWithSource:source options:option error:&error];
-    //    id<MTLLibrary> library = [s_device newLibraryWithURL:url error:&error];
+    // id<MTLLibrary> library = [s_device newLibraryWithSource:source options:nil error:&error];
+    NSString* source = nil;
+    if (byteCode[byteCodeSize - 1] != '\0')
+    {
+        char* byteCodeWithNull = new char[byteCodeSize + 1]{'\0'};
+        memcpy(byteCodeWithNull, byteCode, byteCodeSize);
+        source              = [NSString stringWithCString:byteCodeWithNull encoding:NSUTF8StringEncoding];
+    }
+    else
+    {
+        source = [NSString stringWithCString:byteCode encoding:NSUTF8StringEncoding];
+    }
 
+    if (nil == source)
+    {
+        HS_LOG(crash, "Shader source is nil!");
+    }
     id<MTLLibrary> library = [s_device newLibraryWithSource:source options:nil error:&error];
 
     if (nil == library)
@@ -305,7 +316,6 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
         HS_LOG(crash, "Fail to cretae MTLLibrary");
         return nullptr;
     }
-
     NSString* entry = [NSString stringWithCString:info.entryName encoding:NSUTF8StringEncoding];
 
     id<MTLFunction> func = nil;
@@ -578,7 +588,7 @@ void MetalContext::Submit(Swapchain* swapchain, RHICommandBuffer** cmdBuffers, s
 
 void MetalContext::Present(Swapchain* swapchain)
 {
-    SwapchainMetal* swMetal     = static_cast<SwapchainMetal*>(swapchain);
+    MetalSwapchain* swMetal     = static_cast<MetalSwapchain*>(swapchain);
     RHICommandBuffer* cmdBuffer = swMetal->GetCommandBufferForCurrentFrame();
 
     MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(cmdBuffer);

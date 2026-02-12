@@ -15,7 +15,7 @@
 
 HS_NS_BEGIN
 
-SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
+MetalSwapchain::MetalSwapchain(const SwapchainInfo& info)
     : Swapchain(info)
     , _frameIndex(0)
     , _imageIndex(0)
@@ -40,7 +40,7 @@ SwapchainMetal::SwapchainMetal(const SwapchainInfo& info)
     setFramebuffers();
 }
 
-SwapchainMetal::~SwapchainMetal()
+MetalSwapchain::~MetalSwapchain()
 {
     RHIContext* rhiContext = RHIContext::Get();
     
@@ -62,7 +62,7 @@ SwapchainMetal::~SwapchainMetal()
     delete[] _framebuffers;
 }
 
-void SwapchainMetal::setRenderPass()
+void MetalSwapchain::setRenderPass()
 {
     RenderPassInfo info{};
     info.isSwapchainRenderPass = true;
@@ -78,7 +78,7 @@ void SwapchainMetal::setRenderPass()
     _renderPass = RHIContext::Get()->CreateRenderPass("RenderPass in Swapchain", info);
 }
 
-void SwapchainMetal::setFramebuffers()
+void MetalSwapchain::setFramebuffers()
 {
     HS_ASSERT(_framebuffers == nullptr, "Framebuffer is already exists. you should destroy it before creating new one.");
 

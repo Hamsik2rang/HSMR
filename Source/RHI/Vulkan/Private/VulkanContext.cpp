@@ -105,7 +105,7 @@ bool VulkanContext::Initialize()
 
     createDefaultCommandPool();
 
-    std::vector<DescriptorPoolAllocatorVulkan::PoolSizeRatio> ratios =
+    std::vector<VulkanDescriptorPoolAllocator::PoolSizeRatio> ratios =
         {
             {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3},
             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3},
@@ -148,7 +148,7 @@ void VulkanContext::Suspend(Swapchain* swapchain)
 {
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Suspend");
 
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
     if (swapchainVK->_isSuspended)
     {
         return;
@@ -161,7 +161,7 @@ void VulkanContext::Restore(Swapchain* swapchain)
 {
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Restore");
 
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
     if (!swapchainVK->_isSuspended)
     {
         return;
@@ -185,7 +185,7 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::AcquireNextImage");
 
     // Acquire the next image from the swapchain
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
     swapchainVK->_frameIndex     = static_cast<uint8>(swapchainVK->_frameIndex + 1) % swapchainVK->_maxFrameCount;
 
     const uint8 curframeIndex = swapchainVK->_frameIndex % swapchainVK->_maxFrameCount;
@@ -211,7 +211,7 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
         return UINT32_MAX;
     }
 
-    CommandBufferVulkan* cmdBufferVK = static_cast<CommandBufferVulkan*>(swapchainVK->GetCommandBufferForCurrentFrame());
+    VulkanCommandBuffer* cmdBufferVK = static_cast<VulkanCommandBuffer*>(swapchainVK->GetCommandBufferForCurrentFrame());
     vkResetCommandBuffer(cmdBufferVK->handle, 0);
 
     return swapchainVK->_curImageIndex;
@@ -220,7 +220,7 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
 Swapchain* VulkanContext::CreateSwapchain(SwapchainInfo info)
 {
     VkSurfaceKHR surface         = createSurface(*info.nativeWindow);
-    SwapchainVulkan* swapchainVK = new SwapchainVulkan(info, surface);
+    VulkanSwapchain* swapchainVK = new VulkanSwapchain(info, surface);
     swapchainVK->initSwapchainVK(this, _instanceVk, &_device);
 
     return static_cast<Swapchain*>(swapchainVK);
@@ -228,7 +228,7 @@ Swapchain* VulkanContext::CreateSwapchain(SwapchainInfo info)
 
 void VulkanContext::DestroySwapchain(Swapchain* swapchain)
 {
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
     swapchainVK->destroySwapchainVK(); // 소멸자에서 호출되지만 컨벤션 통일을 위해 명시적 호출함.
 
     delete swapchainVK;
@@ -236,7 +236,7 @@ void VulkanContext::DestroySwapchain(Swapchain* swapchain)
 
 RHIRenderPass* VulkanContext::CreateRenderPass(const char* name, const RenderPassInfo& info)
 {
-    RenderPassVulkan* renderPassVK = new RenderPassVulkan(name, info);
+    VulkanRenderPass* renderPassVK = new VulkanRenderPass(name, info);
 
     renderPassVK->handle = createRenderPass(info);
     if (renderPassVK->handle == VK_NULL_HANDLE)
@@ -251,7 +251,7 @@ RHIRenderPass* VulkanContext::CreateRenderPass(const char* name, const RenderPas
 
 void VulkanContext::DestroyRenderPass(RHIRenderPass* renderPass)
 {
-    RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(renderPass);
+    VulkanRenderPass* renderPassVK = static_cast<VulkanRenderPass*>(renderPass);
     if (renderPassVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyRenderPass(_device, renderPassVK->handle, nullptr);
@@ -264,13 +264,13 @@ RHIFramebuffer* VulkanContext::CreateFramebuffer(const char* name, const Framebu
 {
     HS_ASSERT(info.renderPass->info.colorAttachmentCount == info.colorBuffers.size(), "Framebuffer Info is not matched with RenderPass Info");
 
-    FramebufferVulkan* framebufferVK = new FramebufferVulkan(name, info);
+    VulkanFramebuffer* framebufferVK = new VulkanFramebuffer(name, info);
 
     size_t attachmentSize = static_cast<uint32>(info.colorBuffers.size());
     std::vector<VkImageView> attachments(attachmentSize);
     for (size_t i = 0; i < attachmentSize; i++)
     {
-        TextureVulkan* textureVK = static_cast<TextureVulkan*>(info.colorBuffers[i]);
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(info.colorBuffers[i]);
         if (textureVK && textureVK->imageViewVk)
         {
             attachments[i] = textureVK->imageViewVk;
@@ -284,14 +284,14 @@ RHIFramebuffer* VulkanContext::CreateFramebuffer(const char* name, const Framebu
     if (info.renderPass->info.useDepthStencilAttachment && info.depthStencilBuffer != nullptr)
     {
         attachmentSize++;
-        TextureVulkan* textureVK = static_cast<TextureVulkan*>(info.depthStencilBuffer);
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(info.depthStencilBuffer);
         attachments.push_back(textureVK->imageViewVk);
     }
 
     VkFramebufferCreateInfo createInfo{};
     createInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     createInfo.flags           = 0;
-    createInfo.renderPass      = static_cast<RenderPassVulkan*>(info.renderPass)->handle;
+    createInfo.renderPass      = static_cast<VulkanRenderPass*>(info.renderPass)->handle;
     createInfo.attachmentCount = static_cast<uint32>(attachmentSize);
     createInfo.pAttachments    = attachments.data();
     createInfo.width           = info.width;
@@ -310,7 +310,7 @@ RHIFramebuffer* VulkanContext::CreateFramebuffer(const char* name, const Framebu
 void VulkanContext::DestroyFramebuffer(RHIFramebuffer* framebuffer)
 {
     // Destroy the Vulkan framebuffer
-    FramebufferVulkan* framebufferVK = static_cast<FramebufferVulkan*>(framebuffer);
+    VulkanFramebuffer* framebufferVK = static_cast<VulkanFramebuffer*>(framebuffer);
     if (framebufferVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyFramebuffer(_device, framebufferVK->handle, nullptr);
@@ -321,12 +321,12 @@ void VulkanContext::DestroyFramebuffer(RHIFramebuffer* framebuffer)
 
 RHIGraphicsPipeline* VulkanContext::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
 {
-    GraphicsPipelineVulkan* pipelineVK = new GraphicsPipelineVulkan(name, info);
+    VulkanGraphicsPipeline* pipelineVK = new VulkanGraphicsPipeline(name, info);
 
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline pipelineVk = createGraphicsPipeline(info, pipelineLayout);
-    pipelineVK->handle = pipelineVk;
-    pipelineVK->layout = pipelineLayout;
+    VkPipeline pipelineVk           = createGraphicsPipeline(info, pipelineLayout);
+    pipelineVK->handle              = pipelineVk;
+    pipelineVK->layout              = pipelineLayout;
 
     setDebugObjectName(VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<uint64>(pipelineVk), name);
 
@@ -336,7 +336,7 @@ RHIGraphicsPipeline* VulkanContext::CreateGraphicsPipeline(const char* name, con
 void VulkanContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
 {
     // Destroy the Vulkan graphics pipeline
-    GraphicsPipelineVulkan* pipelineVK = static_cast<GraphicsPipelineVulkan*>(pipeline);
+    VulkanGraphicsPipeline* pipelineVK = static_cast<VulkanGraphicsPipeline*>(pipeline);
     if (pipelineVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyPipeline(_device, pipelineVK->handle, nullptr);
@@ -348,7 +348,7 @@ void VulkanContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
 
 RHIComputePipeline* VulkanContext::CreateComputePipeline(const char* name, const ComputePipelineInfo& info)
 {
-    ComputePipelineVulkan* pipelineVK = new ComputePipelineVulkan(name, info);
+    VulkanComputePipeline* pipelineVK = new VulkanComputePipeline(name, info);
     pipelineVK->handle                = createComputePipeline(info, pipelineVK->layout);
 
     if (pipelineVK->handle == VK_NULL_HANDLE)
@@ -364,7 +364,7 @@ RHIComputePipeline* VulkanContext::CreateComputePipeline(const char* name, const
 
 void VulkanContext::DestroyComputePipeline(RHIComputePipeline* pipeline)
 {
-    ComputePipelineVulkan* pipelineVK = static_cast<ComputePipelineVulkan*>(pipeline);
+    VulkanComputePipeline* pipelineVK = static_cast<VulkanComputePipeline*>(pipeline);
     if (pipelineVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyPipeline(_device, pipelineVK->handle, nullptr);
@@ -468,9 +468,9 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     VkBuffer bufferVk;
     // Create a Vulkan buffer
     VkBufferCreateInfo createInfo{};
-    createInfo.sType               = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    createInfo.size                = dataSize;
-    createInfo.usage               = RHIUtilityVulkan::ToBufferUsage(info.usage);
+    createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    createInfo.size  = dataSize;
+    createInfo.usage = RHIUtilityVulkan::ToBufferUsage(info.usage);
     if (needsStaging)
     {
         createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -533,8 +533,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
             VkMemoryAllocateInfo stagingAllocInfo{};
             stagingAllocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             stagingAllocInfo.allocationSize  = stagingMemReq.size;
-            stagingAllocInfo.memoryTypeIndex = getMemoryTypeIndex(stagingMemReq.memoryTypeBits,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            stagingAllocInfo.memoryTypeIndex = getMemoryTypeIndex(stagingMemReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
             VK_CHECK_RESULT(vkAllocateMemory(_device, &stagingAllocInfo, nullptr, &stagingMemory));
             VK_CHECK_RESULT(vkBindBufferMemory(_device, stagingBuffer, stagingMemory, 0));
@@ -568,7 +567,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
         }
     }
 
-    BufferVulkan* bufferVK = new BufferVulkan(name, info);
+    VulkanBuffer* bufferVK = new VulkanBuffer(name, info);
     bufferVK->handle       = bufferVk;
     bufferVK->memory       = bufferMemory;
 
@@ -579,7 +578,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
 
 void VulkanContext::DestroyBuffer(RHIBuffer* buffer)
 {
-    BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
+    VulkanBuffer* bufferVK = static_cast<VulkanBuffer*>(buffer);
     if (bufferVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyBuffer(_device, bufferVK->handle, nullptr);
@@ -600,7 +599,7 @@ void VulkanContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, cons
     HS_ASSERT(srcData, "Source data is nullptr");
     HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
     HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
-    BufferVulkan* bufferVK = static_cast<BufferVulkan*>(buffer);
+    VulkanBuffer* bufferVK    = static_cast<VulkanBuffer*>(buffer);
     // vkCmdUpdateBuffer updates buffer contents inline within the command buffer
     // Note: dataSize must be less than or equal to 65536 bytes
     // Note: dstOffset and dataSize must be multiples of 4
@@ -644,12 +643,12 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     // Swapchain이면 vkGetSwapchainImagesKHR를 통해서 가져온 VkImage와 해당 핸들로 만든 VkImageView를 사용해야 합니다.
     if (isSwapchainTexture)
     {
-        SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(info.swapchain);
+        VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(info.swapchain);
         for (uint8 i = 0; i < swapchainVK->imageVks.size(); i++)
         {
             if (swapchainVK->_framebuffers[i] == nullptr)
             {
-                TextureVulkan* textureVK = new TextureVulkan(name, info);
+                VulkanTexture* textureVK = new VulkanTexture(name, info);
                 textureVK->handle        = swapchainVK->imageVks[i];
                 textureVK->imageViewVk   = swapchainVK->imageViewVks[i];
                 textureVK->memoryVk      = VK_NULL_HANDLE;            // Swapchain textures do not have dedicated memory
@@ -825,11 +824,11 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         VkCommandBuffer transitionCmd = beginSingleTimeCommands();
 
         VkImageSubresourceRange subresourceRange = {};
-        subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        subresourceRange.baseMipLevel   = 0;
-        subresourceRange.levelCount     = imageCreateInfo.mipLevels;
-        subresourceRange.baseArrayLayer = 0;
-        subresourceRange.layerCount     = imageCreateInfo.arrayLayers;
+        subresourceRange.aspectMask              = VK_IMAGE_ASPECT_COLOR_BIT;
+        subresourceRange.baseMipLevel            = 0;
+        subresourceRange.levelCount              = imageCreateInfo.mipLevels;
+        subresourceRange.baseArrayLayer          = 0;
+        subresourceRange.layerCount              = imageCreateInfo.arrayLayers;
 
         VkImageMemoryBarrier imageMemoryBarrier{};
         imageMemoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -877,7 +876,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     VkImageView imageViewVk;
     VK_CHECK_RESULT(vkCreateImageView(_device, &viewCreateInfo, nullptr, &imageViewVk));
 
-    TextureVulkan* textureVK = new TextureVulkan(name, info);
+    VulkanTexture* textureVK = new VulkanTexture(name, info);
     textureVK->handle        = imageVk;
     textureVK->imageViewVk   = imageViewVk;
     textureVK->memoryVk      = imageMemory;
@@ -892,7 +891,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 void VulkanContext::DestroyTexture(RHITexture* texture)
 {
     // Destroy the Vulkan texture
-    TextureVulkan* textureVK = static_cast<TextureVulkan*>(texture);
+    VulkanTexture* textureVK = static_cast<VulkanTexture*>(texture);
 
     if (textureVK->imageViewVk != VK_NULL_HANDLE)
     {
@@ -930,7 +929,7 @@ RHISampler* VulkanContext::CreateSampler(const char* name, const SamplerInfo& in
     VkSampler vkSampler;
     vkCreateSampler(_device, &samplerInfo, nullptr, &vkSampler);
 
-    SamplerVulkan* samplerVK = new SamplerVulkan(name, info);
+    VulkanSampler* samplerVK = new VulkanSampler(name, info);
     samplerVK->handle        = vkSampler;
 
     setDebugObjectName(VK_OBJECT_TYPE_SAMPLER, reinterpret_cast<uint64>(vkSampler), name);
@@ -940,7 +939,7 @@ RHISampler* VulkanContext::CreateSampler(const char* name, const SamplerInfo& in
 
 void VulkanContext::DestroySampler(RHISampler* sampler)
 {
-    SamplerVulkan* samplerVK = static_cast<SamplerVulkan*>(sampler);
+    VulkanSampler* samplerVK = static_cast<VulkanSampler*>(sampler);
     if (samplerVK->handle)
     {
         vkDestroySampler(_device, samplerVK->handle, nullptr);
@@ -952,7 +951,7 @@ void VulkanContext::DestroySampler(RHISampler* sampler)
 
 RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount)
 {
-    ResourceLayoutVulkan* resourceLayoutVK                = new ResourceLayoutVulkan(name, bindings, bindingCount);
+    VulkanResourceLayout* resourceLayoutVK                = new VulkanResourceLayout(name, bindings, bindingCount);
     std::vector<VkDescriptorSetLayoutBinding>& bindingVks = resourceLayoutVK->bindingVks;
     bindingVks.resize(bindingCount);
 
@@ -1019,7 +1018,7 @@ void VulkanContext::DestroyResourceLayout(RHIResourceLayout* resourceLayout)
 {
     // Destroy the Vulkan resource layout
 
-    ResourceLayoutVulkan* resourceLayoutVK = static_cast<ResourceLayoutVulkan*>(resourceLayout);
+    VulkanResourceLayout* resourceLayoutVK = static_cast<VulkanResourceLayout*>(resourceLayout);
     if (resourceLayoutVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyDescriptorSetLayout(_device, resourceLayoutVK->handle, nullptr);
@@ -1029,7 +1028,7 @@ void VulkanContext::DestroyResourceLayout(RHIResourceLayout* resourceLayout)
 
 RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLayout* resourceLayouts)
 {
-    ResourceLayoutVulkan* layoutVK = static_cast<ResourceLayoutVulkan*>(resourceLayouts);
+    VulkanResourceLayout* layoutVK = static_cast<VulkanResourceLayout*>(resourceLayouts);
 
     // Create a Vulkan resource set
     VkDescriptorSet rSetVk = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr);
@@ -1057,9 +1056,9 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
     for (const auto& binding : resourceLayouts->bindings)
     {
         VkWriteDescriptorSet writeSet{};
-        writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writeSet.dstSet = rSetVk;
-        writeSet.dstBinding = binding.binding;
+        writeSet.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writeSet.dstSet          = rSetVk;
+        writeSet.dstBinding      = binding.binding;
         writeSet.dstArrayElement = 0;
         writeSet.descriptorCount = 1;
 
@@ -1069,16 +1068,17 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
         case EResourceType::STORAGE_BUFFER:
             if (!binding.resource.buffers.empty() && binding.resource.buffers[0])
             {
-                BufferVulkan* bufVK = static_cast<BufferVulkan*>(binding.resource.buffers[0]);
+                VulkanBuffer* bufVK = static_cast<VulkanBuffer*>(binding.resource.buffers[0]);
                 VkDescriptorBufferInfo bufInfo{};
                 bufInfo.buffer = bufVK->handle;
                 bufInfo.offset = 0;
-                bufInfo.range = VK_WHOLE_SIZE;
+                bufInfo.range  = VK_WHOLE_SIZE;
                 bufferInfos.push_back(bufInfo);
 
                 writeSet.descriptorType = (binding.type == EResourceType::UNIFORM_BUFFER)
-                    ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                writeSet.pBufferInfo = &bufferInfos.back();
+                                              ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+                                              : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                writeSet.pBufferInfo    = &bufferInfos.back();
                 descriptorWrites.push_back(writeSet);
             }
             break;
@@ -1086,16 +1086,16 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
         case EResourceType::SAMPLED_IMAGE:
             if (!binding.resource.textures.empty() && binding.resource.textures[0])
             {
-                TextureVulkan* texVK = static_cast<TextureVulkan*>(binding.resource.textures[0]);
+                VulkanTexture* texVK = static_cast<VulkanTexture*>(binding.resource.textures[0]);
                 VkDescriptorImageInfo imgInfo{};
-                imgInfo.imageView = texVK->imageViewVk;
+                imgInfo.imageView   = texVK->imageViewVk;
                 // Use the actual current layout of the texture
                 imgInfo.imageLayout = texVK->layoutVk;
-                imgInfo.sampler = VK_NULL_HANDLE;
+                imgInfo.sampler     = VK_NULL_HANDLE;
                 imageInfos.push_back(imgInfo);
 
                 writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-                writeSet.pImageInfo = &imageInfos.back();
+                writeSet.pImageInfo     = &imageInfos.back();
                 descriptorWrites.push_back(writeSet);
             }
             break;
@@ -1103,15 +1103,15 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
         case EResourceType::STORAGE_IMAGE:
             if (!binding.resource.textures.empty() && binding.resource.textures[0])
             {
-                TextureVulkan* texVK = static_cast<TextureVulkan*>(binding.resource.textures[0]);
+                VulkanTexture* texVK = static_cast<VulkanTexture*>(binding.resource.textures[0]);
                 VkDescriptorImageInfo imgInfo{};
-                imgInfo.imageView = texVK->imageViewVk;
+                imgInfo.imageView   = texVK->imageViewVk;
                 imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-                imgInfo.sampler = VK_NULL_HANDLE;
+                imgInfo.sampler     = VK_NULL_HANDLE;
                 imageInfos.push_back(imgInfo);
 
                 writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                writeSet.pImageInfo = &imageInfos.back();
+                writeSet.pImageInfo     = &imageInfos.back();
                 descriptorWrites.push_back(writeSet);
             }
             break;
@@ -1119,15 +1119,15 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
         case EResourceType::SAMPLER:
             if (!binding.resource.samplers.empty() && binding.resource.samplers[0])
             {
-                SamplerVulkan* samplerVK = static_cast<SamplerVulkan*>(binding.resource.samplers[0]);
+                VulkanSampler* samplerVK = static_cast<VulkanSampler*>(binding.resource.samplers[0]);
                 VkDescriptorImageInfo imgInfo{};
-                imgInfo.sampler = samplerVK->handle;
-                imgInfo.imageView = VK_NULL_HANDLE;
+                imgInfo.sampler     = samplerVK->handle;
+                imgInfo.imageView   = VK_NULL_HANDLE;
                 imgInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                 imageInfos.push_back(imgInfo);
 
                 writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-                writeSet.pImageInfo = &imageInfos.back();
+                writeSet.pImageInfo     = &imageInfos.back();
                 descriptorWrites.push_back(writeSet);
             }
             break;
@@ -1136,17 +1136,17 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
             if (!binding.resource.textures.empty() && binding.resource.textures[0] &&
                 !binding.resource.samplers.empty() && binding.resource.samplers[0])
             {
-                TextureVulkan* texVK = static_cast<TextureVulkan*>(binding.resource.textures[0]);
-                SamplerVulkan* samplerVK = static_cast<SamplerVulkan*>(binding.resource.samplers[0]);
+                VulkanTexture* texVK     = static_cast<VulkanTexture*>(binding.resource.textures[0]);
+                VulkanSampler* samplerVK = static_cast<VulkanSampler*>(binding.resource.samplers[0]);
                 VkDescriptorImageInfo imgInfo{};
-                imgInfo.imageView = texVK->imageViewVk;
+                imgInfo.imageView   = texVK->imageViewVk;
                 // Use the actual current layout of the texture
                 imgInfo.imageLayout = texVK->layoutVk;
-                imgInfo.sampler = samplerVK->handle;
+                imgInfo.sampler     = samplerVK->handle;
                 imageInfos.push_back(imgInfo);
 
                 writeSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                writeSet.pImageInfo = &imageInfos.back();
+                writeSet.pImageInfo     = &imageInfos.back();
                 descriptorWrites.push_back(writeSet);
             }
             break;
@@ -1158,11 +1158,10 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 
     if (!descriptorWrites.empty())
     {
-        vkUpdateDescriptorSets(_device, static_cast<uint32>(descriptorWrites.size()),
-            descriptorWrites.data(), 0, nullptr);
+        vkUpdateDescriptorSets(_device, static_cast<uint32>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    ResourceSetVulkan* resourceSetVK = new ResourceSetVulkan(name);
+    VulkanResourceSet* resourceSetVK = new VulkanResourceSet(name);
     resourceSetVK->handle            = rSetVk;
     resourceSetVK->layoutVK          = layoutVK;
 
@@ -1174,7 +1173,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 void VulkanContext::DestroyResourceSet(RHIResourceSet* resourceSet)
 {
     // Destroy the Vulkan resource set
-    ResourceSetVulkan* resourceSetVK = static_cast<ResourceSetVulkan*>(resourceSet);
+    VulkanResourceSet* resourceSetVK = static_cast<VulkanResourceSet*>(resourceSet);
     if (resourceSetVK->handle != VK_NULL_HANDLE)
     {
         _descriptorPoolAllocator.FreeDescriptorSet(resourceSetVK->handle);
@@ -1206,7 +1205,7 @@ RHIResourceSetPool* VulkanContext::CreateResourceSetPool(const char* name, uint3
 
     VkDescriptorPool descriptorPool;
     VK_CHECK_RESULT(vkCreateDescriptorPool(_device, &poolInfo, nullptr, &descriptorPool));
-    ResourceSetPoolVulkan* resourceSetPoolVK = new ResourceSetPoolVulkan(name);
+    VulkanResourceSetPool* resourceSetPoolVK = new VulkanResourceSetPool(name);
     resourceSetPoolVK->handle                = descriptorPool;
 
     setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_POOL, reinterpret_cast<uint64>(descriptorPool), name);
@@ -1217,7 +1216,7 @@ RHIResourceSetPool* VulkanContext::CreateResourceSetPool(const char* name, uint3
 void VulkanContext::DestroyResourceSetPool(RHIResourceSetPool* resourceSetPool)
 {
     // Destroy the Vulkan resource set pool
-    ResourceSetPoolVulkan* resourceSetPoolVK = static_cast<ResourceSetPoolVulkan*>(resourceSetPool);
+    VulkanResourceSetPool* resourceSetPoolVK = static_cast<VulkanResourceSetPool*>(resourceSetPool);
     if (resourceSetPoolVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyDescriptorPool(_device, resourceSetPoolVK->handle, nullptr);
@@ -1238,7 +1237,7 @@ RHICommandPool* VulkanContext::CreateCommandPool(const char* name, uint32 queueF
     VkCommandPool commandPool;
     vkCreateCommandPool(_device, &poolInfo, nullptr, &commandPool);
 
-    CommandPoolVulkan* commandPoolVK = new CommandPoolVulkan(name);
+    VulkanCommandPool* commandPoolVK = new VulkanCommandPool(name);
     commandPoolVK->handle            = commandPool;
 
     setDebugObjectName(VK_OBJECT_TYPE_COMMAND_POOL, reinterpret_cast<uint64>(commandPool), name);
@@ -1249,7 +1248,7 @@ RHICommandPool* VulkanContext::CreateCommandPool(const char* name, uint32 queueF
 void VulkanContext::DestroyCommandPool(RHICommandPool* commandPool)
 {
     // Destroy the Vulkan command pool
-    CommandPoolVulkan* commandPoolVK = static_cast<CommandPoolVulkan*>(commandPool);
+    VulkanCommandPool* commandPoolVK = static_cast<VulkanCommandPool*>(commandPool);
     if (commandPoolVK->handle != VK_NULL_HANDLE)
     {
         vkDestroyCommandPool(_device, commandPoolVK->handle, nullptr);
@@ -1271,7 +1270,7 @@ RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
     VkCommandBuffer cmdBufferVk;
     vkAllocateCommandBuffers(_device, &allocInfo, &cmdBufferVk);
 
-    CommandBufferVulkan* commandBufferVK = new CommandBufferVulkan(name);
+    VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name);
     commandBufferVK->handle              = cmdBufferVk;
 
     setDebugObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
@@ -1282,7 +1281,7 @@ RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
 void VulkanContext::DestroyCommandBuffer(RHICommandBuffer* commandBuffer)
 {
     // Destroy the Vulkan command buffer
-    CommandBufferVulkan* commandBufferVK = static_cast<CommandBufferVulkan*>(commandBuffer);
+    VulkanCommandBuffer* commandBufferVK = static_cast<VulkanCommandBuffer*>(commandBuffer);
     if (commandBufferVK->handle)
     {
         vkFreeCommandBuffers(_device, _defaultCommandPool, 1, &commandBufferVK->handle);
@@ -1298,7 +1297,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Submit");
     HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in VulkanContext::Submit");
 
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1314,7 +1313,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
 
     for (size_t i = 0; i < bufferCount; ++i)
     {
-        CommandBufferVulkan* commandBufferVK = static_cast<CommandBufferVulkan*>(buffers[i]);
+        VulkanCommandBuffer* commandBufferVK = static_cast<VulkanCommandBuffer*>(buffers[i]);
         commandBufferVks[i]                  = commandBufferVK->handle;
     }
     submitInfo.pCommandBuffers    = commandBufferVks.data();
@@ -1330,7 +1329,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
 void VulkanContext::Present(Swapchain* swapchain)
 {
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Present");
-    SwapchainVulkan* swapchainVK = static_cast<SwapchainVulkan*>(swapchain);
+    VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1384,7 +1383,7 @@ bool VulkanContext::createInstance()
 
 #ifdef __SDL__
     // Get required extensions from SDL
-    uint32 sdlExtCount = 0;
+    uint32 sdlExtCount               = 0;
     const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtCount);
     for (uint32 i = 0; i < sdlExtCount; i++)
     {
@@ -1585,19 +1584,19 @@ VkRenderPass VulkanContext::createRenderPass(const RenderPassInfo& info)
 
 VkFramebuffer VulkanContext::createFramebuffer(const FramebufferInfo& info)
 {
-    RenderPassVulkan* renderPassVK = static_cast<RenderPassVulkan*>(info.renderPass);
+    VulkanRenderPass* renderPassVK = static_cast<VulkanRenderPass*>(info.renderPass);
 
     std::vector<VkImageView> attachments;
     attachments.reserve(info.colorBuffers.size() + (info.depthStencilBuffer ? 1 : 0));
     for (const auto& colorBuffer : info.colorBuffers)
     {
-        TextureVulkan* textureVK = static_cast<TextureVulkan*>(colorBuffer);
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(colorBuffer);
         attachments.push_back(textureVK->imageViewVk);
     }
 
     if (info.depthStencilBuffer)
     {
-        TextureVulkan* depthTextureVK = static_cast<TextureVulkan*>(info.depthStencilBuffer);
+        VulkanTexture* depthTextureVK = static_cast<VulkanTexture*>(info.depthStencilBuffer);
         if (depthTextureVK && depthTextureVK->imageViewVk)
         {
             attachments.push_back(depthTextureVK->imageViewVk);
@@ -1633,10 +1632,10 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     if (info.resourceLayout != nullptr)
     {
-        ResourceLayoutVulkan* resourceLayoutVK = static_cast<ResourceLayoutVulkan*>(info.resourceLayout);
-        descriptorSetLayout = resourceLayoutVK->handle;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts    = &descriptorSetLayout;
+        VulkanResourceLayout* resourceLayoutVK = static_cast<VulkanResourceLayout*>(info.resourceLayout);
+        descriptorSetLayout                    = resourceLayoutVK->handle;
+        pipelineLayoutInfo.setLayoutCount      = 1;
+        pipelineLayoutInfo.pSetLayouts         = &descriptorSetLayout;
     }
     else
     {
@@ -1819,7 +1818,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
 
     pipelineCreateInfo.pDynamicState = &dynamicState;
 
-    pipelineCreateInfo.renderPass = static_cast<RenderPassVulkan*>(info.renderPass)->handle;
+    pipelineCreateInfo.renderPass = static_cast<VulkanRenderPass*>(info.renderPass)->handle;
 
     VkPipeline pipelineVk;
     vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineVk);
@@ -1849,7 +1848,7 @@ VkPipeline VulkanContext::createComputePipeline(const ComputePipelineInfo& info,
     // If resource layout is provided, use it
     if (info.resourceLayout != nullptr)
     {
-        ResourceLayoutVulkan* layoutVK    = static_cast<ResourceLayoutVulkan*>(info.resourceLayout);
+        VulkanResourceLayout* layoutVK    = static_cast<VulkanResourceLayout*>(info.resourceLayout);
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts    = &layoutVK->handle;
     }

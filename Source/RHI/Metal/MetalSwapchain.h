@@ -19,13 +19,13 @@ HS_NS_BEGIN
 
 class CommandBuffer;
 
-class SwapchainMetal : public Swapchain
+class MetalSwapchain : public Swapchain
 {
     friend class MetalContext;
 
 public:
-    SwapchainMetal(const SwapchainInfo& info);
-    ~SwapchainMetal() override;
+    MetalSwapchain(const SwapchainInfo& info);
+    ~MetalSwapchain() override;
 
     void* nativeHandle;
 
@@ -48,11 +48,11 @@ private:
     void setRenderTargets();
     void setRenderPass();
     void setFramebuffers();
-    
+
     id<CAMetalDrawable> _drawable;
     RHICommandBuffer** _commandBuffers;
     RHIFramebuffer** _framebuffers;
-    
+
     bool _isSuspended;
     bool _isInitialized;
 };

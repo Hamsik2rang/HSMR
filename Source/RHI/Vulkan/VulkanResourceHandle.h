@@ -12,73 +12,86 @@
 #include "RHI/ResourceHandle.h"
 #include "RHI/Vulkan/VulkanUtility.h"
 
-
 HS_NS_BEGIN
 
-struct HS_API TextureVulkan : public RHITexture
+struct HS_API VulkanTexture : public RHITexture
 {
-	TextureVulkan(const char* name, const TextureInfo& info) noexcept : RHITexture(name, info) {}
-	~TextureVulkan() final = default;
+    VulkanTexture(const char* name, const TextureInfo& info) noexcept
+        : RHITexture(name, info)
+    {}
+    ~VulkanTexture() final = default;
 
-	VkImage handle = VK_NULL_HANDLE;
-	VkImageView imageViewVk = VK_NULL_HANDLE;
-	VkDeviceMemory memoryVk = VK_NULL_HANDLE;
-	VkImageLayout layoutVk = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkImage handle          = VK_NULL_HANDLE;
+    VkImageView imageViewVk = VK_NULL_HANDLE;
+    VkDeviceMemory memoryVk = VK_NULL_HANDLE;
+    VkImageLayout layoutVk  = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
-struct HS_API SamplerVulkan : public RHISampler
+struct HS_API VulkanSampler : public RHISampler
 {
-	SamplerVulkan(const char* name,  const SamplerInfo& info) noexcept : RHISampler(name, info) {}
-	~SamplerVulkan() final = default;
+    VulkanSampler(const char* name, const SamplerInfo& info) noexcept
+        : RHISampler(name, info)
+    {}
+    ~VulkanSampler() final = default;
 
-	VkSampler handle = VK_NULL_HANDLE;
+    VkSampler handle = VK_NULL_HANDLE;
 };
 
-struct HS_API BufferVulkan : public RHIBuffer
+struct HS_API VulkanBuffer : public RHIBuffer
 {
-	BufferVulkan(const char* name, const BufferInfo& info) noexcept : RHIBuffer(name, info) {}
-	~BufferVulkan() final = default;
+    VulkanBuffer(const char* name, const BufferInfo& info) noexcept
+        : RHIBuffer(name, info)
+    {}
+    ~VulkanBuffer() final = default;
 
-	void Map();
-	void Unmap();
-	
-	VkBuffer handle = VK_NULL_HANDLE;
-	VkDeviceMemory memory = VK_NULL_HANDLE;
+    void Map();
+    void Unmap();
+
+    VkBuffer handle       = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
 };
 
 struct HS_API ShaderVulkan : public RHIShader
 {
-	ShaderVulkan(const char* name, const ShaderInfo& info) noexcept : RHIShader(name, info) {}
-	~ShaderVulkan() final = default;
+    ShaderVulkan(const char* name, const ShaderInfo& info) noexcept
+        : RHIShader(name, info)
+    {}
+    ~ShaderVulkan() final = default;
 
-	VkShaderModule handle;
-	VkPipelineShaderStageCreateInfo stageInfo = {};
+    VkShaderModule handle;
+    VkPipelineShaderStageCreateInfo stageInfo = {};
 };
 
-struct HS_API ResourceLayoutVulkan : public RHIResourceLayout
+struct HS_API VulkanResourceLayout : public RHIResourceLayout
 {
-	ResourceLayoutVulkan(const char* name, ResourceBinding* bindings, size_t bindingCount) noexcept : RHIResourceLayout(name, bindings, bindingCount) {}
-	~ResourceLayoutVulkan() final = default;
+    VulkanResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount) noexcept
+        : RHIResourceLayout(name, bindings, bindingCount)
+    {}
+    ~VulkanResourceLayout() final = default;
 
-	VkDescriptorSetLayout handle = VK_NULL_HANDLE;
-	std::vector<VkDescriptorSetLayoutBinding> bindingVks;
+    VkDescriptorSetLayout handle = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSetLayoutBinding> bindingVks;
 };
 
-struct HS_API ResourceSetVulkan : public RHIResourceSet
+struct HS_API VulkanResourceSet : public RHIResourceSet
 {
-	ResourceSetVulkan(const char* name) noexcept : RHIResourceSet(name) {}
-	~ResourceSetVulkan() final = default;
+    VulkanResourceSet(const char* name) noexcept
+        : RHIResourceSet(name)
+    {}
+    ~VulkanResourceSet() final = default;
 
-	VkDescriptorSet handle = VK_NULL_HANDLE;
-	ResourceLayoutVulkan* layoutVK = nullptr;
+    VkDescriptorSet handle         = VK_NULL_HANDLE;
+    VulkanResourceLayout* layoutVK = nullptr;
 };
 
-struct HS_API ResourceSetPoolVulkan : public RHIResourceSetPool
+struct HS_API VulkanResourceSetPool : public RHIResourceSetPool
 {
-	ResourceSetPoolVulkan(const char* name) noexcept : RHIResourceSetPool(name) {}
-	~ResourceSetPoolVulkan() final = default;
+    VulkanResourceSetPool(const char* name) noexcept
+        : RHIResourceSetPool(name)
+    {}
+    ~VulkanResourceSetPool() final = default;
 
-	VkDescriptorPool handle = VK_NULL_HANDLE;
+    VkDescriptorPool handle = VK_NULL_HANDLE;
 };
 
 HS_NS_END

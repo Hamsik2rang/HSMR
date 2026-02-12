@@ -14,43 +14,49 @@
 
 HS_NS_BEGIN
 
-struct HS_API RenderPassVulkan : public RHIRenderPass
+struct HS_API VulkanRenderPass : public RHIRenderPass
 {
-	RenderPassVulkan(const char* name, const RenderPassInfo& info) : RHIRenderPass(name, info) {}
-	~RenderPassVulkan() override = default;
+    VulkanRenderPass(const char* name, const RenderPassInfo& info)
+        : RHIRenderPass(name, info)
+    {}
+    ~VulkanRenderPass() override = default;
 
 public:
-	VkRenderPass handle = VK_NULL_HANDLE;
+    VkRenderPass handle = VK_NULL_HANDLE;
 };
 
-struct HS_API FramebufferVulkan : public RHIFramebuffer
+struct HS_API VulkanFramebuffer : public RHIFramebuffer
 {
-	FramebufferVulkan(const char* name, const FramebufferInfo& info) : RHIFramebuffer(name, info) {}
-	~FramebufferVulkan() override = default;
-
+    VulkanFramebuffer(const char* name, const FramebufferInfo& info)
+        : RHIFramebuffer(name, info)
+    {}
+    ~VulkanFramebuffer() override = default;
 
 public:
-	VkFramebuffer handle = VK_NULL_HANDLE;
+    VkFramebuffer handle = VK_NULL_HANDLE;
 };
 
-struct HS_API PipelineVulkanBase
+struct HS_API VulkanPipelineBase
 {
-	VkPipeline handle = VK_NULL_HANDLE;
-	VkPipelineLayout layout = VK_NULL_HANDLE;
+    VkPipeline handle       = VK_NULL_HANDLE;
+    VkPipelineLayout layout = VK_NULL_HANDLE;
 };
 
-struct HS_API GraphicsPipelineVulkan : public RHIGraphicsPipeline, public PipelineVulkanBase
+struct HS_API VulkanGraphicsPipeline : public RHIGraphicsPipeline, public VulkanPipelineBase
 {
-	GraphicsPipelineVulkan(const char* name, const GraphicsPipelineInfo& info) : RHIGraphicsPipeline(name, info) {}
-	~GraphicsPipelineVulkan() override = default;
+    VulkanGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
+        : RHIGraphicsPipeline(name, info)
+    {}
+    ~VulkanGraphicsPipeline() override = default;
 };
 
-struct HS_API ComputePipelineVulkan : public RHIComputePipeline, public PipelineVulkanBase
+struct HS_API VulkanComputePipeline : public RHIComputePipeline, public VulkanPipelineBase
 {
-	ComputePipelineVulkan(const char* name, const ComputePipelineInfo& info) : RHIComputePipeline(name, info) {}
-	~ComputePipelineVulkan() override = default;
+    VulkanComputePipeline(const char* name, const ComputePipelineInfo& info)
+        : RHIComputePipeline(name, info)
+    {}
+    ~VulkanComputePipeline() override = default;
 };
-
 
 HS_NS_END
 
