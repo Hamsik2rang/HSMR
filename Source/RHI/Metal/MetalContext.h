@@ -50,6 +50,8 @@ public:
     RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, EBufferUsage usage, EBufferMemoryOption memoryOption) override;
     RHIBuffer* CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info) override;
     void    DestroyBuffer(RHIBuffer* buffer) override;
+    
+    virtual void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) override;
 
     RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) override;
     RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
@@ -81,7 +83,7 @@ public:
 
     HS_FORCEINLINE void* GetDevice() const { return _device; }
     
-    HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const { return ERHIPlatform::METAL; }
+    HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const final { return ERHIPlatform::METAL; }
 
 private:
     void* _device = nullptr;

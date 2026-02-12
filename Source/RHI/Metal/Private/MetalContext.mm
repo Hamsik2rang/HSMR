@@ -127,15 +127,15 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     {
         switch (shader->info.stage)
         {
-            case EShaderStage::VERTEX:
-                [pipelineDesc setVertexFunction:static_cast<MetalShader*>(shader)->handle];
-                break;
-            case EShaderStage::FRAGMENT:
-                [pipelineDesc setFragmentFunction:static_cast<MetalShader*>(shader)->handle];
-                break;
-            default:
-                HS_LOG(crash, "Not supported yet");
-                break;
+        case EShaderStage::VERTEX:
+            [pipelineDesc setVertexFunction:static_cast<MetalShader*>(shader)->handle];
+            break;
+        case EShaderStage::FRAGMENT:
+            [pipelineDesc setFragmentFunction:static_cast<MetalShader*>(shader)->handle];
+            break;
+        default:
+            HS_LOG(crash, "Not supported yet");
+            break;
         }
     }
 
@@ -231,10 +231,10 @@ RHIComputePipeline* MetalContext::CreateComputePipeline(const char* name, const 
 {
     MetalComputePipeline* pipelineMetal = new MetalComputePipeline(name, info);
 
-    MetalShader* shaderMetal = static_cast<MetalShader*>(info.computeShader);
+    MetalShader* shaderMetal        = static_cast<MetalShader*>(info.computeShader);
     id<MTLFunction> computeFunction = shaderMetal->handle;
 
-    NSError* error = nil;
+    NSError* error               = nil;
     pipelineMetal->pipelineState = [s_device newComputePipelineStateWithFunction:computeFunction error:&error];
 
     if (error != nil)
@@ -311,26 +311,26 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     id<MTLFunction> func = nil;
     switch (info.stage)
     {
-        case EShaderStage::VERTEX:
-        {
-            func = [library newFunctionWithName:entry];
-        }
-        break;
-        case EShaderStage::FRAGMENT:
-        {
-            func = [library newFunctionWithName:entry];
-        }
-        break;
-        case EShaderStage::COMPUTE:
-        {
-            //...
-        }
-            //            break;
-        default:
-        {
-            HS_LOG(crash, "This stage is Not supported yet");
-        }
-        break;
+    case EShaderStage::VERTEX:
+    {
+        func = [library newFunctionWithName:entry];
+    }
+    break;
+    case EShaderStage::FRAGMENT:
+    {
+        func = [library newFunctionWithName:entry];
+    }
+    break;
+    case EShaderStage::COMPUTE:
+    {
+        //...
+    }
+        //            break;
+    default:
+    {
+        HS_LOG(crash, "This stage is Not supported yet");
+    }
+    break;
     }
 
     if (nil == func)
@@ -365,27 +365,71 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
 
 RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info)
 {
-    MetalBuffer* MetalBuffer = new struct MetalBuffer(name, info);
+    MetalBuffer* mtlBuffer = new struct MetalBuffer(name, info);
 
-    id<MTLBuffer> mtlBuffer = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
+    id<MTLBuffer> handle = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
 
-    if (nil == mtlBuffer)
+    if (nil == handle)
     {
         HS_LOG(crash, "Fail to create buffer");
     }
 
-    MetalBuffer->handle   = mtlBuffer;
-    MetalBuffer->byte     = [mtlBuffer contents];
-    MetalBuffer->byteSize = dataSize;
+    mtlBuffer->handle   = handle;
+    mtlBuffer->byte     = [handle contents];
+    mtlBuffer->byteSize = dataSize;
 
-    return static_cast<RHIBuffer*>(MetalBuffer);
+    return static_cast<RHIBuffer*>(mtlBuffer);
 }
 
 void MetalContext::DestroyBuffer(RHIBuffer* buffer)
 {
-    MetalBuffer* MetalBuffer = static_cast<struct MetalBuffer*>(buffer);
+    MetalBuffer* mtlBuffer = static_cast<struct MetalBuffer*>(buffer);
 
-    delete MetalBuffer;
+    delete mtlBuffer;
+}
+
+void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
+{
+    HS_ASSERT(dataSize == buffer->byteSize, "Buffer Size isn't same");
+    MetalBuffer* mtlBuffer = static_cast<struct MetalBuffer*>(buffer);
+    id<MTLBuffer> handle   = mtlBuffer->handle;
+    switch (buffer->info.memoryOption)
+    {
+    case EBufferMemoryOption::STATIC:
+    {
+        id<MTLBuffer> stagingBuffer = [s_device newBufferWithLength:dataSize options:MTLResourceStorageModeShared];
+        memcpy([stagingBuffer contents], srcData, dataSize);
+
+        id<MTLCommandBuffer> cmdBuffer        = [s_cmdQueue commandBuffer];
+        id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer blitCommandEncoder];
+
+        [blitEncoder copyFromBuffer:stagingBuffer
+                       sourceOffset:0
+                           toBuffer:handle
+                  destinationOffset:0
+                               size:dataSize];
+        break;
+    }
+
+    case EBufferMemoryOption::DYNAMIC:
+    case EBufferMemoryOption::MAPPED:
+    {
+        void* rawPtr = [handle contents];
+        memcpy(rawPtr, srcData, dataSize);
+
+        if (buffer->info.memoryOption == EBufferMemoryOption::MAPPED)
+        {
+            [handle didModifyRange:NSMakeRange(0, dataSize)];
+        }
+
+        break;
+    }
+    default:
+    {
+        HS_LOG(crash, "Unsupported Buffer Memory Option!");
+        break;
+    }
+    }
 }
 
 RHITexture* MetalContext::CreateTexture(const char* name, void* image, const TextureInfo& info)
