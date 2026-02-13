@@ -298,7 +298,7 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     {
         char* byteCodeWithNull = new char[byteCodeSize + 1]{'\0'};
         memcpy(byteCodeWithNull, byteCode, byteCodeSize);
-        source              = [NSString stringWithCString:byteCodeWithNull encoding:NSUTF8StringEncoding];
+        source = [NSString stringWithCString:byteCodeWithNull encoding:NSUTF8StringEncoding];
     }
     else
     {
@@ -418,6 +418,13 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
                            toBuffer:handle
                   destinationOffset:0
                                size:dataSize];
+        
+        [blitEncoder endEncoding];
+        [cmdBuffer commit];
+        [cmdBuffer waitUntilCompleted];
+        
+        [stagingBuffer release];
+        
         break;
     }
 
@@ -444,7 +451,7 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
 
 RHITexture* MetalContext::CreateTexture(const char* name, void* image, const TextureInfo& info)
 {
-    MetalTexture* MetalTexture = new struct MetalTexture(name, info);
+    MetalTexture* mtlTexture = new struct MetalTexture(name, info);
 
     MTLTextureDescriptor* desc = [MTLTextureDescriptor new];
     desc.width                 = info.extent.width;
@@ -468,11 +475,51 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
         desc.storageMode = MTLStorageModeManaged;
     }
 
-    MetalTexture->handle = [s_device newTextureWithDescriptor:desc];
+    mtlTexture->handle = [s_device newTextureWithDescriptor:desc];
 
+    if (nullptr != image)
+    {
+        if (MTLStorageModePrivate == desc.storageMode)
+        {
+            id<MTLBuffer> stagingBuffer = [s_device newBufferWithBytes:image length:info.byteSize options:MTLResourceStorageModeShared];
+            
+            id<MTLCommandBuffer> cmdBuffer = [s_cmdQueue commandBuffer];
+            id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer blitCommandEncoder];
+            
+            NSUInteger bytesPerRow = info.byteSize / info.extent.depth / info.extent.height;
+            NSUInteger bytesPerImage = bytesPerRow * info.extent.height;
+            
+            [blitEncoder copyFromBuffer: stagingBuffer
+                           sourceOffset:0
+                      sourceBytesPerRow:bytesPerRow
+                    sourceBytesPerImage:bytesPerImage
+                             sourceSize:MTLSizeMake(info.extent.width, info.extent.height, info.extent.depth)
+                              toTexture:mtlTexture->handle
+                       destinationSlice:0
+                       destinationLevel:0
+                      destinationOrigin:MTLOriginMake(0, 0, 0)];
+            
+            [blitEncoder endEncoding];
+            [cmdBuffer commit];
+            [cmdBuffer waitUntilCompleted];
+            
+            [stagingBuffer release];
+        }
+        else
+        {
+
+            NSUInteger bytesPerRow = info.byteSize / info.extent.depth / info.extent.height;
+            MTLRegion region       = {
+                {0, 0, 0},
+                {info.extent.width, info.extent.height, info.extent.depth}
+            };
+
+            [mtlTexture->handle replaceRegion:region mipmapLevel:0 withBytes:image bytesPerRow:bytesPerRow];
+        }
+    }
     [desc release];
 
-    return static_cast<RHITexture*>(MetalTexture);
+    return static_cast<RHITexture*>(mtlTexture);
 }
 
 RHITexture* MetalContext::CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)
