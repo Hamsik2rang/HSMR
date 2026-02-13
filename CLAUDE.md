@@ -45,6 +45,10 @@ I can help with:
 - Writing boilerplate/support code around your core implementation
 ```
 
+### Git Commit Rules
+
+- **Co-Authored-By 금지**: 커밋 메시지에 `Co-Authored-By` 트레일러를 절대 추가하지 않는다. GitHub contributor 목록에 의도하지 않은 계정이 등록되는 것을 방지하기 위함.
+
 ### ALLOWED AI Tasks
 
 These are fine to delegate to AI:
