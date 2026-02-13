@@ -26,6 +26,90 @@
 
 using namespace hs;
 
+// ── Multi-viewport fixes (SDL3 + Metal on macOS) ────────────────────
+// Two issues in the bundled imgui backends for secondary viewport windows:
+//
+// 1) PlatformHandleRaw: Older imgui_impl_sdl3.cpp guards the macOS path
+//    behind SDL_VIDEO_DRIVER_COCOA, which SDL3 no longer exports in
+//    public headers. If PlatformHandleRaw stays nullptr, the Metal
+//    backend interprets the SDL window-ID integer as an NSWindow* → crash.
+//    Fix: resolve NSWindow* ourselves via SDL3 properties API.
+//
+// 2) contentsScale: imgui_impl_metal creates CAMetalLayer with default
+//    contentsScale(1.0). On Retina (2x), the first drawable is 1x but
+//    ImGui scissor rects are 2x → Metal validation failure.
+//    Fix: set contentsScale + drawableSize right after layer creation.
+//
+// Both are fixed by wrapping ImGuiPlatformIO::Renderer_CreateWindow
+// so we never touch third-party source files.
+// ─────────────────────────────────────────────────────────────────────
+#ifdef __SDL__
+static void (*s_originalRendererCreateWindow)(ImGuiViewport*) = nullptr;
+
+// Ensure viewport->PlatformHandleRaw points to the real NSWindow*
+static void ImGuiExt_EnsurePlatformHandleRaw(ImGuiViewport* viewport)
+{
+    if (viewport->PlatformHandleRaw != nullptr)
+        return; // already set
+
+    if (viewport->PlatformHandle == nullptr)
+        return;
+
+    // PlatformHandle is (void*)(intptr_t)SDL_GetWindowID(window)
+    SDL_WindowID window_id = (SDL_WindowID)(intptr_t)viewport->PlatformHandle;
+    SDL_Window* sdl_window = SDL_GetWindowFromID(window_id);
+    if (sdl_window)
+    {
+        viewport->PlatformHandleRaw = SDL_GetPointerProperty(
+            SDL_GetWindowProperties(sdl_window),
+            SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+    }
+}
+
+static void ImGuiExt_RendererCreateWindow(ImGuiViewport* viewport)
+{
+    // Fix PlatformHandleRaw BEFORE the Metal backend reads it
+    ImGuiExt_EnsurePlatformHandleRaw(viewport);
+
+    // Call original imgui_impl_metal CreateWindow.
+    // Do NOT set contentsScale here — leave it at the default (1.0) so that
+    // ImGui_ImplMetal_RenderWindow's own check (contentsScale != fb_scale)
+    // fires on the first frame and sets BOTH contentsScale AND drawableSize
+    // right before nextDrawable is called.
+    if (s_originalRendererCreateWindow)
+        s_originalRendererCreateWindow(viewport);
+}
+
+// ── RenderWindow wrapper ─────────────────────────────────────────────
+// Force correct drawableSize BEFORE the Metal backend calls nextDrawable.
+// ImGui_ImplMetal_RenderWindow's own DPI check may be skipped when AppKit
+// auto-sets contentsScale on layer-hosted views (Retina displays), and it
+// uses window.frame.size (includes title bar) instead of view.bounds.size.
+// ─────────────────────────────────────────────────────────────────────
+static void (*s_originalRendererRenderWindow)(ImGuiViewport*, void*) = nullptr;
+
+static void ImGuiExt_RendererRenderWindow(ImGuiViewport* viewport, void* renderArg)
+{
+    void* handle = viewport->PlatformHandleRaw ? viewport->PlatformHandleRaw : viewport->PlatformHandle;
+    if (handle)
+    {
+        NSWindow* window = (__bridge NSWindow*)handle;
+        NSView* view = window.contentView;
+        CAMetalLayer* layer = (CAMetalLayer*)view.layer;
+        if (layer && [layer isKindOfClass:[CAMetalLayer class]])
+        {
+            float dpiScale = (float)window.backingScaleFactor;
+            CGSize viewSize = view.bounds.size;  // points, NOT window.frame.size
+            layer.contentsScale = dpiScale;
+            layer.drawableSize = CGSizeMake(viewSize.width * dpiScale, viewSize.height * dpiScale);
+        }
+    }
+
+    if (s_originalRendererRenderWindow)
+        s_originalRendererRenderWindow(viewport, renderArg);
+}
+#endif // __SDL__
+
 HS_NS_EDITOR_BEGIN
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
@@ -50,6 +134,18 @@ void ImGuiExtension::InitializeBackend(Swapchain* swapchain)
 
     ImGui_ImplMetal_Init(device);
     ImGui_ImplSDL3_InitForMetal(window);
+
+    // Fix main viewport PlatformHandleRaw (same issue as secondary viewports)
+    ImGuiExt_EnsurePlatformHandleRaw(ImGui::GetMainViewport());
+
+    // Hook Renderer_CreateWindow to fix secondary viewports
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    s_originalRendererCreateWindow = platform_io.Renderer_CreateWindow;
+    platform_io.Renderer_CreateWindow = ImGuiExt_RendererCreateWindow;
+
+    // Hook Renderer_RenderWindow to fix drawableSize every frame
+    s_originalRendererRenderWindow = platform_io.Renderer_RenderWindow;
+    platform_io.Renderer_RenderWindow = ImGuiExt_RendererRenderWindow;
 #else
     // === Native macOS + Metal path ===
     NSWindow* window = (__bridge NSWindow*)(nativeWindow->handle);
@@ -117,7 +213,13 @@ void ImGuiExtension::EndRender()
     cmdMetalBuffer->BeginRenderPass(s_currentSwapchain->GetRenderPass(), framebuffer, area);
 
     ImGui::Render();
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
+    ImDrawData* drawData = ImGui::GetDrawData();
+
+    ImGui_ImplMetal_RenderDrawData(drawData, cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
+
+    // End the main render encoder before handling additional viewports
+    [cmdMetalBuffer->curRenderEncoder endEncoding];
+    cmdMetalBuffer->curRenderEncoder = nil;
 
     // Update and render additional platform windows (multi-viewport)
     ImGuiIO& io = ImGui::GetIO();
