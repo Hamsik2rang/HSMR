@@ -17,17 +17,17 @@ class EditorCamera
 public:
 	enum class EProjectionType
 	{
-		PERSPECTIVE = 0,
-		ORTHOGRAPHIC = 1,
+		Perspective = 0,
+		Orthographic = 1,
 	};
 
 	enum class Dirty
 	{
-		POSITION,
-		ROTATE,
-		SCALE,
-		VIEW,
-		PROJECTION,
+		Position,
+		Rotate,
+		Scale,
+		View,
+		Projection,
 	};
 
 	EditorCamera();

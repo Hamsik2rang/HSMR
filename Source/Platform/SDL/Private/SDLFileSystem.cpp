@@ -204,12 +204,12 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
 
     switch (access)
     {
-    case EFileAccess::READ_ONLY:
+    case EFileAccess::ReadOnly:
         mode = "rb";
         break;
 
-    case EFileAccess::WRITE_ONLY:
-    case EFileAccess::READ_WRITE:
+    case EFileAccess::WriteOnly:
+    case EFileAccess::ReadWrite:
         // 파일이 없으면 생성 후 다시 열기
         if (!FileSystem::Exist(absolutePath))
         {

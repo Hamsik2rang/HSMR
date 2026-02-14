@@ -55,18 +55,18 @@ struct HS_SHADER_ALIGNED PerFrame
 
 enum class ShaderDebugInfoLevel
 {
-    NONE = 0,
-    MINIMAL,
-    STANDARD,
-    MAXIMAL
+    None = 0,
+    Minimal,
+    Standard,
+    Maximal
 };
 
 enum class ShaderOptimizationLevel
 {
-    NONE = 0,
-    STANDARD,
-    HIGH,
-    MAXIMAL
+    None = 0,
+    Standard,
+    High,
+    Maximal
 };
 
 struct ShaderReflectionData
@@ -111,8 +111,8 @@ struct ShaderCompileOption
     EShaderStage stage;
     std::string entryPoint = "main";
     EShaderLanguage targetLanguage;
-    ShaderDebugInfoLevel debugInfoLevel = ShaderDebugInfoLevel::MAXIMAL;
-    ShaderOptimizationLevel optimizationLevel = ShaderOptimizationLevel::NONE;
+    ShaderDebugInfoLevel debugInfoLevel = ShaderDebugInfoLevel::Maximal;
+    ShaderOptimizationLevel optimizationLevel = ShaderOptimizationLevel::None;
     std::vector<ShaderPredefine> macros;
     std::vector<std::string> includePaths;
 };

@@ -5,13 +5,17 @@
 
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Asset/AssetDatabase.h"
 
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Scene/Scene.h"
+#include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
+
+#include "Resource/Model.h"
 
 // For matrix decomposition
 #define GLM_ENABLE_EXPERIMENTAL
@@ -55,7 +59,7 @@ void ScenePanel::Update(float deltaTime)
     }
 
     // Reset state when right-click is released
-    if (!Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    if (!Input::IsPressed(Input::Button::MouseRight))
     {
         _isMouseTracking = false;
         _rightClickStartedInViewport = false;
@@ -285,7 +289,7 @@ void ScenePanel::handlePicking()
         return;
 
     // Don't pick if right mouse is held (camera movement)
-    if (Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    if (Input::IsPressed(Input::Button::MouseRight))
         return;
 
     ImGuiIO& io = ImGui::GetIO();

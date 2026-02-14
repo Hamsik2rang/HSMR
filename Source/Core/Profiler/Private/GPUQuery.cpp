@@ -74,7 +74,7 @@ bool GPUQueryPool::GetOcclusionResult(uint32 queryIndex, uint64& outSampleCount)
 GPUTimestampQuery::GPUTimestampQuery()
 {
     // Create a small query pool for this timer
-    _queryPool = new GPUQueryPool(EGPUQueryType::TIMESTAMP, 2);
+    _queryPool = new GPUQueryPool(EGPUQueryType::Timestamp, 2);
 }
 
 GPUTimestampQuery::~GPUTimestampQuery()

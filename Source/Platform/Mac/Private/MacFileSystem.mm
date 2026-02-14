@@ -59,11 +59,11 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
 
     switch (access)
     {
-        case EFileAccess::READ_ONLY:
+        case EFileAccess::ReadOnly:
             fileHandle = [NSFileHandle fileHandleForReadingAtPath:path];
             break;
 
-        case EFileAccess::WRITE_ONLY:
+        case EFileAccess::WriteOnly:
             // 파일이 없으면 생성
             if (![[NSFileManager defaultManager] fileExistsAtPath:path])
             {
@@ -72,7 +72,7 @@ bool FileSystem::Open(const std::string& absolutePath, EFileAccess access, FileH
             fileHandle = [NSFileHandle fileHandleForWritingAtPath:path];
             break;
 
-        case EFileAccess::READ_WRITE:
+        case EFileAccess::ReadWrite:
             // 파일이 없으면 생성
             if (![[NSFileManager defaultManager] fileExistsAtPath:path])
             {

@@ -42,7 +42,7 @@ struct HS_API ImageResource
     RHISampler* sampler = nullptr;
     uint32 width = 0;
     uint32 height = 0;
-    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
+    EPixelFormat format = EPixelFormat::R8G8B8A8Unorm;
     bool isValid = false;
 };
 

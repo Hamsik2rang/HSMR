@@ -25,7 +25,7 @@ struct HS_SHADER_SYSTEM_API ShaderCompileRequest
     std::string sourceFilePath;             // For include path resolution
     std::vector<std::string> includePaths;
     std::vector<std::pair<std::string, std::string>> defines;
-    EShaderStage requestedStages = EShaderStage::VERTEX | EShaderStage::FRAGMENT;
+    EShaderStage requestedStages = EShaderStage::Vertex | EShaderStage::Fragment;
 };
 
 class HS_SHADER_SYSTEM_API ShaderCompiler
@@ -39,7 +39,7 @@ public:
 
     ShaderCompileOutputEx Compile(const ShaderCompileRequest& request);
     ShaderCompileOutputEx CompileFromFile(const std::string& filePath,
-                                          EShaderStage requestedStages = EShaderStage::VERTEX | EShaderStage::FRAGMENT);
+                                          EShaderStage requestedStages = EShaderStage::Vertex | EShaderStage::Fragment);
 
     EShaderLanguage GetTargetLanguage() const;
 

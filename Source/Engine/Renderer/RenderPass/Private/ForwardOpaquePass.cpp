@@ -52,8 +52,8 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
     ca.format         = rtInfo.colorTextureInfos[0].format;
     ca.clearValue     = ClearValue(0.33f, 0.33f, 0.33f, 1.0f);
     ca.isDepthStencil = false;
-    ca.loadAction     = ELoadAction::CLEAR;
-    ca.storeAction    = EStoreAction::STORE;
+    ca.loadAction     = ELoadAction::Clear;
+    ca.storeAction    = EStoreAction::Store;
     _renderPassInfo.colorAttachments.push_back(ca);
 
     if (rtInfo.useDepthStencilTexture)
@@ -62,8 +62,8 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
         dsa.format                                = rtInfo.depthStencilInfo.format;
         dsa.clearValue                            = ClearValue(1.0f, 0.0f);
         dsa.isDepthStencil                        = true;
-        dsa.loadAction                            = ELoadAction::CLEAR;
-        dsa.storeAction                           = EStoreAction::STORE;
+        dsa.loadAction                            = ELoadAction::Clear;
+        dsa.storeAction                           = EStoreAction::Store;
         _renderPassInfo.depthStencilAttachment    = dsa;
         _renderPassInfo.useDepthStencilAttachment = true;
     }

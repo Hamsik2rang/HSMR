@@ -18,9 +18,9 @@ HS_NS_BEGIN
 // GPU query types
 enum class EGPUQueryType
 {
-    TIMESTAMP,
-    OCCLUSION,
-    PIPELINE_STATISTICS
+    Timestamp,
+    Occlusion,
+    PipelineStatistics
 };
 
 // GPU query pool - manages multiple queries of the same type

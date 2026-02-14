@@ -21,13 +21,13 @@ class RHIFramebuffer;
 
 enum class HS_API ERenderingOrder : uint16
 {
-    INVALID = 0,
+    Invalid = 0,
 
-    OPAQUE      = 2000,
-    SKYBOX      = 2500,
-    TRANSPARENT = 3000,
+    Opaque      = 2000,
+    Skybox      = 2500,
+    Transparent = 3000,
 
-    POST_PROCESS = 8000
+    PostProcess = 8000
     //...
 };
 

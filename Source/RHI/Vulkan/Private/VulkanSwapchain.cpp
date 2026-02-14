@@ -31,8 +31,8 @@ void VulkanSwapchain::setRenderPass()
     Attachment colorAttachment{};
     colorAttachment.format         = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
     colorAttachment.clearValue     = ClearValue(0.3, 0.3, 0.3, 1.0);
-    colorAttachment.loadAction     = ELoadAction::CLEAR;
-    colorAttachment.storeAction    = EStoreAction::STORE;
+    colorAttachment.loadAction     = ELoadAction::Clear;
+    colorAttachment.storeAction    = EStoreAction::Store;
     colorAttachment.isDepthStencil = false;
 
     Area renderArea{};
@@ -67,12 +67,12 @@ void VulkanSwapchain::setFramebuffers()
         tInfo.extent.height        = _info.nativeWindow->surfaceHeight;
         tInfo.extent.depth         = 1;
         tInfo.format               = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
-        tInfo.usage                = ETextureUsage::COLOR_ATTACHMENT;
+        tInfo.usage                = ETextureUsage::ColorAttachment;
         tInfo.isCompressed         = false;
         tInfo.useGenerateMipmap    = false;
         tInfo.mipLevel             = 1;
         tInfo.isSwapchainTexture   = true;
-        tInfo.type                 = ETextureType::TEX_2D;
+        tInfo.type                 = ETextureType::Tex2D;
         tInfo.swapchain            = this;
         tInfo.byteSize             = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
         tInfo.isDepthStencilBuffer = false;

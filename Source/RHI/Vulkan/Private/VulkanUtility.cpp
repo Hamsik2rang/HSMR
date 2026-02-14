@@ -6,35 +6,35 @@ VkFormat RHIUtilityVulkan::ToPixelFormat(EPixelFormat format)
 {
 	switch (format)
 	{
-	case EPixelFormat::R8G8B8A8_UNORM:
+	case EPixelFormat::R8G8B8A8Unorm:
 		return VK_FORMAT_R8G8B8A8_UNORM;
-	case EPixelFormat::R8G8B8A8_SRGB:
+	case EPixelFormat::R8G8B8A8Srgb:
 		return VK_FORMAT_R8G8B8A8_SRGB;
-	case EPixelFormat::B8G8A8R8_UNORM:
+	case EPixelFormat::B8G8A8R8Unorm:
 		return VK_FORMAT_B8G8R8A8_UNORM;
-	case EPixelFormat::B8G8A8R8_SRGB:
+	case EPixelFormat::B8G8A8R8Srgb:
 		return VK_FORMAT_B8G8R8A8_SRGB;
 	// Floating-point formats
-	case EPixelFormat::R16F:
+	case EPixelFormat::R16f:
 		return VK_FORMAT_R16_SFLOAT;
-	case EPixelFormat::RG16F:
+	case EPixelFormat::RG16f:
 		return VK_FORMAT_R16G16_SFLOAT;
-	case EPixelFormat::RGBA16F:
+	case EPixelFormat::Rgba16f:
 		return VK_FORMAT_R16G16B16A16_SFLOAT;
-	case EPixelFormat::R32F:
+	case EPixelFormat::R32f:
 		return VK_FORMAT_R32_SFLOAT;
-	case EPixelFormat::RG32F:
+	case EPixelFormat::RG32f:
 		return VK_FORMAT_R32G32_SFLOAT;
-	case EPixelFormat::RGBA32F:
+	case EPixelFormat::Rgba32f:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
 	// Depth/stencil formats
-	case EPixelFormat::DEPTH32:
+	case EPixelFormat::Depth32:
 		return VK_FORMAT_D32_SFLOAT;
-	case EPixelFormat::STENCIL8:
+	case EPixelFormat::Stencil8:
 		return VK_FORMAT_S8_UINT;
-	case EPixelFormat::DEPTH24_STENCIL8:
+	case EPixelFormat::Depth24Stencil8:
 		return VK_FORMAT_D24_UNORM_S8_UINT;
-	case EPixelFormat::DEPTH32_STENCIL8:
+	case EPixelFormat::Depth32Stencil8:
 		return VK_FORMAT_D32_SFLOAT_S8_UINT;
 	default:
 		HS_LOG(error, "Unsupported pixel format: %d", static_cast<int>(format));
@@ -47,38 +47,38 @@ EPixelFormat RHIUtilityVulkan::FromPixelFormat(VkFormat format)
 	switch (format)
 	{
 	case VK_FORMAT_R8G8B8A8_UNORM:
-		return EPixelFormat::R8G8B8A8_UNORM;
+		return EPixelFormat::R8G8B8A8Unorm;
 	case VK_FORMAT_R8G8B8A8_SRGB:
-		return EPixelFormat::R8G8B8A8_SRGB;
+		return EPixelFormat::R8G8B8A8Srgb;
 	case VK_FORMAT_B8G8R8A8_UNORM:
-		return EPixelFormat::B8G8A8R8_UNORM;
+		return EPixelFormat::B8G8A8R8Unorm;
 	case VK_FORMAT_B8G8R8A8_SRGB:
-		return EPixelFormat::B8G8A8R8_SRGB;
+		return EPixelFormat::B8G8A8R8Srgb;
 	// Floating-point formats
 	case VK_FORMAT_R16_SFLOAT:
-		return EPixelFormat::R16F;
+		return EPixelFormat::R16f;
 	case VK_FORMAT_R16G16_SFLOAT:
-		return EPixelFormat::RG16F;
+		return EPixelFormat::RG16f;
 	case VK_FORMAT_R16G16B16A16_SFLOAT:
-		return EPixelFormat::RGBA16F;
+		return EPixelFormat::Rgba16f;
 	case VK_FORMAT_R32_SFLOAT:
-		return EPixelFormat::R32F;
+		return EPixelFormat::R32f;
 	case VK_FORMAT_R32G32_SFLOAT:
-		return EPixelFormat::RG32F;
+		return EPixelFormat::RG32f;
 	case VK_FORMAT_R32G32B32A32_SFLOAT:
-		return EPixelFormat::RGBA32F;
+		return EPixelFormat::Rgba32f;
 	// Depth/stencil formats
 	case VK_FORMAT_D32_SFLOAT:
-		return EPixelFormat::DEPTH32;
+		return EPixelFormat::Depth32;
 	case VK_FORMAT_S8_UINT:
-		return EPixelFormat::STENCIL8;
+		return EPixelFormat::Stencil8;
 	case VK_FORMAT_D24_UNORM_S8_UINT:
-		return EPixelFormat::DEPTH24_STENCIL8;
+		return EPixelFormat::Depth24Stencil8;
 	case VK_FORMAT_D32_SFLOAT_S8_UINT:
-		return EPixelFormat::DEPTH32_STENCIL8;
+		return EPixelFormat::Depth32Stencil8;
 	default:
 		HS_LOG(error, "Unsupported VkFormat: %d", static_cast<int>(format));
-		return EPixelFormat::INVALID;
+		return EPixelFormat::Invalid;
 	}
 }
 
@@ -86,14 +86,14 @@ VkFormat RHIUtilityVulkan::ToVertexFormat(EVertexFormat format)
 {
 	switch (format)
 	{
-	case EVertexFormat::FLOAT:	return VK_FORMAT_R32_SFLOAT;
-	case EVertexFormat::FLOAT2:	return VK_FORMAT_R32G32_SFLOAT;
-	case EVertexFormat::FLOAT3:	return VK_FORMAT_R32G32B32_SFLOAT;
-	case EVertexFormat::FLOAT4:	return VK_FORMAT_R32G32B32A32_SFLOAT;
-	case EVertexFormat::HALF:	return VK_FORMAT_R16_SFLOAT;
-	case EVertexFormat::HALF2:	return VK_FORMAT_R16G16_SFLOAT;
-	case EVertexFormat::HALF3:	return VK_FORMAT_R16G16B16_SFLOAT;
-	case EVertexFormat::HALF4:	return VK_FORMAT_R16G16B16A16_SFLOAT;
+	case EVertexFormat::Float:	return VK_FORMAT_R32_SFLOAT;
+	case EVertexFormat::Float2:	return VK_FORMAT_R32G32_SFLOAT;
+	case EVertexFormat::Float3:	return VK_FORMAT_R32G32B32_SFLOAT;
+	case EVertexFormat::Float4:	return VK_FORMAT_R32G32B32A32_SFLOAT;
+	case EVertexFormat::Half:	return VK_FORMAT_R16_SFLOAT;
+	case EVertexFormat::Half2:	return VK_FORMAT_R16G16_SFLOAT;
+	case EVertexFormat::Half3:	return VK_FORMAT_R16G16B16_SFLOAT;
+	case EVertexFormat::Half4:	return VK_FORMAT_R16G16B16A16_SFLOAT;
 	default:
 		HS_LOG(error, "Unsupported vertex format: %d", static_cast<int>(format));
 	}
@@ -104,29 +104,29 @@ EVertexFormat RHIUtilityVulkan::FromVertexFormat(VkFormat format)
 {
 	switch (format)
 	{
-	case VK_FORMAT_R32_SFLOAT:			return EVertexFormat::FLOAT;
-	case VK_FORMAT_R32G32_SFLOAT:		return EVertexFormat::FLOAT2;
-	case VK_FORMAT_R32G32B32_SFLOAT:	return EVertexFormat::FLOAT3;
-	case VK_FORMAT_R32G32B32A32_SFLOAT:	return EVertexFormat::FLOAT4;
-	case VK_FORMAT_R16_SFLOAT:			return EVertexFormat::HALF;
-	case VK_FORMAT_R16G16_SFLOAT:		return EVertexFormat::HALF2;
-	case VK_FORMAT_R16G16B16_SFLOAT:	return EVertexFormat::HALF3;
-	case VK_FORMAT_R16G16B16A16_SFLOAT:	return EVertexFormat::HALF4;
+	case VK_FORMAT_R32_SFLOAT:			return EVertexFormat::Float;
+	case VK_FORMAT_R32G32_SFLOAT:		return EVertexFormat::Float2;
+	case VK_FORMAT_R32G32B32_SFLOAT:	return EVertexFormat::Float3;
+	case VK_FORMAT_R32G32B32A32_SFLOAT:	return EVertexFormat::Float4;
+	case VK_FORMAT_R16_SFLOAT:			return EVertexFormat::Half;
+	case VK_FORMAT_R16G16_SFLOAT:		return EVertexFormat::Half2;
+	case VK_FORMAT_R16G16B16_SFLOAT:	return EVertexFormat::Half3;
+	case VK_FORMAT_R16G16B16A16_SFLOAT:	return EVertexFormat::Half4;
 	default:
 		HS_LOG(error, "Unsupported VkFormat for vertex format: %d", static_cast<int>(format));
 	}
-	return EVertexFormat::FLOAT;
+	return EVertexFormat::Float;
 }
 
 VkAttachmentLoadOp RHIUtilityVulkan::ToLoadOp(ELoadAction action)
 {
 	switch (action)
 	{
-	case ELoadAction::DONT_CARE:
+	case ELoadAction::DontCare:
 		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	case ELoadAction::LOAD:
+	case ELoadAction::Load:
 		return VK_ATTACHMENT_LOAD_OP_LOAD;
-	case ELoadAction::CLEAR:
+	case ELoadAction::Clear:
 		return VK_ATTACHMENT_LOAD_OP_CLEAR;
 	default:
 		HS_LOG(error, "Unsupported load action: %d", static_cast<int>(action));
@@ -139,24 +139,24 @@ ELoadAction RHIUtilityVulkan::FromLoadOp(VkAttachmentLoadOp action)
 	switch (action)
 	{
 	case VK_ATTACHMENT_LOAD_OP_DONT_CARE:
-		return ELoadAction::DONT_CARE;
+		return ELoadAction::DontCare;
 	case VK_ATTACHMENT_LOAD_OP_LOAD:
-		return ELoadAction::LOAD;
+		return ELoadAction::Load;
 	case VK_ATTACHMENT_LOAD_OP_CLEAR:
-		return ELoadAction::CLEAR;
+		return ELoadAction::Clear;
 	default:
 		HS_LOG(error, "Unsupported VkAttachmentLoadOp: %d", static_cast<int>(action));
 	}
-	return ELoadAction::INVALID;
+	return ELoadAction::Invalid;
 }
 
 VkAttachmentStoreOp RHIUtilityVulkan::ToStoreOp(EStoreAction action)
 {
 	switch (action)
 	{
-	case EStoreAction::DONT_CARE:
+	case EStoreAction::DontCare:
 		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	case EStoreAction::STORE:
+	case EStoreAction::Store:
 		return VK_ATTACHMENT_STORE_OP_STORE;
 	default:
 		HS_LOG(error, "Unsupported store action: %d", static_cast<int>(action));
@@ -169,13 +169,13 @@ EStoreAction RHIUtilityVulkan::FromStoreOp(VkAttachmentStoreOp action)
 	switch (action)
 	{
 	case VK_ATTACHMENT_STORE_OP_DONT_CARE:
-		return EStoreAction::DONT_CARE;
+		return EStoreAction::DontCare;
 	case VK_ATTACHMENT_STORE_OP_STORE:
-		return EStoreAction::STORE;
+		return EStoreAction::Store;
 	default:
 		HS_LOG(error, "Unsupported VkAttachmentStoreOp: %d", static_cast<int>(action));
 	}
-	return EStoreAction::INVALID;
+	return EStoreAction::Invalid;
 }
 
 VkViewport RHIUtilityVulkan::ToViewport(Viewport vp)
@@ -205,28 +205,28 @@ Viewport RHIUtilityVulkan::FromViewport(VkViewport vp)
 VkImageUsageFlags RHIUtilityVulkan::ToTextureUsage(ETextureUsage usage)
 {
 	VkImageUsageFlags flags = 0;
-	if ((usage & ETextureUsage::STATIC) != 0)
+	if ((usage & ETextureUsage::Static) != 0)
 		flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-	if ((usage & ETextureUsage::STAGING) != 0)
+	if ((usage & ETextureUsage::Staging) != 0)
 		flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
-	if ((usage & ETextureUsage::SAMPLED) != 0)
+	if ((usage & ETextureUsage::Sampled) != 0)
 		flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
-	if ((usage & ETextureUsage::STORAGE) != 0)
+	if ((usage & ETextureUsage::Storage) != 0)
 		flags |= VK_IMAGE_USAGE_STORAGE_BIT;
 
-	if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0)
+	if ((usage & ETextureUsage::ColorAttachment) != 0)
 		flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0)
+	if ((usage & ETextureUsage::DepthStencilAttachment) != 0)
 		flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-	if ((usage & ETextureUsage::TRANSIENT_ATTACHMENT) != 0)
+	if ((usage & ETextureUsage::TransientAttachment) != 0)
 		flags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 
-	if ((usage & ETextureUsage::INPUT_ATTACHMENT) != 0)
+	if ((usage & ETextureUsage::InputAttachment) != 0)
 		flags |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
 	return flags;
@@ -234,30 +234,30 @@ VkImageUsageFlags RHIUtilityVulkan::ToTextureUsage(ETextureUsage usage)
 
 ETextureUsage RHIUtilityVulkan::FromTextureUsage(VkImageUsageFlags usage)
 {
-	ETextureUsage flags = ETextureUsage::UNKNOWN;
+	ETextureUsage flags = ETextureUsage::Unknown;
 	if ((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0)
-		flags |= ETextureUsage::STATIC;
+		flags |= ETextureUsage::Static;
 
 	if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) != 0)
-		flags |= ETextureUsage::STAGING;
+		flags |= ETextureUsage::Staging;
 
 	if ((usage & VK_IMAGE_USAGE_SAMPLED_BIT) != 0)
-		flags |= ETextureUsage::SAMPLED;
+		flags |= ETextureUsage::Sampled;
 
 	if ((usage & VK_IMAGE_USAGE_STORAGE_BIT) != 0)
-		flags |= ETextureUsage::STORAGE;
+		flags |= ETextureUsage::Storage;
 
 	if ((usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) != 0)
-		flags |= ETextureUsage::COLOR_ATTACHMENT;
+		flags |= ETextureUsage::ColorAttachment;
 
 	if ((usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0)
-		flags |= ETextureUsage::DEPTH_STENCIL_ATTACHMENT;
+		flags |= ETextureUsage::DepthStencilAttachment;
 
 	if ((usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) != 0)
-		flags |= ETextureUsage::TRANSIENT_ATTACHMENT;
+		flags |= ETextureUsage::TransientAttachment;
 
 	if ((usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) != 0)
-		flags |= ETextureUsage::INPUT_ATTACHMENT;
+		flags |= ETextureUsage::InputAttachment;
 
 	return flags;
 }
@@ -266,14 +266,14 @@ VkImageType RHIUtilityVulkan::ToImageType(ETextureType type)
 {
 	switch (type)
 	{
-	case ETextureType::TEX_1D:
-	case ETextureType::TEX_1D_ARRAY:
+	case ETextureType::Tex1D:
+	case ETextureType::Tex1DArray:
 		return VK_IMAGE_TYPE_1D;
-	case ETextureType::TEX_2D:
-	case ETextureType::TEX_2D_ARRAY:
-	case ETextureType::TEX_CUBE:  // Cube maps use 2D image type with 6 array layers
+	case ETextureType::Tex2D:
+	case ETextureType::Tex2DArray:
+	case ETextureType::TexCube:  // Cube maps use 2D image type with 6 array layers
 		return VK_IMAGE_TYPE_2D;
-	case ETextureType::TEX_3D:
+	case ETextureType::Tex3D:
 		return VK_IMAGE_TYPE_3D;
 	default:
 		HS_LOG(error, "Unsupported texture type: %d", static_cast<int>(type));
@@ -286,32 +286,32 @@ ETextureType RHIUtilityVulkan::FromImageType(VkImageType type)
 	switch (type)
 	{
 	case VK_IMAGE_TYPE_1D:
-		return ETextureType::TEX_1D;
+		return ETextureType::Tex1D;
 	case VK_IMAGE_TYPE_2D:
-		return ETextureType::TEX_2D;
+		return ETextureType::Tex2D;
 	case VK_IMAGE_TYPE_3D:
-		return ETextureType::TEX_3D;
+		return ETextureType::Tex3D;
 	default:
 		HS_LOG(error, "Unsupported VkImageType: %d", static_cast<int>(type));
 	}
-	return ETextureType::INVALID;
+	return ETextureType::Invalid;
 }
 
 VkImageViewType RHIUtilityVulkan::ToImageViewType(ETextureType type)
 {
 	switch (type)
 	{
-	case ETextureType::TEX_1D:
+	case ETextureType::Tex1D:
 		return VK_IMAGE_VIEW_TYPE_1D;
-	case ETextureType::TEX_1D_ARRAY:
+	case ETextureType::Tex1DArray:
 		return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
-	case ETextureType::TEX_2D:
+	case ETextureType::Tex2D:
 		return VK_IMAGE_VIEW_TYPE_2D;
-	case ETextureType::TEX_2D_ARRAY:
+	case ETextureType::Tex2DArray:
 		return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-	case ETextureType::TEX_CUBE:
+	case ETextureType::TexCube:
 		return VK_IMAGE_VIEW_TYPE_CUBE;
-	case ETextureType::TEX_3D:
+	case ETextureType::Tex3D:
 		return VK_IMAGE_VIEW_TYPE_3D;
 	default:
 		HS_LOG(error, "Unsupported texture view type: %d", static_cast<int>(type));
@@ -324,21 +324,21 @@ ETextureType RHIUtilityVulkan::FromImageViewType(VkImageViewType type)
 	switch (type)
 	{
 	case VK_IMAGE_VIEW_TYPE_1D:
-		return ETextureType::TEX_1D;
+		return ETextureType::Tex1D;
 	case VK_IMAGE_VIEW_TYPE_1D_ARRAY:
-		return ETextureType::TEX_1D_ARRAY;
+		return ETextureType::Tex1DArray;
 	case VK_IMAGE_VIEW_TYPE_2D:
-		return ETextureType::TEX_2D;
+		return ETextureType::Tex2D;
 	case VK_IMAGE_VIEW_TYPE_2D_ARRAY:
-		return ETextureType::TEX_2D_ARRAY;
+		return ETextureType::Tex2DArray;
 	case VK_IMAGE_VIEW_TYPE_CUBE:
-		return ETextureType::TEX_CUBE;
+		return ETextureType::TexCube;
 	case VK_IMAGE_VIEW_TYPE_3D:
-		return ETextureType::TEX_3D;
+		return ETextureType::Tex3D;
 	default:
 		HS_LOG(error, "Unsupported VkImageViewType: %d", static_cast<int>(type));
 	}
-	return ETextureType::INVALID;
+	return ETextureType::Invalid;
 }
 
 
@@ -346,35 +346,35 @@ VkBlendFactor RHIUtilityVulkan::ToBlendFactor(EBlendFactor factor)
 {
 	switch (factor)
 	{
-	case EBlendFactor::ZERO:
+	case EBlendFactor::Zero:
 		return VK_BLEND_FACTOR_ZERO;
-	case EBlendFactor::ONE:
+	case EBlendFactor::One:
 		return VK_BLEND_FACTOR_ONE;
-	case EBlendFactor::SRC_COLOR:
+	case EBlendFactor::SrcColor:
 		return VK_BLEND_FACTOR_SRC_COLOR;
-	case EBlendFactor::ONE_MINUS_SRC_COLOR:
+	case EBlendFactor::OneMinusSrcColor:
 		return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-	case EBlendFactor::DST_COLOR:
+	case EBlendFactor::DstColor:
 		return VK_BLEND_FACTOR_DST_COLOR;
-	case EBlendFactor::ONE_MINUS_DST_COLOR:
+	case EBlendFactor::OneMinusDstColor:
 		return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-	case EBlendFactor::SRC_ALPHA:
+	case EBlendFactor::SrcAlpha:
 		return VK_BLEND_FACTOR_SRC_ALPHA;
-	case EBlendFactor::ONE_MINUS_SRC_ALPHA:
+	case EBlendFactor::OneMinusSrcAlpha:
 		return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	case EBlendFactor::DST_ALPHA:
+	case EBlendFactor::DstAlpha:
 		return VK_BLEND_FACTOR_DST_ALPHA;
-	case EBlendFactor::ONE_MINUS_DST_ALPHA:
+	case EBlendFactor::OneMinusDstAlpha:
 		return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-	case EBlendFactor::SRC_ALPHA_SATURATE:
+	case EBlendFactor::SrcAlphaSaturate:
 		return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
-	case EBlendFactor::SRC1_COLOR:
+	case EBlendFactor::Src1Color:
 		return VK_BLEND_FACTOR_SRC1_COLOR;
-	case EBlendFactor::ONE_MINUS_SRC1_COLOR:
+	case EBlendFactor::OneMinusSrc1Color:
 		return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
-	case EBlendFactor::SRC1_ALPHA:
+	case EBlendFactor::Src1Alpha:
 		return VK_BLEND_FACTOR_SRC1_ALPHA;
-	case EBlendFactor::ONE_MINUS_SRC1_ALPHA:
+	case EBlendFactor::OneMinusSrc1Alpha:
 		return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
 	default:
 		HS_LOG(error, "Unsupported blend factor: %d", static_cast<int>(factor));
@@ -387,54 +387,54 @@ EBlendFactor RHIUtilityVulkan::FromBlendFactor(VkBlendFactor factor)
 	switch (factor)
 	{
 	case VK_BLEND_FACTOR_ZERO:
-		return EBlendFactor::ZERO;
+		return EBlendFactor::Zero;
 	case VK_BLEND_FACTOR_ONE:
-		return EBlendFactor::ONE;
+		return EBlendFactor::One;
 	case VK_BLEND_FACTOR_SRC_COLOR:
-		return EBlendFactor::SRC_COLOR;
+		return EBlendFactor::SrcColor;
 	case VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
-		return EBlendFactor::ONE_MINUS_SRC_COLOR;
+		return EBlendFactor::OneMinusSrcColor;
 	case VK_BLEND_FACTOR_DST_COLOR:
-		return EBlendFactor::DST_COLOR;
+		return EBlendFactor::DstColor;
 	case VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR:
-		return EBlendFactor::ONE_MINUS_DST_COLOR;
+		return EBlendFactor::OneMinusDstColor;
 	case VK_BLEND_FACTOR_SRC_ALPHA:
-		return EBlendFactor::SRC_ALPHA;
+		return EBlendFactor::SrcAlpha;
 	case VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
-		return EBlendFactor::ONE_MINUS_SRC_ALPHA;
+		return EBlendFactor::OneMinusSrcAlpha;
 	case VK_BLEND_FACTOR_DST_ALPHA:
-		return EBlendFactor::DST_ALPHA;
+		return EBlendFactor::DstAlpha;
 	case VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
-		return EBlendFactor::ONE_MINUS_DST_ALPHA;
+		return EBlendFactor::OneMinusDstAlpha;
 	case VK_BLEND_FACTOR_SRC_ALPHA_SATURATE:
-		return EBlendFactor::SRC_ALPHA_SATURATE;
+		return EBlendFactor::SrcAlphaSaturate;
 	case VK_BLEND_FACTOR_SRC1_COLOR:
-		return EBlendFactor::SRC1_COLOR;
+		return EBlendFactor::Src1Color;
 	case VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR:
-		return EBlendFactor::ONE_MINUS_SRC1_COLOR;
+		return EBlendFactor::OneMinusSrc1Color;
 	case VK_BLEND_FACTOR_SRC1_ALPHA:
-		return EBlendFactor::SRC1_ALPHA;
+		return EBlendFactor::Src1Alpha;
 	case VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA:
-		return EBlendFactor::ONE_MINUS_SRC1_ALPHA;
+		return EBlendFactor::OneMinusSrc1Alpha;
 	default:
 		HS_LOG(error, "Unsupported VkBlendFactor: %d", static_cast<int>(factor));
 	}
-	return EBlendFactor::INVALID;
+	return EBlendFactor::Invalid;
 }
 
 VkBlendOp RHIUtilityVulkan::ToBlendOp(EBlendOp operation)
 {
 	switch (operation)
 	{
-	case EBlendOp::ADD:
+	case EBlendOp::Add:
 		return VK_BLEND_OP_ADD;
-	case EBlendOp::SUBTRACT:
+	case EBlendOp::Subtract:
 		return VK_BLEND_OP_SUBTRACT;
-	case EBlendOp::REVERSE_SUBTRACT:
+	case EBlendOp::ReverseSubtract:
 		return VK_BLEND_OP_REVERSE_SUBTRACT;
-	case EBlendOp::MIN:
+	case EBlendOp::Min:
 		return VK_BLEND_OP_MIN;
-	case EBlendOp::MAX:
+	case EBlendOp::Max:
 		return VK_BLEND_OP_MAX;
 	default:
 		HS_LOG(error, "Unsupported blend operation: %d", static_cast<int>(operation));
@@ -447,40 +447,40 @@ EBlendOp RHIUtilityVulkan::FromBlendOp(VkBlendOp operation)
 	switch (operation)
 	{
 	case VK_BLEND_OP_ADD:
-		return EBlendOp::ADD;
+		return EBlendOp::Add;
 	case VK_BLEND_OP_SUBTRACT:
-		return EBlendOp::SUBTRACT;
+		return EBlendOp::Subtract;
 	case VK_BLEND_OP_REVERSE_SUBTRACT:
-		return EBlendOp::REVERSE_SUBTRACT;
+		return EBlendOp::ReverseSubtract;
 	case VK_BLEND_OP_MIN:
-		return EBlendOp::MIN;
+		return EBlendOp::Min;
 	case VK_BLEND_OP_MAX:
-		return EBlendOp::MAX;
+		return EBlendOp::Max;
 	default:
 		HS_LOG(error, "Unsupported VkBlendOp: %d", static_cast<int>(operation));
 	}
-	return EBlendOp::INVALID;
+	return EBlendOp::Invalid;
 }
 
 VkCompareOp RHIUtilityVulkan::ToCompareOp(ECompareOp compareOp)
 {
 	switch (compareOp)
 	{
-	case ECompareOp::NEVER:
+	case ECompareOp::Never:
 		return VK_COMPARE_OP_NEVER;
-	case ECompareOp::LESS:
+	case ECompareOp::Less:
 		return VK_COMPARE_OP_LESS;
-	case ECompareOp::EQUAL:
+	case ECompareOp::Equal:
 		return VK_COMPARE_OP_EQUAL;
-	case ECompareOp::LESS_OR_EQUAL:
+	case ECompareOp::LessOrEqual:
 		return VK_COMPARE_OP_LESS_OR_EQUAL;
-	case ECompareOp::GREATER:
+	case ECompareOp::Greater:
 		return VK_COMPARE_OP_GREATER;
-	case ECompareOp::NOT_EQUAL:
+	case ECompareOp::NotEqual:
 		return VK_COMPARE_OP_NOT_EQUAL;
-	case ECompareOp::GREATER_OR_EQUAL:
+	case ECompareOp::GreaterOrEqual:
 		return VK_COMPARE_OP_GREATER_OR_EQUAL;
-	case ECompareOp::ALWAYS:
+	case ECompareOp::Always:
 		return VK_COMPARE_OP_ALWAYS;
 	default:
 		HS_LOG(error, "Unsupported compare operation: %d", static_cast<int>(compareOp));
@@ -493,39 +493,39 @@ ECompareOp RHIUtilityVulkan::FromCompareOp(VkCompareOp compareOp)
 	switch (compareOp)
 	{
 	case VK_COMPARE_OP_NEVER:
-		return ECompareOp::NEVER;
+		return ECompareOp::Never;
 	case VK_COMPARE_OP_LESS:
-		return ECompareOp::LESS;
+		return ECompareOp::Less;
 	case VK_COMPARE_OP_EQUAL:
-		return ECompareOp::EQUAL;
+		return ECompareOp::Equal;
 	case VK_COMPARE_OP_LESS_OR_EQUAL:
-		return ECompareOp::LESS_OR_EQUAL;
+		return ECompareOp::LessOrEqual;
 	case VK_COMPARE_OP_GREATER:
-		return ECompareOp::GREATER;
+		return ECompareOp::Greater;
 	case VK_COMPARE_OP_NOT_EQUAL:
-		return ECompareOp::NOT_EQUAL;
+		return ECompareOp::NotEqual;
 	case VK_COMPARE_OP_GREATER_OR_EQUAL:
-		return ECompareOp::GREATER_OR_EQUAL;
+		return ECompareOp::GreaterOrEqual;
 	case VK_COMPARE_OP_ALWAYS:
-		return ECompareOp::ALWAYS;
+		return ECompareOp::Always;
 	default:
 		HS_LOG(error, "Unsupported VkCompareOp: %d", static_cast<int>(compareOp));
 	}
-	return ECompareOp::NEVER;
+	return ECompareOp::Never;
 }
 
 VkStencilOp RHIUtilityVulkan::ToStencilOp(EStencilOp stencilOp)
 {
 	switch (stencilOp)
 	{
-	case EStencilOp::KEEP:					return VK_STENCIL_OP_KEEP;
-	case EStencilOp::ZERO:					return VK_STENCIL_OP_ZERO;
-	case EStencilOp::REPLACE:				return VK_STENCIL_OP_REPLACE;
-	case EStencilOp::INCREMENT_AND_CLAMP:	return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-	case EStencilOp::DECREMENT_AND_CLAMP:	return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-	case EStencilOp::INVERT:				return VK_STENCIL_OP_INVERT;
-	case EStencilOp::INCREMENT_AND_WARP:	return VK_STENCIL_OP_INCREMENT_AND_WRAP;
-	case EStencilOp::DECREMENT_AND_WRAP:	return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+	case EStencilOp::Keep:					return VK_STENCIL_OP_KEEP;
+	case EStencilOp::Zero:					return VK_STENCIL_OP_ZERO;
+	case EStencilOp::Replace:				return VK_STENCIL_OP_REPLACE;
+	case EStencilOp::IncrementAndClamp:	return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+	case EStencilOp::DecrementAndClamp:	return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+	case EStencilOp::Invert:				return VK_STENCIL_OP_INVERT;
+	case EStencilOp::IncrementAndWrap:	return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+	case EStencilOp::DecrementAndWrap:	return VK_STENCIL_OP_DECREMENT_AND_WRAP;
 	default:
 		HS_LOG(error, "Unsupported stencil operation: %d", static_cast<int>(stencilOp));
 	}
@@ -536,40 +536,40 @@ EStencilOp RHIUtilityVulkan::FromStencilOp(VkStencilOp stencilOp)
 {
 	switch (stencilOp)
 	{
-	case VK_STENCIL_OP_KEEP:				return EStencilOp::KEEP;
-	case VK_STENCIL_OP_ZERO:				return EStencilOp::ZERO;
-	case VK_STENCIL_OP_REPLACE:				return EStencilOp::REPLACE;
-	case VK_STENCIL_OP_INCREMENT_AND_CLAMP: return EStencilOp::INCREMENT_AND_CLAMP;
-	case VK_STENCIL_OP_DECREMENT_AND_CLAMP: return EStencilOp::DECREMENT_AND_CLAMP;
-	case VK_STENCIL_OP_INVERT:				return EStencilOp::INVERT;
-	case VK_STENCIL_OP_INCREMENT_AND_WRAP:	return EStencilOp::INCREMENT_AND_WARP;
-	case VK_STENCIL_OP_DECREMENT_AND_WRAP:	return EStencilOp::DECREMENT_AND_WRAP;
+	case VK_STENCIL_OP_KEEP:				return EStencilOp::Keep;
+	case VK_STENCIL_OP_ZERO:				return EStencilOp::Zero;
+	case VK_STENCIL_OP_REPLACE:				return EStencilOp::Replace;
+	case VK_STENCIL_OP_INCREMENT_AND_CLAMP: return EStencilOp::IncrementAndClamp;
+	case VK_STENCIL_OP_DECREMENT_AND_CLAMP: return EStencilOp::DecrementAndClamp;
+	case VK_STENCIL_OP_INVERT:				return EStencilOp::Invert;
+	case VK_STENCIL_OP_INCREMENT_AND_WRAP:	return EStencilOp::IncrementAndWrap;
+	case VK_STENCIL_OP_DECREMENT_AND_WRAP:	return EStencilOp::DecrementAndWrap;
 	default:
 		HS_LOG(error, "Unsupported VkStencilOp: %d", static_cast<int>(stencilOp));
 	}
-	return EStencilOp::KEEP;
+	return EStencilOp::Keep;
 }
 
 VkLogicOp RHIUtilityVulkan::ToLogicOp(ELogicOp logicOp)
 {
 	switch (logicOp)
 	{
-	case ELogicOp::CLEAR:			return VK_LOGIC_OP_CLEAR;
-	case ELogicOp::AND:				return VK_LOGIC_OP_AND;
-	case ELogicOp::AND_REVERSE:		return VK_LOGIC_OP_AND_REVERSE;
-	case ELogicOp::COPY:			return VK_LOGIC_OP_COPY;
-	case ELogicOp::AND_INVERTED:	return VK_LOGIC_OP_AND_INVERTED;
-	case ELogicOp::NO_OP:			return VK_LOGIC_OP_NO_OP;
-	case ELogicOp::XOR:				return VK_LOGIC_OP_XOR;
-	case ELogicOp::OR:				return VK_LOGIC_OP_OR;
-	case ELogicOp::NOR:				return VK_LOGIC_OP_NOR;
-	case ELogicOp::EQUIVALENT:		return VK_LOGIC_OP_EQUIVALENT;
-	case ELogicOp::INVERT:			return VK_LOGIC_OP_INVERT;
-	case ELogicOp::OR_REVERSE:		return VK_LOGIC_OP_OR_REVERSE;
-	case ELogicOp::COPY_INVERTED:	return VK_LOGIC_OP_COPY_INVERTED;
-	case ELogicOp::OR_INVERTED:		return VK_LOGIC_OP_OR_INVERTED;
-	case ELogicOp::NAND:			return VK_LOGIC_OP_NAND;
-	case ELogicOp::SET:				return VK_LOGIC_OP_SET;
+	case ELogicOp::Clear:			return VK_LOGIC_OP_CLEAR;
+	case ELogicOp::And:				return VK_LOGIC_OP_AND;
+	case ELogicOp::AndReverse:		return VK_LOGIC_OP_AND_REVERSE;
+	case ELogicOp::Copy:			return VK_LOGIC_OP_COPY;
+	case ELogicOp::AndInverted:	return VK_LOGIC_OP_AND_INVERTED;
+	case ELogicOp::NoOp:			return VK_LOGIC_OP_NO_OP;
+	case ELogicOp::Xor:				return VK_LOGIC_OP_XOR;
+	case ELogicOp::Or:				return VK_LOGIC_OP_OR;
+	case ELogicOp::Nor:				return VK_LOGIC_OP_NOR;
+	case ELogicOp::Equivalent:		return VK_LOGIC_OP_EQUIVALENT;
+	case ELogicOp::Invert:			return VK_LOGIC_OP_INVERT;
+	case ELogicOp::OrReverse:		return VK_LOGIC_OP_OR_REVERSE;
+	case ELogicOp::CopyInverted:	return VK_LOGIC_OP_COPY_INVERTED;
+	case ELogicOp::OrInverted:		return VK_LOGIC_OP_OR_INVERTED;
+	case ELogicOp::Nand:			return VK_LOGIC_OP_NAND;
+	case ELogicOp::Set:				return VK_LOGIC_OP_SET;
 	default:
 		HS_LOG(error, "Unsupported VkCompareOp: %d", static_cast<int>(logicOp));
 	};
@@ -580,35 +580,35 @@ ELogicOp RHIUtilityVulkan::FromLogicOp(VkLogicOp logicOp)
 {
 	switch (logicOp)
 	{
-	case VK_LOGIC_OP_CLEAR:			return ELogicOp::CLEAR;
-	case VK_LOGIC_OP_AND:			return ELogicOp::AND;
-	case VK_LOGIC_OP_AND_REVERSE:	return ELogicOp::AND_REVERSE;
-	case VK_LOGIC_OP_COPY:			return ELogicOp::COPY;
-	case VK_LOGIC_OP_AND_INVERTED:	return ELogicOp::AND_INVERTED;
-	case VK_LOGIC_OP_NO_OP:			return ELogicOp::NO_OP;
-	case VK_LOGIC_OP_XOR:			return ELogicOp::XOR;
-	case VK_LOGIC_OP_OR:			return ELogicOp::OR;
-	case VK_LOGIC_OP_NOR:			return ELogicOp::NOR;
-	case VK_LOGIC_OP_EQUIVALENT:	return ELogicOp::EQUIVALENT;
-	case VK_LOGIC_OP_INVERT:		return ELogicOp::INVERT;
-	case VK_LOGIC_OP_OR_REVERSE:	return ELogicOp::OR_REVERSE;
-	case VK_LOGIC_OP_COPY_INVERTED: return ELogicOp::COPY_INVERTED;
-	case VK_LOGIC_OP_OR_INVERTED:	return ELogicOp::OR_INVERTED;
-	case VK_LOGIC_OP_NAND:			return ELogicOp::NAND;
-	case VK_LOGIC_OP_SET:			return ELogicOp::SET;
+	case VK_LOGIC_OP_CLEAR:			return ELogicOp::Clear;
+	case VK_LOGIC_OP_AND:			return ELogicOp::And;
+	case VK_LOGIC_OP_AND_REVERSE:	return ELogicOp::AndReverse;
+	case VK_LOGIC_OP_COPY:			return ELogicOp::Copy;
+	case VK_LOGIC_OP_AND_INVERTED:	return ELogicOp::AndInverted;
+	case VK_LOGIC_OP_NO_OP:			return ELogicOp::NoOp;
+	case VK_LOGIC_OP_XOR:			return ELogicOp::Xor;
+	case VK_LOGIC_OP_OR:			return ELogicOp::Or;
+	case VK_LOGIC_OP_NOR:			return ELogicOp::Nor;
+	case VK_LOGIC_OP_EQUIVALENT:	return ELogicOp::Equivalent;
+	case VK_LOGIC_OP_INVERT:		return ELogicOp::Invert;
+	case VK_LOGIC_OP_OR_REVERSE:	return ELogicOp::OrReverse;
+	case VK_LOGIC_OP_COPY_INVERTED: return ELogicOp::CopyInverted;
+	case VK_LOGIC_OP_OR_INVERTED:	return ELogicOp::OrInverted;
+	case VK_LOGIC_OP_NAND:			return ELogicOp::Nand;
+	case VK_LOGIC_OP_SET:			return ELogicOp::Set;
 	default:
 		HS_LOG(error, "Unsupported VkLogicOp: %d", static_cast<int>(logicOp));
 	}
-	return ELogicOp::NO_OP;
+	return ELogicOp::NoOp;
 }
 
 VkFrontFace RHIUtilityVulkan::ToFrontFace(EFrontFace frontFace)
 {
 	switch (frontFace)
 	{
-	case EFrontFace::COUNTER_CLOCKWISE:
+	case EFrontFace::CounterClockwise:
 		return VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	case EFrontFace::CLOCKWISE:
+	case EFrontFace::Clockwise:
 		return VK_FRONT_FACE_CLOCKWISE;
 	default:
 		HS_LOG(error, "Unsupported front face: %d", static_cast<int>(frontFace));
@@ -621,26 +621,26 @@ EFrontFace RHIUtilityVulkan::FromFrontFace(VkFrontFace frontFace)
 	switch (frontFace)
 	{
 	case VK_FRONT_FACE_COUNTER_CLOCKWISE:
-		return EFrontFace::COUNTER_CLOCKWISE;
+		return EFrontFace::CounterClockwise;
 	case VK_FRONT_FACE_CLOCKWISE:
-		return EFrontFace::CLOCKWISE;
+		return EFrontFace::Clockwise;
 	default:
 		HS_LOG(error, "Unsupported VkFrontFace: %d", static_cast<int>(frontFace));
 	}
-	return EFrontFace::COUNTER_CLOCKWISE;
+	return EFrontFace::CounterClockwise;
 }
 
 VkCullModeFlags RHIUtilityVulkan::ToCullMode(ECullMode cullMode)
 {
 	switch (cullMode)
 	{
-	case ECullMode::NONE:
+	case ECullMode::None:
 		return VK_CULL_MODE_NONE;
-	case ECullMode::FRONT:
+	case ECullMode::Front:
 		return VK_CULL_MODE_FRONT_BIT;
-	case ECullMode::BACK:
+	case ECullMode::Back:
 		return VK_CULL_MODE_BACK_BIT;
-	case ECullMode::ALL:
+	case ECullMode::All:
 		return VK_CULL_MODE_FRONT_AND_BACK;
 	default:
 		HS_LOG(error, "Unsupported cull mode: %d", static_cast<int>(cullMode));
@@ -653,37 +653,37 @@ ECullMode RHIUtilityVulkan::FromCullMode(VkCullModeFlags cullMode)
 	switch (cullMode)
 	{
 	case VK_CULL_MODE_NONE:
-		return ECullMode::NONE;
+		return ECullMode::None;
 	case VK_CULL_MODE_FRONT_BIT:
-		return ECullMode::FRONT;
+		return ECullMode::Front;
 	case VK_CULL_MODE_BACK_BIT:
-		return ECullMode::BACK;
+		return ECullMode::Back;
 	case VK_CULL_MODE_FRONT_AND_BACK:
-		return ECullMode::ALL;
+		return ECullMode::All;
 	default:
 		HS_LOG(error, "Unsupported VkCullModeFlags: %d", static_cast<int>(cullMode));
 	}
-	return ECullMode::NONE;
+	return ECullMode::None;
 }
 
 VkBufferUsageFlags RHIUtilityVulkan::ToBufferUsage(EBufferUsage usage)
 {
 	VkBufferUsageFlags flags = 0;
-	if ((usage & EBufferUsage::VERTEX) != static_cast<EBufferUsage>(0))			flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	if ((usage & EBufferUsage::INDEX) != static_cast<EBufferUsage>(0))			flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-	if ((usage & EBufferUsage::UNIFORM) != static_cast<EBufferUsage>(0))		flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	if ((usage & EBufferUsage::STORAGE_BUFFER) != static_cast<EBufferUsage>(0))	flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	if ((usage & EBufferUsage::Vertex) != static_cast<EBufferUsage>(0))			flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	if ((usage & EBufferUsage::Index) != static_cast<EBufferUsage>(0))			flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	if ((usage & EBufferUsage::Uniform) != static_cast<EBufferUsage>(0))		flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	if ((usage & EBufferUsage::StorageBuffer) != static_cast<EBufferUsage>(0))	flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
 	return flags;
 }
 
 EBufferUsage RHIUtilityVulkan::FromBufferUsage(VkBufferUsageFlags usage)
 {
-	EBufferUsage flags = EBufferUsage::INVALID;
-	if (usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)		flags = flags | EBufferUsage::VERTEX;
-	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)		flags = flags | EBufferUsage::INDEX;
-	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)		flags = flags | EBufferUsage::UNIFORM;
-	if (usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)		flags = flags | EBufferUsage::STORAGE_BUFFER;
+	EBufferUsage flags = EBufferUsage::Invalid;
+	if (usage & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)		flags = flags | EBufferUsage::Vertex;
+	if (usage & VK_BUFFER_USAGE_INDEX_BUFFER_BIT)		flags = flags | EBufferUsage::Index;
+	if (usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)		flags = flags | EBufferUsage::Uniform;
+	if (usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)		flags = flags | EBufferUsage::StorageBuffer;
 
 	return flags;
 }
@@ -697,11 +697,11 @@ VkPolygonMode RHIUtilityVulkan::ToPolygonMode(EPolygonMode polygonMode)
 	// This might be a naming error in the header file
 	switch (polygonMode)
 	{
-	case EPolygonMode::FILL:
+	case EPolygonMode::Fill:
 		return VK_POLYGON_MODE_FILL; // Default topology for filled polygons
-	case EPolygonMode::LINE:
+	case EPolygonMode::Line:
 		return VK_POLYGON_MODE_LINE;
-	case EPolygonMode::POINT:
+	case EPolygonMode::Point:
 		return VK_POLYGON_MODE_POINT;
 	default:
 		HS_LOG(error, "Unsupported polygon mode: %d", static_cast<int>(polygonMode));
@@ -716,41 +716,41 @@ EPolygonMode RHIUtilityVulkan::FromPolygonMode(VkPolygonMode polygonMode)
 	switch (polygonMode)
 	{
 	case VK_POLYGON_MODE_FILL:
-		return EPolygonMode::FILL;
+		return EPolygonMode::Fill;
 	case VK_POLYGON_MODE_LINE:
-		return EPolygonMode::LINE;
+		return EPolygonMode::Line;
 	case VK_POLYGON_MODE_POINT:
-		return EPolygonMode::POINT;
+		return EPolygonMode::Point;
 	default:
 		HS_LOG(error, "Unsupported VkPrimitiveTopology: %d", static_cast<int>(polygonMode));
 	}
-	return EPolygonMode::FILL;
+	return EPolygonMode::Fill;
 }
 
 VkShaderStageFlagBits RHIUtilityVulkan::ToShaderStageFlags(EShaderStage stage)
 {
 	VkShaderStageFlagBits flags = static_cast<VkShaderStageFlagBits>(0);
-	if ((stage & EShaderStage::VERTEX) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Vertex) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_VERTEX_BIT);
 	}
-	if ((stage & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Fragment) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_FRAGMENT_BIT);
 	}
-	if ((stage & EShaderStage::COMPUTE) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Compute) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_COMPUTE_BIT);
 	}
-	if ((stage & EShaderStage::GEOMETRY) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Geometry) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_GEOMETRY_BIT);
 	}
-	if ((stage & EShaderStage::DOMAIN) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Domain) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
 	}
-	if ((stage & EShaderStage::HULL) != EShaderStage::NONE)
+	if ((stage & EShaderStage::Hull) != EShaderStage::None)
 	{
 		flags = static_cast<VkShaderStageFlagBits>(flags | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
 	}
@@ -760,30 +760,30 @@ VkShaderStageFlagBits RHIUtilityVulkan::ToShaderStageFlags(EShaderStage stage)
 
 EShaderStage RHIUtilityVulkan::FromShaderStageFlags(VkShaderStageFlagBits flags)
 {
-	EShaderStage stage = EShaderStage::NONE;
+	EShaderStage stage = EShaderStage::None;
 	if (flags & VK_SHADER_STAGE_VERTEX_BIT)
 	{
-		stage = stage | EShaderStage::VERTEX;
+		stage = stage | EShaderStage::Vertex;
 	}
 	if (flags & VK_SHADER_STAGE_FRAGMENT_BIT)
 	{
-		stage = stage | EShaderStage::FRAGMENT;
+		stage = stage | EShaderStage::Fragment;
 	}
 	if (flags & VK_SHADER_STAGE_COMPUTE_BIT)
 	{
-		stage = stage | EShaderStage::COMPUTE;
+		stage = stage | EShaderStage::Compute;
 	}
 	if (flags & VK_SHADER_STAGE_GEOMETRY_BIT)
 	{
-		stage = stage | EShaderStage::GEOMETRY;
+		stage = stage | EShaderStage::Geometry;
 	}
 	if (flags & VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT)
 	{
-		stage = stage | EShaderStage::DOMAIN;
+		stage = stage | EShaderStage::Domain;
 	}
 	if (flags & VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT)
 	{
-		stage = stage | EShaderStage::HULL;
+		stage = stage | EShaderStage::Hull;
 	}
 
 	return stage;
@@ -793,27 +793,27 @@ VkPrimitiveTopology RHIUtilityVulkan::ToPrimitiveTopology(EPrimitiveTopology top
 {
 	switch (topology)
 	{
-	case EPrimitiveTopology::POINT_LIST:
+	case EPrimitiveTopology::PointList:
 		return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-	case EPrimitiveTopology::LINE_LIST:
+	case EPrimitiveTopology::LineList:
 		return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-	case EPrimitiveTopology::LINE_STRIP:
+	case EPrimitiveTopology::LineStrip:
 		return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-	case EPrimitiveTopology::TRIANGLE_LIST:
+	case EPrimitiveTopology::TriangleList:
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	case EPrimitiveTopology::TRIANGLE_STRIP:
+	case EPrimitiveTopology::TriangleStrip:
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-	case EPrimitiveTopology::TRIANGLE_FAN:
+	case EPrimitiveTopology::TriangleFan:
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
-	case EPrimitiveTopology::LINE_LIST_WITH_ADJACENCY:
+	case EPrimitiveTopology::LineListWithAdjacency:
 		return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY;
-	case EPrimitiveTopology::LINE_STRIP_WITH_ADJACENCY:
+	case EPrimitiveTopology::LineStripWithAdjacency:
 		return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY;
-	case EPrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY:
+	case EPrimitiveTopology::TriangleListWithAdjacency:
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
-	case EPrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY:
+	case EPrimitiveTopology::TriangleStripWithAdjacency:
 		return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
-	case EPrimitiveTopology::PATCH_LIST:
+	case EPrimitiveTopology::PatchList:
 		return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 	default:
 		HS_LOG(error, "Unsupported primitive topology: %d", static_cast<int>(topology));
@@ -826,46 +826,46 @@ EPrimitiveTopology RHIUtilityVulkan::FromPrimitiveTopology(VkPrimitiveTopology t
 	switch (topology)
 	{
 	case VK_PRIMITIVE_TOPOLOGY_POINT_LIST:
-		return EPrimitiveTopology::POINT_LIST;
+		return EPrimitiveTopology::PointList;
 	case VK_PRIMITIVE_TOPOLOGY_LINE_LIST:
-		return EPrimitiveTopology::LINE_LIST;
+		return EPrimitiveTopology::LineList;
 	case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP:
-		return EPrimitiveTopology::LINE_STRIP;
+		return EPrimitiveTopology::LineStrip;
 	case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST:
-		return EPrimitiveTopology::TRIANGLE_LIST;
+		return EPrimitiveTopology::TriangleList;
 	case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:
-		return EPrimitiveTopology::TRIANGLE_STRIP;
+		return EPrimitiveTopology::TriangleStrip;
 	case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN:
-		return EPrimitiveTopology::TRIANGLE_FAN;
+		return EPrimitiveTopology::TriangleFan;
 	case VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY:
-		return EPrimitiveTopology::LINE_LIST_WITH_ADJACENCY;
+		return EPrimitiveTopology::LineListWithAdjacency;
 	case VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY:
-		return EPrimitiveTopology::LINE_STRIP_WITH_ADJACENCY;
+		return EPrimitiveTopology::LineStripWithAdjacency;
 	case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY:
-		return EPrimitiveTopology::TRIANGLE_LIST_WITH_ADJACENCY;
+		return EPrimitiveTopology::TriangleListWithAdjacency;
 	case VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY:
-		return EPrimitiveTopology::TRIANGLE_STRIP_WITH_ADJACENCY;
+		return EPrimitiveTopology::TriangleStripWithAdjacency;
 	case VK_PRIMITIVE_TOPOLOGY_PATCH_LIST:
-		return EPrimitiveTopology::PATCH_LIST;
+		return EPrimitiveTopology::PatchList;
 	default:
 		HS_LOG(error, "Unsupported VkPrimitiveTopology: %d", static_cast<int>(topology));
 	}
-	return EPrimitiveTopology::TRIANGLE_LIST;
+	return EPrimitiveTopology::TriangleList;
 }
 
 VkSamplerAddressMode RHIUtilityVulkan::ToAddressMode(EAddressMode addressMode)
 {
 	switch (addressMode)
 	{
-	case EAddressMode::REPEAT:
+	case EAddressMode::Repeat:
 		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	case EAddressMode::MIRRORED_REPEAT:
+	case EAddressMode::MirroredRepeat:
 		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-	case EAddressMode::CLAMP_TO_EDGE:
+	case EAddressMode::ClampToEdge:
 		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	case EAddressMode::CLAMP_TO_BORDER:
+	case EAddressMode::ClampToBorder:
 		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-	case EAddressMode::MIRROR_CLAMP_TO_EDGE:
+	case EAddressMode::MirrorClampToEdge:
 		return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
 	default:
 		HS_LOG(error, "Unsupported address mode: %d", static_cast<int>(addressMode));
@@ -878,28 +878,28 @@ EAddressMode RHIUtilityVulkan::FromAddressMode(VkSamplerAddressMode addressMode)
 	switch (addressMode)
 	{
 	case VK_SAMPLER_ADDRESS_MODE_REPEAT:
-		return EAddressMode::REPEAT;
+		return EAddressMode::Repeat;
 	case VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT:
-		return EAddressMode::MIRRORED_REPEAT;
+		return EAddressMode::MirroredRepeat;
 	case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE:
-		return EAddressMode::CLAMP_TO_EDGE;
+		return EAddressMode::ClampToEdge;
 	case VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER:
-		return EAddressMode::CLAMP_TO_BORDER;
+		return EAddressMode::ClampToBorder;
 	case VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE:
-		return EAddressMode::MIRROR_CLAMP_TO_EDGE;
+		return EAddressMode::MirrorClampToEdge;
 	default:
 		HS_LOG(error, "Unsupported VkSamplerAddressMode: %d", static_cast<int>(addressMode));
 	}
-	return EAddressMode::REPEAT; // Default fallback
+	return EAddressMode::Repeat; // Default fallback
 }
 
 VkFilter RHIUtilityVulkan::ToFilter(EFilterMode filter)
 {
 	switch (filter)
 	{
-	case EFilterMode::NEAREST:
+	case EFilterMode::Nearest:
 		return VK_FILTER_NEAREST;
-	case EFilterMode::LINEAR:
+	case EFilterMode::Linear:
 		return VK_FILTER_LINEAR;
 	default:
 		HS_LOG(error, "Unsupported filter mode: %d", static_cast<int>(filter));
@@ -912,22 +912,22 @@ EFilterMode RHIUtilityVulkan::FromFilter(VkFilter filter)
 	switch (filter)
 	{
 	case VK_FILTER_NEAREST:
-		return EFilterMode::NEAREST;
+		return EFilterMode::Nearest;
 	case VK_FILTER_LINEAR:
-		return EFilterMode::LINEAR;
+		return EFilterMode::Linear;
 	default:
 		HS_LOG(error, "Unsupported VkFilter: %d", static_cast<int>(filter));
 	}
-	return EFilterMode::NEAREST; // Default fallback
+	return EFilterMode::Nearest; // Default fallback
 }
 
 VkSamplerMipmapMode RHIUtilityVulkan::ToMipmapMode(EFilterMode mipmapMode)
 {
 	switch (mipmapMode)
 	{
-	case EFilterMode::NEAREST:
+	case EFilterMode::Nearest:
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
-	case EFilterMode::LINEAR:
+	case EFilterMode::Linear:
 		return VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	default:
 		HS_LOG(error, "Unsupported mipmap mode: %d", static_cast<int>(mipmapMode));
@@ -940,13 +940,13 @@ EFilterMode RHIUtilityVulkan::FromMipmapMode(VkSamplerMipmapMode mipmapMode)
 	switch (mipmapMode)
 	{
 	case VK_SAMPLER_MIPMAP_MODE_NEAREST:
-		return EFilterMode::NEAREST;
+		return EFilterMode::Nearest;
 	case VK_SAMPLER_MIPMAP_MODE_LINEAR:
-		return EFilterMode::LINEAR;
+		return EFilterMode::Linear;
 	default:
 		HS_LOG(error, "Unsupported VkSamplerMipmapMode: %d", static_cast<int>(mipmapMode));
 	}
-	return EFilterMode::NEAREST; // Default fallback
+	return EFilterMode::Nearest; // Default fallback
 }
 
 const char* RHIUtilityVulkan::ToString(VkResult result)

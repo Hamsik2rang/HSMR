@@ -127,10 +127,10 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     {
         switch (shader->info.stage)
         {
-        case EShaderStage::VERTEX:
+        case EShaderStage::Vertex:
             [pipelineDesc setVertexFunction:static_cast<MetalShader*>(shader)->handle];
             break;
-        case EShaderStage::FRAGMENT:
+        case EShaderStage::Fragment:
             [pipelineDesc setFragmentFunction:static_cast<MetalShader*>(shader)->handle];
             break;
         default:
@@ -258,7 +258,7 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
 {
     FileHandle handle = 0;
 
-    bool result = FileSystem::Open(std::string(path), EFileAccess::READ_ONLY, handle);
+    bool result = FileSystem::Open(std::string(path), EFileAccess::ReadOnly, handle);
     if (!result)
     {
         HS_LOG(crash, "Can't open path");
@@ -321,17 +321,17 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     id<MTLFunction> func = nil;
     switch (info.stage)
     {
-    case EShaderStage::VERTEX:
+    case EShaderStage::Vertex:
     {
         func = [library newFunctionWithName:entry];
     }
     break;
-    case EShaderStage::FRAGMENT:
+    case EShaderStage::Fragment:
     {
         func = [library newFunctionWithName:entry];
     }
     break;
-    case EShaderStage::COMPUTE:
+    case EShaderStage::Compute:
     {
         //...
     }
@@ -405,7 +405,7 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
     id<MTLBuffer> handle   = mtlBuffer->handle;
     switch (buffer->info.memoryOption)
     {
-    case EBufferMemoryOption::STATIC:
+    case EBufferMemoryOption::Static:
     {
         id<MTLBuffer> stagingBuffer = [s_device newBufferWithLength:dataSize options:MTLResourceStorageModeShared];
         memcpy([stagingBuffer contents], srcData, dataSize);
@@ -428,13 +428,13 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
         break;
     }
 
-    case EBufferMemoryOption::DYNAMIC:
-    case EBufferMemoryOption::MAPPED:
+    case EBufferMemoryOption::Dynamic:
+    case EBufferMemoryOption::Mapped:
     {
         void* rawPtr = [handle contents];
         memcpy(rawPtr, srcData, dataSize);
 
-        if (buffer->info.memoryOption == EBufferMemoryOption::MAPPED)
+        if (buffer->info.memoryOption == EBufferMemoryOption::Mapped)
         {
             [handle didModifyRange:NSMakeRange(0, dataSize)];
         }
@@ -466,7 +466,7 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
 
     // Use Private storage mode for compute shader storage textures (GPU-only access)
     // Use Managed for textures that need CPU readback
-    if ((info.usage & ETextureUsage::STORAGE) != static_cast<ETextureUsage>(0))
+    if ((info.usage & ETextureUsage::Storage) != static_cast<ETextureUsage>(0))
     {
         desc.storageMode = MTLStorageModePrivate;
     }

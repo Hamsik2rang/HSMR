@@ -22,7 +22,7 @@ class HS_API Mesh : public Object
 {
 public:
     Mesh()
-        : Object(EType::MESH)
+        : Object(EType::Mesh)
     {}
     ~Mesh() override;
 

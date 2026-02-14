@@ -67,7 +67,7 @@ bool PeekNativeEvent(NativeWindow* pWindow, NativeEvent& outEvent)
 
     PollNativeEvent(*pWindow);
 
-    outEvent = NativeEvent::Type::NONE;
+    outEvent = NativeEvent::Type::None;
 
     auto& eventQueue = s_eventQueueTable[pWindow];
     if (eventQueue.empty())

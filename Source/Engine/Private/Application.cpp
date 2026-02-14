@@ -26,9 +26,9 @@ void Application::init()
     SystemContext::Init();
 
 #if __WINDOWS__
-    _rhiContext = RHIContext::Create(ERHIPlatform::VULKAN);
+    _rhiContext = RHIContext::Create(ERHIPlatform::Vulkan);
 #else
-    _rhiContext = RHIContext::Create(ERHIPlatform::METAL);
+    _rhiContext = RHIContext::Create(ERHIPlatform::Metal);
 #endif
     g_AppIntance = this;
 }

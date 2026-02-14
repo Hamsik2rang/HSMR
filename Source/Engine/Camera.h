@@ -16,8 +16,8 @@ class HS_API Camera
 public:
     enum class EProjectionType
     {
-        PERSPECTIVE  = 0,
-        ORTHOGRAPHIC = 1,
+        Perspective  = 0,
+        Orthographic = 1,
     };
 
     Camera();

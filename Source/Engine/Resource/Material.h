@@ -24,22 +24,22 @@ class Image;
 // Common material texture types
 enum class HS_API EMaterialTextureType : uint8
 {
-    DIFFUSE = 0,
-    SPECULAR,
-    NORMAL,
-    EMISSION,
-    AMBIENT,
-    ROUGHNESS,
-    METALLIC,
-    AMBIENT_OCCLUSION,
+    Diffuse = 0,
+    Specular,
+    Normal,
+    Emission,
+    Ambient,
+    Roughness,
+    Metallic,
+    AmbientOcclusion,
     // Add more as needed
-    MAX_TEXTURE_TYPES
+    MaxTextureTypes
 };
 
 class HS_API Material : public Object
 {
 public:
-    Material() : Object(EType::MATERIAL), _shader(nullptr) {}
+    Material() : Object(EType::Material), _shader(nullptr) {}
     ~Material() override;
     
     // Shader management

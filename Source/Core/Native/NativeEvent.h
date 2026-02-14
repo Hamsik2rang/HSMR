@@ -15,25 +15,25 @@ struct HS_API NativeEvent
 {
     enum class Type : uint8
     {
-        NONE = 0,
+        None = 0,
 
-        WINDOW_OPEN       = 0x01,
-        WINDOW_CLOSE      = 0x02,
-        WINDOW_RESIZE     = 0x03,
-        WINDOW_MOVE_ENTER = 0x04,
-        WINDOW_MOVE_EXIT  = 0x05,
-        WINDOW_MOVE       = 0x06,
-        WINDOW_MINIMIZE   = 0x07,
-        WINDOW_MAXIMIZE   = 0x08,
-        WINDOW_FOCUS_IN   = 0x09,
-        WINDOW_FOCUS_OUT  = 0x0A,
-        WINDOW_RESTORE    = 0x0B,
+        WindowOpen      = 0x01,
+        WindowClose     = 0x02,
+        WindowResize    = 0x03,
+        WindowMoveEnter = 0x04,
+        WindowMoveExit  = 0x05,
+        WindowMove      = 0x06,
+        WindowMinimize  = 0x07,
+        WindowMaximize  = 0x08,
+        WindowFocusIn   = 0x09,
+        WindowFocusOut  = 0x0A,
+        WindowRestore   = 0x0B,
 
-        BUTTON_PRESS   = 0x10,
-        BUTTON_RELEASE = 0x11,
+        ButtonPress   = 0x10,
+        ButtonRelease = 0x11,
 
-        MOUSE_MOVE   = 0x20,
-        MOUSE_SCROLL = 0x21,
+        MouseMove   = 0x20,
+        MouseScroll = 0x21,
 
         // 0x30 ~ 0xEF : reserve to future use
     };

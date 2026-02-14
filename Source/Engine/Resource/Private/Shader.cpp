@@ -13,11 +13,11 @@ HS_NS_BEGIN
 
 // Legacy constructor
 Shader::Shader(const std::string& source, EShaderStage stage, const std::string& entryPointName)
-	: Object(Object::EType::SHADER), _source(source), _shaderType(stage), _entryPointName(entryPointName)
+	: Object(Object::EType::Shader), _source(source), _shaderType(stage), _entryPointName(entryPointName)
 {
     _compileOptions.stage = stage;
     _compileOptions.entryPoint = entryPointName;
-    _compileOptions.targetLanguage = EShaderLanguage::SPIRV;
+    _compileOptions.targetLanguage = EShaderLanguage::Spirv;
 
     _useSimpleMode = true;
 }
@@ -25,7 +25,7 @@ Shader::Shader(const std::string& source, EShaderStage stage, const std::string&
 // New constructor: multi-stage shader for runtime compilation
 Shader::Shader(const std::string& shaderName, const std::string& sourceCode, EShaderStage requestedStages,
                const std::vector<std::string>& includePaths)
-    : Object(Object::EType::SHADER)
+    : Object(Object::EType::Shader)
     , _shaderName(shaderName)
     , _source(sourceCode)
     , _shaderType(requestedStages)
@@ -35,9 +35,9 @@ Shader::Shader(const std::string& shaderName, const std::string& sourceCode, ESh
 {
     _compileOptions.stage = requestedStages;
 #ifdef __APPLE__
-    _compileOptions.targetLanguage = EShaderLanguage::MSL;
+    _compileOptions.targetLanguage = EShaderLanguage::Msl;
 #else
-    _compileOptions.targetLanguage = EShaderLanguage::SPIRV;
+    _compileOptions.targetLanguage = EShaderLanguage::Spirv;
 #endif
 }
 

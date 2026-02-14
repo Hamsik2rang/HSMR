@@ -221,7 +221,7 @@ Scoped<Material> ModelLoader::ProcessMaterial(aiMaterial* material, const aiScen
         Scoped<Image> diffuseTexture = LoadTexture(fullPath);
         if (diffuseTexture)
         {
-            resultMaterial->SetTexture(EMaterialTextureType::DIFFUSE, diffuseTexture.get());
+            resultMaterial->SetTexture(EMaterialTextureType::Diffuse, diffuseTexture.get());
         }
     }
     
@@ -232,7 +232,7 @@ Scoped<Material> ModelLoader::ProcessMaterial(aiMaterial* material, const aiScen
         Scoped<Image> normalTexture = LoadTexture(fullPath);
         if (normalTexture)
         {
-            resultMaterial->SetTexture(EMaterialTextureType::NORMAL, normalTexture.get());
+            resultMaterial->SetTexture(EMaterialTextureType::Normal, normalTexture.get());
         }
     }
     
@@ -243,7 +243,7 @@ Scoped<Material> ModelLoader::ProcessMaterial(aiMaterial* material, const aiScen
         Scoped<Image> specularTexture = LoadTexture(fullPath);
         if (specularTexture)
         {
-            resultMaterial->SetTexture(EMaterialTextureType::SPECULAR, specularTexture.get());
+            resultMaterial->SetTexture(EMaterialTextureType::Specular, specularTexture.get());
         }
     }
     

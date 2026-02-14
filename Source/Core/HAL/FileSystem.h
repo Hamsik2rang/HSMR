@@ -14,9 +14,9 @@ HS_NS_BEGIN
 
 enum class HS_API EFileAccess
 {
-    READ_ONLY,
-    WRITE_ONLY,
-    READ_WRITE
+    ReadOnly,
+    WriteOnly,
+    ReadWrite
 };
 
 typedef void* FileHandle;
@@ -26,9 +26,9 @@ class HS_API FileSystem
 public:
     enum class EAccessFlag
     {
-        READ_ONLY,
-        WRITE_ONLY,
-        READ_WRITE
+        ReadOnly,
+        WriteOnly,
+        ReadWrite
     };
 
     static bool Exist(const std::string& absolutePath);

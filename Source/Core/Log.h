@@ -22,12 +22,12 @@ class HS_API Log
 public:
     enum class EType
     {
-        LOG_INFO,
-        LOG_DEBUG,
-        LOG_WARNING,
-        LOG_ERROR,
-        LOG_CRASH,
-        LOG_ASSERT
+        Info,
+        Debug,
+        Warning,
+        Error,
+        Crash,
+        Assert
     };
 
     static void Print(const char* file, const uint32 line, const Log::EType type, const char* fmt, ...);
@@ -38,18 +38,18 @@ private:
 
 namespace LogSymbol
 {
-    constexpr static Log::EType info = Log::EType::LOG_INFO;
-    constexpr static Log::EType debug = Log::EType::LOG_DEBUG;
-    constexpr static Log::EType warning = Log::EType::LOG_WARNING;
-    constexpr static Log::EType error = Log::EType::LOG_ERROR;
-    constexpr static Log::EType crash = Log::EType::LOG_CRASH;
+    constexpr static Log::EType info = Log::EType::Info;
+    constexpr static Log::EType debug = Log::EType::Debug;
+    constexpr static Log::EType warning = Log::EType::Warning;
+    constexpr static Log::EType error = Log::EType::Error;
+    constexpr static Log::EType crash = Log::EType::Crash;
 };
 
 #define HS_LOG(symbol, fmt, ...)                                                       \
     do                                                                                 \
     {                                                                                  \
         hs::Log::Print(__FILE__, __LINE__, hs::LogSymbol::symbol, fmt, ##__VA_ARGS__); \
-        if (hs::LogSymbol::symbol == hs::Log::EType::LOG_CRASH)                             \
+        if (hs::LogSymbol::symbol == hs::Log::EType::Crash)                             \
         {                                                                              \
             HS_DEBUG_BREAK();                                                          \
         }                                                                              \
@@ -57,8 +57,8 @@ namespace LogSymbol
 
 #ifdef _DEBUG
 
-#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::LOG_ASSERT, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
-#define HS_CHECK(x, msg) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::LOG_CRASH, msg); } } while(0)
+#define HS_ASSERT(x, fmt, ...) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::Assert, fmt, ##__VA_ARGS__); HS_DEBUG_BREAK(); } } while(0)
+#define HS_CHECK(x, msg) do { const volatile bool b = !!(x); if (!b) { hs::Log::Print(__FILE__, __LINE__, hs::Log::EType::Crash, msg); } } while(0)
 
 #define HS_THROW(fmt, ...) \
     do { \

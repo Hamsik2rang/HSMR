@@ -47,8 +47,8 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
             info.colorTextureInfos[j].extent.width  = width;
             info.colorTextureInfos[j].extent.height = height;
             info.colorTextureInfos[j].extent.depth = 1;
-            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8_SRGB;
-            info.colorTextureInfos[j].usage         = ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::STAGING | ETextureUsage::SAMPLED;
+            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8Srgb;
+            info.colorTextureInfos[j].usage         = ETextureUsage::ColorAttachment | ETextureUsage::Staging | ETextureUsage::Sampled;
             info.colorTextureInfos[j].isCompressed  = false;
             info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
         }
@@ -57,8 +57,8 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
         info.depthStencilInfo.extent.width         = width;
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;
-        info.depthStencilInfo.format               = EPixelFormat::DEPTH32;
-        info.depthStencilInfo.usage                = ETextureUsage::DEPTH_STENCIL_ATTACHMENT | ETextureUsage::STAGING;
+        info.depthStencilInfo.format               = EPixelFormat::Depth32;
+        info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::Staging;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
 
@@ -106,7 +106,7 @@ void Window::ProcessEvent()
         event = PopNativeEvent(&_nativeWindow);
         switch (event.type)
         {
-        case NativeEvent::Type::WINDOW_OPEN:
+        case NativeEvent::Type::WindowOpen:
         {
             _shouldClose   = false;
             _shouldPresent = true;
@@ -114,7 +114,7 @@ void Window::ProcessEvent()
 
             break;
         }
-        case NativeEvent::Type::WINDOW_CLOSE:
+        case NativeEvent::Type::WindowClose:
         {
             _shouldClose   = true;
             _shouldUpdate  = false;
@@ -122,7 +122,7 @@ void Window::ProcessEvent()
 
             break;
         }
-        case NativeEvent::Type::WINDOW_MAXIMIZE:
+        case NativeEvent::Type::WindowMaximize:
         {
             _shouldUpdate  = true;
             _shouldPresent = true;
@@ -131,20 +131,20 @@ void Window::ProcessEvent()
 
             break;
         }
-        case NativeEvent::Type::WINDOW_MINIMIZE:
+        case NativeEvent::Type::WindowMinimize:
         {
             _shouldUpdate  = false;
             _shouldPresent = false;
 
             break;
         }
-        case NativeEvent::Type::WINDOW_RESIZE:
+        case NativeEvent::Type::WindowResize:
         {
             onSuspend();
             onRestore();
             break;
         }
-        case NativeEvent::Type::WINDOW_MOVE_ENTER:
+        case NativeEvent::Type::WindowMoveEnter:
         {
             _shouldUpdate  = false;
             _shouldPresent = false;
@@ -152,8 +152,8 @@ void Window::ProcessEvent()
 
             break;
         }
-        case NativeEvent::Type::WINDOW_MOVE_EXIT:
-        case NativeEvent::Type::WINDOW_RESTORE:
+        case NativeEvent::Type::WindowMoveExit:
+        case NativeEvent::Type::WindowRestore:
         {
             _shouldUpdate  = true;
             _shouldPresent = true;
@@ -161,18 +161,18 @@ void Window::ProcessEvent()
 
             break;
         }
-        case NativeEvent::Type::WINDOW_MOVE:
+        case NativeEvent::Type::WindowMove:
         {
 
             break;
         }
-        case NativeEvent::Type::WINDOW_FOCUS_IN:
+        case NativeEvent::Type::WindowFocusIn:
         {
             _shouldUpdate  = true;
             _shouldPresent = true;
             break;
         }
-        case NativeEvent::Type::WINDOW_FOCUS_OUT:
+        case NativeEvent::Type::WindowFocusOut:
         {
             _shouldUpdate  = false;
             _shouldPresent = false;

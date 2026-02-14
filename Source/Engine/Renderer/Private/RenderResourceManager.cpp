@@ -37,7 +37,7 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(Camera* camera)
     PerView perViewZero{};
     resource.perViewBuffer = _rhiContext->CreateBuffer(
         "PerView UBO", &perViewZero, sizeof(PerView),
-        EBufferUsage::UNIFORM, EBufferMemoryOption::DYNAMIC);
+        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
 
     if (!resource.perViewBuffer)
     {
@@ -70,7 +70,7 @@ ModelResource* RenderResourceManager::GetOrCreateModelResource(Model* model)
     PerDraw perDrawZero{};
     resource.perDrawBuffer = _rhiContext->CreateBuffer(
         "PerDraw UBO", &perDrawZero, sizeof(PerDraw),
-        EBufferUsage::UNIFORM, EBufferMemoryOption::DYNAMIC);
+        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
 
     if (!resource.perDrawBuffer)
     {
@@ -150,7 +150,7 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     DepthStencilStateDescriptor dsDesc{};
     dsDesc.depthTestEnable = true;
     dsDesc.depthWriteEnable = true;
-    dsDesc.depthCompareOp = ECompareOp::LESS;
+    dsDesc.depthCompareOp = ECompareOp::Less;
 
     ColorBlendStateDescriptor cbDesc{};
     cbDesc.attachmentCount = renderPass->info.colorAttachmentCount;
@@ -161,9 +161,9 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     }
 
     RasterizerStateDescriptor rsDesc{};
-    rsDesc.cullMode = material->IsTwoSided() ? ECullMode::NONE : ECullMode::BACK;
-    rsDesc.frontFace = EFrontFace::CCW;
-    rsDesc.polygonMode = EPolygonMode::FILL;
+    rsDesc.cullMode = material->IsTwoSided() ? ECullMode::None : ECullMode::Back;
+    rsDesc.frontFace = EFrontFace::CounterClockwise;
+    rsDesc.polygonMode = EPolygonMode::Fill;
     rsDesc.depthClampEnable = false;
     rsDesc.rasterizerDiscardEnable = false;
     rsDesc.depthBiasEnable = false;
@@ -174,7 +174,7 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     spDesc.stages[1] = matRes->fragmentShader;
 
     InputAssemblyStateDescriptor iaDesc{};
-    iaDesc.primitiveTopology = EPrimitiveTopology::TRIANGLE_LIST;
+    iaDesc.primitiveTopology = EPrimitiveTopology::TriangleList;
 
     GraphicsPipelineInfo gpInfo{};
     gpInfo.shaderDesc = spDesc;
@@ -217,12 +217,12 @@ MeshResource* RenderResourceManager::GetOrCreateMeshResources(Mesh* mesh, const 
     resources.vertexBuffer = _rhiContext->CreateBuffer(
         "Mesh VB", interleavedData.data(),
         interleavedData.size() * sizeof(float),
-        EBufferUsage::VERTEX, EBufferMemoryOption::MAPPED);
+        EBufferUsage::Vertex, EBufferMemoryOption::Mapped);
 
     resources.indexBuffer = _rhiContext->CreateBuffer(
         "Mesh IB", indices.data(),
         indices.size() * sizeof(uint32),
-        EBufferUsage::INDEX, EBufferMemoryOption::MAPPED);
+        EBufferUsage::Index, EBufferMemoryOption::Mapped);
 
     resources.indexCount = static_cast<uint32>(indices.size());
     resources.isValid = true;
@@ -268,11 +268,11 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
     uint8 channels = image->GetChannel();
 
     // Determine pixel format
-    EPixelFormat format = EPixelFormat::R8G8B8A8_UNORM;
+    EPixelFormat format = EPixelFormat::R8G8B8A8Unorm;
     if (channels == 1)
-        format = EPixelFormat::R8_UNORM;
+        format = EPixelFormat::R8Unorm;
     else if (channels == 2)
-        format = EPixelFormat::RG8_UNORM;
+        format = EPixelFormat::RG8Unorm;
     // 3 and 4 channels both use RGBA (RGB8 is inefficient in Vulkan)
 
     // Prepare image data (convert RGB to RGBA if needed)
@@ -303,8 +303,8 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
     // Create RHITexture
     TextureInfo texInfo{};
     texInfo.format = format;
-    texInfo.type = ETextureType::TEX_2D;
-    texInfo.usage = ETextureUsage::SAMPLED | ETextureUsage::STATIC;  // STATIC adds TRANSFER_DST for data upload
+    texInfo.type = ETextureType::Tex2D;
+    texInfo.usage = ETextureUsage::Sampled | ETextureUsage::Static;  // STATIC adds TRANSFER_DST for data upload
     texInfo.extent.width = width;
     texInfo.extent.height = height;
     texInfo.extent.depth = 1;
@@ -323,13 +323,13 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
 
     // Create RHISampler
     SamplerInfo sampInfo{};
-    sampInfo.type = ETextureType::TEX_2D;
-    sampInfo.minFilter = EFilterMode::LINEAR;
-    sampInfo.magFilter = EFilterMode::LINEAR;
-    sampInfo.mipmapMode = EFilterMode::LINEAR;
-    sampInfo.addressU = EAddressMode::REPEAT;
-    sampInfo.addressV = EAddressMode::REPEAT;
-    sampInfo.addressW = EAddressMode::REPEAT;
+    sampInfo.type = ETextureType::Tex2D;
+    sampInfo.minFilter = EFilterMode::Linear;
+    sampInfo.magFilter = EFilterMode::Linear;
+    sampInfo.mipmapMode = EFilterMode::Linear;
+    sampInfo.addressU = EAddressMode::Repeat;
+    sampInfo.addressV = EAddressMode::Repeat;
+    sampInfo.addressW = EAddressMode::Repeat;
 
     resource.sampler = _rhiContext->CreateSampler("ImageSampler", sampInfo);
 
@@ -376,8 +376,8 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     // Create RHI shaders from bytecode
-    const auto* vsBytecode = shader->GetBytecode(EShaderStage::VERTEX);
-    const auto* fsBytecode = shader->GetBytecode(EShaderStage::FRAGMENT);
+    const auto* vsBytecode = shader->GetBytecode(EShaderStage::Vertex);
+    const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
 
     if (!vsBytecode || !fsBytecode)
     {
@@ -386,16 +386,16 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     ShaderInfo vsInfo{};
-    vsInfo.stage = EShaderStage::VERTEX;
-    vsInfo.entryName = shader->GetEntryPoint(EShaderStage::VERTEX);
+    vsInfo.stage = EShaderStage::Vertex;
+    vsInfo.entryName = shader->GetEntryPoint(EShaderStage::Vertex);
     resources.vertexShader = _rhiContext->CreateShader(
         "VS", vsInfo,
         reinterpret_cast<const char*>(vsBytecode->data()),
         vsBytecode->size());
 
     ShaderInfo fsInfo{};
-    fsInfo.stage = EShaderStage::FRAGMENT;
-    fsInfo.entryName = shader->GetEntryPoint(EShaderStage::FRAGMENT);
+    fsInfo.stage = EShaderStage::Fragment;
+    fsInfo.entryName = shader->GetEntryPoint(EShaderStage::Fragment);
     resources.fragmentShader = _rhiContext->CreateShader(
         "FS", fsInfo,
         reinterpret_cast<const char*>(fsBytecode->data()),
@@ -440,32 +440,32 @@ static EMaterialTextureType mapTextureNameToType(const std::string& name)
         lowerName.find("diffuse") != std::string::npos ||
         lowerName.find("basecolor") != std::string::npos ||
         lowerName.find("base_color") != std::string::npos)
-        return EMaterialTextureType::DIFFUSE;
+        return EMaterialTextureType::Diffuse;
 
     if (lowerName.find("normal") != std::string::npos)
-        return EMaterialTextureType::NORMAL;
+        return EMaterialTextureType::Normal;
 
     if (lowerName.find("metallic") != std::string::npos ||
         lowerName.find("metalness") != std::string::npos)
-        return EMaterialTextureType::METALLIC;
+        return EMaterialTextureType::Metallic;
 
     if (lowerName.find("roughness") != std::string::npos)
-        return EMaterialTextureType::ROUGHNESS;
+        return EMaterialTextureType::Roughness;
 
     if (lowerName.find("emission") != std::string::npos ||
         lowerName.find("emissive") != std::string::npos)
-        return EMaterialTextureType::EMISSION;
+        return EMaterialTextureType::Emission;
 
     if (lowerName.find("ao") != std::string::npos ||
         lowerName.find("occlusion") != std::string::npos ||
         lowerName.find("ambient") != std::string::npos)
-        return EMaterialTextureType::AMBIENT_OCCLUSION;
+        return EMaterialTextureType::AmbientOcclusion;
 
     if (lowerName.find("specular") != std::string::npos)
-        return EMaterialTextureType::SPECULAR;
+        return EMaterialTextureType::Specular;
 
     // Default to diffuse
-    return EMaterialTextureType::DIFFUSE;
+    return EMaterialTextureType::Diffuse;
 }
 
 RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
@@ -496,22 +496,22 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
 
 #ifdef __APPLE__
         // Metal: separate bindings per stage
-        if ((buf.stages & EShaderStage::VERTEX) != EShaderStage::NONE)
+        if ((buf.stages & EShaderStage::Vertex) != EShaderStage::None)
         {
             ResourceBinding binding{};
             binding.type = buf.resourceType;
-            binding.stage = EShaderStage::VERTEX;
+            binding.stage = EShaderStage::Vertex;
             binding.binding = static_cast<uint8>(buf.binding);
             binding.arrayCount = 1;
             binding.resource.buffers.push_back(targetBuffer);
             binding.resource.offsets.push_back(0);
             bindings.push_back(std::move(binding));
         }
-        if ((buf.stages & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+        if ((buf.stages & EShaderStage::Fragment) != EShaderStage::None)
         {
             ResourceBinding binding{};
             binding.type = buf.resourceType;
-            binding.stage = EShaderStage::FRAGMENT;
+            binding.stage = EShaderStage::Fragment;
             binding.binding = static_cast<uint8>(buf.binding);
             binding.arrayCount = 1;
             binding.resource.buffers.push_back(targetBuffer);
@@ -557,11 +557,11 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
 
 #ifdef __APPLE__
             // Metal: separate texture and sampler bindings per stage
-            if ((tex.stages & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+            if ((tex.stages & EShaderStage::Fragment) != EShaderStage::None)
             {
                 ResourceBinding texBinding{};
-                texBinding.type = EResourceType::SAMPLED_IMAGE;
-                texBinding.stage = EShaderStage::FRAGMENT;
+                texBinding.type = EResourceType::SampledImage;
+                texBinding.stage = EShaderStage::Fragment;
                 texBinding.binding = static_cast<uint8>(tex.binding);
                 texBinding.arrayCount = 1;
                 texBinding.resource.textures.push_back(imgRes->texture);
@@ -570,11 +570,11 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
                 // Find matching sampler binding
                 for (const auto& samp : reflection.samplerBindings)
                 {
-                    if ((samp.stages & EShaderStage::FRAGMENT) != EShaderStage::NONE)
+                    if ((samp.stages & EShaderStage::Fragment) != EShaderStage::None)
                     {
                         ResourceBinding sampBinding{};
-                        sampBinding.type = EResourceType::SAMPLER;
-                        sampBinding.stage = EShaderStage::FRAGMENT;
+                        sampBinding.type = EResourceType::Sampler;
+                        sampBinding.stage = EShaderStage::Fragment;
                         sampBinding.binding = static_cast<uint8>(samp.binding);
                         sampBinding.arrayCount = 1;
                         sampBinding.resource.samplers.push_back(imgRes->sampler);
@@ -586,7 +586,7 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
 #elif __WINDOWS__
             // Vulkan: combined image sampler
             ResourceBinding binding{};
-            binding.type = EResourceType::COMBINED_IMAGE_SAMPLER;
+            binding.type = EResourceType::CombinedImageSampler;
             binding.stage = tex.stages;
             binding.binding = static_cast<uint8>(tex.binding);
             binding.arrayCount = 1;

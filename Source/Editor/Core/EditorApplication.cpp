@@ -113,12 +113,12 @@ void EditorApplication::Run()
 
 bool EditorApplication::runLauncher()
 {
-	EWindowFlags windowFlags = EWindowFlags::NONE;
-	windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
+	EWindowFlags windowFlags = EWindowFlags::None;
+	windowFlags |= EWindowFlags::Resizable;
 #if defined(__APPLE__)
-	windowFlags |= EWindowFlags::WINDOW_METAL;
+	windowFlags |= EWindowFlags::Metal;
 #else
-	windowFlags |= EWindowFlags::WINDOW_VULKAN;
+	windowFlags |= EWindowFlags::Vulkan;
 #endif
 
 	_launcherWindow = new ProjectLauncherWindow(this);
@@ -172,13 +172,13 @@ bool EditorApplication::runLauncher()
 
 void EditorApplication::runEditor()
 {
-	EWindowFlags windowFlags = EWindowFlags::NONE;
-	windowFlags |= EWindowFlags::WINDOW_RESIZABLE;
-	windowFlags |= EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY;
+	EWindowFlags windowFlags = EWindowFlags::None;
+	windowFlags |= EWindowFlags::Resizable;
+	windowFlags |= EWindowFlags::HighPixelDensity;
 #if defined(__APPLE__)
-	windowFlags |= EWindowFlags::WINDOW_METAL;
+	windowFlags |= EWindowFlags::Metal;
 #else
-	windowFlags |= EWindowFlags::WINDOW_VULKAN;
+	windowFlags |= EWindowFlags::Vulkan;
 #endif
 
 	// Create editor window with project name in title

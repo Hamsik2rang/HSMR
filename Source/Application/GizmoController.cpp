@@ -59,7 +59,7 @@ bool GizmoController::Manipulate(Camera* camera, SceneObject* object)
     if (!_enabled || !camera || !object) return false;
 
 #if HAS_IMGUIZMO
-    ImGuizmo::SetOrthographic(camera->GetProjectionType() == Camera::EProjectionType::ORTHOGRAPHIC);
+    ImGuizmo::SetOrthographic(camera->GetProjectionType() == Camera::EProjectionType::Orthographic);
     ImGuizmo::SetDrawlist();
 
     // Set viewport

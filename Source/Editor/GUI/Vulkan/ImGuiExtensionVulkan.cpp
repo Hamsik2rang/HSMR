@@ -100,14 +100,14 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
     const VulkanDevice* rhiDeviceVK = rhiContextVK->GetDevice();
     VulkanRenderPass* renderPassVK  = static_cast<VulkanRenderPass*>(swapchainVK->GetRenderPass());
     hs::SamplerInfo samplerInfo{};
-    samplerInfo.addressU          = hs::EAddressMode::CLAMP_TO_BORDER;
-    samplerInfo.addressV          = hs::EAddressMode::CLAMP_TO_BORDER;
-    samplerInfo.addressW          = hs::EAddressMode::CLAMP_TO_BORDER;
+    samplerInfo.addressU          = hs::EAddressMode::ClampToBorder;
+    samplerInfo.addressV          = hs::EAddressMode::ClampToBorder;
+    samplerInfo.addressW          = hs::EAddressMode::ClampToBorder;
     samplerInfo.isPixelCoordinate = false;
-    samplerInfo.type              = hs::ETextureType::TEX_2D;
-    samplerInfo.magFilter         = hs::EFilterMode::NEAREST;
-    samplerInfo.minFilter         = hs::EFilterMode::NEAREST;
-    samplerInfo.mipmapMode        = hs::EFilterMode::NEAREST;
+    samplerInfo.type              = hs::ETextureType::Tex2D;
+    samplerInfo.magFilter         = hs::EFilterMode::Nearest;
+    samplerInfo.minFilter         = hs::EFilterMode::Nearest;
+    samplerInfo.mipmapMode        = hs::EFilterMode::Nearest;
     s_samplerVK                   = static_cast<VulkanSampler*>(rhiContextVK->CreateSampler("ImGui Default Sampler", samplerInfo));
 
     ImGui_ImplVulkan_InitInfo initInfo{};

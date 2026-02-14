@@ -42,11 +42,11 @@ class HS_API Object : public Referencable
 public:
 	enum class EType
 	{
-		UNKNOWN,
-		MESH,
-		MATERIAL,
-		IMAGE,
-		SHADER,
+		Unknown,
+		Mesh,
+		Material,
+		Image,
+		Shader,
 	};
 
 	Object(EType type)
@@ -56,7 +56,7 @@ public:
 	{}
 	virtual ~Object()
 	{
-		_type = EType::UNKNOWN;
+		_type = EType::Unknown;
 		_isValid = false;
 	}
 

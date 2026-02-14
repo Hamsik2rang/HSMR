@@ -28,6 +28,7 @@
 #include "Editor/Panel/ProfilerPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
+#include "Editor/Panel/ResourcePanel.h"
 
 #include "Editor/Core/EditorCamera.h"
 
@@ -59,7 +60,7 @@ bool EditorWindow::onInitialize()
         guiContext->ApplyDPIScale(dpiScale);
     }
 
-    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::OPAQUE);
+    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::Opaque);
     _renderer->AddPass(std::move(opaquePass));
 
     // Setup test scene before panels (so EditorContext has a scene)
@@ -281,9 +282,9 @@ void EditorWindow::processShortcuts()
 {
     // Ctrl+S (Windows) or Cmd+S (Mac) to save layout
 #if defined(__APPLE__)
-    bool modifierPressed = Input::IsPressed(Input::Button::LWIN_OR_COMMAND);
+    bool modifierPressed = Input::IsPressed(Input::Button::LwinOrCommand);
 #else
-    bool modifierPressed = Input::IsPressed(Input::Button::CONTROL);
+    bool modifierPressed = Input::IsPressed(Input::Button::Control);
 #endif
 
     static bool sKeyWasPressed = false;
@@ -308,11 +309,11 @@ void EditorWindow::processShortcuts()
     // Gizmo operation shortcuts (W/E/R for Translate/Rotate/Scale)
     auto& context = EditorContext::Get();
 
-    if (Input::IsPressed(Input::Button::W) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    if (Input::IsPressed(Input::Button::W) && !Input::IsPressed(Input::Button::MouseRight))
     {
         context.SetGizmoOperation(EditorContext::GizmoOperation::Translate);
     }
-    if (Input::IsPressed(Input::Button::E) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    if (Input::IsPressed(Input::Button::E) && !Input::IsPressed(Input::Button::MouseRight))
     {
         context.SetGizmoOperation(EditorContext::GizmoOperation::Rotate);
     }
@@ -323,7 +324,7 @@ void EditorWindow::processShortcuts()
 
     // Toggle local/world space with Q (when not moving camera)
     static bool qKeyWasPressed = false;
-    if (Input::IsPressed(Input::Button::Q) && !Input::IsPressed(Input::Button::MOUSE_RIGHT))
+    if (Input::IsPressed(Input::Button::Q) && !Input::IsPressed(Input::Button::MouseRight))
     {
         if (!qKeyWasPressed)
         {

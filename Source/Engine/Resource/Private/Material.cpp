@@ -20,7 +20,7 @@ void Material::SetShader(Shader* shader)
 
 void Material::SetTexture(EMaterialTextureType type, Image* texture)
 {
-    if (type >= EMaterialTextureType::MAX_TEXTURE_TYPES)
+    if (type >= EMaterialTextureType::MaxTextureTypes)
     {
         HS_LOG(error, "Invalid texture type: %d", static_cast<int>(type));
         return;

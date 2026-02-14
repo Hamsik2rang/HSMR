@@ -68,10 +68,10 @@ void MetalSwapchain::setRenderPass()
     info.isSwapchainRenderPass = true;
     info.colorAttachmentCount  = 1;
     Attachment colorAttachment{};
-    colorAttachment.format         = EPixelFormat::B8G8A8R8_UNORM;
+    colorAttachment.format         = EPixelFormat::B8G8A8R8Unorm;
     colorAttachment.clearValue     = ClearValue(0.5, 0.5, 0.5, 1.0);
-    colorAttachment.loadAction     = ELoadAction::CLEAR;
-    colorAttachment.storeAction    = EStoreAction::STORE;
+    colorAttachment.loadAction     = ELoadAction::Clear;
+    colorAttachment.storeAction    = EStoreAction::Store;
     colorAttachment.isDepthStencil = false;
     info.colorAttachments.push_back(colorAttachment);
 
@@ -92,13 +92,13 @@ void MetalSwapchain::setFramebuffers()
         tInfo.extent.width         = _info.nativeWindow->surfaceWidth;
         tInfo.extent.height        = _info.nativeWindow->surfaceHeight;
         tInfo.extent.depth         = 1;
-        tInfo.format               = EPixelFormat::B8G8A8R8_UNORM;
-        tInfo.usage                = ETextureUsage::COLOR_ATTACHMENT;
+        tInfo.format               = EPixelFormat::B8G8A8R8Unorm;
+        tInfo.usage                = ETextureUsage::ColorAttachment;
         tInfo.isCompressed         = false;
         tInfo.useGenerateMipmap    = false;
         tInfo.mipLevel             = 1;
         tInfo.isSwapchainTexture   = true;
-        tInfo.type                 = ETextureType::TEX_2D;
+        tInfo.type                 = ETextureType::Tex2D;
         tInfo.swapchain            = this;
         tInfo.byteSize             = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
         tInfo.isDepthStencilBuffer = false;

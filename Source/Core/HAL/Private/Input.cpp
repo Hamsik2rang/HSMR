@@ -9,7 +9,7 @@
 
 HS_NS_BEGIN
 
-Input::ButtonInfo Input::s_button[static_cast<uint8>(Button::COUNT)];
+Input::ButtonInfo Input::s_button[static_cast<uint8>(Button::Count)];
 Input::MoveInfo Input::s_move;
 Input::ScrollInfo Input::s_scroll;
 

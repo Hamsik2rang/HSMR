@@ -10,22 +10,22 @@ MTLPixelFormat MetalUtility::ToPixelFormat(EPixelFormat format)
 {
     switch (format)
     {
-    case EPixelFormat::R8G8B8A8_UNORM:   return MTLPixelFormatRGBA8Unorm;
-    case EPixelFormat::R8G8B8A8_SRGB:    return MTLPixelFormatRGBA8Unorm_sRGB;
-    case EPixelFormat::B8G8A8R8_UNORM:   return MTLPixelFormatBGRA8Unorm;
-    case EPixelFormat::B8G8A8R8_SRGB:    return MTLPixelFormatBGRA8Unorm_sRGB;
+    case EPixelFormat::R8G8B8A8Unorm:   return MTLPixelFormatRGBA8Unorm;
+    case EPixelFormat::R8G8B8A8Srgb:    return MTLPixelFormatRGBA8Unorm_sRGB;
+    case EPixelFormat::B8G8A8R8Unorm:   return MTLPixelFormatBGRA8Unorm;
+    case EPixelFormat::B8G8A8R8Srgb:    return MTLPixelFormatBGRA8Unorm_sRGB;
 
     // Floating-point formats (for HDR, compute, atmosphere LUTs)
-    case EPixelFormat::R16F:             return MTLPixelFormatR16Float;
-    case EPixelFormat::RG16F:            return MTLPixelFormatRG16Float;
-    case EPixelFormat::RGBA16F:          return MTLPixelFormatRGBA16Float;
-    case EPixelFormat::R32F:             return MTLPixelFormatR32Float;
-    case EPixelFormat::RG32F:            return MTLPixelFormatRG32Float;
-    case EPixelFormat::RGBA32F:          return MTLPixelFormatRGBA32Float;
+    case EPixelFormat::R16f:             return MTLPixelFormatR16Float;
+    case EPixelFormat::RG16f:            return MTLPixelFormatRG16Float;
+    case EPixelFormat::Rgba16f:          return MTLPixelFormatRGBA16Float;
+    case EPixelFormat::R32f:             return MTLPixelFormatR32Float;
+    case EPixelFormat::RG32f:            return MTLPixelFormatRG32Float;
+    case EPixelFormat::Rgba32f:          return MTLPixelFormatRGBA32Float;
 
-    case EPixelFormat::DEPTH32:          return MTLPixelFormatDepth32Float;
-    case EPixelFormat::DEPTH32_STENCIL8: return MTLPixelFormatDepth32Float_Stencil8;
-    case EPixelFormat::DEPTH24_STENCIL8: return MTLPixelFormatDepth24Unorm_Stencil8;
+    case EPixelFormat::Depth32:          return MTLPixelFormatDepth32Float;
+    case EPixelFormat::Depth32Stencil8: return MTLPixelFormatDepth32Float_Stencil8;
+    case EPixelFormat::Depth24Stencil8: return MTLPixelFormatDepth24Unorm_Stencil8;
 
     default:                             break;
     }
@@ -38,24 +38,24 @@ EPixelFormat MetalUtility::FromPixelFormat(MTLPixelFormat format)
 {
     switch (format)
     {
-    case MTLPixelFormatRGBA8Unorm:      return EPixelFormat::R8G8B8A8_UNORM;
-    case MTLPixelFormatRGBA8Unorm_sRGB: return EPixelFormat::R8G8B8A8_SRGB;
-    case MTLPixelFormatBGRA8Unorm:      return EPixelFormat::B8G8A8R8_UNORM;
-    case MTLPixelFormatBGRA8Unorm_sRGB: return EPixelFormat::B8G8A8R8_SRGB;
+    case MTLPixelFormatRGBA8Unorm:      return EPixelFormat::R8G8B8A8Unorm;
+    case MTLPixelFormatRGBA8Unorm_sRGB: return EPixelFormat::R8G8B8A8Srgb;
+    case MTLPixelFormatBGRA8Unorm:      return EPixelFormat::B8G8A8R8Unorm;
+    case MTLPixelFormatBGRA8Unorm_sRGB: return EPixelFormat::B8G8A8R8Srgb;
 
     // Floating-point formats
-    case MTLPixelFormatR16Float:        return EPixelFormat::R16F;
-    case MTLPixelFormatRG16Float:       return EPixelFormat::RG16F;
-    case MTLPixelFormatRGBA16Float:     return EPixelFormat::RGBA16F;
-    case MTLPixelFormatR32Float:        return EPixelFormat::R32F;
-    case MTLPixelFormatRG32Float:       return EPixelFormat::RG32F;
-    case MTLPixelFormatRGBA32Float:     return EPixelFormat::RGBA32F;
+    case MTLPixelFormatR16Float:        return EPixelFormat::R16f;
+    case MTLPixelFormatRG16Float:       return EPixelFormat::RG16f;
+    case MTLPixelFormatRGBA16Float:     return EPixelFormat::Rgba16f;
+    case MTLPixelFormatR32Float:        return EPixelFormat::R32f;
+    case MTLPixelFormatRG32Float:       return EPixelFormat::RG32f;
+    case MTLPixelFormatRGBA32Float:     return EPixelFormat::Rgba32f;
 
     default:                            break;
     }
 
     HS_LOG(crash, "Unsupported MTLPixelFormat!");
-    return EPixelFormat::INVALID;
+    return EPixelFormat::Invalid;
 }
 
 MTLVertexFormat MetalUtility::ToVertexFormat(EVertexFormat format)
@@ -63,14 +63,14 @@ MTLVertexFormat MetalUtility::ToVertexFormat(EVertexFormat format)
     switch (format)
     {
 
-    case EVertexFormat::FLOAT:  return MTLVertexFormatFloat;
-    case EVertexFormat::FLOAT2: return MTLVertexFormatFloat2;
-    case EVertexFormat::FLOAT3: return MTLVertexFormatFloat3;
-    case EVertexFormat::FLOAT4: return MTLVertexFormatFloat4;
-    case EVertexFormat::HALF:   return MTLVertexFormatHalf;
-    case EVertexFormat::HALF2:  return MTLVertexFormatHalf2;
-    case EVertexFormat::HALF3:  return MTLVertexFormatHalf3;
-    case EVertexFormat::HALF4:  return MTLVertexFormatHalf4;
+    case EVertexFormat::Float:  return MTLVertexFormatFloat;
+    case EVertexFormat::Float2: return MTLVertexFormatFloat2;
+    case EVertexFormat::Float3: return MTLVertexFormatFloat3;
+    case EVertexFormat::Float4: return MTLVertexFormatFloat4;
+    case EVertexFormat::Half:   return MTLVertexFormatHalf;
+    case EVertexFormat::Half2:  return MTLVertexFormatHalf2;
+    case EVertexFormat::Half3:  return MTLVertexFormatHalf3;
+    case EVertexFormat::Half4:  return MTLVertexFormatHalf4;
 
     default:                    break;
     }
@@ -84,29 +84,29 @@ EVertexFormat MetalUtility::FromVertexFormat(MTLVertexFormat format)
     switch (format)
     {
 
-    case MTLVertexFormatFloat:  return EVertexFormat::FLOAT;
-    case MTLVertexFormatFloat2: return EVertexFormat::FLOAT2;
-    case MTLVertexFormatFloat3: return EVertexFormat::FLOAT3;
-    case MTLVertexFormatFloat4: return EVertexFormat::FLOAT4;
-    case MTLVertexFormatHalf:   return EVertexFormat::HALF;
-    case MTLVertexFormatHalf2:  return EVertexFormat::HALF2;
-    case MTLVertexFormatHalf3:  return EVertexFormat::HALF3;
-    case MTLVertexFormatHalf4:  return EVertexFormat::HALF4;
+    case MTLVertexFormatFloat:  return EVertexFormat::Float;
+    case MTLVertexFormatFloat2: return EVertexFormat::Float2;
+    case MTLVertexFormatFloat3: return EVertexFormat::Float3;
+    case MTLVertexFormatFloat4: return EVertexFormat::Float4;
+    case MTLVertexFormatHalf:   return EVertexFormat::Half;
+    case MTLVertexFormatHalf2:  return EVertexFormat::Half2;
+    case MTLVertexFormatHalf3:  return EVertexFormat::Half3;
+    case MTLVertexFormatHalf4:  return EVertexFormat::Half4;
 
     default:                    break;
     }
 
     HS_LOG(crash, "Unsupported EVertexFormat!");
-    return EVertexFormat::INVALID;
+    return EVertexFormat::Invalid;
 }
 
 MTLLoadAction MetalUtility::ToLoadAction(ELoadAction action)
 {
     switch (action)
     {
-    case ELoadAction::DONT_CARE: return MTLLoadActionDontCare;
-    case ELoadAction::LOAD:      return MTLLoadActionLoad;
-    case ELoadAction::CLEAR:     return MTLLoadActionClear;
+    case ELoadAction::DontCare: return MTLLoadActionDontCare;
+    case ELoadAction::Load:      return MTLLoadActionLoad;
+    case ELoadAction::Clear:     return MTLLoadActionClear;
 
     default:                     break;
     }
@@ -118,22 +118,22 @@ ELoadAction MetalUtility::FromLoadAction(MTLLoadAction action)
 {
     switch (action)
     {
-    case MTLLoadActionDontCare: return ELoadAction::DONT_CARE;
-    case MTLLoadActionLoad:     return ELoadAction::LOAD;
-    case MTLLoadActionClear:    return ELoadAction::CLEAR;
+    case MTLLoadActionDontCare: return ELoadAction::DontCare;
+    case MTLLoadActionLoad:     return ELoadAction::Load;
+    case MTLLoadActionClear:    return ELoadAction::Clear;
 
     default:                    break;
     }
     HS_LOG(crash, "Unsupported MTLLoadAction");
-    return ELoadAction::INVALID;
+    return ELoadAction::Invalid;
 }
 
 MTLStoreAction MetalUtility::ToStoreAction(EStoreAction action)
 {
     switch (action)
     {
-    case EStoreAction::DONT_CARE: return MTLStoreActionDontCare;
-    case EStoreAction::STORE:     return MTLStoreActionStore;
+    case EStoreAction::DontCare: return MTLStoreActionDontCare;
+    case EStoreAction::Store:     return MTLStoreActionStore;
 
     default:                      break;
     }
@@ -145,13 +145,13 @@ EStoreAction MetalUtility::FromStoreAction(MTLStoreAction action)
 {
     switch (action)
     {
-    case MTLStoreActionDontCare: return EStoreAction::DONT_CARE;
-    case MTLStoreActionStore:    return EStoreAction::STORE;
+    case MTLStoreActionDontCare: return EStoreAction::DontCare;
+    case MTLStoreActionStore:    return EStoreAction::Store;
 
     default:                     break;
     }
     HS_LOG(crash, "Unsupported MTLStoreAction");
-    return EStoreAction::INVALID;
+    return EStoreAction::Invalid;
 }
 
 MTLViewport MetalUtility::ToViewport(Viewport vp)
@@ -174,21 +174,21 @@ Viewport MetalUtility::FromViewport(MTLViewport vp)
 MTLTextureUsage MetalUtility::ToTextureUsage(ETextureUsage usage)
 {
     MTLTextureUsage result = 0;
-    if ((usage & ETextureUsage::SAMPLED) != 0) result |= MTLTextureUsageShaderRead;
-    if ((usage & ETextureUsage::STAGING) != 0) result |= MTLTextureUsageShaderWrite;
-    if ((usage & ETextureUsage::STORAGE) != 0) result |= MTLTextureUsageShaderWrite; // UAV/RWTexture support
-    if ((usage & ETextureUsage::COLOR_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
-    if ((usage & ETextureUsage::DEPTH_STENCIL_ATTACHMENT) != 0) result |= MTLTextureUsageRenderTarget;
+    if ((usage & ETextureUsage::Sampled) != 0) result |= MTLTextureUsageShaderRead;
+    if ((usage & ETextureUsage::Staging) != 0) result |= MTLTextureUsageShaderWrite;
+    if ((usage & ETextureUsage::Storage) != 0) result |= MTLTextureUsageShaderWrite; // UAV/RWTexture support
+    if ((usage & ETextureUsage::ColorAttachment) != 0) result |= MTLTextureUsageRenderTarget;
+    if ((usage & ETextureUsage::DepthStencilAttachment) != 0) result |= MTLTextureUsageRenderTarget;
 
     return result;
 }
 
 ETextureUsage MetalUtility::FromTextureUsage(MTLTextureUsage usage)
 {
-    ETextureUsage result = ETextureUsage::UNKNOWN;
-    if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::SAMPLED;
-    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::STORAGE; // Map to STORAGE for compute
-    if ((usage & MTLTextureUsageRenderTarget) != 0) result |= (ETextureUsage::COLOR_ATTACHMENT | ETextureUsage::DEPTH_STENCIL_ATTACHMENT);
+    ETextureUsage result = ETextureUsage::Unknown;
+    if ((usage & MTLTextureUsageShaderRead) != 0) result |= ETextureUsage::Sampled;
+    if ((usage & MTLTextureUsageShaderWrite) != 0) result |= ETextureUsage::Storage; // Map to STORAGE for compute
+    if ((usage & MTLTextureUsageRenderTarget) != 0) result |= (ETextureUsage::ColorAttachment | ETextureUsage::DepthStencilAttachment);
 
     return result;
 }
@@ -197,12 +197,12 @@ MTLTextureType MetalUtility::ToTextureType(ETextureType type)
 {
     switch (type)
     {
-    case ETextureType::TEX_1D:       return MTLTextureType1D;
-    case ETextureType::TEX_1D_ARRAY: return MTLTextureType1DArray;
-    case ETextureType::TEX_2D:       return MTLTextureType2D;
-    case ETextureType::TEX_2D_ARRAY: return MTLTextureType2DArray;
-    case ETextureType::TEX_CUBE:     return MTLTextureTypeCube;
-    case ETextureType::TEX_3D:       return MTLTextureType3D;
+    case ETextureType::Tex1D:       return MTLTextureType1D;
+    case ETextureType::Tex1DArray: return MTLTextureType1DArray;
+    case ETextureType::Tex2D:       return MTLTextureType2D;
+    case ETextureType::Tex2DArray: return MTLTextureType2DArray;
+    case ETextureType::TexCube:     return MTLTextureTypeCube;
+    case ETextureType::Tex3D:       return MTLTextureType3D;
 
     default:                         break;
     }
@@ -214,17 +214,17 @@ ETextureType MetalUtility::FromTextureType(MTLTextureType type)
 {
     switch (type)
     {
-    case MTLTextureType1D:      return ETextureType::TEX_1D;
-    case MTLTextureType1DArray: return ETextureType::TEX_1D_ARRAY;
-    case MTLTextureType2D:      return ETextureType::TEX_2D;
-    case MTLTextureType2DArray: return ETextureType::TEX_2D_ARRAY;
-    case MTLTextureTypeCube:    return ETextureType::TEX_CUBE;
-    case MTLTextureType3D:      return ETextureType::TEX_3D;
+    case MTLTextureType1D:      return ETextureType::Tex1D;
+    case MTLTextureType1DArray: return ETextureType::Tex1DArray;
+    case MTLTextureType2D:      return ETextureType::Tex2D;
+    case MTLTextureType2DArray: return ETextureType::Tex2DArray;
+    case MTLTextureTypeCube:    return ETextureType::TexCube;
+    case MTLTextureType3D:      return ETextureType::Tex3D;
 
     default:                    break;
     }
     HS_LOG(crash, "Unsupported MTLTextureType");
-    return ETextureType::INVALID;
+    return ETextureType::Invalid;
 }
 
 size_t MetalUtility::GetBytesPerPixel(EPixelFormat format)
@@ -266,22 +266,22 @@ MTLBlendFactor MetalUtility::ToBlendFactor(EBlendFactor factor)
 {
     switch (factor)
     {
-    case EBlendFactor::ZERO:                 return MTLBlendFactorZero;
-    case EBlendFactor::ONE:                  return MTLBlendFactorOne;
-    case EBlendFactor::SRC_COLOR:            return MTLBlendFactorSourceColor;
-    case EBlendFactor::ONE_MINUS_SRC_COLOR:  return MTLBlendFactorOneMinusSourceColor;
-    case EBlendFactor::DST_COLOR:            return MTLBlendFactorDestinationColor;
-    case EBlendFactor::ONE_MINUS_DST_COLOR:  return MTLBlendFactorOneMinusDestinationColor;
-    case EBlendFactor::SRC_ALPHA:            return MTLBlendFactorSourceAlpha;
-    case EBlendFactor::ONE_MINUS_SRC_ALPHA:  return MTLBlendFactorOneMinusSourceAlpha;
-    case EBlendFactor::DST_ALPHA:            return MTLBlendFactorDestinationAlpha;
-    case EBlendFactor::ONE_MINUS_DST_ALPHA:  return MTLBlendFactorOneMinusDestinationAlpha;
+    case EBlendFactor::Zero:                 return MTLBlendFactorZero;
+    case EBlendFactor::One:                  return MTLBlendFactorOne;
+    case EBlendFactor::SrcColor:            return MTLBlendFactorSourceColor;
+    case EBlendFactor::OneMinusSrcColor:  return MTLBlendFactorOneMinusSourceColor;
+    case EBlendFactor::DstColor:            return MTLBlendFactorDestinationColor;
+    case EBlendFactor::OneMinusDstColor:  return MTLBlendFactorOneMinusDestinationColor;
+    case EBlendFactor::SrcAlpha:            return MTLBlendFactorSourceAlpha;
+    case EBlendFactor::OneMinusSrcAlpha:  return MTLBlendFactorOneMinusSourceAlpha;
+    case EBlendFactor::DstAlpha:            return MTLBlendFactorDestinationAlpha;
+    case EBlendFactor::OneMinusDstAlpha:  return MTLBlendFactorOneMinusDestinationAlpha;
 
-    case EBlendFactor::SRC_ALPHA_SATURATE:   return MTLBlendFactorSourceAlphaSaturated;
-    case EBlendFactor::SRC1_COLOR:           return MTLBlendFactorSource1Color;
-    case EBlendFactor::ONE_MINUS_SRC1_COLOR: return MTLBlendFactorOneMinusSource1Color;
-    case EBlendFactor::SRC1_ALPHA:           return MTLBlendFactorSource1Alpha;
-    case EBlendFactor::ONE_MINUS_SRC1_ALPHA: return MTLBlendFactorOneMinusSource1Alpha;
+    case EBlendFactor::SrcAlphaSaturate:   return MTLBlendFactorSourceAlphaSaturated;
+    case EBlendFactor::Src1Color:           return MTLBlendFactorSource1Color;
+    case EBlendFactor::OneMinusSrc1Color: return MTLBlendFactorOneMinusSource1Color;
+    case EBlendFactor::Src1Alpha:           return MTLBlendFactorSource1Alpha;
+    case EBlendFactor::OneMinusSrc1Alpha: return MTLBlendFactorOneMinusSource1Alpha;
 
     default:                                 break;
     }
@@ -294,39 +294,39 @@ EBlendFactor MetalUtility::FromBlendFactor(MTLBlendFactor factor)
 {
     switch (factor)
     {
-    case MTLBlendFactorZero:                     return EBlendFactor::ZERO;
-    case MTLBlendFactorOne:                      return EBlendFactor::ONE;
-    case MTLBlendFactorSourceColor:              return EBlendFactor::SRC_COLOR;
-    case MTLBlendFactorOneMinusSourceColor:      return EBlendFactor::ONE_MINUS_SRC_COLOR;
-    case MTLBlendFactorDestinationColor:         return EBlendFactor::DST_COLOR;
-    case MTLBlendFactorOneMinusDestinationColor: return EBlendFactor::ONE_MINUS_DST_COLOR;
-    case MTLBlendFactorSourceAlpha:              return EBlendFactor::SRC_ALPHA;
-    case MTLBlendFactorOneMinusSourceAlpha:      return EBlendFactor::ONE_MINUS_SRC_ALPHA;
-    case MTLBlendFactorDestinationAlpha:         return EBlendFactor::DST_ALPHA;
-    case MTLBlendFactorOneMinusDestinationAlpha: return EBlendFactor::ONE_MINUS_DST_ALPHA;
+    case MTLBlendFactorZero:                     return EBlendFactor::Zero;
+    case MTLBlendFactorOne:                      return EBlendFactor::One;
+    case MTLBlendFactorSourceColor:              return EBlendFactor::SrcColor;
+    case MTLBlendFactorOneMinusSourceColor:      return EBlendFactor::OneMinusSrcColor;
+    case MTLBlendFactorDestinationColor:         return EBlendFactor::DstColor;
+    case MTLBlendFactorOneMinusDestinationColor: return EBlendFactor::OneMinusDstColor;
+    case MTLBlendFactorSourceAlpha:              return EBlendFactor::SrcAlpha;
+    case MTLBlendFactorOneMinusSourceAlpha:      return EBlendFactor::OneMinusSrcAlpha;
+    case MTLBlendFactorDestinationAlpha:         return EBlendFactor::DstAlpha;
+    case MTLBlendFactorOneMinusDestinationAlpha: return EBlendFactor::OneMinusDstAlpha;
 
-    case MTLBlendFactorSourceAlphaSaturated:     return EBlendFactor::SRC_ALPHA_SATURATE;
-    case MTLBlendFactorSource1Color:             return EBlendFactor::SRC1_COLOR;
-    case MTLBlendFactorOneMinusSource1Color:     return EBlendFactor::ONE_MINUS_SRC1_COLOR;
-    case MTLBlendFactorSource1Alpha:             return EBlendFactor::SRC1_ALPHA;
-    case MTLBlendFactorOneMinusSource1Alpha:     return EBlendFactor::ONE_MINUS_SRC1_ALPHA;
+    case MTLBlendFactorSourceAlphaSaturated:     return EBlendFactor::SrcAlphaSaturate;
+    case MTLBlendFactorSource1Color:             return EBlendFactor::Src1Color;
+    case MTLBlendFactorOneMinusSource1Color:     return EBlendFactor::OneMinusSrc1Color;
+    case MTLBlendFactorSource1Alpha:             return EBlendFactor::Src1Alpha;
+    case MTLBlendFactorOneMinusSource1Alpha:     return EBlendFactor::OneMinusSrc1Alpha;
 
     default:                                     break;
     }
 
     HS_LOG(crash, "Unsupported EBlendFactor");
-    return EBlendFactor::INVALID;
+    return EBlendFactor::Invalid;
 }
 
 MTLBlendOperation MetalUtility::ToBlendOperation(EBlendOp operation)
 {
     switch (operation)
     {
-    case EBlendOp::ADD:              return MTLBlendOperationAdd;
-    case EBlendOp::SUBTRACT:         return MTLBlendOperationSubtract;
-    case EBlendOp::REVERSE_SUBTRACT: return MTLBlendOperationReverseSubtract;
-    case EBlendOp::MAX:              return MTLBlendOperationMax;
-    case EBlendOp::MIN:              return MTLBlendOperationMin;
+    case EBlendOp::Add:              return MTLBlendOperationAdd;
+    case EBlendOp::Subtract:         return MTLBlendOperationSubtract;
+    case EBlendOp::ReverseSubtract: return MTLBlendOperationReverseSubtract;
+    case EBlendOp::Max:              return MTLBlendOperationMax;
+    case EBlendOp::Min:              return MTLBlendOperationMin;
 
     default:                         break;
     }
@@ -339,31 +339,31 @@ EBlendOp MetalUtility::FromBlendOperation(MTLBlendOperation operation)
 {
     switch (operation)
     {
-    case MTLBlendOperationAdd:             return EBlendOp::ADD;
-    case MTLBlendOperationSubtract:        return EBlendOp::SUBTRACT;
-    case MTLBlendOperationReverseSubtract: return EBlendOp::REVERSE_SUBTRACT;
-    case MTLBlendOperationMax:             return EBlendOp::MAX;
-    case MTLBlendOperationMin:             return EBlendOp::MIN;
+    case MTLBlendOperationAdd:             return EBlendOp::Add;
+    case MTLBlendOperationSubtract:        return EBlendOp::Subtract;
+    case MTLBlendOperationReverseSubtract: return EBlendOp::ReverseSubtract;
+    case MTLBlendOperationMax:             return EBlendOp::Max;
+    case MTLBlendOperationMin:             return EBlendOp::Min;
 
     default:                               break;
     }
 
     HS_LOG(crash, "Unsupported MTLBlendOperation");
-    return EBlendOp::INVALID;
+    return EBlendOp::Invalid;
 }
 
 MTLCompareFunction MetalUtility::ToCompareFunction(ECompareOp compare)
 {
     switch (compare)
     {
-    case ECompareOp::NEVER:            return MTLCompareFunctionNever;
-    case ECompareOp::LESS:             return MTLCompareFunctionLess;
-    case ECompareOp::EQUAL:            return MTLCompareFunctionEqual;
-    case ECompareOp::LESS_OR_EQUAL:    return MTLCompareFunctionLessEqual;
-    case ECompareOp::GREATER:          return MTLCompareFunctionGreater;
-    case ECompareOp::NOT_EQUAL:        return MTLCompareFunctionNotEqual;
-    case ECompareOp::GREATER_OR_EQUAL: return MTLCompareFunctionGreaterEqual;
-    case ECompareOp::ALWAYS:           return MTLCompareFunctionAlways;
+    case ECompareOp::Never:            return MTLCompareFunctionNever;
+    case ECompareOp::Less:             return MTLCompareFunctionLess;
+    case ECompareOp::Equal:            return MTLCompareFunctionEqual;
+    case ECompareOp::LessOrEqual:    return MTLCompareFunctionLessEqual;
+    case ECompareOp::Greater:          return MTLCompareFunctionGreater;
+    case ECompareOp::NotEqual:        return MTLCompareFunctionNotEqual;
+    case ECompareOp::GreaterOrEqual: return MTLCompareFunctionGreaterEqual;
+    case ECompareOp::Always:           return MTLCompareFunctionAlways;
 
     default:                           break;
     }
@@ -376,28 +376,28 @@ ECompareOp MetalUtility::FromCompareFunction(MTLCompareFunction compare)
 {
     switch (compare)
     {
-    case MTLCompareFunctionNever:        return ECompareOp::NEVER;
-    case MTLCompareFunctionLess:         return ECompareOp::LESS;
-    case MTLCompareFunctionEqual:        return ECompareOp::EQUAL;
-    case MTLCompareFunctionLessEqual:    return ECompareOp::LESS_OR_EQUAL;
-    case MTLCompareFunctionGreater:      return ECompareOp::GREATER;
-    case MTLCompareFunctionNotEqual:     return ECompareOp::NOT_EQUAL;
-    case MTLCompareFunctionGreaterEqual: return ECompareOp::GREATER_OR_EQUAL;
-    case MTLCompareFunctionAlways:       return ECompareOp::ALWAYS;
+    case MTLCompareFunctionNever:        return ECompareOp::Never;
+    case MTLCompareFunctionLess:         return ECompareOp::Less;
+    case MTLCompareFunctionEqual:        return ECompareOp::Equal;
+    case MTLCompareFunctionLessEqual:    return ECompareOp::LessOrEqual;
+    case MTLCompareFunctionGreater:      return ECompareOp::Greater;
+    case MTLCompareFunctionNotEqual:     return ECompareOp::NotEqual;
+    case MTLCompareFunctionGreaterEqual: return ECompareOp::GreaterOrEqual;
+    case MTLCompareFunctionAlways:       return ECompareOp::Always;
 
     default:                             break;
     }
 
     HS_LOG(crash, "Unsupported MTLCompareFunction");
-    return ECompareOp::NEVER;
+    return ECompareOp::Never;
 }
 
 MTLWinding MetalUtility::ToWinding(EFrontFace frontFace)
 {
     switch (frontFace)
     {
-    case EFrontFace::CLOCKWISE:         return MTLWindingClockwise;
-    case EFrontFace::COUNTER_CLOCKWISE: return MTLWindingCounterClockwise;
+    case EFrontFace::Clockwise:         return MTLWindingClockwise;
+    case EFrontFace::CounterClockwise: return MTLWindingCounterClockwise;
 
     default:                            break;
     }
@@ -410,22 +410,22 @@ EFrontFace MetalUtility::FromWinding(MTLWinding frontFace)
 {
     switch (frontFace)
     {
-    case MTLWindingClockwise:        return EFrontFace::CLOCKWISE;
-    case MTLWindingCounterClockwise: return EFrontFace::COUNTER_CLOCKWISE;
+    case MTLWindingClockwise:        return EFrontFace::Clockwise;
+    case MTLWindingCounterClockwise: return EFrontFace::CounterClockwise;
 
     default:                         break;
     }
     HS_LOG(crash, "Unsupported MTLWinding");
-    return EFrontFace::CLOCKWISE;
+    return EFrontFace::Clockwise;
 }
 
 MTLCullMode MetalUtility::ToCullMode(ECullMode cullMode)
 {
     switch (cullMode)
     {
-    case ECullMode::FRONT: return MTLCullModeFront;
-    case ECullMode::BACK:  return MTLCullModeBack;
-    case ECullMode::NONE:  return MTLCullModeNone;
+    case ECullMode::Front: return MTLCullModeFront;
+    case ECullMode::Back:  return MTLCullModeBack;
+    case ECullMode::None:  return MTLCullModeNone;
 
     default:               break;
     }
@@ -437,22 +437,22 @@ ECullMode MetalUtility::FromCullMode(MTLCullMode cullMode)
 {
     switch (cullMode)
     {
-    case MTLCullModeFront: return ECullMode::FRONT;
-    case MTLCullModeBack:  return ECullMode::BACK;
-    case MTLCullModeNone:  return ECullMode::NONE;
+    case MTLCullModeFront: return ECullMode::Front;
+    case MTLCullModeBack:  return ECullMode::Back;
+    case MTLCullModeNone:  return ECullMode::None;
 
     default:               break;
     }
     HS_LOG(crash, "Unsupported MTLCullMode");
-    return ECullMode::NONE;
+    return ECullMode::None;
 }
 
 MTLTriangleFillMode MetalUtility::ToPolygonMode(EPolygonMode polygonMode)
 {
     switch (polygonMode)
     {
-    case EPolygonMode::LINE: return MTLTriangleFillModeLines;
-    case EPolygonMode::FILL: return MTLTriangleFillModeFill;
+    case EPolygonMode::Line: return MTLTriangleFillModeLines;
+    case EPolygonMode::Fill: return MTLTriangleFillModeFill;
 
     default:                 break;
     }
@@ -464,24 +464,24 @@ EPolygonMode MetalUtility::FromPolygonMode(MTLTriangleFillMode polygonMode)
 {
     switch (polygonMode)
     {
-    case MTLTriangleFillModeLines: return EPolygonMode::LINE;
-    case MTLTriangleFillModeFill:  return EPolygonMode::FILL;
+    case MTLTriangleFillModeLines: return EPolygonMode::Line;
+    case MTLTriangleFillModeFill:  return EPolygonMode::Fill;
 
     default:                       break;
     }
     HS_LOG(crash, "Unsupported MTLTriangleFillMode");
-    return EPolygonMode::FILL;
+    return EPolygonMode::Fill;
 }
 
 MTLPrimitiveType MetalUtility::ToPrimitiveTopology(EPrimitiveTopology topology)
 {
     switch (topology)
     {
-    case EPrimitiveTopology::POINT_LIST:     return MTLPrimitiveTypePoint;
-    case EPrimitiveTopology::LINE_LIST:      return MTLPrimitiveTypeLine;
-    case EPrimitiveTopology::LINE_STRIP:     return MTLPrimitiveTypeLineStrip;
-    case EPrimitiveTopology::TRIANGLE_LIST:  return MTLPrimitiveTypeTriangle;
-    case EPrimitiveTopology::TRIANGLE_STRIP: return MTLPrimitiveTypeTriangleStrip;
+    case EPrimitiveTopology::PointList:     return MTLPrimitiveTypePoint;
+    case EPrimitiveTopology::LineList:      return MTLPrimitiveTypeLine;
+    case EPrimitiveTopology::LineStrip:     return MTLPrimitiveTypeLineStrip;
+    case EPrimitiveTopology::TriangleList:  return MTLPrimitiveTypeTriangle;
+    case EPrimitiveTopology::TriangleStrip: return MTLPrimitiveTypeTriangleStrip;
 
     default:                                 break;
     }
@@ -493,16 +493,16 @@ EPrimitiveTopology MetalUtility::FromPrimitiveTopology(MTLPrimitiveType topology
 {
     switch (topology)
     {
-    case MTLPrimitiveTypePoint:         return EPrimitiveTopology::POINT_LIST;
-    case MTLPrimitiveTypeLine:          return EPrimitiveTopology::LINE_LIST;
-    case MTLPrimitiveTypeLineStrip:     return EPrimitiveTopology::LINE_STRIP;
-    case MTLPrimitiveTypeTriangle:      return EPrimitiveTopology::TRIANGLE_LIST;
-    case MTLPrimitiveTypeTriangleStrip: return EPrimitiveTopology::TRIANGLE_STRIP;
+    case MTLPrimitiveTypePoint:         return EPrimitiveTopology::PointList;
+    case MTLPrimitiveTypeLine:          return EPrimitiveTopology::LineList;
+    case MTLPrimitiveTypeLineStrip:     return EPrimitiveTopology::LineStrip;
+    case MTLPrimitiveTypeTriangle:      return EPrimitiveTopology::TriangleList;
+    case MTLPrimitiveTypeTriangleStrip: return EPrimitiveTopology::TriangleStrip;
 
     default:                            break;
     }
     HS_LOG(crash, "Unsupported EPimitiveTopology");
-    return EPrimitiveTopology::TRIANGLE_LIST;
+    return EPrimitiveTopology::TriangleList;
 }
 
 MTLVertexFormat MetalUtility::GetVertexFormatFromSize(size_t size)
@@ -540,9 +540,9 @@ MTLResourceOptions MetalUtility::ToBufferOption(EBufferMemoryOption option)
 {
     switch (option)
     {
-    case EBufferMemoryOption::STATIC:  return MTLResourceStorageModePrivate;
-    case EBufferMemoryOption::DYNAMIC: return MTLResourceStorageModeShared;
-    case EBufferMemoryOption::MAPPED:  return MTLResourceStorageModeManaged;
+    case EBufferMemoryOption::Static:  return MTLResourceStorageModePrivate;
+    case EBufferMemoryOption::Dynamic: return MTLResourceStorageModeShared;
+    case EBufferMemoryOption::Mapped:  return MTLResourceStorageModeManaged;
 
     default:                           break;
     }
@@ -554,23 +554,23 @@ EBufferMemoryOption MetalUtility::FromBufferOption(MTLResourceOptions option)
 {
     switch (option)
     {
-    case MTLResourceStorageModePrivate: return EBufferMemoryOption::STATIC;
-    case MTLResourceStorageModeShared:  return EBufferMemoryOption::DYNAMIC;
-    case MTLResourceStorageModeManaged: return EBufferMemoryOption::MAPPED;
+    case MTLResourceStorageModePrivate: return EBufferMemoryOption::Static;
+    case MTLResourceStorageModeShared:  return EBufferMemoryOption::Dynamic;
+    case MTLResourceStorageModeManaged: return EBufferMemoryOption::Mapped;
 
     default:                            break;
     }
 
     HS_LOG(crash, "Unsupported EBufferMemoryOption");
-    return EBufferMemoryOption::INVALID;
+    return EBufferMemoryOption::Invalid;
 }
 
 MTLSamplerMinMagFilter MetalUtility::ToMinMagFilter(EFilterMode filter)
 {
     switch (filter)
     {
-    case EFilterMode::NEAREST: return MTLSamplerMinMagFilterNearest;
-    case EFilterMode::LINEAR:  return MTLSamplerMinMagFilterLinear;
+    case EFilterMode::Nearest: return MTLSamplerMinMagFilterNearest;
+    case EFilterMode::Linear:  return MTLSamplerMinMagFilterLinear;
     default:                   break;
     }
     HS_LOG(error, "Unsupported Min/Mag FilterMode!");
@@ -582,21 +582,21 @@ EFilterMode MetalUtility::FromMinMagFilter(MTLSamplerMinMagFilter filter)
 {
     switch (filter)
     {
-    case MTLSamplerMinMagFilterNearest: return EFilterMode::NEAREST;
-    case MTLSamplerMinMagFilterLinear:  return EFilterMode::LINEAR;
+    case MTLSamplerMinMagFilterNearest: return EFilterMode::Nearest;
+    case MTLSamplerMinMagFilterLinear:  return EFilterMode::Linear;
     default:                            break;
     }
     HS_LOG(error, "Unsupported Min/Mag FilterMode!");
 
-    return EFilterMode::NEAREST;
+    return EFilterMode::Nearest;
 }
 
 MTLSamplerMipFilter MetalUtility::ToMipFilter(EFilterMode filter)
 {
     switch (filter)
     {
-    case EFilterMode::NEAREST: return MTLSamplerMipFilterNearest;
-    case EFilterMode::LINEAR:  return MTLSamplerMipFilterLinear;
+    case EFilterMode::Nearest: return MTLSamplerMipFilterNearest;
+    case EFilterMode::Linear:  return MTLSamplerMipFilterLinear;
     default:                   break;
     }
     HS_LOG(error, "Unsupported Mip FilterMode");
@@ -608,25 +608,25 @@ EFilterMode MetalUtility::FromMipFilter(MTLSamplerMipFilter filter)
 {
     switch (filter)
     {
-    case MTLSamplerMipFilterNearest: return EFilterMode::NEAREST;
-    case MTLSamplerMipFilterLinear:  return EFilterMode::LINEAR;
+    case MTLSamplerMipFilterNearest: return EFilterMode::Nearest;
+    case MTLSamplerMipFilterLinear:  return EFilterMode::Linear;
     default:                         break;
     }
 
     HS_LOG(error, "Unsupported Mip FilterMode");
 
-    return EFilterMode::NEAREST;
+    return EFilterMode::Nearest;
 }
 
 MTLSamplerAddressMode MetalUtility::ToSamplerAddressMode(EAddressMode addressMode)
 {
     switch (addressMode)
     {
-    case EAddressMode::REPEAT:               return MTLSamplerAddressModeRepeat;
-    case EAddressMode::MIRRORED_REPEAT:      return MTLSamplerAddressModeMirrorRepeat;
-    case EAddressMode::CLAMP_TO_EDGE:        return MTLSamplerAddressModeClampToEdge;
-    case EAddressMode::CLAMP_TO_BORDER:      return MTLSamplerAddressModeClampToBorderColor;
-    case EAddressMode::MIRROR_CLAMP_TO_EDGE: return MTLSamplerAddressModeMirrorClampToEdge;
+    case EAddressMode::Repeat:               return MTLSamplerAddressModeRepeat;
+    case EAddressMode::MirroredRepeat:      return MTLSamplerAddressModeMirrorRepeat;
+    case EAddressMode::ClampToEdge:        return MTLSamplerAddressModeClampToEdge;
+    case EAddressMode::ClampToBorder:      return MTLSamplerAddressModeClampToBorderColor;
+    case EAddressMode::MirrorClampToEdge: return MTLSamplerAddressModeMirrorClampToEdge;
     default:                                 break;
     }
     HS_LOG(error, "Unsupported Sampler Address Mode!");
@@ -638,16 +638,16 @@ EAddressMode MetalUtility::FromSamplerAddressMode(MTLSamplerAddressMode addressM
 {
     switch (addressMode)
     {
-    case MTLSamplerAddressModeRepeat:             return EAddressMode::REPEAT;
-    case MTLSamplerAddressModeMirrorRepeat:       return EAddressMode::MIRRORED_REPEAT;
-    case MTLSamplerAddressModeClampToEdge:        return EAddressMode::CLAMP_TO_EDGE;
-    case MTLSamplerAddressModeClampToBorderColor: return EAddressMode::CLAMP_TO_BORDER;
-    case MTLSamplerAddressModeMirrorClampToEdge:  return EAddressMode::MIRROR_CLAMP_TO_EDGE;
+    case MTLSamplerAddressModeRepeat:             return EAddressMode::Repeat;
+    case MTLSamplerAddressModeMirrorRepeat:       return EAddressMode::MirroredRepeat;
+    case MTLSamplerAddressModeClampToEdge:        return EAddressMode::ClampToEdge;
+    case MTLSamplerAddressModeClampToBorderColor: return EAddressMode::ClampToBorder;
+    case MTLSamplerAddressModeMirrorClampToEdge:  return EAddressMode::MirrorClampToEdge;
     default:                                      break;
     }
     HS_LOG(error, "Unsupported Sampler Address Mode!");
 
-    return EAddressMode::CLAMP_TO_EDGE;
+    return EAddressMode::ClampToEdge;
 }
 
 MTLClearColor MetalUtility::ToClearColor(const float* color)

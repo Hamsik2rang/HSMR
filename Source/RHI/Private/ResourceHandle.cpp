@@ -3,7 +3,7 @@
 HS_NS_BEGIN
 
 RHITexture::RHITexture(const char* name, const TextureInfo& info)
-    : RHIHandle(EType::TEXTURE, name)
+    : RHIHandle(EType::Texture, name)
     , info(info)
 {
     size_t size = info.extent.width * info.extent.height * info.extent.depth;
@@ -14,7 +14,7 @@ RHITexture::~RHITexture()
 }
 
 RHISampler::RHISampler(const char* name, const SamplerInfo& info)
-    : RHIHandle(EType::SAMPLER, name)
+    : RHIHandle(EType::Sampler, name)
     , info(info)
 {
 }
@@ -24,7 +24,7 @@ RHISampler::~RHISampler()
 }
 
 RHIShader::RHIShader(const char* name, const ShaderInfo& info) noexcept
-    : RHIHandle(EType::SHADER, name)
+    : RHIHandle(EType::Shader, name)
     , info(info)
 {
 }
@@ -34,7 +34,7 @@ RHIShader::~RHIShader()
 }
 
 RHIBuffer::RHIBuffer(const char* name, const BufferInfo& info)
-    : RHIHandle(EType::BUFFER, name)
+    : RHIHandle(EType::Buffer, name)
     , info(info)
 {}
 
@@ -42,7 +42,7 @@ RHIBuffer::~RHIBuffer()
 {}
 
 RHIResourceLayout::RHIResourceLayout(const char* name, ResourceBinding* bindings, size_t bindingCount)
-    : RHIHandle(EType::RESOURCE_LAYOUT, name)
+    : RHIHandle(EType::ResourceLayout, name)
     , bindings(bindingCount)
 {
     HS_ASSERT(bindingCount >= 0, "BindingCount out of range");
@@ -56,14 +56,14 @@ RHIResourceLayout::~RHIResourceLayout()
 }
 
 RHIResourceSet::RHIResourceSet(const char* name)
-    : RHIHandle(EType::RESOURCE_SET, name)
+    : RHIHandle(EType::ResourceSet, name)
 {}
 
 RHIResourceSet::~RHIResourceSet()
 {}
 
 RHIResourceSetPool::RHIResourceSetPool(const char* name)
-    : RHIHandle(EType::RESOURCE_SET_POOL, name)
+    : RHIHandle(EType::ResourceSetPool, name)
 {}
 
 RHIResourceSetPool::~RHIResourceSetPool()

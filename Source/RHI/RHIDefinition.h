@@ -25,21 +25,21 @@ class HS_API RHIHandle
 public:
 	enum class EType
 	{
-		SWAPCHAIN,
-		BUFFER,
-		TEXTURE,
-		SAMPLER,
-		SHADER,
-		RESOURCE_LAYOUT,
-		RESOURCE_SET,
-		RESOURCE_SET_POOL,
-		RENDER_PASS,
-		FRAMEBUFFER,
-		GRAPHICS_PIPELINE,
-		COMPUTE_PIPELINE,
-		COMMAND_QUEUE,
-		COMMAND_POOL,
-		COMMAND_BUFFER,
+		Swapchain,
+		Buffer,
+		Texture,
+		Sampler,
+		Shader,
+		ResourceLayout,
+		ResourceSet,
+		ResourceSetPool,
+		RenderPass,
+		Framebuffer,
+		GraphicsPipeline,
+		ComputePipeline,
+		CommandQueue,
+		CommandPool,
+		CommandBuffer,
 	};
 
 	RHIHandle() = delete;
@@ -49,7 +49,7 @@ public:
 	{}
 
 	// RAII: Virtual destructor calls Release() automatically
-	virtual ~RHIHandle() 
+	virtual ~RHIHandle()
 	{
 		//// Only cleanup if we're the last reference
 		//if (_refs == 1)
@@ -60,7 +60,7 @@ public:
 
 	// Copy constructor - increase reference count
 	RHIHandle(const RHIHandle& other) = delete;  // Disable copy to prevent issues
-	
+
 	// Move constructor - transfer ownership
 	RHIHandle(RHIHandle&& other) noexcept
 		: _type(other._type)
@@ -81,7 +81,7 @@ public:
 			{
 				delete this;
 			}
-			
+
 			// Transfer from other
 			_type = other._type;
 			name = other.name;
@@ -95,7 +95,7 @@ public:
 	HS_FORCEINLINE RHIHandle::EType GetType() const { return _type; }
 	HS_FORCEINLINE uint32           GetHash() const { return _hash; }
 	HS_FORCEINLINE void GetName(const char* name) { this->name = name; }
-	
+
 	// For external reference counting when needed
 	HS_FORCEINLINE int Retain()
 	{
@@ -105,7 +105,7 @@ public:
 	HS_FORCEINLINE int Release()
 	{
 		HS_ASSERT(_refs > 0, "Over Released!");
-		
+
 		if (--_refs == 0)
 		{
 			delete this;
@@ -130,91 +130,91 @@ protected:
 
 enum class ERHIPlatform
 {
-	INVALID = 0,
-	VULKAN,
-	METAL,
+	Invalid = 0,
+	Vulkan,
+	Metal,
 	//DIRECTX12,
 	//OPENGL,
 	//OPENGL_ES,
 	//WEBGPU,
-	VIRTUAL,
+	Virtual,
 };
 
 enum class EVertexFormat
 {
-    INVALID, 
-    
-	FLOAT,
-	FLOAT2,
-	FLOAT3,
-	FLOAT4,
+    Invalid,
 
-	HALF,
-	HALF2,
-	HALF3,
-	HALF4,
+	Float,
+	Float2,
+	Float3,
+	Float4,
 
-	MAT2x2,
-	MAT2x3,
-	MAT2x4,
+	Half,
+	Half2,
+	Half3,
+	Half4,
 
-	MAT3x2,
-	MAT3x3,
-	MAT3x4,
+	Mat2x2,
+	Mat2x3,
+	Mat2x4,
 
-	MAT4x2,
-	MAT4x3,
-	MAT4x4
+	Mat3x2,
+	Mat3x3,
+	Mat3x4,
+
+	Mat4x2,
+	Mat4x3,
+	Mat4x4
 };
 
 enum class EPixelFormat
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	R8_UNORM = 10,
-	RG8_UNORM = 30,
-	R8G8B8A8_UNORM = 70,
-	R8G8B8A8_SRGB = 71,
-	B8G8A8R8_UNORM = 80,
-	B8G8A8R8_SRGB = 81,
+	R8Unorm = 10,
+	RG8Unorm = 30,
+	R8G8B8A8Unorm = 70,
+	R8G8B8A8Srgb = 71,
+	B8G8A8R8Unorm = 80,
+	B8G8A8R8Srgb = 81,
 
 	// Floating-point formats (for HDR, compute, atmosphere LUTs)
-	R16F = 100,
-	RG16F = 101,
-	RGBA16F = 102,
-	R32F = 110,
-	RG32F = 111,
-	RGBA32F = 112,
+	R16f = 100,
+	RG16f = 101,
+	Rgba16f = 102,
+	R32f = 110,
+	RG32f = 111,
+	Rgba32f = 112,
 
-	DEPTH32 = 252,
-	STENCIL8 = 253,
-	DEPTH24_STENCIL8 = 255,
-	DEPTH32_STENCIL8 = 260,
+	Depth32 = 252,
+	Stencil8 = 253,
+	Depth24Stencil8 = 255,
+	Depth32Stencil8 = 260,
 };
 
 enum class ETextureType
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	TEX_1D,
-	TEX_1D_ARRAY,
-	TEX_2D,
-	TEX_2D_ARRAY,
-	TEX_CUBE,
-	TEX_3D,
+	Tex1D,
+	Tex1DArray,
+	Tex2D,
+	Tex2DArray,
+	TexCube,
+	Tex3D,
 };
 
 enum class ETextureUsage : uint16
 {
-	UNKNOWN = 0x0000,
-	STATIC = 0x0001,
-	STAGING = 0x0002,
-	SAMPLED = 0x0004,
-	STORAGE = 0x0008,
-	COLOR_ATTACHMENT = 0x0010,
-	DEPTH_STENCIL_ATTACHMENT = 0x0020,
-	TRANSIENT_ATTACHMENT = 0x0040,
-	INPUT_ATTACHMENT = 0x0080,
+	Unknown = 0x0000,
+	Static = 0x0001,
+	Staging = 0x0002,
+	Sampled = 0x0004,
+	Storage = 0x0008,
+	ColorAttachment = 0x0010,
+	DepthStencilAttachment = 0x0020,
+	TransientAttachment = 0x0040,
+	InputAttachment = 0x0080,
 };
 
 HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
@@ -246,9 +246,9 @@ HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)
 
 struct TextureInfo
 {
-	EPixelFormat  format = EPixelFormat::R8G8B8A8_UNORM;
-	ETextureType  type = ETextureType::TEX_2D;
-	ETextureUsage usage = ETextureUsage::UNKNOWN;
+	EPixelFormat  format = EPixelFormat::R8G8B8A8Unorm;
+	ETextureType  type = ETextureType::Tex2D;
+	ETextureUsage usage = ETextureUsage::Unknown;
 	struct
 	{
 		uint32 width = 0;
@@ -269,19 +269,19 @@ struct TextureInfo
 
 enum class EFilterMode
 {
-	NEAREST,
-	LINEAR
+	Nearest,
+	Linear
 };
 
 enum class EAddressMode
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	REPEAT,
-	MIRRORED_REPEAT,
-	CLAMP_TO_EDGE,
-	CLAMP_TO_BORDER,
-	MIRROR_CLAMP_TO_EDGE
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+	ClampToBorder,
+	MirrorClampToEdge
 };
 
 struct SamplerInfo
@@ -301,13 +301,13 @@ struct RHIBuffer;
 
 enum class EBufferUsage
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	UNIFORM = 0x00000010,
-	STORAGE_BUFFER = 0x00000020,
-	INDEX = 0x00000040,
-	VERTEX = 0x00000080,
-	TEXEL = 0x00000004,
+	Uniform = 0x00000010,
+	StorageBuffer = 0x00000020,
+	Index = 0x00000040,
+	Vertex = 0x00000080,
+	Texel = 0x00000004,
 };
 
 HS_FORCEINLINE EBufferUsage operator|(EBufferUsage lhs, EBufferUsage rhs)
@@ -334,12 +334,12 @@ HS_FORCEINLINE EBufferUsage operator&=(EBufferUsage& lhs, uint32 rhs)
 
 enum class EBufferMemoryOption
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	NOTHING,
-	MAPPED,
-	STATIC,
-	DYNAMIC
+	Nothing,
+	Mapped,
+	Static,
+	Dynamic
 };
 
 struct BufferInfo
@@ -374,19 +374,19 @@ struct SwapchainInfo
 
 enum class EStoreAction
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	DONT_CARE,
-	STORE,
+	DontCare,
+	Store,
 };
 
 enum class ELoadAction
 {
-	INVALID = 0,
+	Invalid = 0,
 
-	DONT_CARE,
-	LOAD,
-	CLEAR,
+	DontCare,
+	Load,
+	Clear,
 };
 
 struct ClearValue
@@ -461,30 +461,30 @@ struct FramebufferInfo
 
 enum class EShaderParameterType
 {
-	T_BOOL = 0,
-	T_CHAR,
-	T_INT8,
-	T_UINT8,
-	T_INT16,
-	T_UINT16,
-	T_INT32,
-	T_UINT32,
-	T_INT64,
-	T_UINT64,
+	Bool = 0,
+	Char,
+	Int8,
+	Uint8,
+	Int16,
+	Uint16,
+	Int32,
+	Uint32,
+	Int64,
+	Uint64,
 
-	T_HALF,
-	T_FLOAT,
-	T_DOUBLE,
+	Half,
+	Float,
+	Double,
 
-	T_VEC2,
-	T_VEC3,
-	T_VEC4,
+	Vec2,
+	Vec3,
+	Vec4,
 
-	T_MAT22,
-	T_MAT33,
-	T_MAT44,
+	Mat22,
+	Mat33,
+	Mat44,
 
-	T_STRUCT // Constant Buffer
+	Struct // Constant Buffer
 	//,..
 };
 
@@ -534,12 +534,12 @@ struct VertexAttribute
 
 enum class EShaderLanguage
 {
-	INVALID = 0,
-	SPIRV,
-	MSL,
-	HLSL,
+	Invalid = 0,
+	Spirv,
+	Msl,
+	Hlsl,
 	//GLSL,
-};;
+};
 
 #ifdef DOMAIN
 #pragma push_macro("DOMAIN")
@@ -548,14 +548,14 @@ enum class EShaderLanguage
 
 enum class EShaderStage
 {
-	NONE = 0x00000000,
-	VERTEX = 0x00000001,
-	DOMAIN = 0x00000002,
-	HULL = 0x00000004,
-	GEOMETRY = 0x00000008,
-	FRAGMENT = 0x00000010,
+	None = 0x00000000,
+	Vertex = 0x00000001,
+	Domain = 0x00000002,
+	Hull = 0x00000004,
+	Geometry = 0x00000008,
+	Fragment = 0x00000010,
 
-	COMPUTE = 0x00000020
+	Compute = 0x00000020
 };
 
 #ifdef DOMAIN
@@ -597,17 +597,17 @@ struct ShaderInfo
 
 enum class EResourceType : uint8
 {
-	SAMPLER,
-	COMBINED_IMAGE_SAMPLER,
-	SAMPLED_IMAGE,
-	STORAGE_IMAGE,
-	UNIFORM_TEXEL_BUFFER,
-	STORAGET_TEXEL_BUFFER,
-	UNIFORM_BUFFER,
-	STORAGE_BUFFER,
-	UNIFORM_BUFFER_DYNAMIC,
-	STORAGE_BUFFER_DYNAMIC,
-	INPUT_ATTACHMENT,
+	Sampler,
+	CombinedImageSampler,
+	SampledImage,
+	StorageImage,
+	UniformTexelBuffer,
+	StorageTexelBuffer,
+	UniformBuffer,
+	StorageBuffer,
+	UniformBufferDynamic,
+	StorageBufferDynamic,
+	InputAttachment,
 };
 
 struct RHISampler;
@@ -665,17 +665,17 @@ struct VertexInputStateDescriptor
 
 enum class EPrimitiveTopology
 {
-	POINT_LIST,
-	LINE_LIST,
-	LINE_STRIP,
-	TRIANGLE_LIST,
-	TRIANGLE_STRIP,
-	TRIANGLE_FAN,
-	LINE_LIST_WITH_ADJACENCY,
-	LINE_STRIP_WITH_ADJACENCY,
-	TRIANGLE_LIST_WITH_ADJACENCY,
-	TRIANGLE_STRIP_WITH_ADJACENCY,
-	PATCH_LIST
+	PointList,
+	LineList,
+	LineStrip,
+	TriangleList,
+	TriangleStrip,
+	TriangleFan,
+	LineListWithAdjacency,
+	LineStripWithAdjacency,
+	TriangleListWithAdjacency,
+	TriangleStripWithAdjacency,
+	PatchList
 };
 
 struct InputAssemblyStateDescriptor
@@ -686,55 +686,55 @@ struct InputAssemblyStateDescriptor
 
 enum class ELogicOp
 {
-	CLEAR = 0,
-	AND = 1,
-	AND_REVERSE = 2,
-	COPY = 3,
-	AND_INVERTED = 4,
-	NO_OP = 5,
-	XOR = 6,
-	OR = 7,
-	NOR = 8,
-	EQUIVALENT = 9,
-	INVERT = 10,
-	OR_REVERSE = 11,
-	COPY_INVERTED = 12,
-	OR_INVERTED = 13,
-	NAND = 14,
-	SET = 15,
+	Clear = 0,
+	And = 1,
+	AndReverse = 2,
+	Copy = 3,
+	AndInverted = 4,
+	NoOp = 5,
+	Xor = 6,
+	Or = 7,
+	Nor = 8,
+	Equivalent = 9,
+	Invert = 10,
+	OrReverse = 11,
+	CopyInverted = 12,
+	OrInverted = 13,
+	Nand = 14,
+	Set = 15,
 };
 
 enum class EBlendFactor
 {
-	ZERO = 0,
-	ONE = 1,
-	SRC_COLOR = 2,
-	ONE_MINUS_SRC_COLOR = 3,
-	DST_COLOR = 4,
-	ONE_MINUS_DST_COLOR = 5,
-	SRC_ALPHA = 6,
-	ONE_MINUS_SRC_ALPHA = 7,
-	DST_ALPHA = 8,
-	ONE_MINUS_DST_ALPHA = 9,
+	Zero = 0,
+	One = 1,
+	SrcColor = 2,
+	OneMinusSrcColor = 3,
+	DstColor = 4,
+	OneMinusDstColor = 5,
+	SrcAlpha = 6,
+	OneMinusSrcAlpha = 7,
+	DstAlpha = 8,
+	OneMinusDstAlpha = 9,
 
-	SRC_ALPHA_SATURATE = 14,
-	SRC1_COLOR = 15,
-	ONE_MINUS_SRC1_COLOR = 16,
-	SRC1_ALPHA = 17,
-	ONE_MINUS_SRC1_ALPHA = 18,
+	SrcAlphaSaturate = 14,
+	Src1Color = 15,
+	OneMinusSrc1Color = 16,
+	Src1Alpha = 17,
+	OneMinusSrc1Alpha = 18,
 
-	INVALID = 0xFF
+	Invalid = 0xFF
 };
 
 enum class EBlendOp
 {
-	ADD = 0,
-	SUBTRACT = 1,
-	REVERSE_SUBTRACT = 2,
-	MIN = 3,
-	MAX = 4,
+	Add = 0,
+	Subtract = 1,
+	ReverseSubtract = 2,
+	Min = 3,
+	Max = 4,
 
-	INVALID = 0xFF
+	Invalid = 0xFF
 };
 
 struct ColorBlendAttachmentDescriptor
@@ -763,25 +763,25 @@ struct ColorBlendStateDescriptor
 
 enum class EPolygonMode
 {
-	FILL,
-	LINE,
-	POINT,
+	Fill,
+	Line,
+	Point,
 };
 
 enum class ECullMode
 {
-	NONE = 0x0,
-	FRONT = 0x1,
-	BACK = 0x2,
-	ALL = 0x3
+	None = 0x0,
+	Front = 0x1,
+	Back = 0x2,
+	All = 0x3
 };
 
 enum class EFrontFace
 {
-	COUNTER_CLOCKWISE = 0,
-	CCW = COUNTER_CLOCKWISE,
-	CLOCKWISE = 1,
-	CW = CLOCKWISE,
+	CounterClockwise = 0,
+	Ccw = CounterClockwise,
+	Clockwise = 1,
+	Cw = Clockwise,
 };
 
 struct RasterizerStateDescriptor
@@ -807,26 +807,26 @@ struct MultiSampleStateDescriptor
 
 enum class ECompareOp
 {
-	NEVER,
-	LESS,
-	EQUAL,
-	LESS_OR_EQUAL,
-	GREATER,
-	NOT_EQUAL,
-	GREATER_OR_EQUAL,
-	ALWAYS,
+	Never,
+	Less,
+	Equal,
+	LessOrEqual,
+	Greater,
+	NotEqual,
+	GreaterOrEqual,
+	Always,
 };
 
 enum class EStencilOp
 {
-	KEEP,
-	ZERO,
-	REPLACE,
-	INCREMENT_AND_CLAMP,
-	DECREMENT_AND_CLAMP,
-	INVERT,
-	INCREMENT_AND_WARP,
-	DECREMENT_AND_WRAP
+	Keep,
+	Zero,
+	Replace,
+	IncrementAndClamp,
+	DecrementAndClamp,
+	Invert,
+	IncrementAndWrap,
+	DecrementAndWrap
 };
 
 struct StencilTestDescriptor

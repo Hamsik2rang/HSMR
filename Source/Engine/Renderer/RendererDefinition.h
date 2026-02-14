@@ -42,11 +42,11 @@ struct HS_API RenderTargetInfo
 
 enum class ERenderGroup : uint16
 {
-    SKYBOX      = 500,
-    OPAQUE      = 800,
-    ALPHA_TEST  = 1000,
-    TRANSPARENT = 1100,
-    UI          = 2000
+    Skybox      = 500,
+    Opaque      = 800,
+    AlphaTest   = 1000,
+    Transparent = 1100,
+    Ui          = 2000
 };
 
 struct HS_API RenderParameter

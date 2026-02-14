@@ -10,7 +10,7 @@ Camera::Camera()
     , _rotation(0.0f, 0.0f, 0.0f)
     , _frontDir(0.0f, 0.0f, 1.0f)
     , _upDir(0.0f, 1.0f, 0.0f)
-    , _projectionType(EProjectionType::PERSPECTIVE)
+    , _projectionType(EProjectionType::Perspective)
     , _fovY(glm::radians(60.0f))
     , _aspectRatio(16.0f / 9.0f)
     , _nearZ(0.1f)
@@ -29,7 +29,7 @@ Camera::Camera()
 
 void Camera::SetPerspective(float fovY, float aspectRatio, float nearZ, float farZ)
 {
-    _projectionType  = EProjectionType::PERSPECTIVE;
+    _projectionType  = EProjectionType::Perspective;
     _fovY            = fovY;
     _aspectRatio     = aspectRatio;
     _nearZ           = nearZ;
@@ -39,7 +39,7 @@ void Camera::SetPerspective(float fovY, float aspectRatio, float nearZ, float fa
 
 void Camera::SetOrthographic(float left, float right, float bottom, float top, float nearZ, float farZ)
 {
-    _projectionType  = EProjectionType::ORTHOGRAPHIC;
+    _projectionType  = EProjectionType::Orthographic;
     _left            = left;
     _right           = right;
     _bottom          = bottom;
@@ -95,18 +95,18 @@ void Camera::updateProjectionMatrix()
 {
     switch (_projectionType)
     {
-    case EProjectionType::PERSPECTIVE:
+    case EProjectionType::Perspective:
     {
         _projectionMatrix = glm::perspectiveLH(_fovY, _aspectRatio, _nearZ, _farZ);
         break;
     }
-    case EProjectionType::ORTHOGRAPHIC:
+    case EProjectionType::Orthographic:
     {
         _projectionMatrix = glm::orthoLH(_left, _right, _bottom, _top, _nearZ, _farZ);
         break;
     }
     }
-    if (RHIContext::Get()->GetCurrentPlatform() == ERHIPlatform::VULKAN)
+    if (RHIContext::Get()->GetCurrentPlatform() == ERHIPlatform::Vulkan)
     {
 
     _projectionMatrix[1][1] *= -1; // Invert Y for Vulkan NDC

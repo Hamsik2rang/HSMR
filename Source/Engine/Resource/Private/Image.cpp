@@ -11,7 +11,7 @@
 HS_NS_BEGIN
 
 Image::Image(const char* path) noexcept
-    : Object(EType::IMAGE)
+    : Object(EType::Image)
 {
     Scoped<Image> image = ObjectManager::LoadImageFromFile(path);
     Image* pImage       = image.get();
@@ -22,7 +22,7 @@ Image::Image(const char* path) noexcept
 }
 
 Image::Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept
-    : Object(EType::IMAGE)
+    : Object(EType::Image)
     , _width(width)
     , _height(height)
     , _channel(channel)
@@ -33,7 +33,7 @@ Image::Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept
 }
 
 Image::Image(const Image& o) noexcept
-    : Object(EType::IMAGE)
+    : Object(EType::Image)
     , _rawData(o._rawData)  // std::vector copy constructor handles memory safely
     , _width(o._width)
     , _height(o._height)
@@ -44,7 +44,7 @@ Image::Image(const Image& o) noexcept
 }
 
 Image::Image(Image&& o) noexcept
-    : Object(EType::IMAGE)
+    : Object(EType::Image)
     , _rawData(std::move(o._rawData))  // std::vector move constructor
     , _width(o._width)
     , _height(o._height)

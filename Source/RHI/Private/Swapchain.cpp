@@ -5,7 +5,7 @@
 HS_NS_BEGIN
 
 Swapchain::Swapchain(const SwapchainInfo& info)
-	: RHIHandle(RHIHandle::EType::SWAPCHAIN, info.nativeWindow->title)
+	: RHIHandle(RHIHandle::EType::Swapchain, info.nativeWindow->title)
     , _info(info)
     , _renderPass(nullptr)
 {

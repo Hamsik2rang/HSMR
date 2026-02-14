@@ -86,7 +86,7 @@ public:
 
     void WaitForIdle() const final;
 
-    HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::VULKAN; }
+    HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::Vulkan; }
 
     // TODO: ImGui 백엔드 변경되면 없애야합니다.
     HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }

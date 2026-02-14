@@ -34,8 +34,8 @@ struct HS_SHADER_SYSTEM_API ShaderBufferBindingInfo
     uint32 set = 0;         // Descriptor set index
     uint32 binding = 0;     // Binding slot
     uint32 totalSize = 0;   // Total byte size
-    EShaderStage stages = EShaderStage::NONE;   // Bitmask: which stages use this
-    EResourceType resourceType = EResourceType::UNIFORM_BUFFER;
+    EShaderStage stages = EShaderStage::None;   // Bitmask: which stages use this
+    EResourceType resourceType = EResourceType::UniformBuffer;
     std::vector<ShaderBufferMember> members;
 };
 
@@ -46,7 +46,7 @@ struct HS_SHADER_SYSTEM_API ShaderTextureBindingInfo
     uint32 nameHash = 0;
     uint32 set = 0;
     uint32 binding = 0;
-    EShaderStage stages = EShaderStage::NONE;
+    EShaderStage stages = EShaderStage::None;
     uint32 dimension = 2;   // 1D, 2D, 3D, Cube
 };
 
@@ -57,7 +57,7 @@ struct HS_SHADER_SYSTEM_API ShaderSamplerBindingInfo
     uint32 nameHash = 0;
     uint32 set = 0;
     uint32 binding = 0;
-    EShaderStage stages = EShaderStage::NONE;
+    EShaderStage stages = EShaderStage::None;
 };
 
 // Vertex input attribute
@@ -65,7 +65,7 @@ struct HS_SHADER_SYSTEM_API ShaderVertexAttribute
 {
     std::string semantic;   // "POSITION0", "NORMAL0", etc.
     uint32 location = 0;
-    EVertexFormat format = EVertexFormat::INVALID;
+    EVertexFormat format = EVertexFormat::Invalid;
     uint32 offset = 0;
     uint32 size = 0;
 };
@@ -149,10 +149,10 @@ struct HS_SHADER_SYSTEM_API ShaderReflectionDataEx
 // Per-stage compile result
 struct HS_SHADER_SYSTEM_API ShaderStageOutput
 {
-    EShaderStage stage = EShaderStage::NONE;
+    EShaderStage stage = EShaderStage::None;
     std::vector<uint8> bytecode;
     std::string entryPoint;     // SPIRV: "main", Metal: original name
-    EShaderLanguage language = EShaderLanguage::INVALID;
+    EShaderLanguage language = EShaderLanguage::Invalid;
     bool isValid = false;
 };
 

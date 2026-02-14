@@ -18,12 +18,12 @@ class HS_API Image : public Object
 public:
     enum ImageType
     {
-        DEFAULT,
-        BUFFER,
+        Default,
+        Buffer,
     };
     
     explicit Image() noexcept
-        : Object(Object::EType::IMAGE)
+        : Object(Object::EType::Image)
     {}
     Image(const char* path) noexcept;
     Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept;

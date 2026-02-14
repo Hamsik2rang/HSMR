@@ -168,18 +168,18 @@ void MetalCommandBuffer::BindResourceSet(RHIResourceSet* rSet)
 
             switch (rb.type)
             {
-                case EResourceType::UNIFORM_BUFFER:
+                case EResourceType::UniformBuffer:
                 {
                     bindBuffers(rb.stage, rb.binding, rb.resource.buffers.data(), rb.resource.offsets.data(), rb.arrayCount);
                 }
                 break;
-                case EResourceType::COMBINED_IMAGE_SAMPLER:
-                case EResourceType::SAMPLED_IMAGE:
+                case EResourceType::CombinedImageSampler:
+                case EResourceType::SampledImage:
                 {
                     bindTextures(rb.stage, rb.binding, rb.resource.textures.data(), rb.arrayCount);
                 }
                 break;
-                case EResourceType::SAMPLER:
+                case EResourceType::Sampler:
                 {
                     bindSamplers(rb.stage, rb.binding, rb.resource.samplers.data(), rb.arrayCount);
                 }
@@ -291,8 +291,8 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
 
             switch (rb.type)
             {
-                case EResourceType::UNIFORM_BUFFER:
-                case EResourceType::STORAGE_BUFFER:
+                case EResourceType::UniformBuffer:
+                case EResourceType::StorageBuffer:
                 {
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
@@ -301,9 +301,9 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     }
                 }
                 break;
-                case EResourceType::COMBINED_IMAGE_SAMPLER:
-                case EResourceType::SAMPLED_IMAGE:
-                case EResourceType::STORAGE_IMAGE:
+                case EResourceType::CombinedImageSampler:
+                case EResourceType::SampledImage:
+                case EResourceType::StorageImage:
                 {
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
@@ -312,7 +312,7 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     }
                 }
                 break;
-                case EResourceType::SAMPLER:
+                case EResourceType::Sampler:
                 {
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
@@ -417,12 +417,12 @@ void MetalCommandBuffer::bindBuffers(EShaderStage stage, uint8 binding, RHIBuffe
 
     switch (stage)
     {
-        case EShaderStage::VERTEX:
+        case EShaderStage::Vertex:
         {
             [curRenderEncoder setVertexBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
         }
         break;
-        case EShaderStage::FRAGMENT:
+        case EShaderStage::Fragment:
         {
             [curRenderEncoder setFragmentBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
         }
@@ -446,12 +446,12 @@ void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHIText
 
     switch (stage)
     {
-        case EShaderStage::VERTEX:
+        case EShaderStage::Vertex:
         {
             [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }
         break;
-        case EShaderStage::FRAGMENT:
+        case EShaderStage::Fragment:
         {
             [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }
@@ -475,12 +475,12 @@ void MetalCommandBuffer::bindSamplers(EShaderStage stage, uint8 binding, RHISamp
 
     switch (stage)
     {
-        case EShaderStage::VERTEX:
+        case EShaderStage::Vertex:
         {
             [curRenderEncoder setVertexSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }
         break;
-        case EShaderStage::FRAGMENT:
+        case EShaderStage::Fragment:
         {
             [curRenderEncoder setFragmentSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }

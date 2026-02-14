@@ -83,7 +83,7 @@ public:
 
     HS_FORCEINLINE void* GetDevice() const { return _device; }
     
-    HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const final { return ERHIPlatform::METAL; }
+    HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const final { return ERHIPlatform::Metal; }
 
 private:
     void* _device = nullptr;

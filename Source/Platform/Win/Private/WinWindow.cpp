@@ -54,16 +54,16 @@ static uint8 MapSDLScancodeToButton(SDL_Scancode scancode)
         case SDL_SCANCODE_Z: return static_cast<uint8>(Button::Z);
 
         // Numbers 0-9
-        case SDL_SCANCODE_0: return static_cast<uint8>(Button::NUM_0);
-        case SDL_SCANCODE_1: return static_cast<uint8>(Button::NUM_1);
-        case SDL_SCANCODE_2: return static_cast<uint8>(Button::NUM_2);
-        case SDL_SCANCODE_3: return static_cast<uint8>(Button::NUM_3);
-        case SDL_SCANCODE_4: return static_cast<uint8>(Button::NUM_4);
-        case SDL_SCANCODE_5: return static_cast<uint8>(Button::NUM_5);
-        case SDL_SCANCODE_6: return static_cast<uint8>(Button::NUM_6);
-        case SDL_SCANCODE_7: return static_cast<uint8>(Button::NUM_7);
-        case SDL_SCANCODE_8: return static_cast<uint8>(Button::NUM_8);
-        case SDL_SCANCODE_9: return static_cast<uint8>(Button::NUM_9);
+        case SDL_SCANCODE_0: return static_cast<uint8>(Button::Num0);
+        case SDL_SCANCODE_1: return static_cast<uint8>(Button::Num1);
+        case SDL_SCANCODE_2: return static_cast<uint8>(Button::Num2);
+        case SDL_SCANCODE_3: return static_cast<uint8>(Button::Num3);
+        case SDL_SCANCODE_4: return static_cast<uint8>(Button::Num4);
+        case SDL_SCANCODE_5: return static_cast<uint8>(Button::Num5);
+        case SDL_SCANCODE_6: return static_cast<uint8>(Button::Num6);
+        case SDL_SCANCODE_7: return static_cast<uint8>(Button::Num7);
+        case SDL_SCANCODE_8: return static_cast<uint8>(Button::Num8);
+        case SDL_SCANCODE_9: return static_cast<uint8>(Button::Num9);
 
         // Function keys
         case SDL_SCANCODE_F1:  return static_cast<uint8>(Button::F1);
@@ -80,46 +80,46 @@ static uint8 MapSDLScancodeToButton(SDL_Scancode scancode)
         case SDL_SCANCODE_F12: return static_cast<uint8>(Button::F12);
 
         // Special keys
-        case SDL_SCANCODE_BACKSPACE: return static_cast<uint8>(Button::BACK);
-        case SDL_SCANCODE_TAB:       return static_cast<uint8>(Button::TAB);
+        case SDL_SCANCODE_BACKSPACE: return static_cast<uint8>(Button::Back);
+        case SDL_SCANCODE_TAB:       return static_cast<uint8>(Button::Tab);
         case SDL_SCANCODE_LSHIFT:
-        case SDL_SCANCODE_RSHIFT:    return static_cast<uint8>(Button::SHIFT);
+        case SDL_SCANCODE_RSHIFT:    return static_cast<uint8>(Button::Shift);
         case SDL_SCANCODE_LCTRL:
-        case SDL_SCANCODE_RCTRL:     return static_cast<uint8>(Button::CONTROL);
+        case SDL_SCANCODE_RCTRL:     return static_cast<uint8>(Button::Control);
         case SDL_SCANCODE_LALT:
-        case SDL_SCANCODE_RALT:      return static_cast<uint8>(Button::ALT);
-        case SDL_SCANCODE_SPACE:     return static_cast<uint8>(Button::SPACE);
-        case SDL_SCANCODE_END:       return static_cast<uint8>(Button::END);
-        case SDL_SCANCODE_HOME:      return static_cast<uint8>(Button::HOME);
-        case SDL_SCANCODE_LEFT:      return static_cast<uint8>(Button::LEFT);
-        case SDL_SCANCODE_UP:        return static_cast<uint8>(Button::UP);
-        case SDL_SCANCODE_RIGHT:     return static_cast<uint8>(Button::RIGHT);
-        case SDL_SCANCODE_DOWN:      return static_cast<uint8>(Button::DOWN);
-        case SDL_SCANCODE_INSERT:    return static_cast<uint8>(Button::INSERT);
-        case SDL_SCANCODE_DELETE:    return static_cast<uint8>(Button::DELETE);
+        case SDL_SCANCODE_RALT:      return static_cast<uint8>(Button::Alt);
+        case SDL_SCANCODE_SPACE:     return static_cast<uint8>(Button::Space);
+        case SDL_SCANCODE_END:       return static_cast<uint8>(Button::End);
+        case SDL_SCANCODE_HOME:      return static_cast<uint8>(Button::Home);
+        case SDL_SCANCODE_LEFT:      return static_cast<uint8>(Button::Left);
+        case SDL_SCANCODE_UP:        return static_cast<uint8>(Button::Up);
+        case SDL_SCANCODE_RIGHT:     return static_cast<uint8>(Button::Right);
+        case SDL_SCANCODE_DOWN:      return static_cast<uint8>(Button::Down);
+        case SDL_SCANCODE_INSERT:    return static_cast<uint8>(Button::Insert);
+        case SDL_SCANCODE_DELETE:    return static_cast<uint8>(Button::Delete);
 
         // Numpad
-        case SDL_SCANCODE_KP_0: return static_cast<uint8>(Button::NUMPAD_0);
-        case SDL_SCANCODE_KP_1: return static_cast<uint8>(Button::NUMPAD_1);
-        case SDL_SCANCODE_KP_2: return static_cast<uint8>(Button::NUMPAD_2);
-        case SDL_SCANCODE_KP_3: return static_cast<uint8>(Button::NUMPAD_3);
-        case SDL_SCANCODE_KP_4: return static_cast<uint8>(Button::NUMPAD_4);
-        case SDL_SCANCODE_KP_5: return static_cast<uint8>(Button::NUMPAD_5);
-        case SDL_SCANCODE_KP_6: return static_cast<uint8>(Button::NUMPAD_6);
-        case SDL_SCANCODE_KP_7: return static_cast<uint8>(Button::NUMPAD_7);
-        case SDL_SCANCODE_KP_8: return static_cast<uint8>(Button::NUMPAD_8);
-        case SDL_SCANCODE_KP_9: return static_cast<uint8>(Button::NUMPAD_9);
-        case SDL_SCANCODE_KP_MULTIPLY: return static_cast<uint8>(Button::MULTIPLY);
-        case SDL_SCANCODE_KP_PLUS:     return static_cast<uint8>(Button::ADD);
-        case SDL_SCANCODE_KP_MINUS:    return static_cast<uint8>(Button::SUBTRACT);
-        case SDL_SCANCODE_KP_PERIOD:   return static_cast<uint8>(Button::DECIMAL);
-        case SDL_SCANCODE_KP_DIVIDE:   return static_cast<uint8>(Button::DIVIDE);
+        case SDL_SCANCODE_KP_0: return static_cast<uint8>(Button::Numpad0);
+        case SDL_SCANCODE_KP_1: return static_cast<uint8>(Button::Numpad1);
+        case SDL_SCANCODE_KP_2: return static_cast<uint8>(Button::Numpad2);
+        case SDL_SCANCODE_KP_3: return static_cast<uint8>(Button::Numpad3);
+        case SDL_SCANCODE_KP_4: return static_cast<uint8>(Button::Numpad4);
+        case SDL_SCANCODE_KP_5: return static_cast<uint8>(Button::Numpad5);
+        case SDL_SCANCODE_KP_6: return static_cast<uint8>(Button::Numpad6);
+        case SDL_SCANCODE_KP_7: return static_cast<uint8>(Button::Numpad7);
+        case SDL_SCANCODE_KP_8: return static_cast<uint8>(Button::Numpad8);
+        case SDL_SCANCODE_KP_9: return static_cast<uint8>(Button::Numpad9);
+        case SDL_SCANCODE_KP_MULTIPLY: return static_cast<uint8>(Button::Multiply);
+        case SDL_SCANCODE_KP_PLUS:     return static_cast<uint8>(Button::Add);
+        case SDL_SCANCODE_KP_MINUS:    return static_cast<uint8>(Button::Subtract);
+        case SDL_SCANCODE_KP_PERIOD:   return static_cast<uint8>(Button::Decimal);
+        case SDL_SCANCODE_KP_DIVIDE:   return static_cast<uint8>(Button::Divide);
 
         // Windows/Command key
-        case SDL_SCANCODE_LGUI: return static_cast<uint8>(Button::LWIN_OR_COMMAND);
-        case SDL_SCANCODE_RGUI: return static_cast<uint8>(Button::RWIN);
+        case SDL_SCANCODE_LGUI: return static_cast<uint8>(Button::LwinOrCommand);
+        case SDL_SCANCODE_RGUI: return static_cast<uint8>(Button::Rwin);
 
-        default: return static_cast<uint8>(Button::UNKNOWN);
+        default: return static_cast<uint8>(Button::Unknown);
     }
 }
 } // anonymous namespace
@@ -156,7 +156,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
-        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_OPEN);
+        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowOpen);
 
         break;
     }
@@ -183,17 +183,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         hs::NativeEvent event;
         if (isMinimized)
         {
-            PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_MINIMIZE);
+            PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowMinimize);
         }
         else if (isMaximized)
         {
-            PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_MAXIMIZE);
+            PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowMaximize);
         }
         else
         {
             if (width != s_boundHsWindow->surfaceWidth || height != s_boundHsWindow->surfaceHeight)
             {
-                PushNativeEvent(s_boundHsWindow, hs::NativeEvent{hs::NativeEvent::Type::WINDOW_RESIZE});
+                PushNativeEvent(s_boundHsWindow, hs::NativeEvent{hs::NativeEvent::Type::WindowResize});
             }
         }
 
@@ -210,13 +210,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_ENTERSIZEMOVE:
     {
-        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_MOVE_ENTER);
+        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowMoveEnter);
 
         break;
     }
     case WM_EXITSIZEMOVE:
     {
-        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_MOVE_EXIT);
+        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowMoveExit);
         break;
     }
     case WM_MOVE:
@@ -227,7 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SYSKEYDOWN:
     {
         uint8 keyCode = static_cast<uint8>(wParam);
-        if (keyCode < static_cast<uint8>(Input::Button::COUNT))
+        if (keyCode < static_cast<uint8>(Input::Button::Count))
         {
             Input::s_button[keyCode].isPressed = 1;
             Input::s_button[keyCode].repeatCount = (lParam & 0xFFFF);
@@ -238,7 +238,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SYSKEYUP:
     {
         uint8 keyCode = static_cast<uint8>(wParam);
-        if (keyCode < static_cast<uint8>(Input::Button::COUNT))
+        if (keyCode < static_cast<uint8>(Input::Button::Count))
         {
             Input::s_button[keyCode].isPressed = 0;
             Input::s_button[keyCode].repeatCount = 0;
@@ -247,32 +247,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_LBUTTONDOWN:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 1;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseLeft)].isPressed = 1;
         break;
     }
     case WM_LBUTTONUP:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 0;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseLeft)].isPressed = 0;
         break;
     }
     case WM_RBUTTONDOWN:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 1;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseRight)].isPressed = 1;
         break;
     }
     case WM_RBUTTONUP:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 0;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseRight)].isPressed = 0;
         break;
     }
     case WM_MBUTTONDOWN:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 1;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseMiddle)].isPressed = 1;
         break;
     }
     case WM_MBUTTONUP:
     {
-        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 0;
+        Input::s_button[static_cast<uint8>(Input::Button::MouseMiddle)].isPressed = 0;
         break;
     }
     case WM_MOUSEMOVE:
@@ -297,7 +297,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
     case WM_CLOSE:
     {
-        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WINDOW_CLOSE);
+        PushNativeEvent(s_boundHsWindow, hs::NativeEvent::Type::WindowClose);
         PostQuitMessage(0);
         break;
     }
@@ -351,8 +351,8 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.scale = displayScale;
     outNativeWindow.isMaximized = (static_cast<uint64>(flag) & SDL_WINDOW_MAXIMIZED) != 0;
     outNativeWindow.isMinimized = (static_cast<uint64>(flag) & SDL_WINDOW_MINIMIZED) != 0;
-    outNativeWindow.resizable = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
-    outNativeWindow.useHDR = (flag & EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY) != EWindowFlags::NONE;
+    outNativeWindow.resizable = (flag & EWindowFlags::Resizable) != EWindowFlags::None;
+    outNativeWindow.useHDR = (flag & EWindowFlags::HighPixelDensity) != EWindowFlags::None;
 
     HS_LOG(info, "[SDL] Window created: %s (%dx%d, surface: %dx%d, scale: %.2f)",
            name, width, height, drawableWidth, drawableHeight, displayScale);
@@ -440,8 +440,8 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
     outNativeWindow.graphicsLayer = nullptr;
     outNativeWindow.isMaximized   = false;
     outNativeWindow.isMinimized   = false;
-    outNativeWindow.resizable     = (flag & EWindowFlags::WINDOW_RESIZABLE) != EWindowFlags::NONE;
-    outNativeWindow.useHDR        = (flag & EWindowFlags::WINDOW_HIGH_PIXEL_DENSITY) != EWindowFlags::NONE;
+    outNativeWindow.resizable     = (flag & EWindowFlags::Resizable) != EWindowFlags::None;
+    outNativeWindow.useHDR        = (flag & EWindowFlags::HighPixelDensity) != EWindowFlags::None;
 
     // TODO: DISPLAY_DEVICEW, DEVMODEW 사용해서 추가 caps가져오기.
 #endif
@@ -507,7 +507,7 @@ void PollNativeEventInternal(NativeWindow& nativeWindow)
         {
             // Window events
             case SDL_EVENT_QUIT:
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_CLOSE);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowClose);
                 break;
 
             case SDL_EVENT_WINDOW_RESIZED:
@@ -521,41 +521,41 @@ void PollNativeEventInternal(NativeWindow& nativeWindow)
                 nativeWindow.width = static_cast<uint16>(w);
                 nativeWindow.height = static_cast<uint16>(h);
 
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_RESIZE);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowResize);
                 break;
             }
 
             case SDL_EVENT_WINDOW_MINIMIZED:
                 nativeWindow.isMinimized = true;
                 nativeWindow.isMaximized = false;
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_MINIMIZE);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowMinimize);
                 break;
 
             case SDL_EVENT_WINDOW_MAXIMIZED:
                 nativeWindow.isMaximized = true;
                 nativeWindow.isMinimized = false;
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_MAXIMIZE);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowMaximize);
                 break;
 
             case SDL_EVENT_WINDOW_RESTORED:
                 nativeWindow.isMinimized = false;
                 nativeWindow.isMaximized = false;
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_RESTORE);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowRestore);
                 break;
 
             case SDL_EVENT_WINDOW_FOCUS_GAINED:
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_FOCUS_IN);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowFocusIn);
                 break;
 
             case SDL_EVENT_WINDOW_FOCUS_LOST:
-                PushNativeEvent(&nativeWindow, NativeEvent::Type::WINDOW_FOCUS_OUT);
+                PushNativeEvent(&nativeWindow, NativeEvent::Type::WindowFocusOut);
                 break;
 
             // Keyboard events
             case SDL_EVENT_KEY_DOWN:
             {
                 uint8 keyCode = MapSDLScancodeToButton(event.key.scancode);
-                if (keyCode > 0 && keyCode < static_cast<uint8>(Input::Button::COUNT))
+                if (keyCode > 0 && keyCode < static_cast<uint8>(Input::Button::Count))
                 {
                     Input::s_button[keyCode].isPressed = 1;
                     Input::s_button[keyCode].repeatCount = event.key.repeat ? 1 : 0;
@@ -566,7 +566,7 @@ void PollNativeEventInternal(NativeWindow& nativeWindow)
             case SDL_EVENT_KEY_UP:
             {
                 uint8 keyCode = MapSDLScancodeToButton(event.key.scancode);
-                if (keyCode > 0 && keyCode < static_cast<uint8>(Input::Button::COUNT))
+                if (keyCode > 0 && keyCode < static_cast<uint8>(Input::Button::Count))
                 {
                     Input::s_button[keyCode].isPressed = 0;
                     Input::s_button[keyCode].repeatCount = 0;
@@ -580,13 +580,13 @@ void PollNativeEventInternal(NativeWindow& nativeWindow)
                 switch (event.button.button)
                 {
                     case SDL_BUTTON_LEFT:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 1;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseLeft)].isPressed = 1;
                         break;
                     case SDL_BUTTON_RIGHT:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 1;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseRight)].isPressed = 1;
                         break;
                     case SDL_BUTTON_MIDDLE:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 1;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseMiddle)].isPressed = 1;
                         break;
                 }
                 break;
@@ -597,13 +597,13 @@ void PollNativeEventInternal(NativeWindow& nativeWindow)
                 switch (event.button.button)
                 {
                     case SDL_BUTTON_LEFT:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_LEFT)].isPressed = 0;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseLeft)].isPressed = 0;
                         break;
                     case SDL_BUTTON_RIGHT:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_RIGHT)].isPressed = 0;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseRight)].isPressed = 0;
                         break;
                     case SDL_BUTTON_MIDDLE:
-                        Input::s_button[static_cast<uint8>(Input::Button::MOUSE_MIDDLE)].isPressed = 0;
+                        Input::s_button[static_cast<uint8>(Input::Button::MouseMiddle)].isPressed = 0;
                         break;
                 }
                 break;

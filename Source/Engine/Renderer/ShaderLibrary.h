@@ -32,7 +32,7 @@ public:
 
     // Core API: request shader by name, auto-compiles if not yet compiled
     Shader* GetOrCompile(const std::string& shaderName,
-                         EShaderStage stages = EShaderStage::VERTEX | EShaderStage::FRAGMENT);
+                         EShaderStage stages = EShaderStage::Vertex | EShaderStage::Fragment);
 
     bool HasShader(const std::string& shaderName) const;
 

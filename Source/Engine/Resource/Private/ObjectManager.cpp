@@ -56,35 +56,35 @@ bool ObjectManager::Initialize()
     {
         uint8 whitePixel[4]    = {255, 255, 255, 255}; // RGBA
         s_fallbackImage2DWhite = MakeScoped<Image>(whitePixel, 1, 1, 4);
-        s_fallbackImage2DWhite->SetType(Image::ImageType::BUFFER);
+        s_fallbackImage2DWhite->SetType(Image::ImageType::Buffer);
     }
 
     // 1x1 Black Image 2D
     {
         uint8 blackPixel[4]    = {0, 0, 0, 255}; // RGBA
         s_fallbackImage2DBlack = MakeScoped<Image>(blackPixel, 1, 1, 4);
-        s_fallbackImage2DBlack->SetType(Image::ImageType::BUFFER);
+        s_fallbackImage2DBlack->SetType(Image::ImageType::Buffer);
     }
 
     // 1x1 Red Image 2D
     {
         uint8 redPixel[4]    = {255, 0, 0, 255}; // RGBA
         s_fallbackImage2DRed = MakeScoped<Image>(redPixel, 1, 1, 4);
-        s_fallbackImage2DRed->SetType(Image::ImageType::BUFFER);
+        s_fallbackImage2DRed->SetType(Image::ImageType::Buffer);
     }
 
     // 1x1 Green Image 2D
     {
         uint8 greenPixel[4]    = {0, 255, 0, 255}; // RGBA
         s_fallbackImage2DGreen = MakeScoped<Image>(greenPixel, 1, 1, 4);
-        s_fallbackImage2DGreen->SetType(Image::ImageType::BUFFER);
+        s_fallbackImage2DGreen->SetType(Image::ImageType::Buffer);
     }
 
     // 1x1 Blue Image 2D
     {
         uint8 bluePixel[4]    = {0, 0, 255, 255}; // RGBA
         s_fallbackImage2DBlue = MakeScoped<Image>(bluePixel, 1, 1, 4);
-        s_fallbackImage2DBlue->SetType(Image::ImageType::BUFFER);
+        s_fallbackImage2DBlue->SetType(Image::ImageType::Buffer);
     }
 
     // Create fallback meshes
@@ -205,23 +205,23 @@ static EMaterialTextureType ConvertTextureType(aiTextureType type)
     switch (type)
     {
     case aiTextureType_DIFFUSE:
-        return EMaterialTextureType::DIFFUSE;
+        return EMaterialTextureType::Diffuse;
     case aiTextureType_SPECULAR:
-        return EMaterialTextureType::SPECULAR;
+        return EMaterialTextureType::Specular;
     case aiTextureType_NORMALS:
-        return EMaterialTextureType::NORMAL;
+        return EMaterialTextureType::Normal;
     case aiTextureType_EMISSIVE:
-        return EMaterialTextureType::EMISSION;
+        return EMaterialTextureType::Emission;
     case aiTextureType_AMBIENT:
-        return EMaterialTextureType::AMBIENT;
+        return EMaterialTextureType::Ambient;
     case aiTextureType_METALNESS:
-        return EMaterialTextureType::METALLIC;
+        return EMaterialTextureType::Metallic;
     case aiTextureType_DIFFUSE_ROUGHNESS:
-        return EMaterialTextureType::ROUGHNESS;
+        return EMaterialTextureType::Roughness;
     case aiTextureType_AMBIENT_OCCLUSION:
-        return EMaterialTextureType::AMBIENT_OCCLUSION;
+        return EMaterialTextureType::AmbientOcclusion;
     default:
-        return EMaterialTextureType::DIFFUSE; // Default to diffuse
+        return EMaterialTextureType::Diffuse; // Default to diffuse
     }
 }
 
@@ -575,7 +575,7 @@ Scoped<Shader> ObjectManager::LoadShaderFromFile(const std::string& path, EShade
         return nullptr;
     }
     FileHandle fHandle;
-    FileSystem::Open(shaderPath, EFileAccess::READ_ONLY, fHandle);
+    FileSystem::Open(shaderPath, EFileAccess::ReadOnly, fHandle);
 
     size_t sourceLen = FileSystem::GetSize(fHandle);
     if (sourceLen == 0)
@@ -1064,9 +1064,9 @@ bool ObjectManager::LoadModel(const std::string& path, std::vector<Scoped<Mesh>>
                     Scoped<Image> texture = LoadImageFromFile(texturePath, true);
                     if (texture)
                     {
-                        EMaterialTextureType hsTextureType = EMaterialTextureType::DIFFUSE;
-                        if (type == aiTextureType_NORMALS) hsTextureType = EMaterialTextureType::NORMAL;
-                        else if (type == aiTextureType_SPECULAR) hsTextureType = EMaterialTextureType::SPECULAR;
+                        EMaterialTextureType hsTextureType = EMaterialTextureType::Diffuse;
+                        if (type == aiTextureType_NORMALS) hsTextureType = EMaterialTextureType::Normal;
+                        else if (type == aiTextureType_SPECULAR) hsTextureType = EMaterialTextureType::Specular;
 
                         material->SetTexture(hsTextureType, texture.release());
                     }
@@ -1283,23 +1283,23 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
         };
 
         TextureMapping textureMappings[] = {
-            {aiTextureType_BASE_COLOR, EMaterialTextureType::DIFFUSE},
-            {aiTextureType_DIFFUSE, EMaterialTextureType::DIFFUSE},
-            {aiTextureType_NORMALS, EMaterialTextureType::NORMAL},
-            {aiTextureType_METALNESS, EMaterialTextureType::METALLIC},
-            {aiTextureType_DIFFUSE_ROUGHNESS, EMaterialTextureType::ROUGHNESS},
-            {aiTextureType_EMISSIVE, EMaterialTextureType::EMISSION},
-            {aiTextureType_AMBIENT_OCCLUSION, EMaterialTextureType::AMBIENT_OCCLUSION},
+            {aiTextureType_BASE_COLOR, EMaterialTextureType::Diffuse},
+            {aiTextureType_DIFFUSE, EMaterialTextureType::Diffuse},
+            {aiTextureType_NORMALS, EMaterialTextureType::Normal},
+            {aiTextureType_METALNESS, EMaterialTextureType::Metallic},
+            {aiTextureType_DIFFUSE_ROUGHNESS, EMaterialTextureType::Roughness},
+            {aiTextureType_EMISSIVE, EMaterialTextureType::Emission},
+            {aiTextureType_AMBIENT_OCCLUSION, EMaterialTextureType::AmbientOcclusion},
         };
 
         std::unordered_map<EMaterialTextureType, const char*> textureTypeStringMap =
             {
-                {EMaterialTextureType::DIFFUSE, "DIFFUSE"},
-                {EMaterialTextureType::NORMAL, "NORMAL"},
-                {EMaterialTextureType::METALLIC, "METALLIC"},
-                {EMaterialTextureType::ROUGHNESS, "ROUGHNESS"},
-                {EMaterialTextureType::EMISSION, "EMISSION"},
-                {EMaterialTextureType::AMBIENT_OCCLUSION, "AMBIENT_OCCLUSION"},
+                {EMaterialTextureType::Diffuse, "DIFFUSE"},
+                {EMaterialTextureType::Normal, "NORMAL"},
+                {EMaterialTextureType::Metallic, "METALLIC"},
+                {EMaterialTextureType::Roughness, "ROUGHNESS"},
+                {EMaterialTextureType::Emission, "EMISSION"},
+                {EMaterialTextureType::AmbientOcclusion, "AMBIENT_OCCLUSION"},
             };
 
         for (const auto& mapping : textureMappings)

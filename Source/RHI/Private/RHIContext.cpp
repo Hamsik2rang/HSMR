@@ -20,13 +20,13 @@ RHIContext* RHIContext::Create(ERHIPlatform platform)
 	switch (platform)
 	{
 #if defined(__WINDOWS__)
-	case ERHIPlatform::VULKAN:
+	case ERHIPlatform::Vulkan:
 	{
 		g_rhiContext = new VulkanContext();
 	}
 	break;
 #elif defined(__APPLE__)
-	case ERHIPlatform::METAL:
+	case ERHIPlatform::Metal:
 	{
 		g_rhiContext = new MetalContext();
 	}

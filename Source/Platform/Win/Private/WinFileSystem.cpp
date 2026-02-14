@@ -49,11 +49,11 @@ static DWORD get_access_flag(EFileAccess access)
 {
     switch (access)
     {
-    case EFileAccess::READ_ONLY:
+    case EFileAccess::ReadOnly:
         return GENERIC_READ;
-    case EFileAccess::WRITE_ONLY:
+    case EFileAccess::WriteOnly:
         return GENERIC_WRITE;
-    case EFileAccess::READ_WRITE:
+    case EFileAccess::ReadWrite:
         return GENERIC_READ | GENERIC_WRITE;
     default:
         return GENERIC_READ;
@@ -65,10 +65,10 @@ static DWORD get_createion_disposition(EFileAccess access)
 {
     switch (access)
     {
-    case EFileAccess::READ_ONLY:
+    case EFileAccess::ReadOnly:
         return OPEN_EXISTING;
-    case EFileAccess::WRITE_ONLY:
-    case EFileAccess::READ_WRITE:
+    case EFileAccess::WriteOnly:
+    case EFileAccess::ReadWrite:
         return OPEN_ALWAYS; // Open existing or create new
     default:
         return OPEN_EXISTING;

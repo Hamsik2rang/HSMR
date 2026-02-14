@@ -13,13 +13,13 @@ static EShaderStage slangStageToHSStage(SlangStage stage)
 {
     switch (stage)
     {
-    case SLANG_STAGE_VERTEX:   return EShaderStage::VERTEX;
-    case SLANG_STAGE_FRAGMENT: return EShaderStage::FRAGMENT;
-    case SLANG_STAGE_COMPUTE:  return EShaderStage::COMPUTE;
-    case SLANG_STAGE_HULL:     return EShaderStage::HULL;
-    case SLANG_STAGE_DOMAIN:   return EShaderStage::DOMAIN;
-    case SLANG_STAGE_GEOMETRY: return EShaderStage::GEOMETRY;
-    default: return EShaderStage::NONE;
+    case SLANG_STAGE_VERTEX:   return EShaderStage::Vertex;
+    case SLANG_STAGE_FRAGMENT: return EShaderStage::Fragment;
+    case SLANG_STAGE_COMPUTE:  return EShaderStage::Compute;
+    case SLANG_STAGE_HULL:     return EShaderStage::Hull;
+    case SLANG_STAGE_DOMAIN:   return EShaderStage::Domain;
+    case SLANG_STAGE_GEOMETRY: return EShaderStage::Geometry;
+    default: return EShaderStage::None;
     }
 }
 
@@ -27,9 +27,9 @@ static const char* getEntryPointNameForStage(EShaderStage stage)
 {
     switch (stage)
     {
-    case EShaderStage::VERTEX:   return "VertexMain";
-    case EShaderStage::FRAGMENT: return "FragmentMain";
-    case EShaderStage::COMPUTE:  return "ComputeMain";
+    case EShaderStage::Vertex:   return "VertexMain";
+    case EShaderStage::Fragment: return "FragmentMain";
+    case EShaderStage::Compute:  return "ComputeMain";
     default: return nullptr;
     }
 }
@@ -72,11 +72,11 @@ void ShaderCompiler::Finalize()
 EShaderLanguage ShaderCompiler::GetTargetLanguage() const
 {
 #ifdef __APPLE__
-    return EShaderLanguage::MSL;
+    return EShaderLanguage::Msl;
 #elif __WINDOWS__
-    return EShaderLanguage::SPIRV;
+    return EShaderLanguage::Spirv;
 #else
-    return EShaderLanguage::INVALID;
+    return EShaderLanguage::Invalid;
 #endif
 }
 
@@ -167,10 +167,10 @@ ShaderCompileOutputEx ShaderCompiler::Compile(const ShaderCompileRequest& reques
     };
     std::vector<StageInfo> foundStages;
 
-    EShaderStage stagesToCheck[] = { EShaderStage::VERTEX, EShaderStage::FRAGMENT, EShaderStage::COMPUTE };
+    EShaderStage stagesToCheck[] = { EShaderStage::Vertex, EShaderStage::Fragment, EShaderStage::Compute };
     for (auto checkStage : stagesToCheck)
     {
-        if ((request.requestedStages & checkStage) == EShaderStage::NONE) continue;
+        if ((request.requestedStages & checkStage) == EShaderStage::None) continue;
 
         const char* epName = getEntryPointNameForStage(checkStage);
         if (!epName) continue;
@@ -318,7 +318,7 @@ ShaderCompileOutputEx ShaderCompiler::CompileFromFile(const std::string& filePat
     ShaderCompileOutputEx output;
 
     FileHandle fileHandle;
-    if (!FileSystem::Open(filePath, EFileAccess::READ_ONLY, fileHandle))
+    if (!FileSystem::Open(filePath, EFileAccess::ReadOnly, fileHandle))
     {
         output.diagnostics = "Failed to open file: " + filePath;
         HS_LOG(error, "[ShaderCompiler] %s", output.diagnostics.c_str());
@@ -374,7 +374,7 @@ static uint32 getResourceBinding(slang::VariableLayoutReflection* param,
                                  EResourceCategory category,
                                  EShaderLanguage targetLanguage)
 {
-    if (targetLanguage == EShaderLanguage::MSL)
+    if (targetLanguage == EShaderLanguage::Msl)
     {
         switch (category)
         {
@@ -429,7 +429,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
             bufInfo.name = param->getName() ? param->getName() : "";
             bufInfo.binding = getResourceBinding(param, EResourceCategory::Buffer, targetLang);
             bufInfo.set = static_cast<uint32>(param->getBindingSpace());
-            bufInfo.resourceType = EResourceType::UNIFORM_BUFFER;
+            bufInfo.resourceType = EResourceType::UniformBuffer;
 
             // Determine which stages use this buffer
             // For now, check all requested stages
@@ -494,7 +494,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                 outReflection.textureBindings.push_back(std::move(texInfo));
 
                 // On Metal, Sampler2D decomposes into separate texture + sampler
-                if (targetLang == EShaderLanguage::MSL)
+                if (targetLang == EShaderLanguage::Msl)
                 {
                     ShaderSamplerBindingInfo sampInfo;
                     sampInfo.name = param->getName() ? param->getName() : "";
@@ -552,16 +552,16 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
         EShaderStage hsStage = slangStageToHSStage(slangStage);
 
         const char* epName = epReflection->getName();
-        if (hsStage == EShaderStage::VERTEX)
+        if (hsStage == EShaderStage::Vertex)
         {
             outReflection.vertexEntryPoint = epName ? epName : "VertexMain";
             extractVertexInputFromEntryPoint(epReflection, outReflection.vertexInput);
         }
-        else if (hsStage == EShaderStage::FRAGMENT)
+        else if (hsStage == EShaderStage::Fragment)
         {
             outReflection.fragmentEntryPoint = epName ? epName : "FragmentMain";
         }
-        else if (hsStage == EShaderStage::COMPUTE)
+        else if (hsStage == EShaderStage::Compute)
         {
             outReflection.computeEntryPoint = epName ? epName : "ComputeMain";
         }
@@ -585,7 +585,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                 bufInfo.binding = getResourceBinding(param, EResourceCategory::Buffer, targetLang);
                 bufInfo.set = static_cast<uint32>(param->getBindingSpace());
                 bufInfo.stages = hsStage;
-                bufInfo.resourceType = EResourceType::UNIFORM_BUFFER;
+                bufInfo.resourceType = EResourceType::UniformBuffer;
 
                 if (elementLayout)
                 {
@@ -685,14 +685,14 @@ void ShaderCompiler::extractVertexInputFromEntryPoint(void* entryPointReflection
                 // Calculate size based on format
                 switch (attr.format)
                 {
-                case EVertexFormat::FLOAT:  attr.size = 4;  break;
-                case EVertexFormat::FLOAT2: attr.size = 8;  break;
-                case EVertexFormat::FLOAT3: attr.size = 12; break;
-                case EVertexFormat::FLOAT4: attr.size = 16; break;
-                case EVertexFormat::HALF:   attr.size = 2;  break;
-                case EVertexFormat::HALF2:  attr.size = 4;  break;
-                case EVertexFormat::HALF3:  attr.size = 6;  break;
-                case EVertexFormat::HALF4:  attr.size = 8;  break;
+                case EVertexFormat::Float:  attr.size = 4;  break;
+                case EVertexFormat::Float2: attr.size = 8;  break;
+                case EVertexFormat::Float3: attr.size = 12; break;
+                case EVertexFormat::Float4: attr.size = 16; break;
+                case EVertexFormat::Half:   attr.size = 2;  break;
+                case EVertexFormat::Half2:  attr.size = 4;  break;
+                case EVertexFormat::Half3:  attr.size = 6;  break;
+                case EVertexFormat::Half4:  attr.size = 8;  break;
                 default: attr.size = 0; break;
                 }
 
@@ -719,14 +719,14 @@ void ShaderCompiler::extractVertexInputFromEntryPoint(void* entryPointReflection
 
             switch (attr.format)
             {
-            case EVertexFormat::FLOAT:  attr.size = 4;  break;
-            case EVertexFormat::FLOAT2: attr.size = 8;  break;
-            case EVertexFormat::FLOAT3: attr.size = 12; break;
-            case EVertexFormat::FLOAT4: attr.size = 16; break;
-            case EVertexFormat::HALF:   attr.size = 2;  break;
-            case EVertexFormat::HALF2:  attr.size = 4;  break;
-            case EVertexFormat::HALF3:  attr.size = 6;  break;
-            case EVertexFormat::HALF4:  attr.size = 8;  break;
+            case EVertexFormat::Float:  attr.size = 4;  break;
+            case EVertexFormat::Float2: attr.size = 8;  break;
+            case EVertexFormat::Float3: attr.size = 12; break;
+            case EVertexFormat::Float4: attr.size = 16; break;
+            case EVertexFormat::Half:   attr.size = 2;  break;
+            case EVertexFormat::Half2:  attr.size = 4;  break;
+            case EVertexFormat::Half3:  attr.size = 6;  break;
+            case EVertexFormat::Half4:  attr.size = 8;  break;
             default: attr.size = 0; break;
             }
 
@@ -761,23 +761,23 @@ EVertexFormat ShaderCompiler::scalarTypeToVertexFormat(int scalarType, uint32 ro
     case slang::TypeReflection::ScalarType::Float32:
         switch (componentCount)
         {
-        case 1: return EVertexFormat::FLOAT;
-        case 2: return EVertexFormat::FLOAT2;
-        case 3: return EVertexFormat::FLOAT3;
-        case 4: return EVertexFormat::FLOAT4;
-        default: return EVertexFormat::INVALID;
+        case 1: return EVertexFormat::Float;
+        case 2: return EVertexFormat::Float2;
+        case 3: return EVertexFormat::Float3;
+        case 4: return EVertexFormat::Float4;
+        default: return EVertexFormat::Invalid;
         }
     case slang::TypeReflection::ScalarType::Float16:
         switch (componentCount)
         {
-        case 1: return EVertexFormat::HALF;
-        case 2: return EVertexFormat::HALF2;
-        case 3: return EVertexFormat::HALF3;
-        case 4: return EVertexFormat::HALF4;
-        default: return EVertexFormat::INVALID;
+        case 1: return EVertexFormat::Half;
+        case 2: return EVertexFormat::Half2;
+        case 3: return EVertexFormat::Half3;
+        case 4: return EVertexFormat::Half4;
+        default: return EVertexFormat::Invalid;
         }
     default:
-        return EVertexFormat::INVALID;
+        return EVertexFormat::Invalid;
     }
 }
 

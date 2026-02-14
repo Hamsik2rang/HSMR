@@ -90,7 +90,7 @@ private:
     // NEW: Runtime compilation data
     std::string _shaderName;
     std::vector<std::string> _includePaths;
-    EShaderStage _requestedStages = EShaderStage::NONE;
+    EShaderStage _requestedStages = EShaderStage::None;
     ShaderCompileOutputEx _compileOutputEx;
 };
 

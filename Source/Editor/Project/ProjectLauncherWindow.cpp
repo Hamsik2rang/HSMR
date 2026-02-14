@@ -30,9 +30,9 @@ HS_NS_EDITOR_BEGIN
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
     : Window(ownerApp, "HSMR", 1024, 600,
 #if defined(__APPLE__)
-             EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_METAL)
+             EWindowFlags::Resizable | EWindowFlags::Metal)
 #else
-             EWindowFlags::WINDOW_RESIZABLE | EWindowFlags::WINDOW_VULKAN)
+             EWindowFlags::Resizable | EWindowFlags::Vulkan)
 #endif
 {
     onInitialize();
@@ -137,11 +137,11 @@ void ProjectLauncherWindow::drawLauncherUI()
     ImGui::BeginChild("Actions", ImVec2(220, 0), true);
     {
         std::string titleText = "HSMR";
-        if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::VULKAN)
+        if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan)
         {
             titleText += " - Vulkan";
         }
-        else if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::METAL)
+        else if (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Metal)
         {
             titleText += " - Metal";
         }

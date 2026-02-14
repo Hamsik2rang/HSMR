@@ -383,7 +383,7 @@ void VulkanContext::DestroyComputePipeline(RHIComputePipeline* pipeline)
 RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info, const char* path)
 {
     FileHandle fileHandle = nullptr;
-    if (!FileSystem::Open(path, EFileAccess::READ_ONLY, fileHandle))
+    if (!FileSystem::Open(path, EFileAccess::ReadOnly, fileHandle))
     {
         HS_LOG(error, "Fail to open Shader: %s", path);
         return nullptr;
@@ -463,7 +463,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
 
 RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_t dataSize, const BufferInfo& info)
 {
-    bool needsStaging = (data != nullptr) && (info.memoryOption == EBufferMemoryOption::STATIC);
+    bool needsStaging = (data != nullptr) && (info.memoryOption == EBufferMemoryOption::Static);
 
     VkBuffer bufferVk;
     // Create a Vulkan buffer
@@ -476,7 +476,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
         createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     }
     // MAPPED/DYNAMIC buffers may use vkCmdUpdateBuffer, which requires TRANSFER_DST
-    if (info.memoryOption == EBufferMemoryOption::MAPPED || info.memoryOption == EBufferMemoryOption::DYNAMIC)
+    if (info.memoryOption == EBufferMemoryOption::Mapped || info.memoryOption == EBufferMemoryOption::Dynamic)
     {
         createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     }
@@ -491,13 +491,13 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     VkMemoryPropertyFlags properties{};
     switch (info.memoryOption)
     {
-    case EBufferMemoryOption::STATIC:
+    case EBufferMemoryOption::Static:
         properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         break;
-    case EBufferMemoryOption::MAPPED:
+    case EBufferMemoryOption::Mapped:
         properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         break;
-    case EBufferMemoryOption::DYNAMIC:
+    case EBufferMemoryOption::Dynamic:
         properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         break;
     }
@@ -623,9 +623,9 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, uint32 w
 
 RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const TextureInfo& info)
 {
-    bool isColorRenderTarget = ((info.usage & ETextureUsage::COLOR_ATTACHMENT) != 0);
-    bool isStorageTexture    = (info.usage & ETextureUsage::STORAGE) != 0;
-    bool isSampledTexture    = (info.usage & ETextureUsage::SAMPLED) != 0;
+    bool isColorRenderTarget = ((info.usage & ETextureUsage::ColorAttachment) != 0);
+    bool isStorageTexture    = (info.usage & ETextureUsage::Storage) != 0;
+    bool isSampledTexture    = (info.usage & ETextureUsage::Sampled) != 0;
     bool isSwapchainTexture  = info.isSwapchainTexture;
 
     // Validate texture usage: render targets cannot be both color and depth
@@ -673,7 +673,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         bufferCopyRegion.imageSubresource.layerCount     = 1;
         bufferCopyRegion.imageExtent.width               = info.extent.width >> i;
         bufferCopyRegion.imageExtent.height              = info.extent.height >> i;
-        bufferCopyRegion.imageExtent.depth               = (info.type == ETextureType::TEX_3D) ? info.extent.depth : 1;
+        bufferCopyRegion.imageExtent.depth               = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
         bufferCopyRegion.bufferOffset                    = 0;
         bufferCopyRegions.push_back(bufferCopyRegion);
     }
@@ -687,15 +687,15 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     imageCreateInfo.usage         = RHIUtilityVulkan::ToTextureUsage(info.usage);
     imageCreateInfo.extent.width  = info.extent.width;
     imageCreateInfo.extent.height = info.extent.height;
-    imageCreateInfo.extent.depth  = (info.type == ETextureType::TEX_3D) ? info.extent.depth : 1;
-    imageCreateInfo.arrayLayers   = info.type == ETextureType::TEX_CUBE ? 6 : 1; // Assuming single layer
+    imageCreateInfo.extent.depth  = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
+    imageCreateInfo.arrayLayers   = info.type == ETextureType::TexCube ? 6 : 1; // Assuming single layer
     imageCreateInfo.mipLevels     = 1;                                           // TODO: Support mipmaps
     imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;                       // TODO: Support MSAA
     imageCreateInfo.tiling        = (imageCreateInfo.imageType == VK_IMAGE_TYPE_1D) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
     imageCreateInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
     imageCreateInfo.initialLayout = initialLayout; // Will be transitioned later
     imageCreateInfo.flags         = 0;             // No special flags for now
-    if (info.type == ETextureType::TEX_CUBE)
+    if (info.type == ETextureType::TexCube)
     {
         imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
     }
@@ -961,31 +961,31 @@ RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, Resourc
         VkDescriptorType descType;
         switch (bindings[i].type)
         {
-        case EResourceType::SAMPLER:
+        case EResourceType::Sampler:
             descType = VK_DESCRIPTOR_TYPE_SAMPLER;
             break;
-        case EResourceType::COMBINED_IMAGE_SAMPLER:
+        case EResourceType::CombinedImageSampler:
             descType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             break;
-        case EResourceType::SAMPLED_IMAGE:
+        case EResourceType::SampledImage:
             descType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             break;
-        case EResourceType::STORAGE_IMAGE:
+        case EResourceType::StorageImage:
             descType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
             break;
-        case EResourceType::UNIFORM_BUFFER:
+        case EResourceType::UniformBuffer:
             descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             break;
-        case EResourceType::STORAGE_BUFFER:
+        case EResourceType::StorageBuffer:
             descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             break;
-        case EResourceType::STORAGE_BUFFER_DYNAMIC:
+        case EResourceType::StorageBufferDynamic:
             descType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
             break;
-        case EResourceType::UNIFORM_BUFFER_DYNAMIC:
+        case EResourceType::UniformBufferDynamic:
             descType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             break;
-        case EResourceType::INPUT_ATTACHMENT:
+        case EResourceType::InputAttachment:
             descType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
             break;
         default:
@@ -1064,8 +1064,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 
         switch (binding.type)
         {
-        case EResourceType::UNIFORM_BUFFER:
-        case EResourceType::STORAGE_BUFFER:
+        case EResourceType::UniformBuffer:
+        case EResourceType::StorageBuffer:
             if (!binding.resource.buffers.empty() && binding.resource.buffers[0])
             {
                 VulkanBuffer* bufVK = static_cast<VulkanBuffer*>(binding.resource.buffers[0]);
@@ -1075,7 +1075,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
                 bufInfo.range  = VK_WHOLE_SIZE;
                 bufferInfos.push_back(bufInfo);
 
-                writeSet.descriptorType = (binding.type == EResourceType::UNIFORM_BUFFER)
+                writeSet.descriptorType = (binding.type == EResourceType::UniformBuffer)
                                               ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
                                               : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                 writeSet.pBufferInfo    = &bufferInfos.back();
@@ -1083,7 +1083,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
             }
             break;
 
-        case EResourceType::SAMPLED_IMAGE:
+        case EResourceType::SampledImage:
             if (!binding.resource.textures.empty() && binding.resource.textures[0])
             {
                 VulkanTexture* texVK = static_cast<VulkanTexture*>(binding.resource.textures[0]);
@@ -1100,7 +1100,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
             }
             break;
 
-        case EResourceType::STORAGE_IMAGE:
+        case EResourceType::StorageImage:
             if (!binding.resource.textures.empty() && binding.resource.textures[0])
             {
                 VulkanTexture* texVK = static_cast<VulkanTexture*>(binding.resource.textures[0]);
@@ -1116,7 +1116,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
             }
             break;
 
-        case EResourceType::SAMPLER:
+        case EResourceType::Sampler:
             if (!binding.resource.samplers.empty() && binding.resource.samplers[0])
             {
                 VulkanSampler* samplerVK = static_cast<VulkanSampler*>(binding.resource.samplers[0]);
@@ -1132,7 +1132,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
             }
             break;
 
-        case EResourceType::COMBINED_IMAGE_SAMPLER:
+        case EResourceType::CombinedImageSampler:
             if (!binding.resource.textures.empty() && binding.resource.textures[0] &&
                 !binding.resource.samplers.empty() && binding.resource.samplers[0])
             {

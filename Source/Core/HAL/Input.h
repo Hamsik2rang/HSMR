@@ -9,11 +9,6 @@
 
 #include "Precompile.h"
 
-#ifdef _WIN32
-#pragma push_macro("DELETE")
-#undef DELETE
-#endif
-
 HS_NS_BEGIN
 
 class HS_API Input
@@ -21,37 +16,37 @@ class HS_API Input
 public:
     enum class Button : uint8
     {
-        UNKNOWN = 0x00,
+        Unknown = 0x00,
 
-        MOUSE_LEFT   = 0x01,
-        MOUSE_RIGHT  = 0x02,
-        MOUSE_MIDDLE = 0x04,
+        MouseLeft   = 0x01,
+        MouseRight  = 0x02,
+        MouseMiddle = 0x04,
 
-        BACK    = 0x08,
-        TAB     = 0x09,
-        SHIFT   = 0x10,
-        CONTROL = 0x11,
-        ALT     = 0x12,
-        SPACE   = 0x20,
-        END     = 0x23,
-        HOME    = 0x24,
-        LEFT    = 0x25,
-        UP      = 0x26,
-        RIGHT   = 0x27,
-        DOWN    = 0x28,
-        INSERT  = 0x2D,
-        DELETE  = 0x2E,
+        Back    = 0x08,
+        Tab     = 0x09,
+        Shift   = 0x10,
+        Control = 0x11,
+        Alt     = 0x12,
+        Space   = 0x20,
+        End     = 0x23,
+        Home    = 0x24,
+        Left    = 0x25,
+        Up      = 0x26,
+        Right   = 0x27,
+        Down    = 0x28,
+        Insert  = 0x2D,
+        Delete  = 0x2E,
 
-        NUM_0 = 0x30,
-        NUM_1 = 0x31,
-        NUM_2 = 0x32,
-        NUM_3 = 0x33,
-        NUM_4 = 0x34,
-        NUM_5 = 0x35,
-        NUM_6 = 0x36,
-        NUM_7 = 0x37,
-        NUM_8 = 0x38,
-        NUM_9 = 0x39,
+        Num0 = 0x30,
+        Num1 = 0x31,
+        Num2 = 0x32,
+        Num3 = 0x33,
+        Num4 = 0x34,
+        Num5 = 0x35,
+        Num6 = 0x36,
+        Num7 = 0x37,
+        Num8 = 0x38,
+        Num9 = 0x39,
 
         A = 0x41,
         B = 0x42,
@@ -80,49 +75,49 @@ public:
         Y = 0x59,
         Z = 0x5A,
 
-        LWIN_OR_COMMAND = 0x5B,
-        RWIN            = 0x5C,
-        APPS            = 0x5D,
-        SLEEP           = 0x5F,
-        NUMPAD_0        = 0x60,
-        NUMPAD_1        = 0x61,
-        NUMPAD_2        = 0x62,
-        NUMPAD_3        = 0x63,
-        NUMPAD_4        = 0x64,
-        NUMPAD_5        = 0x65,
-        NUMPAD_6        = 0x66,
-        NUMPAD_7        = 0x67,
-        NUMPAD_8        = 0x68,
-        NUMPAD_9        = 0x69,
-        MULTIPLY        = 0x6A,
-        ADD             = 0x6B,
-        SEPARATOR       = 0x6C,
-        SUBTRACT        = 0x6D,
-        DECIMAL         = 0x6E,
-        DIVIDE          = 0x6F,
-        F1              = 0x70,
-        F2              = 0x71,
-        F3              = 0x72,
-        F4              = 0x73,
-        F5              = 0x74,
-        F6              = 0x75,
-        F7              = 0x76,
-        F8              = 0x77,
-        F9              = 0x78,
-        F10             = 0x79,
-        F11             = 0x7A,
-        F12             = 0x7B,
+        LwinOrCommand = 0x5B,
+        Rwin          = 0x5C,
+        Apps          = 0x5D,
+        Sleep         = 0x5F,
+        Numpad0       = 0x60,
+        Numpad1       = 0x61,
+        Numpad2       = 0x62,
+        Numpad3       = 0x63,
+        Numpad4       = 0x64,
+        Numpad5       = 0x65,
+        Numpad6       = 0x66,
+        Numpad7       = 0x67,
+        Numpad8       = 0x68,
+        Numpad9       = 0x69,
+        Multiply      = 0x6A,
+        Add           = 0x6B,
+        Separator     = 0x6C,
+        Subtract      = 0x6D,
+        Decimal       = 0x6E,
+        Divide        = 0x6F,
+        F1            = 0x70,
+        F2            = 0x71,
+        F3            = 0x72,
+        F4            = 0x73,
+        F5            = 0x74,
+        F6            = 0x75,
+        F7            = 0x76,
+        F8            = 0x77,
+        F9            = 0x78,
+        F10           = 0x79,
+        F11           = 0x7A,
+        F12           = 0x7B,
 
-        COUNT
+        Count
     };
 
     enum class Mouse : uint8
     {
 
-        MOVE   = 0x08,
-        SCROLL = 0x09,
+        Move   = 0x08,
+        Scroll = 0x09,
 
-        COUNT
+        Count
     };
 
     HS_FORCEINLINE static bool IsPressed(Button button) { return static_cast<bool>(s_button[static_cast<uint8>(button)].isPressed); }
@@ -145,7 +140,7 @@ public:
     {
         uint32 isPressed   : 1;
         uint32 repeatCount : 15;
-    } s_button[static_cast<uint8>(Button::COUNT)];
+    } s_button[static_cast<uint8>(Button::Count)];
 
     static struct MoveInfo
     {
@@ -163,9 +158,5 @@ public:
 };
 
 HS_NS_END
-
-#ifdef _WIN32
-#pragma pop_macro("DELETE")
-#endif
 
 #endif
