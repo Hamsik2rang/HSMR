@@ -548,6 +548,18 @@ RHISampler* MetalContext::CreateSampler(const char* name, const SamplerInfo& inf
 {
     MetalSampler* mtlSampler = new struct MetalSampler(name, info);
 
+    MTLSamplerDescriptor* desc = [[MTLSamplerDescriptor alloc] init];
+
+    desc.minFilter    = MetalUtility::ToMinMagFilter(info.minFilter);
+    desc.magFilter    =  MetalUtility::ToMinMagFilter(info.magFilter);
+    desc.mipFilter    =  MetalUtility::ToMipFilter(info.mipmapMode);
+    desc.sAddressMode = MetalUtility::ToSamplerAddressMode(info.addressU);
+    desc.tAddressMode = MetalUtility::ToSamplerAddressMode(info.addressV);
+    desc.rAddressMode = MetalUtility::ToSamplerAddressMode(info.addressW);
+    desc.label        = [NSString stringWithUTF8String:name];
+
+    mtlSampler->handle = [s_device newSamplerStateWithDescriptor:desc];
+
     return static_cast<RHISampler*>(mtlSampler);
 }
 

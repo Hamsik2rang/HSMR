@@ -1,4 +1,4 @@
-﻿//
+//
 //  RHIDefinition
 //  HSMR
 //
@@ -269,8 +269,6 @@ struct TextureInfo
 
 enum class EFilterMode
 {
-	INVALID = 0,
-
 	NEAREST,
 	LINEAR
 };

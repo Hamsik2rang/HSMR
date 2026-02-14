@@ -72,6 +72,15 @@ public:
     static MTLResourceOptions ToBufferOption(EBufferMemoryOption option);
     static EBufferMemoryOption FromBufferOption(MTLResourceOptions option);
     
+    static MTLSamplerMinMagFilter ToMinMagFilter(EFilterMode filter);
+    static EFilterMode FromMinMagFilter(MTLSamplerMinMagFilter filter);
+    
+    static MTLSamplerMipFilter ToMipFilter(EFilterMode filter);
+    static EFilterMode FromMipFilter(MTLSamplerMipFilter filter);
+    
+    static MTLSamplerAddressMode ToSamplerAddressMode(EAddressMode addressMode);
+    static EAddressMode FromSamplerAddressMode(MTLSamplerAddressMode addressMode);
+    
     static MTLClearColor ToClearColor(const float* color);
     static void FromClearColor(MTLClearColor color, float* outColor);
 };
