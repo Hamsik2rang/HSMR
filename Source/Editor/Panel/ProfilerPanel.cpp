@@ -1,22 +1,23 @@
 //
 //  ProfilerPanel.cpp
-//  HSMR
+//  Editor
 //
-//  Tracy-integrated profiler panel
+//  Dockable profiler panel implementation.
 //
 
 #include "Editor/Panel/ProfilerPanel.h"
+#include "Editor/Core/EditorContext.h"
 
-#include "Core/HAL/Timer.h"
+#include "Core/Profiler/ProfileDataCollector.h"
 #include "Core/Profiler/Profiler.h"
-#include "Editor/GUI/ImGuiExtension.h"
+
+#include "ImGui/imgui.h"
 
 HS_NS_EDITOR_BEGIN
 
 ProfilerPanel::ProfilerPanel(Window* window)
     : Panel(window)
 {
-    _frameTimeHistory.fill(0.0f);
 }
 
 ProfilerPanel::~ProfilerPanel()
@@ -25,189 +26,190 @@ ProfilerPanel::~ProfilerPanel()
 
 bool ProfilerPanel::Setup()
 {
-    Timer::Start();
-    _lastFrameTime = Timer::GetElapsedMilliseconds();
     return true;
 }
 
 void ProfilerPanel::Cleanup()
 {
-    Timer::Stop();
 }
 
 void ProfilerPanel::Draw()
 {
-    HS_PROFILE_ZONE_NC("ProfilerPanel::Draw", HS::Profile::ColorUI);
-
-    // Calculate frame time
-    double currentTime = Timer::GetElapsedMilliseconds();
-    float deltaMs = static_cast<float>(currentTime - _lastFrameTime);
-    _lastFrameTime = currentTime;
-
-    // Update history
-    _frameTimeHistory[_historyIndex] = deltaMs;
-    _historyIndex = (_historyIndex + 1) % HISTORY_SIZE;
-
-    // Update statistics
-    _frameTimeSum += deltaMs;
-    _frameCount++;
-    _minFrameTime = std::min(_minFrameTime, deltaMs);
-    _maxFrameTime = std::max(_maxFrameTime, deltaMs);
-
-    if (_frameCount >= 60)
+    auto& vis = EditorContext::Get().GetPanelVisibility();
+    if (!vis.profiler)
     {
-        _avgFrameTime = _frameTimeSum / static_cast<float>(_frameCount);
-        _frameTimeSum = 0.0f;
-        _frameCount = 0;
+        return;
     }
 
-    // Plot the frame time to Tracy
-    HS_PROFILE_PLOT("Frame Time (ms)", deltaMs);
+    ImGui::Begin("Profiler", &vis.profiler);
 
-    // Draw overlay window
-    ImGuiWindowFlags windowFlags =
-        ImGuiWindowFlags_NoDocking |
-        ImGuiWindowFlags_AlwaysAutoResize |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoNav |
-        ImGuiWindowFlags_NoTitleBar;
-
-    const float padding = 10.0f;
-    ImVec2 windowPos(padding, padding);
-    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Once);  // Only set position initially, allow dragging
-    ImGui::SetNextWindowBgAlpha(0.75f);
-
-    if (ImGui::Begin("Profiler", nullptr, windowFlags))
+    if (ImGui::BeginTabBar("ProfilerTabs"))
     {
-        // Quick Stats
-        drawQuickStatsSection();
-
-        ImGui::Separator();
-
-        // Frame Time Graph
-        if (_showFrameGraph)
+        if (ImGui::BeginTabItem("CPU"))
         {
-            drawFrameTimeSection();
-            ImGui::Separator();
+            _drawCPUTab();
+            ImGui::EndTabItem();
         }
 
-        // Camera Info
-        if (_showCamera && _sceneCamera)
+        if (ImGui::BeginTabItem("GPU"))
         {
-            drawCameraSection();
-            ImGui::Separator();
+            _drawGPUTab();
+            ImGui::EndTabItem();
         }
 
-        // Tracy Hint
-        if (_showTracyHint)
+        if (ImGui::BeginTabItem("Memory"))
         {
-            drawTracySection();
+            _drawMemoryTab();
+            ImGui::EndTabItem();
         }
 
-        // Toggle options
-        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-        {
-            ImGui::OpenPopup("ProfilerOptions");
-        }
-
-        if (ImGui::BeginPopup("ProfilerOptions"))
-        {
-            ImGui::Checkbox("Frame Graph", &_showFrameGraph);
-            ImGui::Checkbox("Camera Info", &_showCamera);
-            ImGui::Checkbox("Tracy Hint", &_showTracyHint);
-            ImGui::Separator();
-            ImGui::SliderFloat("Target FPS", &_targetFPS, 30.0f, 144.0f, "%.0f");
-            if (ImGui::Button("Reset Stats"))
-            {
-                _minFrameTime = 1000.0f;
-                _maxFrameTime = 0.0f;
-                _avgFrameTime = 0.0f;
-            }
-            ImGui::EndPopup();
-        }
+        ImGui::EndTabBar();
     }
+
+    ImGui::Separator();
+
+    // Tracy status
+#if defined(TRACY_ENABLE)
+    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Tracy: Enabled");
+#else
+    ImGui::TextDisabled("Tracy: Disabled");
+#endif
+
     ImGui::End();
 }
 
-void ProfilerPanel::drawQuickStatsSection()
+void ProfilerPanel::_drawCPUTab()
 {
-    float currentFPS = _avgFrameTime > 0.0f ? 1000.0f / _avgFrameTime : 0.0f;
-    float targetMs = 1000.0f / _targetFPS;
+    const auto& zones = hs::ProfileDataCollector::Get().GetLastFrameZones();
 
-    // Color based on performance
-    ImVec4 fpsColor;
-    if (_avgFrameTime <= targetMs)
+    if (zones.empty())
     {
-        fpsColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green - Good
-    }
-    else if (_avgFrameTime <= targetMs * 1.5f)
-    {
-        fpsColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);  // Yellow - Warning
-    }
-    else
-    {
-        fpsColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);  // Red - Bad
+        ImGui::TextDisabled("No zone data collected");
+        return;
     }
 
-    ImGui::TextColored(fpsColor, "%.1f FPS", currentFPS);
-    ImGui::SameLine();
-    ImGui::Text("(%.2f ms)", _avgFrameTime);
+    // Calculate total frame time from root zones (depth == 0)
+    float totalFrameMs = 0.0f;
+    for (const auto& zone : zones)
+    {
+        if (zone.depth == 0)
+        {
+            totalFrameMs += zone.durationMs;
+        }
+    }
+    if (totalFrameMs < 0.001f)
+    {
+        totalFrameMs = 1.0f;
+    }
 
-    ImGui::Text("Min: %.2f ms | Max: %.2f ms", _minFrameTime, _maxFrameTime);
+    ImGui::Text("Frame: %.2f ms", totalFrameMs);
+    ImGui::Separator();
+
+    // Render zone tree using depth to determine tree structure
+    // Track which depth levels have open tree nodes
+    int prevDepth = -1;
+    int openNodes = 0;
+
+    for (size_t i = 0; i < zones.size(); ++i)
+    {
+        const auto& zone = zones[i];
+
+        // Close tree nodes if we went back up in depth
+        while (prevDepth >= zone.depth && openNodes > 0)
+        {
+            ImGui::TreePop();
+            openNodes--;
+            prevDepth--;
+        }
+
+        // Check if this zone has children (next zone has greater depth)
+        bool hasChildren = (i + 1 < zones.size() && zones[i + 1].depth > zone.depth);
+
+        float fraction = zone.durationMs / totalFrameMs;
+        float percent = fraction * 100.0f;
+
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (!hasChildren)
+        {
+            flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        }
+        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+        // Zone color indicator
+        ImVec4 zoneColor = ImGui::ColorConvertU32ToFloat4(
+            IM_COL32((zone.color >> 16) & 0xFF,
+                     (zone.color >> 8) & 0xFF,
+                     (zone.color) & 0xFF, 255));
+
+        ImGui::PushStyleColor(ImGuiCol_Text, zoneColor);
+        ImGui::Bullet();
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+
+        bool nodeOpen = ImGui::TreeNodeEx(zone.name, flags);
+
+        // Duration and percentage on the same line
+        ImGui::SameLine(ImGui::GetWindowWidth() - 200);
+        ImGui::Text("%.2f ms", zone.durationMs);
+        ImGui::SameLine(ImGui::GetWindowWidth() - 120);
+
+        // Draw mini bar
+        _drawZoneBar(fraction, zone.color, 60.0f, ImGui::GetTextLineHeight());
+        ImGui::SameLine();
+        ImGui::Text("%4.1f%%", percent);
+
+        if (hasChildren && nodeOpen)
+        {
+            openNodes++;
+            prevDepth = zone.depth;
+        }
+        else if (!hasChildren)
+        {
+            prevDepth = zone.depth;
+        }
+    }
+
+    // Close remaining open tree nodes
+    while (openNodes > 0)
+    {
+        ImGui::TreePop();
+        openNodes--;
+    }
 }
 
-void ProfilerPanel::drawFrameTimeSection()
+void ProfilerPanel::_drawGPUTab()
 {
-    // Reorder history for continuous display
-    float orderedHistory[HISTORY_SIZE];
-    for (int i = 0; i < HISTORY_SIZE; ++i)
+    ImGui::TextDisabled("GPU profiling coming soon.");
+    ImGui::TextDisabled("(Phase 2)");
+}
+
+void ProfilerPanel::_drawMemoryTab()
+{
+    ImGui::TextDisabled("Memory profiling coming soon.");
+    ImGui::TextDisabled("(Phase 3)");
+}
+
+void ProfilerPanel::_drawZoneBar(float fraction, uint32 color, float width, float height)
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+
+    float barWidth = width * fraction;
+    if (barWidth < 1.0f)
     {
-        int idx = (_historyIndex + i) % HISTORY_SIZE;
-        orderedHistory[i] = _frameTimeHistory[idx];
+        barWidth = 1.0f;
     }
 
-    float targetMs = 1000.0f / _targetFPS;
+    ImU32 bgColor = IM_COL32(40, 40, 40, 200);
+    ImU32 barColor = IM_COL32((color >> 16) & 0xFF,
+                               (color >> 8) & 0xFF,
+                               (color) & 0xFF, 200);
 
-    // Draw frame time graph
-    char overlay[32];
-    snprintf(overlay, sizeof(overlay), "Target: %.1f ms", targetMs);
+    drawList->AddRectFilled(pos, ImVec2(pos.x + width, pos.y + height), bgColor);
+    drawList->AddRectFilled(pos, ImVec2(pos.x + barWidth, pos.y + height), barColor);
 
-    ImGui::PlotLines(
-        "##FrameTime",
-        orderedHistory,
-        HISTORY_SIZE,
-        0,
-        overlay,
-        0.0f,
-        targetMs * 2.0f,  // Scale to 2x target for visibility
-        ImVec2(200, 50)
-    );
-}
-
-void ProfilerPanel::drawCameraSection()
-{
-    if (!_sceneCamera) return;
-
-    const auto& pos = _sceneCamera->GetPosition();
-    const auto& rot = _sceneCamera->GetRotation();
-    const auto& forward = _sceneCamera->GetForward();
-
-    ImGui::Text("Camera");
-    ImGui::Text("  Pos: %.1f, %.1f, %.1f", pos.x, pos.y, pos.z);
-    ImGui::Text("  Rot: %.1f, %.1f, %.1f", rot.x, rot.y, rot.z);
-    ImGui::Text("  Fwd: %.2f, %.2f, %.2f", forward.x, forward.y, forward.z);
-}
-
-void ProfilerPanel::drawTracySection()
-{
-#if defined(TRACY_ENABLE)
-    ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "[Tracy] Enabled");
-    ImGui::TextWrapped("Run Tracy server to capture detailed profiling data.");
-#else
-    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[Tracy] Disabled");
-    ImGui::TextWrapped("Build with HSMR_ENABLE_TRACY=ON for detailed profiling.");
-#endif
+    // Advance cursor
+    ImGui::Dummy(ImVec2(width, height));
 }
 
 HS_NS_EDITOR_END

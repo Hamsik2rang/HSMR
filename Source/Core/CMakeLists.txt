@@ -107,6 +107,7 @@ list(APPEND TOTAL_FILES ${CORE_MEMORY_SOURCES})
 set(CORE_PROFILER_HEADERS
     Profiler/Profiler.h
     Profiler/ProfilerMacros.h
+    Profiler/ProfileDataCollector.h
     Profiler/GPUQuery.h
 )
 
@@ -115,6 +116,7 @@ list(APPEND TOTAL_FILES ${CORE_PROFILER_HEADERS})
 
 set(CORE_PROFILER_SOURCES
     Profiler/Private/Profiler.cpp
+    Profiler/Private/ProfileDataCollector.cpp
     Profiler/Private/GPUQuery.cpp
 )
 source_group("Profiler\\Private" FILES ${CORE_PROFILER_SOURCES})

@@ -139,8 +139,9 @@ set(PANEL_HEADERS
     Panel/InspectorPanel.h
     Panel/MenuPanel.h
     Panel/ResourcePanel.h
-    Panel/ProfilerPanel.h
+    Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
+    Panel/ProfilerPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -154,8 +155,9 @@ set(PANEL_SOURCES
     Panel/InspectorPanel.cpp
     Panel/MenuPanel.cpp
     Panel/ResourcePanel.cpp
-    Panel/ProfilerPanel.cpp
+    Panel/SceneStatusPanel.cpp
     Panel/HierarchyPanel.cpp
+    Panel/ProfilerPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

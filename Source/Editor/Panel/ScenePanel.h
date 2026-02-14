@@ -41,6 +41,9 @@ public:
 
     HS_FORCEINLINE Camera* GetCamera() const { return _camera.get(); }
 
+    HS_FORCEINLINE ImVec2 GetViewportMin() const { return _viewportMin; }
+    HS_FORCEINLINE ImVec2 GetViewportMax() const { return _viewportMax; }
+
 private:
     Resolution _resolution;
     RenderTarget* _currentRenderTarget = nullptr;

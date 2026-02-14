@@ -2,16 +2,14 @@
 //  ProfilerPanel.h
 //  Editor
 //
-//  Tracy-integrated profiler panel
+//  Dockable profiler panel with CPU zone tree view.
 //
 
-#pragma once
+#ifndef __HS_EDITOR_PROFILER_PANEL_H__
+#define __HS_EDITOR_PROFILER_PANEL_H__
 
 #include "Precompile.h"
 #include "Editor/Panel/Panel.h"
-#include "Engine/Camera.h"
-
-#include <array>
 
 HS_NS_EDITOR_BEGIN
 
@@ -25,35 +23,13 @@ public:
     void Cleanup() override;
     void Draw() override;
 
-    void SetSceneCamera(const Camera* camera) { _sceneCamera = camera; }
-
 private:
-    // UI sections
-    void drawFrameTimeSection();
-    void drawQuickStatsSection();
-    void drawCameraSection();
-    void drawTracySection();
-
-    // Frame time history
-    static constexpr int HISTORY_SIZE = 128;
-    std::array<float, HISTORY_SIZE> _frameTimeHistory{};
-    int _historyIndex = 0;
-
-    // Statistics
-    double _lastFrameTime = 0.0;
-    float _minFrameTime = 1000.0f;
-    float _maxFrameTime = 0.0f;
-    float _avgFrameTime = 0.0f;
-    float _frameTimeSum = 0.0f;
-    int _frameCount = 0;
-
-    // Settings
-    bool _showFrameGraph = true;
-    bool _showCamera = true;
-    bool _showTracyHint = true;
-    float _targetFPS = 60.0f;
-
-    const Camera* _sceneCamera = nullptr;
+    void _drawCPUTab();
+    void _drawGPUTab();
+    void _drawMemoryTab();
+    void _drawZoneBar(float fraction, uint32 color, float width, float height);
 };
 
 HS_NS_EDITOR_END
+
+#endif /* __HS_EDITOR_PROFILER_PANEL_H__ */

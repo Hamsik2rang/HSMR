@@ -30,6 +30,7 @@ public:
 private:
     void drawFileMenu();
     void drawEditMenu();
+    void drawWindowMenu();
 
     void newScene();
     void openScene();

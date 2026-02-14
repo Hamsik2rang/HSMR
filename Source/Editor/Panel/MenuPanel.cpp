@@ -34,6 +34,7 @@ void MenuPanel::Draw()
     {
         drawFileMenu();
         drawEditMenu();
+        drawWindowMenu();
         ImGui::EndMenuBar();
     }
 
@@ -125,6 +126,26 @@ void MenuPanel::drawEditMenu()
                 guiContext->SaveLayout("");
             }
         }
+
+        ImGui::EndMenu();
+    }
+}
+
+void MenuPanel::drawWindowMenu()
+{
+    if (ImGui::BeginMenu("Window"))
+    {
+        auto& vis = EditorContext::Get().GetPanelVisibility();
+
+        ImGui::MenuItem("Scene", nullptr, &vis.scene);
+        ImGui::MenuItem("Hierarchy", nullptr, &vis.hierarchy);
+        ImGui::MenuItem("Inspector", nullptr, &vis.inspector);
+        ImGui::MenuItem("Assets", nullptr, &vis.resources);
+        ImGui::MenuItem("Scene Status", nullptr, &vis.sceneStatus);
+
+        ImGui::Separator();
+
+        ImGui::MenuItem("Profiler", nullptr, &vis.profiler);
 
         ImGui::EndMenu();
     }

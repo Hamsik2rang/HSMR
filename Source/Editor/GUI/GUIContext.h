@@ -40,6 +40,7 @@ public:
     void ApplyDPIScale(float dpiScale); // Call once after backend initialization
     void LoadLayout(const std::string& layoutPath);
     void SaveLayout(const std::string& layoutPath);
+    void SetLayoutPath(const std::string& layoutPath);
 
     void BeginRender(Swapchain* swapchain);
     void EndRender();
@@ -48,6 +49,7 @@ private:
     ImGuiContext* _context; // 네임스페이스 없이 사용
     ImFont* _font;
     std::string _assetDirectory;
+    std::string _layoutPath;
 
     float _scaleFactor;
 };

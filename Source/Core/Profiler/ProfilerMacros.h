@@ -136,6 +136,34 @@
 
 #endif // TRACY_ENABLE
 
+// ===== In-Engine Zone Collection =====
+// Collects zone data for the editor profiler panel alongside Tracy.
+// Uses ProfileDataCollector for self-contained timing display.
+
+#include "Core/Profiler/ProfileDataCollector.h"
+
+#define HS_CONCAT_INNER(a, b) a ## b
+#define HS_CONCAT(a, b) HS_CONCAT_INNER(a, b)
+
+class ProfileScopeCollector
+{
+public:
+    ProfileScopeCollector(const char* name, uint32 color)
+    {
+        hs::ProfileDataCollector::Get().PushZone(name, color);
+    }
+
+    ~ProfileScopeCollector()
+    {
+        hs::ProfileDataCollector::Get().PopZone();
+    }
+};
+
+#define HS_COLLECT_ZONE_NC(name, color) \
+    HS_PROFILE_ZONE_NC(name, color); \
+    ProfileScopeCollector HS_CONCAT(_collector_, __LINE__)(name, color)
+
+
 // ===== Color Constants for Zones =====
 namespace HS::Profile
 {

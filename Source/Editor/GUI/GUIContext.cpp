@@ -2,6 +2,7 @@
 
 #include "Core/Log.h"
 #include "Core/SystemContext.h"
+#include "Core/HAL/FileSystem.h"
 
 #include "RHI/Swapchain.h"
 
@@ -33,11 +34,14 @@ void GUIContext::Initialize()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport (drag windows outside main window)
-    std::string layoutPath = _assetDirectory + "imgui.ini";
-    const char* filePath   = layoutPath.c_str();
+    // 기본 레이아웃 경로 (글로벌 — 프로젝트 열기 전까지 사용)
+    _layoutPath = _assetDirectory + "imgui.ini";
 
-    io.IniFilename = filePath;
-    ImGui::LoadIniSettingsFromDisk(io.IniFilename);
+    // ImGui 자동 저장 비활성화 (수동으로 제어)
+    io.IniFilename = nullptr;
+
+    // 글로벌 레이아웃 로드
+    ImGui::LoadIniSettingsFromDisk(_layoutPath.c_str());
     // Setup style
     SetColorTheme(false);
 
@@ -59,8 +63,7 @@ void GUIContext::NextFrame()
 
 void GUIContext::Finalize()
 {
-    std::string filePath = std::string(_assetDirectory + "imgui.ini");
-    ImGui::SaveIniSettingsToDisk(filePath.c_str());
+    ImGui::SaveIniSettingsToDisk(_layoutPath.c_str());
     ImGui::DestroyContext();
 }
 
@@ -205,22 +208,37 @@ void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
 
 void GUIContext::LoadLayout(const std::string& layoutPath)
 {
-    std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+    std::string fullPath = layoutPath.empty() ? _layoutPath : layoutPath;
     ImGui::LoadIniSettingsFromDisk(fullPath.c_str());
 
-    #ifdef _DEBUG
+#ifdef _DEBUG
     HS_LOG(debug, "GUI Layout info is loaded from %s", fullPath.c_str());
 #endif
 }
 
 void GUIContext::SaveLayout(const std::string& layoutPath)
 {
-    std::string fullPath = layoutPath.empty() ? (_assetDirectory + "imgui.ini") : layoutPath;
+    std::string fullPath = layoutPath.empty() ? _layoutPath : layoutPath;
     ImGui::SaveIniSettingsToDisk(fullPath.c_str());
 
 #ifdef _DEBUG
     HS_LOG(debug, "GUI Layout info is saved into %s", fullPath.c_str());
 #endif
+}
+
+void GUIContext::SetLayoutPath(const std::string& layoutPath)
+{
+    _layoutPath = layoutPath;
+
+    if (hs::FileSystem::Exist(layoutPath))
+    {
+        ImGui::LoadIniSettingsFromDisk(_layoutPath.c_str());
+        HS_LOG(info, "[GUI] Loaded project layout: %s", _layoutPath.c_str());
+    }
+    else
+    {
+        HS_LOG(info, "[GUI] No project layout found, using current layout");
+    }
 }
 
 void GUIContext::BeginRender(Swapchain* swapchain)

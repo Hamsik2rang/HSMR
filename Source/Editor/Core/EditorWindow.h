@@ -55,9 +55,11 @@ private:
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;
-    Scoped<Panel> _profilerPanel;
+    Scoped<Panel> _sceneStatusPanel;
     Scoped<Panel> _hierarchyPanel;
     Scoped<Panel> _inspectorPanel;
+    Scoped<Panel> _resourcePanel;
+    Scoped<Panel> _profilerPanel;
 
     Scoped<EditorCamera> _editorCamera;
 

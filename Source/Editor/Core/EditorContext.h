@@ -16,6 +16,16 @@
 
 HS_NS_EDITOR_BEGIN
 
+struct PanelVisibility
+{
+    bool scene       = true;
+    bool hierarchy   = true;
+    bool inspector   = true;
+    bool resources   = true;
+    bool sceneStatus = true;
+    bool profiler    = false;
+};
+
 /**
  * @brief Editor context singleton
  *
@@ -23,6 +33,7 @@ HS_NS_EDITOR_BEGIN
  * - Active scene
  * - Selected entity
  * - Gizmo operation mode
+ * - Panel visibility
  */
 class HS_EDITOR_API EditorContext
 {
@@ -81,6 +92,10 @@ public:
     void SetGizmoActive(bool active) { _gizmoActive = active; }
     bool IsGizmoActive() const { return _gizmoActive; }
 
+    // ===== Panel Visibility =====
+
+    PanelVisibility& GetPanelVisibility() { return _panelVisibility; }
+
 private:
     EditorContext() = default;
     ~EditorContext() = default;
@@ -99,6 +114,9 @@ private:
     bool _useSnap = false;
     float _snapValue = 1.0f;
     bool _gizmoActive = false;
+
+    // Panel visibility
+    PanelVisibility _panelVisibility;
 
     // Listeners
     std::vector<SelectionCallback> _selectionListeners;

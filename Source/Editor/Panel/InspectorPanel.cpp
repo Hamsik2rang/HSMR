@@ -50,7 +50,13 @@ void InspectorPanel::Cleanup()
 
 void InspectorPanel::Draw()
 {
-    ImGui::Begin("Inspector", nullptr);
+    auto& vis = EditorContext::Get().GetPanelVisibility();
+    if (!vis.inspector)
+    {
+        return;
+    }
+
+    ImGui::Begin("Inspector", &vis.inspector);
 
     Entity selectedEntity = EditorContext::Get().GetSelectedEntity();
 

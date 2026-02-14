@@ -105,6 +105,10 @@ void EditorApplication::Run()
 		// Initialize AssetDatabase with project asset path
 		AssetDatabase::Get().SetRootPath(ProjectContext::Get().GetAssetPath());
 		AssetDatabase::Get().Scan();
+
+		// 프로젝트별 레이아웃 경로로 전환
+		std::string layoutPath = ProjectContext::Get().GetSettingsPath() + "imgui.ini";
+		_guiContext->SetLayoutPath(layoutPath);
 	}
 
 	// Phase 3: Editor Window

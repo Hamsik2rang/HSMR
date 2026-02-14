@@ -10,7 +10,15 @@
 #include "Editor/Core/EditorContext.h"
 #include "Core/SystemContext.h"
 
+#include "Scene/Scene.h"
+#include "Scene/Entity.h"
+#include "Scene/Components/Components.h"
+
+#include "Resource/Model.h"
+
 #include "ImGui/imgui.h"
+
+#include <cstdlib>
 
 HS_NS_EDITOR_BEGIN
 
@@ -65,7 +73,13 @@ void ResourcePanel::Cleanup()
 
 void ResourcePanel::Draw()
 {
-    ImGui::Begin("Assets", nullptr);
+    auto& vis = EditorContext::Get().GetPanelVisibility();
+    if (!vis.resources)
+    {
+        return;
+    }
+
+    ImGui::Begin("Assets", &vis.resources);
 
     // Path bar at top
     drawPathBar();
@@ -344,7 +358,32 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
     // Double-click to open/import
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
     {
-        // TODO: Open asset in appropriate editor
+        if (asset->type == EAssetType::Model)
+        {
+            Scene* scene = EditorContext::Get().GetActiveScene();
+            if (scene)
+            {
+                hs::Model* model = AssetDatabase::Get().LoadModel(asset->relativePath);
+                if (model)
+                {
+                    // Extract display name from asset name
+                    std::string entityName = asset->name;
+                    size_t dot = entityName.rfind('.');
+                    if (dot != std::string::npos)
+                        entityName = entityName.substr(0, dot);
+
+                    Entity entity = scene->CreateEntity(entityName);
+                    auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+                    meshRenderer.mesh = model->GetMesh();
+                    if (model->GetMaterial())
+                    {
+                        meshRenderer.materials.push_back(model->GetMaterial());
+                    }
+
+                    EditorContext::Get().SetSelectedEntity(entity);
+                }
+            }
+        }
     }
 
     // Drag source for drag & drop
@@ -408,7 +447,18 @@ void ResourcePanel::drawContextMenu()
 
         if (ImGui::MenuItem("Show in Explorer"))
         {
-            // TODO: Open folder in system file explorer
+            std::string folderPath = AssetDatabase::Get().GetRootPath();
+            if (!_currentPath.empty())
+            {
+                folderPath += "/" + _currentPath;
+            }
+#if defined(__APPLE__)
+            std::string cmd = "open \"" + folderPath + "\"";
+            system(cmd.c_str());
+#elif defined(_WIN32)
+            std::string cmd = "explorer \"" + folderPath + "\"";
+            system(cmd.c_str());
+#endif
         }
 
         ImGui::EndPopup();

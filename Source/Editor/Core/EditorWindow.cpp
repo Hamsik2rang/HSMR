@@ -25,10 +25,13 @@
 #include "Editor/Panel/DockspacePanel.h"
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
-#include "Editor/Panel/ProfilerPanel.h"
+#include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
 #include "Editor/Panel/ResourcePanel.h"
+#include "Editor/Panel/ProfilerPanel.h"
+
+#include "Core/Profiler/ProfileDataCollector.h"
 
 #include "Editor/Core/EditorCamera.h"
 
@@ -81,6 +84,8 @@ bool EditorWindow::onInitialize()
 
 void EditorWindow::onNextFrame()
 {
+    ProfileDataCollector::Get().BeginFrame();
+
     if (false == _shouldPresent)
     {
         return;
@@ -100,7 +105,7 @@ void EditorWindow::onNextFrame()
 
 void EditorWindow::onUpdate(float deltaTime)
 {
-    HS_PROFILE_FUNCTION();
+    HS_COLLECT_ZONE_NC("Update", HS::Profile::ColorScene);
     processShortcuts();
     updateSceneCamera(deltaTime);
 
@@ -113,7 +118,7 @@ void EditorWindow::onUpdate(float deltaTime)
 
 void EditorWindow::onRender()
 {
-    HS_PROFILE_ZONE_NC("EditorWindow::onRender", HS::Profile::ColorRender);
+    HS_COLLECT_ZONE_NC("Render", HS::Profile::ColorRender);
 
     if (false == _shouldPresent)
     {
@@ -140,7 +145,7 @@ void EditorWindow::onRender()
 
     // 1. Render Scene to Scene Panel
     {
-        HS_PROFILE_ZONE_NC("Scene Render", HS::Profile::ColorRender);
+        HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
         _renderer->Render(param, curRT);
     }
 
@@ -148,7 +153,7 @@ void EditorWindow::onRender()
 
     // 2. Render GUI
     {
-        HS_PROFILE_ZONE_NC("GUI Render", HS::Profile::ColorUI);
+        HS_COLLECT_ZONE_NC("GUI Render", HS::Profile::ColorUI);
         onRenderGUI();
     }
 
@@ -208,9 +213,9 @@ void EditorWindow::setupPanels()
     _scenePanel->Setup();
     _basePanel->InsertPanel(_scenePanel.get());
 
-    _profilerPanel = MakeScoped<ProfilerPanel>(this);
-    _profilerPanel->Setup();
-    _basePanel->InsertPanel(_profilerPanel.get());
+    _sceneStatusPanel = MakeScoped<SceneStatusPanel>(this);
+    _sceneStatusPanel->Setup();
+    _basePanel->InsertPanel(_sceneStatusPanel.get());
 
     _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
     _hierarchyPanel->Setup();
@@ -219,6 +224,14 @@ void EditorWindow::setupPanels()
     _inspectorPanel = MakeScoped<InspectorPanel>(this);
     _inspectorPanel->Setup();
     _basePanel->InsertPanel(_inspectorPanel.get());
+
+    _resourcePanel = MakeScoped<ResourcePanel>(this);
+    _resourcePanel->Setup();
+    _basePanel->InsertPanel(_resourcePanel.get());
+
+    _profilerPanel = MakeScoped<ProfilerPanel>(this);
+    _profilerPanel->Setup();
+    _basePanel->InsertPanel(_profilerPanel.get());
 }
 
 void EditorWindow::setupTestScene()
@@ -273,8 +286,11 @@ void EditorWindow::updateSceneCamera(float deltaTime)
     if (_scenePanel)
     {
         _scenePanel->Update(deltaTime);
-        Camera* camera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
-        static_cast<ProfilerPanel*>(_profilerPanel.get())->SetSceneCamera(camera);
+        ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
+        SceneStatusPanel* sceneStatusPanel = static_cast<SceneStatusPanel*>(_sceneStatusPanel.get());
+
+        sceneStatusPanel->SetSceneCamera(scenePanel->GetCamera());
+        sceneStatusPanel->SetSceneBounds(scenePanel->GetViewportMin(), scenePanel->GetViewportMax());
     }
 }
 

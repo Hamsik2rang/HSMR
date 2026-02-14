@@ -7,9 +7,13 @@
 
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Asset/AssetDatabase.h"
 
 #include "Scene/Scene.h"
+#include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
+
+#include "Resource/Model.h"
 
 #include <algorithm>
 #include <cstring>
@@ -46,7 +50,13 @@ void HierarchyPanel::Cleanup()
 
 void HierarchyPanel::Draw()
 {
-    ImGui::Begin("Hierarchy", nullptr);
+    auto& vis = EditorContext::Get().GetPanelVisibility();
+    if (!vis.hierarchy)
+    {
+        return;
+    }
+
+    ImGui::Begin("Hierarchy", &vis.hierarchy);
 
     Scene* scene = EditorContext::Get().GetActiveScene();
     if (!scene)
@@ -104,6 +114,49 @@ void HierarchyPanel::Draw()
 
     // Handle context menu popup
     drawContextMenu();
+
+    // Drop target for ASSET_MODEL on empty area
+    // Use an invisible dummy to cover remaining space as drop target
+    ImVec2 remaining = ImGui::GetContentRegionAvail();
+    if (remaining.y > 0)
+    {
+        ImGui::Dummy(remaining);
+    }
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
+        {
+            std::string assetPath(static_cast<const char*>(payload->Data));
+
+            if (scene)
+            {
+                hs::editor::AssetDatabase& assetDB = hs::editor::AssetDatabase::Get();
+                hs::Model* model = assetDB.LoadModel(assetPath);
+                if (model)
+                {
+                    // Extract display name from asset path
+                    std::string entityName = assetPath;
+                    size_t lastSlash = entityName.rfind('/');
+                    if (lastSlash != std::string::npos)
+                        entityName = entityName.substr(lastSlash + 1);
+                    size_t dot = entityName.rfind('.');
+                    if (dot != std::string::npos)
+                        entityName = entityName.substr(0, dot);
+
+                    Entity entity = scene->CreateEntity(entityName);
+                    auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+                    meshRenderer.mesh = model->GetMesh();
+                    if (model->GetMaterial())
+                    {
+                        meshRenderer.materials.push_back(model->GetMaterial());
+                    }
+
+                    EditorContext::Get().SetSelectedEntity(entity);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 
     // Click on empty space to deselect
     if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())

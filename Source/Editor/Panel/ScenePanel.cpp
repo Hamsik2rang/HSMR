@@ -114,6 +114,12 @@ void ScenePanel::Update(float deltaTime)
 
 void ScenePanel::Draw()
 {
+    auto& vis = EditorContext::Get().GetPanelVisibility();
+    if (!vis.scene)
+    {
+        return;
+    }
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
     ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar);
@@ -145,6 +151,44 @@ void ScenePanel::Draw()
     if (_camera && _resolution.height > 0)
     {
         _camera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
+    }
+
+    // Accept ASSET_MODEL drag & drop onto viewport
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
+        {
+            std::string assetPath(static_cast<const char*>(payload->Data));
+
+            Scene* scene = EditorContext::Get().GetActiveScene();
+            if (scene)
+            {
+                hs::editor::AssetDatabase& assetDB = hs::editor::AssetDatabase::Get();
+                hs::Model* model = assetDB.LoadModel(assetPath);
+                if (model)
+                {
+                    // Extract display name from asset path
+                    std::string entityName = assetPath;
+                    size_t lastSlash = entityName.rfind('/');
+                    if (lastSlash != std::string::npos)
+                        entityName = entityName.substr(lastSlash + 1);
+                    size_t dot = entityName.rfind('.');
+                    if (dot != std::string::npos)
+                        entityName = entityName.substr(0, dot);
+
+                    Entity entity = scene->CreateEntity(entityName);
+                    auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+                    meshRenderer.mesh = model->GetMesh();
+                    if (model->GetMaterial())
+                    {
+                        meshRenderer.materials.push_back(model->GetMaterial());
+                    }
+
+                    EditorContext::Get().SetSelectedEntity(entity);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
     }
 
     // Handle picking before gizmo (so clicking empty space clears selection)
