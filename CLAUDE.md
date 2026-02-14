@@ -64,6 +64,52 @@ These are fine to delegate to AI:
 
 ---
 
+## Coding Convention (MUST FOLLOW)
+
+**모든 코드 작성 및 수정 시 `CONVENTIONS.md`에 정의된 코딩 컨벤션을 반드시 준수해야 합니다.** 전체 규칙은 `CONVENTIONS.md`를 참조하되, 아래 핵심 규칙은 위반 시 즉시 수정해야 합니다.
+
+### 네이밍
+
+| 대상 | 규칙 | 예시 |
+|:-----|:-----|:-----|
+| 클래스/구조체 | PascalCase | `EditorWindow`, `RHITexture` |
+| 공개 메서드 | PascalCase | `Initialize()`, `GetPosition()` |
+| 비공개 메서드 | `_camelCase` | `_setupPanels()`, `_drawEntityNode()` |
+| 멤버 변수 | `_camelCase` | `_position`, `_renderer` |
+| 정적 변수 | `s_` 접두사 | `s_instance`, `s_sdlWindow` |
+| 지역 변수/매개변수 | camelCase | `vertexCount`, `shininess` |
+| 출력 매개변수 | `out` 접두사 | `outWidth`, `outNativeWindow` |
+| 열거형 타입 | `E` 접두사 + PascalCase | `EPixelFormat`, `EShaderStage` |
+| 열거형 값 | PascalCase (**ALL_CAPS 금지**) | `Vertex`, `ClampToEdge` |
+| 매크로 | `HS_` + SCREAMING_SNAKE_CASE | `HS_LOG`, `HS_BIT` |
+
+### 포매팅
+
+- **들여쓰기**: 스페이스 4칸 (탭 금지)
+- **중괄호**: Allman 스타일 (여는 중괄호를 다음 줄에 배치)
+- **줄 길이**: ~120자 소프트 리밋
+
+### 프로젝트 고유 별칭 (반드시 사용)
+
+| 표준 라이브러리 | 프로젝트 별칭 |
+|:---------------|:-------------|
+| `std::unique_ptr<T>` | `Scoped<T>` |
+| `std::make_unique<T>()` | `MakeScoped<T>()` |
+| `inline` | `HS_FORCEINLINE` |
+| `namespace hs {` | `HS_NS_BEGIN` |
+| `#pragma once` | `#ifndef __HS_..._H__` 가드 |
+
+### 기타 필수 규칙
+
+- **`enum class` 전용**: 일반 `enum` 사용 금지
+- **네임스페이스 매크로**: `HS_NS_BEGIN`/`HS_NS_END` (에디터: `HS_NS_EDITOR_BEGIN`/`HS_NS_EDITOR_END`)
+- **헤더 가드**: `__HS_[MODULE]_[FILENAME]_H__` 형식
+- **API 매크로**: 외부 공개 클래스에 모듈별 매크로 부착 (`HS_API`, `HS_EDITOR_API` 등)
+- **파일 배치**: 공개 헤더는 모듈 루트, 구현 파일은 `Private/` 하위 디렉토리
+- **플랫폼 내부 함수**: `Internal` 접미사 패턴 (`CreateNativeWindowInternal`)
+
+---
+
 ## Project Overview
 
 HSMR (High-Speed Modular Renderer) is a C++20-based cross-platform graphics engine currently in active development. The project supports both Vulkan (Windows) and Metal (macOS) rendering APIs with a modular component-based architecture.
