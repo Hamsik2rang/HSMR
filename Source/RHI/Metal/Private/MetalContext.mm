@@ -539,23 +539,23 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, uint32 wi
 
 void MetalContext::DestroyTexture(RHITexture* texture)
 {
-    MetalTexture* MetalTexture = static_cast<struct MetalTexture*>(texture);
+    MetalTexture* mtlTexture = static_cast<struct MetalTexture*>(texture);
 
-    delete MetalTexture;
+    delete mtlTexture;
 }
 
 RHISampler* MetalContext::CreateSampler(const char* name, const SamplerInfo& info)
 {
-    MetalSampler* MetalSampler = new struct MetalSampler(name, info);
+    MetalSampler* mtlSampler = new struct MetalSampler(name, info);
 
-    return static_cast<RHISampler*>(MetalSampler);
+    return static_cast<RHISampler*>(mtlSampler);
 }
 
 void MetalContext::DestroySampler(RHISampler* sampler)
 {
-    MetalSampler* MetalSampler = static_cast<struct MetalSampler*>(sampler);
+    MetalSampler* mtlSampler = static_cast<struct MetalSampler*>(sampler);
 
-    delete MetalSampler;
+    delete mtlSampler;
 }
 
 RHIResourceLayout* MetalContext::CreateResourceLayout(const char* name, ResourceBinding* bindings, uint32 bindingCount)

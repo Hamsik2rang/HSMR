@@ -437,8 +437,12 @@ void MetalCommandBuffer::bindBuffers(EShaderStage stage, uint8 binding, RHIBuffe
 
 void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHITexture* const* textures, uint8 arrayCount)
 {
-    MetalTexture* const* MetalTextures = reinterpret_cast<MetalTexture* const*>(textures);
+    MetalTexture* const* mtlTextures = reinterpret_cast<MetalTexture* const*>(textures);
     std::vector<id<MTLTexture>> handles(arrayCount);
+    for (size_t i = 0; i < arrayCount; i++)
+    {
+        handles[i] = mtlTextures[i]->handle;
+    }
 
     switch (stage)
     {
@@ -446,10 +450,12 @@ void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHIText
         {
             [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }
+        break;
         case EShaderStage::FRAGMENT:
         {
             [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
         }
+        break;
         default:
         {
             HS_LOG(crash, "Not Implemented ResourceType");
@@ -460,8 +466,12 @@ void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHIText
 
 void MetalCommandBuffer::bindSamplers(EShaderStage stage, uint8 binding, RHISampler* const* samplers, uint8 arrayCount)
 {
-    MetalSampler* const* MetalSamplers = reinterpret_cast<MetalSampler* const*>(samplers);
+    MetalSampler* const* mtlSamplers = reinterpret_cast<MetalSampler* const*>(samplers);
     std::vector<id<MTLSamplerState>> handles(arrayCount);
+    for (size_t i = 0; i < arrayCount; i++)
+    {
+        handles[i] = mtlSamplers[i]->handle;
+    }
 
     switch (stage)
     {
