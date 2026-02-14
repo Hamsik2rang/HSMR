@@ -11,7 +11,7 @@
 
 HS_NS_BEGIN
 
-class HS_API Exception
+class HS_CORE_API Exception
 {
 public:
 	Exception(const char* file, unsigned int line, const char* fmt, ...);

@@ -8,7 +8,7 @@
 
 HS_NS_BEGIN
 
-HS_API RHIContext* g_rhiContext = nullptr;
+HS_RHI_API RHIContext* g_rhiContext = nullptr;
 
 RHIContext* RHIContext::Create(ERHIPlatform platform)
 {

@@ -20,7 +20,7 @@ namespace hs { class Swapchain; }
 
 HS_NS_BEGIN
 
-class HS_API RHIHandle
+class HS_RHI_API RHIHandle
 {
 public:
 	enum class EType

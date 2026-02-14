@@ -15,7 +15,7 @@
 HS_NS_BEGIN
 
 // Same with SDL_WindowFlags.
-enum class HS_API EWindowFlags : uint64
+enum class HS_CORE_API EWindowFlags : uint64
 {
 	None = 0,
 
@@ -46,34 +46,34 @@ enum class HS_API EWindowFlags : uint64
 	NotFocusable      = HS_BIT(31), /**< window should not be focusable */
 };
 
-constexpr HS_API  EWindowFlags operator&(EWindowFlags lhs, EWindowFlags rhs)
+constexpr HS_CORE_API  EWindowFlags operator&(EWindowFlags lhs, EWindowFlags rhs)
 {
 	return static_cast<EWindowFlags>(static_cast<uint64>(lhs) & static_cast<uint64>(rhs));
 }
 
-constexpr HS_API  EWindowFlags& operator&=(EWindowFlags& lhs, EWindowFlags rhs)
+constexpr HS_CORE_API  EWindowFlags& operator&=(EWindowFlags& lhs, EWindowFlags rhs)
 {
 	lhs = lhs & rhs;
 	return lhs;
 }
 
-constexpr HS_API EWindowFlags operator|(EWindowFlags lhs, EWindowFlags rhs)
+constexpr HS_CORE_API EWindowFlags operator|(EWindowFlags lhs, EWindowFlags rhs)
 {
 	return static_cast<EWindowFlags>(static_cast<uint64>(lhs) | static_cast<uint64>(rhs));
 }
 
-constexpr HS_API EWindowFlags operator|(EWindowFlags lhs, uint64 rhs)
+constexpr HS_CORE_API EWindowFlags operator|(EWindowFlags lhs, uint64 rhs)
 {
 	return lhs | static_cast<EWindowFlags>(rhs);
 }
 
-constexpr HS_API EWindowFlags& operator|=(EWindowFlags& lhs, EWindowFlags rhs)
+constexpr HS_CORE_API EWindowFlags& operator|=(EWindowFlags& lhs, EWindowFlags rhs)
 {
 	lhs = lhs | rhs;
 	return lhs;
 }
 
-struct HS_API NativeWindow
+struct HS_CORE_API NativeWindow
 {
 	EWindowFlags flags;
 	void* handle; // HWND for Windows, NSWindow for macOS, SDL_Window* for SDL
@@ -98,18 +98,18 @@ struct HS_API NativeWindow
 	bool futureUse : 4; // padding.
 };
 
-bool HS_API CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
-void HS_API DestroyNativeWindow(NativeWindow& nativeWindow);
-void HS_API ShowNativeWindow(const NativeWindow& nativeWindow);
-void HS_API PollNativeEvent(NativeWindow& nativeWindow);
-void HS_API SetNativeWindowSize(uint16 width, uint16 height);
-void HS_API GetNativeWindowSize(uint16& outWidth, uint16& outHeight);
+bool HS_CORE_API CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFlags flag, NativeWindow& outNativeWindow);
+void HS_CORE_API DestroyNativeWindow(NativeWindow& nativeWindow);
+void HS_CORE_API ShowNativeWindow(const NativeWindow& nativeWindow);
+void HS_CORE_API PollNativeEvent(NativeWindow& nativeWindow);
+void HS_CORE_API SetNativeWindowSize(uint16 width, uint16 height);
+void HS_CORE_API GetNativeWindowSize(uint16& outWidth, uint16& outHeight);
 
-bool HS_API PeekNativeEvent(hs::NativeWindow* pWindow, NativeEvent& outEvent);
-void HS_API PushNativeEvent(const hs::NativeWindow* pWindow, NativeEvent event);
-NativeEvent HS_API PopNativeEvent(const hs::NativeWindow* pWindow);
+bool HS_CORE_API PeekNativeEvent(hs::NativeWindow* pWindow, NativeEvent& outEvent);
+void HS_CORE_API PushNativeEvent(const hs::NativeWindow* pWindow, NativeEvent event);
+NativeEvent HS_CORE_API PopNativeEvent(const hs::NativeWindow* pWindow);
 
-void HS_API SetNativePreEventHandler(void* fnHandler);
+void HS_CORE_API SetNativePreEventHandler(void* fnHandler);
 
 HS_NS_END
 

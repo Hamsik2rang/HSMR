@@ -20,7 +20,7 @@ class RHIFramebuffer;
 
 HS_NS_BEGIN
 
-class HS_API Swapchain : public RHIHandle
+class HS_RHI_API Swapchain : public RHIHandle
 {
 public:
     Swapchain(const SwapchainInfo& info);

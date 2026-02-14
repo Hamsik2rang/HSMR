@@ -6,7 +6,7 @@
 #include "Core/Flag.h"
 #include "Core/Math/Common.h"
 
-#include "Engine/Resource/Object.h"
+#include "Core/Object.h"
 
 
 HS_NS_EDITOR_BEGIN

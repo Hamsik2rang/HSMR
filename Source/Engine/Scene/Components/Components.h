@@ -1,14 +1,5 @@
-//
-//  Components.h
-//  HSMR
-//
-
-#pragma once
-
-// Convenience header to include all components
-
-#include "Scene/Components/TransformComponent.h"
-#include "Scene/Components/TagComponent.h"
-#include "Scene/Components/MeshRendererComponent.h"
-#include "Scene/Components/CameraComponent.h"
-#include "Scene/Components/LightComponent.h"
+// Forwarding header — real implementation in Source/Scene/Components/Components.h
+#ifndef __HS_ENGINE_COMPONENTS_FWD_H__
+#define __HS_ENGINE_COMPONENTS_FWD_H__
+#include "Scene/Components/Components.h"
+#endif

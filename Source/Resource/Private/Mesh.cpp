@@ -1,4 +1,4 @@
-﻿//
+//
 //  Mesh.cpp
 //  HSMR
 //
@@ -67,7 +67,7 @@ void Mesh::CalculateNormal()
         glm::vec3 v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
         glm::vec3 v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
         glm::vec3 v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
-        
+
         glm::vec3 faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
         // 각 정점에 면 법선 누적
@@ -99,38 +99,38 @@ void Mesh::CalculateTangent()
 {
     if (_position.empty() || _indices.empty() || _texcoord[0].empty())
         return;
-    
+
     size_t vertexCount = _position.size() / 3;
     _tangent.clear();
     _tangent.resize(vertexCount * 3, 0.0f);
     _bitangent.clear();
     _bitangent.resize(vertexCount * 3, 0.0f);
-    
+
     // 삼각형별로 탄젠트/바이탄젠트 계산
     for (size_t i = 0; i < _indices.size(); i += 3)
     {
         uint32 i0 = _indices[i];
         uint32 i1 = _indices[i + 1];
         uint32 i2 = _indices[i + 2];
-        
+
         glm::vec3 v0(_position[i0 * 3], _position[i0 * 3 + 1], _position[i0 * 3 + 2]);
         glm::vec3 v1(_position[i1 * 3], _position[i1 * 3 + 1], _position[i1 * 3 + 2]);
         glm::vec3 v2(_position[i2 * 3], _position[i2 * 3 + 1], _position[i2 * 3 + 2]);
-        
+
         glm::vec2 uv0(_texcoord[0][i0 * 2], _texcoord[0][i0 * 2 + 1]);
         glm::vec2 uv1(_texcoord[0][i1 * 2], _texcoord[0][i1 * 2 + 1]);
         glm::vec2 uv2(_texcoord[0][i2 * 2], _texcoord[0][i2 * 2 + 1]);
-        
+
         glm::vec3 deltaPos1 = v1 - v0;
         glm::vec3 deltaPos2 = v2 - v0;
-        
+
         glm::vec2 deltaUV1 = uv1 - uv0;
         glm::vec2 deltaUV2 = uv2 - uv0;
-        
+
         float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
         glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
         glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
-        
+
         // 각 정점에 누적
         for (int j = 0; j < 3; ++j)
         {
@@ -138,26 +138,26 @@ void Mesh::CalculateTangent()
             _tangent[idx * 3] += tangent.x;
             _tangent[idx * 3 + 1] += tangent.y;
             _tangent[idx * 3 + 2] += tangent.z;
-            
+
             _bitangent[idx * 3] += bitangent.x;
             _bitangent[idx * 3 + 1] += bitangent.y;
             _bitangent[idx * 3 + 2] += bitangent.z;
         }
     }
-    
+
     // 정규화 및 직교화
     for (size_t i = 0; i < vertexCount; ++i)
     {
         glm::vec3 n(_normal[i * 3], _normal[i * 3 + 1], _normal[i * 3 + 2]);
         glm::vec3 t(_tangent[i * 3], _tangent[i * 3 + 1], _tangent[i * 3 + 2]);
-        
+
         // Gram-Schmidt 직교화
         t = glm::normalize(t - n * glm::dot(n, t));
-        
+
         _tangent[i * 3] = t.x;
         _tangent[i * 3 + 1] = t.y;
         _tangent[i * 3 + 2] = t.z;
-        
+
         // 바이탄젠트는 법선과 탄젠트의 외적으로 재계산
         glm::vec3 b = glm::cross(n, t);
         _bitangent[i * 3] = b.x;

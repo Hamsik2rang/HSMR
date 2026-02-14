@@ -86,23 +86,35 @@ else()
     list(APPEND TOTAL_FILES ${RHI_METAL_SOURCES})
 endif()
 
-add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
+add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
-    set(VULKAN)
-    set(SPIRV)
+    list(APPEND RHI_FRAMEWORKS
+        "-framework Metal"
+        "-framework Foundation"
+        "-framework QuartzCore"
+    )
+
+    # Platform (STATIC) links SDL3 but its -F search path doesn't propagate
+    if(HSMR_USE_SDL)
+        target_link_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+    endif()
+
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        Platform Core
+        ${RHI_FRAMEWORKS}
+    )
 else()
     set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
     set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
-endif()
 
-target_link_libraries(${TARGET_NAME}
-    PRIVATE
-    Platform Core)
-
-if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
+        Platform Core
         ${VULKAN} ${SPIRV})
 endif()
 
@@ -120,7 +132,8 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_RHI
-    HS_API_EXPORT
+    HS_RHI_API_EXPORT
+    HS_CORE_API_IMPORT
 )
 
 install(TARGETS ${TARGET_NAME}

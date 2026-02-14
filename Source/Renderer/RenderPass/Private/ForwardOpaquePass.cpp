@@ -1,4 +1,5 @@
-#include "Engine/Renderer/RenderPass/ForwardOpaquePass.h"
+#include "Renderer/RenderPass/ForwardOpaquePass.h"
+#include "Renderer/RenderDefinition.h"
 
 #include "Core/Log.h"
 #include "Core/SystemContext.h"
@@ -17,7 +18,7 @@
 #include "Resource/Shader.h"
 #include "Resource/ResourceDefinition.h"
 
-#include "Engine/Camera.h"
+#include "Renderer/Camera.h"
 
 // ECS Scene support
 #include "Scene/Scene.h"

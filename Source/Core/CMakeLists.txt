@@ -9,6 +9,7 @@ set(CORE_HEADERS
     Flag.h
     Hash.h
     Log.h
+    Object.h
     SystemContext.h
 )
 
@@ -22,6 +23,7 @@ set(CORE_SOURCES
     Private/Flag.cpp
     Private/Hash.cpp
     Private/Log.cpp
+    Private/Object.cpp
     Private/SystemContext.cpp
 )
 
@@ -122,7 +124,42 @@ set(CORE_PROFILER_SOURCES
 source_group("Profiler\\Private" FILES ${CORE_PROFILER_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_PROFILER_SOURCES})
 
-add_library(${TARGET_NAME} STATIC ${TOTAL_FILES})
+add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
+
+if(APPLE)
+    list(APPEND CORE_FRAMEWORKS
+        "-framework Foundation"
+        "-framework AppKit"
+        "-framework IOKit"
+    )
+
+    # Add SDL3 framework support
+    if(HSMR_USE_SDL)
+        target_compile_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+
+        target_link_options(${TARGET_NAME}
+            PRIVATE
+            -F${HS_DEPS_LIB_DIR}
+        )
+
+        list(APPEND CORE_FRAMEWORKS "-framework SDL3")
+    endif()
+
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        ${CORE_FRAMEWORKS}
+    )
+
+    # Platform implements Core's *Internal() functions (CreateNativeWindowInternal, etc.)
+    # We defer symbol resolution to runtime to avoid Core <-> Platform circular dependency.
+    target_link_options(${TARGET_NAME}
+        PRIVATE
+        "-undefined" "dynamic_lookup"
+    )
+endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
@@ -136,7 +173,7 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:Release>:_RELEASE>
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_CORE
-    HS_API_EXPORT
+    HS_CORE_API_EXPORT
 )
 
 # Link Tracy if enabled

@@ -15,7 +15,7 @@ HS_NS_BEGIN
 class VulkanCommandBuffer;
 class RHIContext;
 
-class HS_API VulkanSwapchain final : public Swapchain
+class HS_RHI_API VulkanSwapchain final : public Swapchain
 {
 public:
     friend class VulkanContext;

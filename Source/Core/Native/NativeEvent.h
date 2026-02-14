@@ -11,7 +11,7 @@
 
 HS_NS_BEGIN
 
-struct HS_API NativeEvent
+struct HS_CORE_API NativeEvent
 {
     enum class Type : uint8
     {

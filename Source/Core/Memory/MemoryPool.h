@@ -23,7 +23,7 @@ class StackAllocator;
 // Platform-specific aligned allocation utilities
 namespace MemoryUtils
 {
-    HS_API inline void* AlignedAlloc(size_t size, size_t alignment) noexcept
+    HS_CORE_API inline void* AlignedAlloc(size_t size, size_t alignment) noexcept
     {
         #if defined(_WIN32)
             return _aligned_malloc(size, alignment);
@@ -44,7 +44,7 @@ namespace MemoryUtils
         #endif
     }
 
-    HS_API inline void AlignedFree(void* ptr) noexcept
+    HS_CORE_API inline void AlignedFree(void* ptr) noexcept
     {
         if (!ptr) return;
         

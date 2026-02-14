@@ -1,4 +1,4 @@
-﻿#include "Renderer/RenderTarget.h"
+#include "Renderer/RenderTarget.h"
 
 #include "RHI/RHIContext.h"
 #include "RHI/RHIDefinition.h"
@@ -22,29 +22,27 @@ void RenderTarget::Create(const RenderTargetInfo& info)
 {
     HS_CHECK(info.colorTextureCount >= 1, "Count of ColorTexture should be at least 1 or more");
 
-    RHIContext* pRHIContext = RHIContext::Get();
+    RHIContext* rhiContext = RHIContext::Get();
 
     if (true == info.isSwapchainTarget)
     {
         HS_CHECK(info.colorTextureCount == 1, "Swapchain RenderTarget must have only 1 ColorTexture");
 
-        _colorTextures.push_back(pRHIContext->CreateTexture("Swapchain RenderTarget Color Texture", nullptr, info.colorTextureInfos[0]));
+        _colorTextures.push_back(rhiContext->CreateTexture("Swapchain RenderTarget Color Texture", nullptr, info.colorTextureInfos[0]));
     }
     else
     {
-        //_colorTextures.resize(info.colorTextureCount);
-
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
             
-            RHITexture* texture = pRHIContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
+            RHITexture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
             _colorTextures.push_back(texture);
         }
     }
 
     if (info.useDepthStencilTexture)
     {
-        _depthStencilTexture = pRHIContext->CreateTexture("RenderTarget DepthStencil Teture", nullptr, info.depthStencilInfo);
+        _depthStencilTexture = rhiContext->CreateTexture("RenderTarget DepthStencil Teture", nullptr, info.depthStencilInfo);
     }
 
     //... Resolve Target

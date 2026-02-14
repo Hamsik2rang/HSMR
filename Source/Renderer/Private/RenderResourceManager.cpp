@@ -1,4 +1,5 @@
 #include "Renderer/RenderResourceManager.h"
+#include "Renderer/RenderDefinition.h"
 
 #include "Core/Log.h"
 #include "Core/Hash.h"

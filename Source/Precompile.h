@@ -98,6 +98,18 @@ typedef uint64_t uint64;
 #define HS_API
 #endif
 
+#if defined(HS_CORE_API_EXPORT)
+#define HS_CORE_API __attribute__((__visibility__("default")))
+#else
+#define HS_CORE_API
+#endif
+
+#if defined(HS_RHI_API_EXPORT)
+#define HS_RHI_API __attribute__((__visibility__("default")))
+#else
+#define HS_RHI_API
+#endif
+
 #if defined(HS_EDITOR_API_EXPORT)
 #define HS_EDITOR_API __attribute__((__visibility__("default")))
 #else
@@ -122,6 +134,24 @@ typedef uint64_t uint64;
 #define HS_SHADER_SYSTEM_API
 #endif
 
+#if defined(HS_RESOURCE_API_EXPORT)
+#define HS_RESOURCE_API __attribute__((__visibility__("default")))
+#else
+#define HS_RESOURCE_API
+#endif
+
+#if defined(HS_RENDERER_API_EXPORT)
+#define HS_RENDERER_API __attribute__((__visibility__("default")))
+#else
+#define HS_RENDERER_API
+#endif
+
+#if defined(HS_SCENE_API_EXPORT)
+#define HS_SCENE_API __attribute__((__visibility__("default")))
+#else
+#define HS_SCENE_API
+#endif
+
 #else
 
 #if defined(HS_API_EXPORT)
@@ -130,6 +160,22 @@ typedef uint64_t uint64;
 #define HS_API __declspec(dllimport)
 #else
 #define HS_API
+#endif
+
+#if defined(HS_CORE_API_EXPORT)
+#define HS_CORE_API __declspec(dllexport)
+#elif defined(HS_CORE_API_IMPORT)
+#define HS_CORE_API __declspec(dllimport)
+#else
+#define HS_CORE_API
+#endif
+
+#if defined(HS_RHI_API_EXPORT)
+#define HS_RHI_API __declspec(dllexport)
+#elif defined(HS_RHI_API_IMPORT)
+#define HS_RHI_API __declspec(dllimport)
+#else
+#define HS_RHI_API
 #endif
 
 #if defined(HS_EDITOR_API_EXPORT)
@@ -162,6 +208,30 @@ typedef uint64_t uint64;
 #define HS_SHADER_SYSTEM_API __declspec(dllimport)
 #else
 #define HS_SHADER_SYSTEM_API
+#endif
+
+#if defined(HS_RESOURCE_API_EXPORT)
+#define HS_RESOURCE_API __declspec(dllexport)
+#elif defined(HS_RESOURCE_API_IMPORT)
+#define HS_RESOURCE_API __declspec(dllimport)
+#else
+#define HS_RESOURCE_API
+#endif
+
+#if defined(HS_RENDERER_API_EXPORT)
+#define HS_RENDERER_API __declspec(dllexport)
+#elif defined(HS_RENDERER_API_IMPORT)
+#define HS_RENDERER_API __declspec(dllimport)
+#else
+#define HS_RENDERER_API
+#endif
+
+#if defined(HS_SCENE_API_EXPORT)
+#define HS_SCENE_API __declspec(dllexport)
+#elif defined(HS_SCENE_API_IMPORT)
+#define HS_SCENE_API __declspec(dllimport)
+#else
+#define HS_SCENE_API
 #endif
 #endif
 

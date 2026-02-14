@@ -243,7 +243,7 @@ add_library(${TARGET_NAME}
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Engine
+        Core RHI Engine Resource Renderer Scene
         ${HS_DEPS_LIB_DIR}/vulkan-1.lib
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
@@ -254,14 +254,14 @@ else()
     if(HSMR_USE_SDL)
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            "-Wl, -all_load" Engine
+            "-Wl, -all_load" Core RHI Engine Resource Renderer Scene
             ${OSX_FRAMEWORK}
             "-F${HS_SDL3_FRAMEWORK_DIR}/.." "-framework SDL3"
         )
     else()
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            "-Wl, -all_load" Engine
+            "-Wl, -all_load" Core RHI Engine Resource Renderer Scene
             ${OSX_FRAMEWORK}
         )
     endif()
@@ -297,6 +297,12 @@ target_compile_definitions(${TARGET_NAME}
     HS_EDITOR_API_EXPORT
 
     HS_API_IMPORT
+    HS_CORE_API_IMPORT
+    HS_RHI_API_IMPORT
+    HS_RESOURCE_API_IMPORT
+    HS_RENDERER_API_IMPORT
+    HS_SHADER_SYSTEM_API_IMPORT
+    HS_SCENE_API_IMPORT
 
     $<$<BOOL:${IMGUIZMO_FOUND}>:HAS_IMGUIZMO=1>
 )

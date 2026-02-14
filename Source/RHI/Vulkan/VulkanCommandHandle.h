@@ -16,7 +16,7 @@
 
 HS_NS_BEGIN
 
-struct HS_API VulkanCommandQueue : public RHICommandQueue
+struct HS_RHI_API VulkanCommandQueue : public RHICommandQueue
 {
     VulkanCommandQueue(const char* name);
     ~VulkanCommandQueue() override;
@@ -24,7 +24,7 @@ struct HS_API VulkanCommandQueue : public RHICommandQueue
     uint32 queueIndex;
 };
 
-struct HS_API VulkanCommandPool : public RHICommandPool
+struct HS_RHI_API VulkanCommandPool : public RHICommandPool
 {
     VulkanCommandPool(const char* name);
     ~VulkanCommandPool() override;
@@ -32,7 +32,7 @@ struct HS_API VulkanCommandPool : public RHICommandPool
     VkCommandPool handle;
 };
 
-struct HS_API VulkanCommandBuffer : public RHICommandBuffer
+struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 {
     VulkanCommandBuffer(const char* name);
     ~VulkanCommandBuffer() override;

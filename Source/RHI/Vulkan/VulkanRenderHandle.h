@@ -14,7 +14,7 @@
 
 HS_NS_BEGIN
 
-struct HS_API VulkanRenderPass : public RHIRenderPass
+struct HS_RHI_API VulkanRenderPass : public RHIRenderPass
 {
     VulkanRenderPass(const char* name, const RenderPassInfo& info)
         : RHIRenderPass(name, info)
@@ -25,7 +25,7 @@ public:
     VkRenderPass handle = VK_NULL_HANDLE;
 };
 
-struct HS_API VulkanFramebuffer : public RHIFramebuffer
+struct HS_RHI_API VulkanFramebuffer : public RHIFramebuffer
 {
     VulkanFramebuffer(const char* name, const FramebufferInfo& info)
         : RHIFramebuffer(name, info)
@@ -36,13 +36,13 @@ public:
     VkFramebuffer handle = VK_NULL_HANDLE;
 };
 
-struct HS_API VulkanPipelineBase
+struct HS_RHI_API VulkanPipelineBase
 {
     VkPipeline handle       = VK_NULL_HANDLE;
     VkPipelineLayout layout = VK_NULL_HANDLE;
 };
 
-struct HS_API VulkanGraphicsPipeline : public RHIGraphicsPipeline, public VulkanPipelineBase
+struct HS_RHI_API VulkanGraphicsPipeline : public RHIGraphicsPipeline, public VulkanPipelineBase
 {
     VulkanGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
         : RHIGraphicsPipeline(name, info)
@@ -50,7 +50,7 @@ struct HS_API VulkanGraphicsPipeline : public RHIGraphicsPipeline, public Vulkan
     ~VulkanGraphicsPipeline() override = default;
 };
 
-struct HS_API VulkanComputePipeline : public RHIComputePipeline, public VulkanPipelineBase
+struct HS_RHI_API VulkanComputePipeline : public RHIComputePipeline, public VulkanPipelineBase
 {
     VulkanComputePipeline(const char* name, const ComputePipelineInfo& info)
         : RHIComputePipeline(name, info)

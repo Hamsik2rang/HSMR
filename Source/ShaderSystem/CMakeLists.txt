@@ -44,7 +44,6 @@ endif()
 if(WIN32)
     target_link_options(${TARGET_NAME}
         PRIVATE
-        "/WHOLEARCHIVE:Core"
         "/WHOLEARCHIVE:Platform"
     )
 endif()
@@ -63,6 +62,7 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_SHADER_SYSTEM
     HS_SHADER_SYSTEM_API_EXPORT
+    HS_CORE_API_IMPORT
 )
 
 install(TARGETS ${TARGET_NAME}

@@ -19,7 +19,7 @@
 HS_NS_BEGIN
 
 
-class HS_API RHIContext
+class HS_RHI_API RHIContext
 {
 public:
 	RHIContext() = default;

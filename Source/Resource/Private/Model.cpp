@@ -1,4 +1,4 @@
-#include "Engine/Resource/Model.h"
+#include "Resource/Model.h"
 
 HS_NS_BEGIN
 
@@ -6,11 +6,11 @@ void Model::Update()
 {
     if (_isMeshDirty)
     {
-        
+
     }
     if (_isMaterialDirty)
     {
-        
+
     }
     if (_isTransformDirty)
     {

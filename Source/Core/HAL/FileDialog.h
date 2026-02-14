@@ -12,13 +12,13 @@
 
 HS_NS_BEGIN
 
-struct HS_API FileDialogFilter
+struct HS_CORE_API FileDialogFilter
 {
     const char* name;    // e.g. "Scene Files"
     const char* pattern; // e.g. "*.scene"
 };
 
-class HS_API FileDialog
+class HS_CORE_API FileDialog
 {
 public:
     static std::string OpenFile(const FileDialogFilter* filters = nullptr,

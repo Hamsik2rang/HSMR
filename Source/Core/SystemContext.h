@@ -11,7 +11,7 @@
 
 HS_NS_BEGIN
 
-struct HS_API SystemContext
+struct HS_CORE_API SystemContext
 {
 public:
     ~SystemContext();

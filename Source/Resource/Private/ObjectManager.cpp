@@ -1,6 +1,6 @@
 #include "Resource/ObjectManager.h"
 
-#include "Engine/Resource/ResourceDefinition.h"
+#include "Resource/ResourceDefinition.h"
 
 #include "Core/HAL/FileSystem.h"
 
@@ -1482,6 +1482,18 @@ bool ObjectManager::loadGLTF(const std::string& path, Scoped<Model>& outModel, b
     outModel->SetMaterial(std::move(materials.front()));
 
     return true;
+}
+
+Scoped<Material> ObjectManager::LoadMaterialFromFile(const std::string& path, bool isAbsolutePath)
+{
+    // Material loading from file is not yet implemented
+    HS_LOG(warning, "LoadMaterialFromFile not implemented yet: %s", path.c_str());
+    return nullptr;
+}
+
+void ObjectManager::FreeMaterial(Material* material)
+{
+    // The material destructor should handle cleanup
 }
 
 HS_NS_END

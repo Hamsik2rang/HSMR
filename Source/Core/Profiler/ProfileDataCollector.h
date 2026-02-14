@@ -31,7 +31,7 @@ struct ZoneStats
     float maxMs = 0.0f;
 };
 
-class HS_API ProfileDataCollector
+class HS_CORE_API ProfileDataCollector
 {
 public:
     static ProfileDataCollector& Get();

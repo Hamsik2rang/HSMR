@@ -1,4 +1,4 @@
-﻿//
+//
 //  Image.cpp
 //  HSMR
 //
@@ -86,7 +86,7 @@ Image& Image::operator=(Image&& o)
         _width   = o._width;
         _height  = o._height;
         _channel = o._channel;
-        
+
         // Reset moved-from object
         o._width = 0;
         o._height = 0;

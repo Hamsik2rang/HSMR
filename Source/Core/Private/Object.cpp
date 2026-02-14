@@ -4,7 +4,7 @@
 //
 //  Created by Yongsik Im on 2/4/25.
 //
-#include "Engine/Resource/Object.h"
+#include "Core/Object.h"
 #include <atomic>
 
 HS_NS_BEGIN

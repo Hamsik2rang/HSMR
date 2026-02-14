@@ -13,13 +13,13 @@
 HS_NS_BEGIN
 
 template <typename En, typename std::enable_if<std::is_enum<En>::value>::type* = nullptr>
-class HS_API Flag
+class HS_CORE_API Flag
 {
     
 };
 
 template <typename En>
-class HS_API DirtyFlag : public Flag<En>
+class HS_CORE_API DirtyFlag : public Flag<En>
 {
     
 };

@@ -2,41 +2,12 @@
 //  ForwardOpaquePass.h
 //  HSMR
 //
-//  Created by Yongsik Im on 1/30/25.
+//  DEPRECATED: Use "Renderer/RenderPass/ForwardOpaquePass.h" instead.
+//  This forwarding header exists for backward compatibility during migration.
 //
-#ifndef __HS_FORWARD_OPAQUE_PASS_H__
-#define __HS_FORWARD_OPAQUE_PASS_H__
+#ifndef __HS_ENGINE_FORWARD_OPAQUE_PASS_FWD_H__
+#define __HS_ENGINE_FORWARD_OPAQUE_PASS_FWD_H__
 
-#include "Precompile.h"
-#include "Engine/Renderer/RenderPass/ForwardRenderPass.h"
-
-namespace hs
-{
-/*#include "RHI/RenderHandle.h"*/ class RHIRenderPass;
-/*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
-} // namespace hs
-
-HS_NS_BEGIN
-
-class HS_API ForwardOpaquePass : public ForwardRenderPass
-{
-public:
-    ForwardOpaquePass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
-    ~ForwardOpaquePass() override;
-
-    void OnBeforeRendering(uint32_t submitIndex) override;
-
-    void Configure(RenderTarget* renderTarget) override;
-
-    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) override;
-    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const RenderParameter& param) override;
-
-    void OnAfterRendering() override;
-
-private:
-    RenderTarget* _currentRenderTarget = nullptr;
-};
-
-HS_NS_END
+#include "Renderer/RenderPass/ForwardOpaquePass.h"
 
 #endif

@@ -11,7 +11,7 @@
 
 HS_NS_BEGIN
 
-class HS_API Input
+class HS_CORE_API Input
 {
 public:
     enum class Button : uint8
