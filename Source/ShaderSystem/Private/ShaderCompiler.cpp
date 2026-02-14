@@ -368,6 +368,27 @@ ShaderCompileOutputEx ShaderCompiler::CompileFromFile(const std::string& filePat
 // Reflection extraction
 // ============================
 
+enum class EResourceCategory { Buffer, Texture, Sampler };
+
+static uint32 getResourceBinding(slang::VariableLayoutReflection* param,
+                                 EResourceCategory category,
+                                 EShaderLanguage targetLanguage)
+{
+    if (targetLanguage == EShaderLanguage::MSL)
+    {
+        switch (category)
+        {
+        case EResourceCategory::Buffer:
+            return static_cast<uint32>(param->getOffset(slang::ParameterCategory::MetalBuffer));
+        case EResourceCategory::Texture:
+            return static_cast<uint32>(param->getOffset(slang::ParameterCategory::MetalTexture));
+        case EResourceCategory::Sampler:
+            return static_cast<uint32>(param->getOffset(slang::ParameterCategory::SamplerState));
+        }
+    }
+    return static_cast<uint32>(param->getBindingIndex());
+}
+
 void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                                        const ShaderCompileRequest& request,
                                        ShaderReflectionDataEx& outReflection)
@@ -379,6 +400,8 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
         HS_LOG(error, "[ShaderCompiler] Failed to get program layout for reflection");
         return;
     }
+
+    EShaderLanguage targetLang = GetTargetLanguage();
 
     // Extract global parameters (ConstantBuffers, textures, samplers)
     unsigned paramCount = layout->getParameterCount();
@@ -404,7 +427,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
         {
             ShaderBufferBindingInfo bufInfo;
             bufInfo.name = param->getName() ? param->getName() : "";
-            bufInfo.binding = static_cast<uint32>(param->getBindingIndex());
+            bufInfo.binding = getResourceBinding(param, EResourceCategory::Buffer, targetLang);
             bufInfo.set = static_cast<uint32>(param->getBindingSpace());
             bufInfo.resourceType = EResourceType::UNIFORM_BUFFER;
 
@@ -444,7 +467,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
             {
                 ShaderTextureBindingInfo texInfo;
                 texInfo.name = param->getName() ? param->getName() : "";
-                texInfo.binding = static_cast<uint32>(param->getBindingIndex());
+                texInfo.binding = getResourceBinding(param, EResourceCategory::Texture, targetLang);
                 texInfo.set = static_cast<uint32>(param->getBindingSpace());
                 texInfo.stages = request.requestedStages;
                 texInfo.dimension = 2; // Default to 2D
@@ -454,7 +477,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
             {
                 ShaderSamplerBindingInfo sampInfo;
                 sampInfo.name = param->getName() ? param->getName() : "";
-                sampInfo.binding = static_cast<uint32>(param->getBindingIndex());
+                sampInfo.binding = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
                 sampInfo.set = static_cast<uint32>(param->getBindingSpace());
                 sampInfo.stages = request.requestedStages;
                 outReflection.samplerBindings.push_back(std::move(sampInfo));
@@ -462,24 +485,56 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
             else if (bindingType == slang::ParameterCategory::DescriptorTableSlot)
             {
                 // Combined image sampler (e.g., Sampler2D in Slang)
-                // Treat as texture binding - sampler is combined
                 ShaderTextureBindingInfo texInfo;
                 texInfo.name = param->getName() ? param->getName() : "";
-                texInfo.binding = static_cast<uint32>(param->getBindingIndex());
+                texInfo.binding = getResourceBinding(param, EResourceCategory::Texture, targetLang);
                 texInfo.set = static_cast<uint32>(param->getBindingSpace());
                 texInfo.stages = request.requestedStages;
                 texInfo.dimension = 2; // Default to 2D
                 outReflection.textureBindings.push_back(std::move(texInfo));
 
-                HS_LOG(info, "[ShaderCompiler] Combined sampler '%s' at binding %u",
+                // On Metal, Sampler2D decomposes into separate texture + sampler
+                if (targetLang == EShaderLanguage::MSL)
+                {
+                    ShaderSamplerBindingInfo sampInfo;
+                    sampInfo.name = param->getName() ? param->getName() : "";
+                    sampInfo.binding = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
+                    sampInfo.set = static_cast<uint32>(param->getBindingSpace());
+                    sampInfo.stages = request.requestedStages;
+                    outReflection.samplerBindings.push_back(std::move(sampInfo));
+                }
+
+                HS_LOG(info, "[ShaderCompiler] Combined sampler '%s' at texture binding %u",
                        texInfo.name.c_str(), texInfo.binding);
+            }
+            else if (bindingType == slang::ParameterCategory::Mixed)
+            {
+                // Mixed category: Sampler2D on Metal decomposes into texture + sampler
+                ShaderTextureBindingInfo texInfo;
+                texInfo.name = param->getName() ? param->getName() : "";
+                texInfo.binding = getResourceBinding(param, EResourceCategory::Texture, targetLang);
+                texInfo.set = static_cast<uint32>(param->getBindingSpace());
+                texInfo.stages = request.requestedStages;
+                texInfo.dimension = 2;
+                outReflection.textureBindings.push_back(std::move(texInfo));
+
+                ShaderSamplerBindingInfo sampInfo;
+                sampInfo.name = param->getName() ? param->getName() : "";
+                sampInfo.binding = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
+                sampInfo.set = static_cast<uint32>(param->getBindingSpace());
+                sampInfo.stages = request.requestedStages;
+                outReflection.samplerBindings.push_back(std::move(sampInfo));
+
+                HS_LOG(info, "[ShaderCompiler] Mixed sampler '%s' tex=%u samp=%u",
+                       (param->getName() ? param->getName() : ""),
+                       texInfo.binding, sampInfo.binding);
             }
         }
         else if (kind == slang::TypeReflection::Kind::SamplerState)
         {
             ShaderSamplerBindingInfo sampInfo;
             sampInfo.name = param->getName() ? param->getName() : "";
-            sampInfo.binding = static_cast<uint32>(param->getBindingIndex());
+            sampInfo.binding = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
             sampInfo.set = static_cast<uint32>(param->getBindingSpace());
             sampInfo.stages = request.requestedStages;
             outReflection.samplerBindings.push_back(std::move(sampInfo));
@@ -527,7 +582,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
 
                 ShaderBufferBindingInfo bufInfo;
                 bufInfo.name = param->getName() ? param->getName() : "";
-                bufInfo.binding = static_cast<uint32>(param->getBindingIndex());
+                bufInfo.binding = getResourceBinding(param, EResourceCategory::Buffer, targetLang);
                 bufInfo.set = static_cast<uint32>(param->getBindingSpace());
                 bufInfo.stages = hsStage;
                 bufInfo.resourceType = EResourceType::UNIFORM_BUFFER;
