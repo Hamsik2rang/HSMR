@@ -591,7 +591,7 @@ EFilterMode MetalUtility::FromMinMagFilter(MTLSamplerMinMagFilter filter)
     return EFilterMode::NEAREST;
 }
 
-MTLSamplerMipFilter ToMipFilter(EFilterMode filter)
+MTLSamplerMipFilter MetalUtility::ToMipFilter(EFilterMode filter)
 {
     switch (filter)
     {
@@ -604,7 +604,7 @@ MTLSamplerMipFilter ToMipFilter(EFilterMode filter)
     return MTLSamplerMipFilterNearest;
 }
 
-EFilterMode FromMipFilter(MTLSamplerMipFilter filter)
+EFilterMode MetalUtility::FromMipFilter(MTLSamplerMipFilter filter)
 {
     switch (filter)
     {
@@ -618,7 +618,7 @@ EFilterMode FromMipFilter(MTLSamplerMipFilter filter)
     return EFilterMode::NEAREST;
 }
 
-MTLSamplerAddressMode ToSamplerAddressMode(EAddressMode addressMode)
+MTLSamplerAddressMode MetalUtility::ToSamplerAddressMode(EAddressMode addressMode)
 {
     switch (addressMode)
     {
@@ -634,7 +634,7 @@ MTLSamplerAddressMode ToSamplerAddressMode(EAddressMode addressMode)
     return MTLSamplerAddressModeClampToEdge;
 }
 
-EAddressMode FromSamplerAddressMode(MTLSamplerAddressMode addressMode)
+EAddressMode MetalUtility::FromSamplerAddressMode(MTLSamplerAddressMode addressMode)
 {
     switch (addressMode)
     {
