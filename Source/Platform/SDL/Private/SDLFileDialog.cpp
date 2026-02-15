@@ -12,11 +12,21 @@
 #include <SDL3/SDL.h>
 
 #ifdef __APPLE__
+struct HSFileDialogFilter
+{
+    const char* name;
+    const char* pattern;
+};
+extern std::string HSOpenFileDialog_Native(const HSFileDialogFilter* filters, int filterCount,
+                                           const char* defaultLocation);
+extern std::string HSSaveFileDialog_Native(const HSFileDialogFilter* filters, int filterCount,
+                                           const char* defaultLocation);
 extern std::string HSOpenFolderDialog_Native(const char* defaultLocation);
 #endif
 
 HS_NS_BEGIN
 
+#ifndef __APPLE__
 struct FileDialogContext
 {
     std::string result;
@@ -42,13 +52,18 @@ static std::string WaitForDialog(FileDialogContext& ctx)
     }
     return ctx.result;
 }
+#endif
 
 std::string FileDialog::OpenFile(const FileDialogFilter* filters, uint32 filterCount,
                                  const char* defaultLocation)
 {
+#ifdef __APPLE__
+    // Use native NSOpenPanel — SDL's async approach deadlocks during ImGui frames
+    return HSOpenFileDialog_Native(reinterpret_cast<const HSFileDialogFilter*>(filters),
+                                   static_cast<int>(filterCount), defaultLocation);
+#else
     FileDialogContext ctx;
 
-    // Convert filters to SDL_DialogFileFilter
     std::vector<SDL_DialogFileFilter> sdlFilters;
     if (filters && filterCount > 0)
     {
@@ -67,11 +82,16 @@ std::string FileDialog::OpenFile(const FileDialogFilter* filters, uint32 filterC
         defaultLocation, false);
 
     return WaitForDialog(ctx);
+#endif
 }
 
 std::string FileDialog::SaveFile(const FileDialogFilter* filters, uint32 filterCount,
                                  const char* defaultLocation)
 {
+#ifdef __APPLE__
+    return HSSaveFileDialog_Native(reinterpret_cast<const HSFileDialogFilter*>(filters),
+                                    static_cast<int>(filterCount), defaultLocation);
+#else
     FileDialogContext ctx;
 
     std::vector<SDL_DialogFileFilter> sdlFilters;
@@ -92,6 +112,7 @@ std::string FileDialog::SaveFile(const FileDialogFilter* filters, uint32 filterC
         defaultLocation);
 
     return WaitForDialog(ctx);
+#endif
 }
 
 std::string FileDialog::OpenFolder(const char* defaultLocation)

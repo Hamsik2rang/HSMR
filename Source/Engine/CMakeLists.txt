@@ -85,7 +85,7 @@ list(APPEND TOTAL_FILES ${ENGINE_SCENE_HEADERS})
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
 if(APPLE)
-    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController -framework UniformTypeIdentifiers")
 
     # Add SDL3 framework support
     if(HSMR_USE_SDL)
