@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 
-#include "Engine/Renderer/RenderPath.h"
+#include "Renderer/RenderPath.h"
 
 
 HS_NS_EDITOR_BEGIN

@@ -6,7 +6,7 @@
 #include "Core/Native/NativeWindow.h"
 
 #include "Engine/EngineContext.h"
-#include "Engine/Resource/ObjectManager.h"
+#include "Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorWindow.h"

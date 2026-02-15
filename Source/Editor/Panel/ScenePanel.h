@@ -13,7 +13,7 @@
 #include "Editor/Panel/Panel.h"
 
 #include "Renderer/RenderTarget.h"
-#include "Geometry/GeometryDefinition.h"
+#include "Resource/GeometryDefinition.h"
 
 #include "Camera.h"
 #include "Scene/Entity.h"

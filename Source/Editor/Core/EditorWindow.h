@@ -11,8 +11,8 @@
 #include "Precompile.h"
 
 #include "Engine/Window.h"
-#include "Engine/Renderer/RendererDefinition.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Renderer/RendererDefinition.h"
+#include "Renderer/RenderTarget.h"
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }

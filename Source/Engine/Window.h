@@ -10,7 +10,7 @@
 #include "Precompile.h"
 
 #include "Core/Native/NativeWindow.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Renderer/RenderTarget.h"
 
 #include <list>
 #include <queue>
