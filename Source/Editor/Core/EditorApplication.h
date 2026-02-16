@@ -14,8 +14,6 @@
 
 namespace hs { namespace editor { class GUIContext; } }
 namespace hs { namespace editor { class ProjectLauncherWindow; } }
-namespace hs { struct EngineContext; }
-
 HS_NS_EDITOR_BEGIN
 
 class HS_EDITOR_API EditorApplication : public Application

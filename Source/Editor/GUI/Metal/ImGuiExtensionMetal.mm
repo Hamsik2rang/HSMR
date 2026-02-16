@@ -1,6 +1,5 @@
 #include "Editor/GUI/ImGuiExtension.h"
 
-#include "Engine/EngineContext.h"
 #include "Engine/Window.h"
 
 #include "RHI/Metal/MetalContext.h"

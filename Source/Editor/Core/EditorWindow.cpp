@@ -67,7 +67,8 @@ bool EditorWindow::onInitialize()
     _renderer->AddPass(std::move(opaquePass));
 
     // Setup test scene before panels (so EditorContext has a scene)
-    setupTestScene();
+    setupResources();
+//    setupTestScene();
 
     setupPanels();
 
@@ -77,7 +78,6 @@ bool EditorWindow::onInitialize()
 
     _editorCamera = MakeScoped<EditorCamera>();
 
-    setupResources();
 
     return true;
 }
@@ -243,40 +243,12 @@ void EditorWindow::setupTestScene()
     EditorContext::Get().SetActiveScene(_testScene.get());
 
     // Create some test entities
-    Entity mainCamera = _testScene->CreateEntity("Main Camera");
-    mainCamera.AddComponent<CameraComponent>();
-    auto& camTransform = mainCamera.GetComponent<TransformComponent>();
-    camTransform.SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));
-
-    Entity directionalLight = _testScene->CreateEntity("Directional Light");
-    directionalLight.AddComponent<LightComponent>(ELightType::Directional);
-    auto& lightTransform = directionalLight.GetComponent<TransformComponent>();
-    lightTransform.SetPosition(glm::vec3(0.0f, 10.0f, 0.0f));
-    lightTransform.SetEulerAngles(glm::vec3(-45.0f, 0.0f, 0.0f));
-
-    Entity cube = _testScene->CreateEntity("Cube");
-    cube.AddComponent<MeshRendererComponent>();
-    auto& cubeTransform = cube.GetComponent<TransformComponent>();
-    cubeTransform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-
-    Entity sphere = _testScene->CreateEntity("Sphere");
-    sphere.AddComponent<MeshRendererComponent>();
-    auto& sphereTransform = sphere.GetComponent<TransformComponent>();
-    sphereTransform.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f));
-
-    // Create a parent-child hierarchy for testing
-    Entity parent = _testScene->CreateEntity("Parent Object");
-    auto& parentTransform = parent.GetComponent<TransformComponent>();
-    parentTransform.SetPosition(glm::vec3(-3.0f, 0.0f, 0.0f));
-
-    Entity child1 = _testScene->CreateChildEntity(parent, "Child 1");
-    auto& child1Transform = child1.GetComponent<TransformComponent>();
-    child1Transform.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
-
-    Entity child2 = _testScene->CreateChildEntity(parent, "Child 2");
-    auto& child2Transform = child2.GetComponent<TransformComponent>();
-    child2Transform.SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
-
+    Entity entity = _testScene->CreateEntity("Damaged Helmet");
+    auto& transform = entity.AddComponent<TransformComponent>();
+    transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    
+    entity.AddComponent<MeshRendererComponent>();
+    
     // Initial update to calculate world transforms
     _testScene->Update(0.0f);
 }

@@ -8,7 +8,7 @@
 #define __HS_APPLICATION_PROTOTYPE_APPLICATION_H__
 
 #include "Precompile.h"
-#include "Camera.h"
+#include "Renderer/Camera.h"
 #include "Scene.h"
 #include "MousePicker.h"
 

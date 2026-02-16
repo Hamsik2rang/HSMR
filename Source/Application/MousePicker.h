@@ -10,7 +10,7 @@
 #include "Precompile.h"
 #include "Core/Math/Common.h"
 #include "SceneObject.h"
-#include "Camera.h"
+#include "Renderer/Camera.h"
 #include "Scene.h"
 
 HS_NS_BEGIN

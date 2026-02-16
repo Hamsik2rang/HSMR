@@ -9,7 +9,7 @@
 
 #include "Precompile.h"
 #include "SceneObject.h"
-#include "Camera.h"
+#include "Renderer/Camera.h"
 #include <string>
 #include <vector>
 #include <unordered_map>

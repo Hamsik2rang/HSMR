@@ -15,8 +15,6 @@
 namespace hs { class RenderPath; }
 namespace hs { class Scene; }
 namespace hs { class Window; }
-namespace hs { class EngineContext; }
-
 HS_NS_BEGIN
 
 class HS_API Application

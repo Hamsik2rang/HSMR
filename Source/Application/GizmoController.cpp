@@ -5,7 +5,7 @@
 //  ImGuizmo wrapper for 3D object manipulation
 //
 #include "GizmoController.h"
-#include "Camera.h"
+#include "Renderer/Camera.h"
 #include "SceneObject.h"
 
 #include "imgui.h"

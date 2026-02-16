@@ -15,7 +15,7 @@
 #include "Renderer/RenderTarget.h"
 #include "Resource/GeometryDefinition.h"
 
-#include "Camera.h"
+#include "Renderer/Camera.h"
 #include "Scene/Entity.h"
 
 HS_NS_EDITOR_BEGIN

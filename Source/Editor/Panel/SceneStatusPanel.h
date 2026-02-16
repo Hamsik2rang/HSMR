@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 #include "Editor/Panel/Panel.h"
-#include "Engine/Camera.h"
+#include "Renderer/Camera.h"
 
 #include <array>
 

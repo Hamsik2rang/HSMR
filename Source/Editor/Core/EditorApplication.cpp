@@ -5,7 +5,6 @@
 #include "Core/HAL/FileSystem.h"
 #include "Core/Native/NativeWindow.h"
 
-#include "Engine/EngineContext.h"
 #include "Resource/ObjectManager.h"
 
 #include "Editor/GUI/GUIContext.h"
