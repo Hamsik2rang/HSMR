@@ -1,23 +1,6 @@
-struct PerViewUBO
-{
-    float4x4 viewMatrix;
-    float4x4 projectionMatrix;
-    float4x4 viewProjectionMatrix;
-    float4x4 inverseViewMatrix;
-    float4x4 inverseProjectionMatrix;
-    float4x4 inverseViewProjectionMatrix;
+module BlinnPhong;
+import GlobalUniform;
 
-    float4 cameraPosition;
-};
-
-struct PerDrawUBO
-{
-    float4x4 modelMatrix;
-    float4x4 inverseModelMatrix;
-};
-
-ConstantBuffer<PerViewUBO> perView : register(b1);
-ConstantBuffer<PerDrawUBO> perDraw : register(b2);
 Sampler2D albedoSampler : register(s0);
 
 struct VSInput

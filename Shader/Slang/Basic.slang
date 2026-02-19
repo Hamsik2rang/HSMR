@@ -1,4 +1,5 @@
-#include "GlobalInputLayout.hlsli"
+import GlobalUniform;
+
 
 [shader("vertex")]
 FSInput VertexMain(VSInput input)
