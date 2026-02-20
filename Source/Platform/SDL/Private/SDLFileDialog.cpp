@@ -130,4 +130,10 @@ std::string FileDialog::OpenFolder(const char* defaultLocation)
 #endif
 }
 
+bool FileDialog::OpenInExplorer(const std::string& path)
+{
+    std::string url = "file://" + path;
+    return SDL_OpenURL(url.c_str());
+}
+
 HS_NS_END

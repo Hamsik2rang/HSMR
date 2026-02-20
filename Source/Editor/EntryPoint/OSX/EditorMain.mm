@@ -16,7 +16,6 @@ int hs_editor_main(int argc, char* argv[])
 {
     SystemContext::Init();
     
-    // TODO: Parse command arguments
     @autoreleasepool
     {
         EditorApplication* app = new EditorApplication("HSMR");

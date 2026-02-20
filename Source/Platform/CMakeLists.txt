@@ -117,7 +117,12 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-add_dependencies(${TARGET_NAME} Core)
+# On Windows, Platform is WHOLEARCHIVE'd into Core.dll, so we don't create
+# a dependency on Core here (would cause circular CMake dependency).
+# Core headers are available via the global include_directories(Source).
+if(NOT WIN32)
+    add_dependencies(${TARGET_NAME} Core)
+endif()
 
 target_include_directories(${TARGET_NAME}
     PRIVATE
@@ -132,9 +137,10 @@ if(HSMR_USE_SDL)
     )
 
     if(WIN32)
+        # On Windows, Platform is merged into Core.dll via WHOLEARCHIVE.
+        # SDL3 dependency is handled in Core/CMakeLists.txt.
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            Core
             ${HS_SDL3_LIB}
         )
     elseif(APPLE)
@@ -164,18 +170,15 @@ if(HSMR_USE_SDL)
         )
     endif()
 else()
-    if(WIN32)
-        target_link_libraries(${TARGET_NAME}
-            PRIVATE
-            Core
-        )
-    elseif(APPLE)
+    if(APPLE)
         target_link_libraries(${TARGET_NAME}
             PRIVATE
             Core
             "-framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
         )
     endif()
+    # On Windows without SDL, no additional link deps needed for Platform.
+    # Platform will be WHOLEARCHIVE'd into Core.dll.
 endif()
 
 target_compile_definitions(${TARGET_NAME}
@@ -186,6 +189,9 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_PLATFORM
     HS_API_EXPORT
+    # On Windows, Platform is WHOLEARCHIVE'd into Core.dll, so Platform functions
+    # that use HS_CORE_API need dllexport to be visible from Core.dll.
+    $<$<PLATFORM_ID:Windows>:HS_CORE_API_EXPORT>
 )
 
 install(TARGETS ${TARGET_NAME}

@@ -19,6 +19,7 @@ set(RESOURCE_HEADERS
     ObjectManager.h
     ResourceDefinition.h
     GeometryDefinition.h
+    Light.h
 )
 
 source_group("Public" FILES ${RESOURCE_HEADERS})
@@ -33,6 +34,7 @@ set(RESOURCE_SOURCES
     Private/ObjectManager.cpp
     Private/ResourceDefinition.cpp
     Private/GeometryDefinition.cpp
+    Private/Light.cpp
 )
 
 source_group("Private" FILES ${RESOURCE_SOURCES})

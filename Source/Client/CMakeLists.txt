@@ -38,6 +38,7 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
+        Core
         Engine
         Editor
         ${OSX_FRAMEWORK}
@@ -52,6 +53,7 @@ else()
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
+        Core
         Engine
         Editor
     )
@@ -66,6 +68,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
 
     HS_API_IMPORT
+    HS_CORE_API_IMPORT
     HS_EDITOR_API_IMPORT
 
     HS_EXECUTABLE_NAME="${EXECUTABLE_NAME}"

@@ -37,7 +37,7 @@ private:
     int _refCount = 0;
 };
 
-class Object : public Referencable
+class HS_CORE_API Object : public Referencable
 {
 public:
     enum class EType

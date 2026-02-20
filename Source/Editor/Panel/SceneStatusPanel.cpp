@@ -174,7 +174,7 @@ void SceneStatusPanel::_drawQuickStatsSection()
     ImGui::SameLine();
     ImGui::Text("(%.2f ms)", _avgFrameTime);
 
-    ImGui::Text("Min: %.2f ms | Max: %.2f ms", _minFrameTime, _maxFrameTime);
+    //ImGui::Text("Min: %.2f ms | Max: %.2f ms", _minFrameTime, _maxFrameTime);
 }
 
 void SceneStatusPanel::_drawFrameTimeSection()
@@ -201,7 +201,7 @@ void SceneStatusPanel::_drawFrameTimeSection()
         overlay,
         0.0f,
         targetMs * 2.0f,  // Scale to 2x target for visibility
-        ImVec2(200, 50)
+        ImVec2(230, 50)
     );
 }
 

@@ -2,7 +2,6 @@
 
 #include "Core/Log.h"
 #include "Core/HAL/Timer.h"
-#include "Core/HAL/FileSystem.h"
 #include "Core/Native/NativeWindow.h"
 
 #include "Resource/ObjectManager.h"
@@ -189,7 +188,7 @@ void EditorApplication::runEditor()
 		windowTitle += " - " + ProjectContext::Get().GetProjectName();
 	}
 
-	_window = new EditorWindow(this, windowTitle.c_str(), 1920, 1080, windowFlags);
+	_window = new EditorWindow(this, windowTitle.c_str(), 2560, 1440, windowFlags);
 	if (nullptr == _window->GetNativeWindow().handle)
 	{
 		HS_LOG(error, "Failed to initialize editor window");

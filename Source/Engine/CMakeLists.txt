@@ -49,12 +49,8 @@ else()
     )
 endif()
 
-if(WIN32)
-    target_link_options(${TARGET_NAME}
-        PRIVATE
-        "/WHOLEARCHIVE:Platform"
-    )
-endif()
+# On Windows, Platform is already WHOLEARCHIVE'd into Core.dll.
+# No need to duplicate it here.
 
 target_include_directories(${TARGET_NAME}
     PRIVATE

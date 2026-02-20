@@ -161,6 +161,24 @@ if(APPLE)
         PRIVATE
         "-undefined" "dynamic_lookup"
     )
+elseif(WIN32)
+    # On Windows, DLLs cannot defer symbol resolution like macOS (-undefined dynamic_lookup).
+    # Platform implements Core's initializePlatform(), finalizePlatform(), and *Internal()
+    # functions. We merge Platform (STATIC) into Core.dll via WHOLEARCHIVE so all symbols
+    # are resolved within the same link step.
+    target_link_libraries(${TARGET_NAME}
+        PRIVATE
+        Platform
+    )
+    target_link_options(${TARGET_NAME}
+        PRIVATE
+        "/WHOLEARCHIVE:Platform"
+    )
+
+    # Pull in Platform's dependencies
+    if(HSMR_USE_SDL)
+        target_link_libraries(${TARGET_NAME} PRIVATE ${HS_SDL3_LIB})
+    endif()
 endif()
 
 target_include_directories(${TARGET_NAME}

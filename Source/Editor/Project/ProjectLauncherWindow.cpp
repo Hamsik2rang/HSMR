@@ -18,6 +18,7 @@
 #include "Core/HAL/FileSystem.h"
 #include "Core/Log.h"
 
+
 #include "RHI/Swapchain.h"
 
 #include "ImGui/imgui.h"
@@ -269,9 +270,7 @@ void ProjectLauncherWindow::drawProjectList()
             if (ImGui::MenuItem("Open in Explorer"))
             {
                 std::string folder = hs::FileSystem::GetDirectory(project.path);
-#ifdef _WIN32
-                ShellExecuteA(nullptr, "explore", folder.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#endif
+                hs::FileDialog::OpenInExplorer(folder);
             }
             if (ImGui::MenuItem("Remove from List"))
             {

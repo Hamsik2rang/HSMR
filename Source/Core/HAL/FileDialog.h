@@ -30,6 +30,8 @@ public:
                                 const char* defaultLocation = nullptr);
 
     static std::string OpenFolder(const char* defaultLocation = nullptr);
+
+    static bool OpenInExplorer(const std::string& path);
 };
 
 HS_NS_END

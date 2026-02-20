@@ -8,7 +8,7 @@
 
 HS_NS_BEGIN
 
-class Model
+class HS_RESOURCE_API Model
 {
 public:
     Model() = default;
