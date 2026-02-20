@@ -10,32 +10,16 @@
 
 #define hs_main(argc, argv) hs_editor_main((argc), (argv))
 
-#include <cstdlib>   // For malloc/free
-#include <cstdio>    // For printf/logging
-
-#if defined (__APPLE__)
-#include <execinfo.h> // For backtrace (optional)
-#include <unistd.h>
-
-#else // !__APPLE__
-
-#ifndef UNICODE
-#define UNICODE
-#endif
-
-#include <windows.h>
-
-#endif // __APPLE__
-
-#else // !__HS_EDITOR_MODE
+#else // !HS_EDITOR_MODE
 // #include ...
 
 // #define hs_main(argc, argv) hs_play_main((argc), (argv))
-#endif // __HS_EDITOR_MODE
+#endif // HS_EDITOR_MODE
 
+#include "Core/HAL/CommandLine.h"
 
 int main(int argc, char* argv[])
 {
-	return hs_main(argc, argv);
+    hs::CommandLine::Initialize(argc, argv);
+    return hs_main(argc, argv);
 }
-

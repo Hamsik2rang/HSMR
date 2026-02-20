@@ -14,12 +14,10 @@
 #include "Editor/Project/RecentProjects.h"
 #include "Editor/Asset/AssetDatabase.h"
 
+#include "Core/HAL/CommandLine.h"
+
 #if defined(__APPLE__)
 #include "Platform/Mac/AutoReleasePool.h"
-#else
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <shellapi.h>
 #endif
 
 HS_NS_EDITOR_BEGIN
@@ -228,43 +226,24 @@ void EditorApplication::runEditor()
 
 std::string EditorApplication::getProjectFromCommandLine()
 {
-	// First check if path was set programmatically
 	if (!_commandLineProjectPath.empty())
 	{
 		return _commandLineProjectPath;
 	}
 
-	// Check command line arguments
-	// Format: HSMR.exe "path/to/project.hsproj"
-	// Or: HSMR.exe --project "path/to/project.hsproj"
-
-#ifdef _WIN32
-	int argc;
-	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-	if (argv && argc > 1)
+	std::string projectPath = CommandLine::GetFlagValue("--project");
+	if (!projectPath.empty())
 	{
-		for (int i = 1; i < argc; ++i)
-		{
-			std::string arg = hs::FileSystem::Utf16ToUtf8(std::wstring(argv[i]));
-
-			// Check for --project flag
-			if (arg == "--project" && i + 1 < argc)
-			{
-				std::string projectPath = hs::FileSystem::Utf16ToUtf8(std::wstring(argv[i + 1]));
-				LocalFree(argv);
-				return projectPath;
-			}
-
-			// Check if argument is a .hsproj file
-			if (arg.size() > 7 && arg.substr(arg.size() - 7) == ".hsproj")
-			{
-				LocalFree(argv);
-				return arg;
-			}
-		}
-		LocalFree(argv);
+		return projectPath;
 	}
-#endif
+
+	for (const auto& arg : CommandLine::GetArgs())
+	{
+		if (arg.size() > 7 && arg.substr(arg.size() - 7) == ".hsproj")
+		{
+			return arg;
+		}
+	}
 
 	return "";
 }

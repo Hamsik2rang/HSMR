@@ -45,6 +45,7 @@ source_group("Native\\Private" FILES ${CORE_NATIVE_SOURCES})
 list(APPEND TOTAL_FILES ${CORE_NATIVE_SOURCES})
 
 set(CORE_HAL_HEADERS
+    HAL/CommandLine.h
     HAL/FileDialog.h
     HAL/FileSystem.h
     HAL/Input.h
@@ -55,6 +56,7 @@ source_group("HAL\\Public" FILES ${CORE_HAL_HEADERS})
 list(APPEND TOTAL_FILES ${CORE_HAL_HEADERS})
 
 set(CORE_HAL_SOURCES
+    HAL/Private/CommandLine.cpp
     HAL/Private/FileSystem.cpp
     HAL/Private/Input.cpp
     HAL/Private/Timer.cpp
