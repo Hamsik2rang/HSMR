@@ -10,7 +10,6 @@
 #include "RHI/RHIContext.h"
 
 #include "Resource/Material.h"
-#include "Resource/Model.h"
 
 HS_NS_BEGIN
 
@@ -66,11 +65,6 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
 void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource)
 {
-    if (sceneResource.cameraResources.empty() || sceneResource.renderModels.empty())
-    {
-        return;
-    }
-
     RenderResourceManager* resMgr = _renderer->GetResourceManager();
 
     RHIFramebuffer* framebuffer = _renderer->GetHandleCache()->GetFramebuffer(renderPass, _currentRenderTarget);
@@ -79,27 +73,21 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
     commandBuffer->PushDebugMark("Opaque Pass", debugColor);
 
     Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-    bool renderPassStarted = false;
+
+    // Always begin the render pass to ensure proper image layout transitions and clear
+    commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
+    commandBuffer->SetViewport(Viewport{0.0f, 0.0f,
+        static_cast<float>(framebuffer->info.width),
+        static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
+    commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
 
     for (const auto& renderModel : sceneResource.renderModels)
     {
-        Model* model = renderModel.source;
-        if (!model) continue;
-
         // Get pipeline (pass-specific, can't be pre-resolved)
-        Material* mat = model->GetMaterial();
+        Material* mat = renderModel.material;
+        if (!mat) continue;
         RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, renderPass);
         if (!pipeline) continue;
-
-        if (!renderPassStarted)
-        {
-            commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
-            commandBuffer->SetViewport(Viewport{0.0f, 0.0f,
-                static_cast<float>(framebuffer->info.width),
-                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-            commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
-            renderPassStarted = true;
-        }
 
         // Bind and draw using pre-resolved resources
         commandBuffer->BindPipeline(pipeline);
@@ -112,10 +100,7 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
         commandBuffer->DrawIndexed(0, renderModel.meshResource->indexCount, 1, 0);
     }
 
-    if (renderPassStarted)
-    {
-        commandBuffer->EndRenderPass();
-    }
+    commandBuffer->EndRenderPass();
     commandBuffer->PopDebugMark();
 }
 

@@ -8,12 +8,10 @@
 #define __HS_RENDERER_DEFINITION_H__
 
 #include "RHI/RHIDefinition.h"
-#include "Renderer/Camera.h"
 #include "Resource/Image.h"
 #include "Resource/Shader.h"
 #include "Resource/Material.h"
 #include "Resource/Mesh.h"
-#include "Resource/Model.h"
 
 
 HS_NS_BEGIN
@@ -54,10 +52,12 @@ enum class ERenderGroup : uint16
     Ui          = 2000
 };
 
-// 렌더링 단위: Model의 GPU 리소스 묶음 (ModelResource 개념 흡수)
+// 렌더링 단위: GPU 리소스 묶음
 struct HS_RENDERER_API RenderModel
 {
-    Model* source = nullptr;                        // 원본 Model (Transform 접근용)
+    glm::mat4 worldMatrix{1.0f};
+    glm::mat4 inverseWorldMatrix{1.0f};
+    Material* material = nullptr;                   // 파이프라인 룩업용
     RHIBuffer* perDrawBuffer = nullptr;             // PerDraw UBO
     MeshResource* meshResource = nullptr;           // VB/IB
     MaterialResource* materialResource = nullptr;   // Shader/Textures/ResourceSet

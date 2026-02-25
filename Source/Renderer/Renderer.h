@@ -60,8 +60,6 @@ public:
     virtual void NextFrame(Swapchain* swapchain);
 
     virtual void Render(
-        const std::vector<Model*>& models,
-        const std::vector<Camera*>& cameras,
         Scene* scene,
         RenderTarget* renderTarget
     );

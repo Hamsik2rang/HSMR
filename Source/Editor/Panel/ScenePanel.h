@@ -15,7 +15,7 @@
 #include "Renderer/RenderTarget.h"
 #include "Resource/GeometryDefinition.h"
 
-#include "Renderer/Camera.h"
+#include "Editor/Core/EditorCamera.h"
 #include "Scene/Entity.h"
 
 HS_NS_EDITOR_BEGIN
@@ -39,7 +39,7 @@ public:
 
     HS_FORCEINLINE Resolution GetResolution() const { return _resolution; }
 
-    HS_FORCEINLINE Camera* GetCamera() const { return _camera.get(); }
+    HS_FORCEINLINE EditorCamera* GetEditorCamera() const { return _editorCamera.get(); }
 
     HS_FORCEINLINE ImVec2 GetViewportMin() const { return _viewportMin; }
     HS_FORCEINLINE ImVec2 GetViewportMax() const { return _viewportMax; }
@@ -48,7 +48,7 @@ private:
     Resolution _resolution;
     RenderTarget* _currentRenderTarget = nullptr;
 
-    Scoped<Camera> _camera;
+    Scoped<EditorCamera> _editorCamera;
 
     uint16 _lastMouseX = 0;
     uint16 _lastMouseY = 0;

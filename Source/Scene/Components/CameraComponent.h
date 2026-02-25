@@ -49,13 +49,13 @@ struct HS_SCENE_API CameraComponent
     {
         if (projectionType == EProjectionType::Perspective)
         {
-            return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
+            return glm::perspectiveLH(glm::radians(fov), aspectRatio, nearPlane, farPlane);
         }
         else
         {
             float halfWidth = orthoSize * aspectRatio;
             float halfHeight = orthoSize;
-            return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane, farPlane);
+            return glm::orthoLH(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane, farPlane);
         }
     }
 

@@ -29,8 +29,6 @@ class RHIRenderPass;
 class Material;
 class Mesh;
 class Shader;
-class Camera;
-class Model;
 class Image;
 } // namespace hs
 
@@ -41,22 +39,22 @@ struct HS_RENDERER_API ImageResource
 {
     RHITexture* texture = nullptr;
     RHISampler* sampler = nullptr;
-    uint32 width = 0;
-    uint32 height = 0;
+    uint32 width        = 0;
+    uint32 height       = 0;
     EPixelFormat format = EPixelFormat::R8G8B8A8Unorm;
-    bool isValid = false;
+    bool isValid        = false;
 };
 
 // Cached RHI resources per material
 struct HS_RENDERER_API MaterialResource
 {
-    RHIShader* vertexShader = nullptr;
-    RHIShader* fragmentShader = nullptr;
+    RHIShader* vertexShader           = nullptr;
+    RHIShader* fragmentShader         = nullptr;
     RHIResourceLayout* resourceLayout = nullptr;
-    RHIResourceSet* resourceSet = nullptr;
+    RHIResourceSet* resourceSet       = nullptr;
     std::vector<RHIBuffer*> materialBuffers;
     std::unordered_map<size_t, RHIGraphicsPipeline*> pipelineCache;
-    std::vector<ImageResource*> textureResources;  // Referenced textures
+    std::vector<ImageResource*> textureResources; // Referenced textures
     bool isValid = false;
 };
 
@@ -64,17 +62,17 @@ struct HS_RENDERER_API MaterialResource
 struct HS_RENDERER_API MeshResource
 {
     RHIBuffer* vertexBuffer = nullptr;
-    RHIBuffer* indexBuffer = nullptr;
-    uint32 indexCount = 0;
-    bool isValid = false;
+    RHIBuffer* indexBuffer  = nullptr;
+    uint32 indexCount       = 0;
+    bool isValid            = false;
 };
 
-// Cached RHI resources per camera (PerView UBO)
+// GPU resource for a camera view (PerView UBO)
 struct HS_RENDERER_API CameraResource
 {
-    Camera* source = nullptr;
+    PerView perViewData{};
     RHIBuffer* perViewBuffer = nullptr;
-    bool isValid = false;
+    bool isValid             = false;
 };
 
 struct HS_RENDERER_API LightResource
@@ -94,15 +92,10 @@ public:
     ~RenderResourceManager();
 
     // CPU 데이터로부터 GPU-resolved SceneResource 구축
-    SceneResource BuildSceneResource(
-        const std::vector<Model*>& models,
-        const std::vector<Camera*>& cameras,
-        Scene* scene,
-        ShaderLibrary* shaderLibrary
-    );
+    SceneResource BuildSceneResource(Scene* scene, ShaderLibrary* shaderLibrary);
 
-    // Camera resources (PerView UBO, cached per camera)
-    CameraResource* GetOrCreateCameraResource(Camera* camera);
+    // Camera resources (PerView UBO)
+    CameraResource* GetOrCreateCameraResource(uint32 index);
     void SetActiveCameraResource(CameraResource* resource);
 
     // Material resources (cached)
@@ -118,7 +111,7 @@ public:
     void ReleaseAll();
 
 private:
-    RHIBuffer* getOrCreatePerDrawBuffer(Model* model);
+    RHIBuffer* getOrCreatePerDrawBuffer(uint32 entityId);
 
     MaterialResource createMaterialResources(Material* material);
     ImageResource createImageResource(Image* image);
@@ -128,10 +121,10 @@ private:
     RHIContext* _rhiContext;
 
     CameraResource* _activeCameraResource = nullptr;
-    RHIBuffer* _activePerDrawBuffer = nullptr;
+    RHIBuffer* _activePerDrawBuffer       = nullptr;
 
-    std::unordered_map<Camera*, CameraResource> _cameraResources;
-    std::unordered_map<Model*, RHIBuffer*> _perDrawBuffers;
+    std::unordered_map<uint32, CameraResource> _cameraResources;
+    std::unordered_map<uint32, RHIBuffer*> _perDrawBuffers;
     std::unordered_map<Material*, MaterialResource> _materialResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
     std::unordered_map<Image*, ImageResource> _imageResources;

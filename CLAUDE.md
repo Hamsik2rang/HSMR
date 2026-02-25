@@ -74,7 +74,7 @@ These are fine to delegate to AI:
 |:-----|:-----|:-----|
 | 클래스/구조체 | PascalCase | `EditorWindow`, `RHITexture` |
 | 공개 메서드 | PascalCase | `Initialize()`, `GetPosition()` |
-| 비공개 메서드 | `_camelCase` | `_setupPanels()`, `_drawEntityNode()` |
+| 비공개 메서드 | `camelCase` | `setupPanels()`, `drawEntityNode()` |
 | 멤버 변수 | `_camelCase` | `_position`, `_renderer` |
 | 정적 변수 | `s_` 접두사 | `s_instance`, `s_sdlWindow` |
 | 지역 변수/매개변수 | camelCase | `vertexCount`, `shininess` |

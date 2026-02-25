@@ -10,12 +10,10 @@
 #include "Core/SystemContext.h"
 
 #include "RHI/Swapchain.h"
-#include "Renderer/Camera.h"
 #include "Renderer/RenderDefinition.h"
 #include "Renderer/RenderPass/RenderPass.h"
 #include "Renderer/RenderResourceManager.h"
 #include "Renderer/ShaderLibrary.h"
-#include "Resource/Model.h"
 
 HS_NS_BEGIN
 
@@ -148,18 +146,11 @@ void Renderer::NextFrame(Swapchain* swapchain)
 }
 
 void Renderer::Render(
-    const std::vector<Model*>& models,
-    const std::vector<Camera*>& cameras,
     Scene* scene,
     RenderTarget* renderTarget)
 {
-    for (auto* model : models)
-    {
-        model->Update();
-    }
 
-    SceneResource sceneResource = _resourceManager->BuildSceneResource(
-        models, cameras, scene, _shaderLibrary);
+    SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
     _updateSceneBuffers(sceneResource);
 
@@ -188,32 +179,17 @@ void Renderer::_updateSceneBuffers(const SceneResource& sceneResource)
     // Update PerView UBOs for all cameras
     for (CameraResource* camRes : sceneResource.cameraResources)
     {
-        Camera* camera = camRes->source;
-        if (!camera) continue;
+        if (!camRes || !camRes->isValid) continue;
 
-        camera->Update();
-
-        PerView perViewData{};
-        perViewData.viewMatrix                  = camera->GetViewMatrix();
-        perViewData.projectionMatrix            = camera->GetProjectionMatrix();
-        perViewData.viewProjectionMatrix        = camera->GetViewProjectionMatrix();
-        perViewData.inverseViewMatrix           = camera->GetInverseViewMatrix();
-        perViewData.inverseProjectionMatrix     = camera->GetInverseProjectionMatrix();
-        perViewData.inverseViewProjectionMatrix = camera->GetInverseViewProjectionMatrix();
-        perViewData.cameraPosition              = glm::vec4(camera->GetPosition(), 1.0f);
-
-        _curCommandBuffer->UpdateBuffer(camRes->perViewBuffer, 0, &perViewData, sizeof(PerView));
+        _curCommandBuffer->UpdateBuffer(camRes->perViewBuffer, 0, &camRes->perViewData, sizeof(PerView));
     }
 
     // Update PerDraw UBOs for all models
     for (const RenderModel& renderModel : sceneResource.renderModels)
     {
-        Model* model = renderModel.source;
-        if (!model) continue;
-
         PerDraw perDrawData{};
-        perDrawData.modelMatrix        = model->GetWorldMatrix();
-        perDrawData.inverseModelMatrix = model->GetInverseWorldMatrix();
+        perDrawData.modelMatrix        = renderModel.worldMatrix;
+        perDrawData.inverseModelMatrix = renderModel.inverseWorldMatrix;
 
         _curCommandBuffer->UpdateBuffer(renderModel.perDrawBuffer, 0, &perDrawData, sizeof(PerDraw));
     }

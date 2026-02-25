@@ -10,7 +10,7 @@
 
 #include "Precompile.h"
 #include "Editor/Panel/Panel.h"
-#include "Renderer/Camera.h"
+#include "Editor/Core/EditorCamera.h"
 
 #include <array>
 
@@ -26,7 +26,7 @@ public:
     void Cleanup() override;
     void Draw() override;
 
-    void SetSceneCamera(const Camera* camera) { _sceneCamera = camera; }
+    void SetSceneCamera(const EditorCamera* camera) { _sceneCamera = camera; }
     void SetSceneBounds(ImVec2 boundsMin, ImVec2 boundsMax) { _sceneBoundsMin = boundsMin; _sceneBoundsMax = boundsMax; }
 
 private:
@@ -53,7 +53,7 @@ private:
     bool _showCamera = true;
     float _targetFPS = 60.0f;
 
-    const Camera* _sceneCamera = nullptr;
+    const EditorCamera* _sceneCamera = nullptr;
 
     // Scene bounds for position clamping
     ImVec2 _sceneBoundsMin = ImVec2(0, 0);

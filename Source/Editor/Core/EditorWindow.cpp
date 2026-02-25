@@ -33,8 +33,6 @@
 
 #include "Core/Profiler/ProfileDataCollector.h"
 
-#include "Editor/Core/EditorCamera.h"
-
 #include <vector>
 
 HS_NS_EDITOR_BEGIN
@@ -66,18 +64,13 @@ bool EditorWindow::onInitialize()
     auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::Opaque);
     _renderer->AddPass(std::move(opaquePass));
 
-    // Setup test scene before panels (so EditorContext has a scene)
     setupResources();
-//    setupTestScene();
-
+    setupDefaultScene();
     setupPanels();
 
     void* handler = nullptr;
     ImGuiExtension::SetProcessEventHandler(&handler);
     SetPreEventHandler(handler);
-
-    _editorCamera = MakeScoped<EditorCamera>();
-
 
     return true;
 }
@@ -110,9 +103,9 @@ void EditorWindow::onUpdate(float deltaTime)
     updateSceneCamera(deltaTime);
 
     // Update scene transforms
-    if (_testScene)
+    if (_scene)
     {
-        _testScene->Update(deltaTime);
+        _scene->Update(deltaTime);
     }
 }
 
@@ -130,20 +123,13 @@ void EditorWindow::onRender()
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
-    std::vector<Model*> models;
-    models.push_back(_model.get());
-
-    std::vector<Camera*> cameras;
-    Camera* sceneCamera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
-    if (sceneCamera)
-    {
-        cameras.push_back(sceneCamera);
-    }
+    // Sync EditorCamera → Scene camera entity
+    syncEditorCameraToScene();
 
     // 1. Render Scene to Scene Panel
     {
         HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
-        _renderer->Render(models, cameras, _testScene.get(), curRT);
+        _renderer->Render(_scene.get(), curRT);
     }
 
     static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
@@ -182,8 +168,7 @@ void EditorWindow::onShutdown()
         _renderer.reset();
     }
 
-    // Cleanup test scene
-    _testScene.reset();
+    _scene.reset();
 }
 
 void EditorWindow::onRenderGUI()
@@ -231,23 +216,45 @@ void EditorWindow::setupPanels()
     _basePanel->InsertPanel(_profilerPanel.get());
 }
 
-void EditorWindow::setupTestScene()
+void EditorWindow::setupDefaultScene()
 {
-    // Create test scene
-    _testScene = MakeScoped<Scene>("Test Scene");
+    _scene = MakeScoped<Scene>("Default Scene");
+    EditorContext::Get().SetActiveScene(_scene.get());
 
-    // Set as active scene in EditorContext
-    EditorContext::Get().SetActiveScene(_testScene.get());
+    // Editor camera entity
+    Entity cameraEntity = _scene->CreateEntity("Editor Camera");
+    auto& camera = cameraEntity.AddComponent<CameraComponent>();
+    camera.isPrimary = true;
 
-    // Create some test entities
-    Entity entity = _testScene->CreateEntity("Damaged Helmet");
-    auto& transform = entity.AddComponent<TransformComponent>();
-    transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    
+    // Test mesh entity
+    Entity entity = _scene->CreateEntity("Damaged Helmet");
+    entity.GetComponent<TransformComponent>().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     entity.AddComponent<MeshRendererComponent>();
-    
-    // Initial update to calculate world transforms
-    _testScene->Update(0.0f);
+
+    _scene->Update(0.0f);
+}
+
+void EditorWindow::syncEditorCameraToScene()
+{
+    if (!_scene || !_scenePanel) return;
+
+    EditorCamera* editorCamera = static_cast<ScenePanel*>(_scenePanel.get())->GetEditorCamera();
+    if (!editorCamera) return;
+
+    editorCamera->Update();
+
+    Entity cameraEntity = _scene->GetPrimaryCamera();
+    if (!cameraEntity.IsValid()) return;
+
+    auto& transform = cameraEntity.GetComponent<TransformComponent>();
+    auto& camera = cameraEntity.GetComponent<CameraComponent>();
+
+    const auto& editorTransform = editorCamera->GetTransform();
+    const auto& editorCameraComp = editorCamera->GetCameraComponent();
+
+    transform.SetPosition(editorTransform.position);
+    transform.SetRotation(editorTransform.rotation);
+    camera = editorCameraComp;
 }
 
 void EditorWindow::updateSceneCamera(float deltaTime)
@@ -258,7 +265,7 @@ void EditorWindow::updateSceneCamera(float deltaTime)
         ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
         SceneStatusPanel* sceneStatusPanel = static_cast<SceneStatusPanel*>(_sceneStatusPanel.get());
 
-        sceneStatusPanel->SetSceneCamera(scenePanel->GetCamera());
+        sceneStatusPanel->SetSceneCamera(scenePanel->GetEditorCamera());
         sceneStatusPanel->SetSceneBounds(scenePanel->GetViewportMin(), scenePanel->GetViewportMax());
     }
 }
@@ -334,7 +341,7 @@ void EditorWindow::setupResources()
                            HS_DIR_SEPERATOR +
                            "DamagedHelmet.gltf";
 
-    ObjectManager::LoadModel(gltfPath, _model);
+    //ObjectManager::LoadModel(gltfPath, _model);
 }
 
 HS_NS_EDITOR_END

@@ -29,8 +29,8 @@ HS_NS_EDITOR_BEGIN
 
 bool ScenePanel::Setup()
 {
-    _camera = MakeScoped<Camera>();
-    _camera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
+    _editorCamera = MakeScoped<EditorCamera>();
+    _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
 
     return true;
 }
@@ -81,8 +81,9 @@ void ScenePanel::Update(float deltaTime)
 
             if (dx != 0.0f || dy != 0.0f)
             {
-                float rotateSpeed = _camera->GetRotateSpeed();
-                _camera->Rotate(glm::vec3(-dy * rotateSpeed, dx * rotateSpeed, 0.0f));
+                float rotateSpeed = _editorCamera->GetRotateSpeed();
+                // Rotate(yawDelta, pitchDelta)
+                _editorCamera->Rotate(dx * rotateSpeed, -dy * rotateSpeed);
             }
         }
 
@@ -101,8 +102,8 @@ void ScenePanel::Update(float deltaTime)
 
         if (front != 0 || right != 0 || up != 0)
         {
-            moveDir = _camera->GetForward() * static_cast<float>(front) +
-                      _camera->GetRight() * static_cast<float>(right) +
+            moveDir = _editorCamera->GetForward() * static_cast<float>(front) +
+                      _editorCamera->GetRight() * static_cast<float>(right) +
                       glm::vec3(0.0f, 1.0f, 0.0f) * static_cast<float>(up);
             isMoveDirectionUpdated = true;
         }
@@ -118,7 +119,7 @@ void ScenePanel::Update(float deltaTime)
 
     if (isMoveDirectionUpdated)
     {
-        currentCameraSpeed = _camera->GetMoveSpeed();
+        currentCameraSpeed = _editorCamera->GetMoveSpeed();
     }
     else
     {
@@ -129,9 +130,9 @@ void ScenePanel::Update(float deltaTime)
     {
         return;
     }
-    _camera->Move(moveDir * deltaTime * currentCameraSpeed);
+    _editorCamera->Move(moveDir * deltaTime * currentCameraSpeed);
 
-    _camera->Update();
+    _editorCamera->Update();
 }
 
 void ScenePanel::Draw()
@@ -169,9 +170,9 @@ void ScenePanel::Draw()
 
     _viewportMax = ImVec2(_viewportMin.x + static_cast<float>(_resolution.width), _viewportMin.y + static_cast<float>(_resolution.height));
 
-    if (_camera && _resolution.height > 0)
+    if (_editorCamera && _resolution.height > 0)
     {
-        _camera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
+        _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
     }
 
     // Accept ASSET_MODEL drag & drop onto viewport
@@ -233,7 +234,7 @@ void ScenePanel::drawTransformGizmo()
     if (!selectedEntity.IsValid() || !selectedEntity.HasComponent<TransformComponent>())
         return;
 
-    if (!_camera)
+    if (!_editorCamera)
         return;
 
     // Get gizmo settings from EditorContext
@@ -268,8 +269,8 @@ void ScenePanel::drawTransformGizmo()
     ImGuizmo::SetRect(_viewportMin.x, _viewportMin.y, static_cast<float>(_resolution.width), static_cast<float>(_resolution.height));
 
     // Get matrices
-    glm::mat4 viewMatrix = _camera->GetViewMatrix();
-    glm::mat4 projMatrix = _camera->GetProjectionMatrix();
+    glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
+    glm::mat4 projMatrix = _editorCamera->GetProjectionMatrix();
 
     // Get entity transform
     auto& transform        = selectedEntity.GetComponent<TransformComponent>();
@@ -370,7 +371,7 @@ void ScenePanel::handlePicking()
 
     // Generate ray
     glm::vec3 rayDir    = screenToWorldRay(viewportX, viewportY);
-    glm::vec3 rayOrigin = _camera->GetPosition();
+    glm::vec3 rayOrigin = _editorCamera->GetPosition();
 
     // Pick entity
     Entity picked = pickEntity(rayOrigin, rayDir);
@@ -388,7 +389,7 @@ void ScenePanel::handlePicking()
 
 glm::vec3 ScenePanel::screenToWorldRay(float viewportX, float viewportY)
 {
-    if (!_camera)
+    if (!_editorCamera)
         return glm::vec3(0.0f, 0.0f, -1.0f);
 
     // Convert from [0,1] to NDC [-1,1]
@@ -396,8 +397,8 @@ glm::vec3 ScenePanel::screenToWorldRay(float viewportX, float viewportY)
     float ndcY = 1.0f - viewportY * 2.0f; // Flip Y
 
     // Get inverse matrices
-    glm::mat4 invProj = glm::inverse(_camera->GetProjectionMatrix());
-    glm::mat4 invView = glm::inverse(_camera->GetViewMatrix());
+    glm::mat4 invProj = glm::inverse(_editorCamera->GetProjectionMatrix());
+    glm::mat4 invView = glm::inverse(_editorCamera->GetViewMatrix());
 
     // Unproject near and far points
     glm::vec4 rayClip(ndcX, ndcY, -1.0f, 1.0f);
@@ -495,7 +496,7 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
 
 void ScenePanel::drawViewGizmo()
 {
-    if (!_camera) return;
+    if (!_editorCamera) return;
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 windowPos     = ImGui::GetWindowPos();
@@ -517,7 +518,7 @@ void ScenePanel::drawViewGizmo()
     drawList->AddCircle(center, halfSize, IM_COL32(80, 80, 80, 180), 32, 1.0f);
 
     // View rotation (world -> view upper 3x3)
-    glm::mat3 viewRot(_camera->GetViewMatrix());
+    glm::mat3 viewRot(_editorCamera->GetViewMatrix());
 
     struct Axis
     {
@@ -604,7 +605,7 @@ void ScenePanel::drawViewGizmo()
             float my = io.MousePos.y - tip.y;
             if (mx * mx + my * my < 14.0f * 14.0f)
             {
-                float camDist = glm::length(_camera->GetPosition());
+                float camDist = glm::length(_editorCamera->GetPosition());
                 if (camDist < 0.1f) camDist = 5.0f;
 
                 glm::vec3 newPos  = a.worldDir * camDist;
@@ -613,9 +614,9 @@ void ScenePanel::drawViewGizmo()
                 float pitch = asinf(forward.y);
                 float yaw   = atan2f(forward.x, forward.z);
 
-                _camera->SetPosition(newPos);
-                _camera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
-                _camera->Update();
+                _editorCamera->SetPosition(newPos);
+                _editorCamera->SetRotation(glm::vec3(pitch, yaw, 0.0f));
+                _editorCamera->Update();
             }
         }
     }

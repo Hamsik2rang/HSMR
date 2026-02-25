@@ -34,7 +34,6 @@ void RenderTarget::Create(const RenderTargetInfo& info)
     {
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
-            
             RHITexture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
             _colorTextures.push_back(texture);
         }

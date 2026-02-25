@@ -3,7 +3,7 @@ set(TARGET_NAME Renderer)
 set(TOTAL_FILES)
 
 set(RENDERER_HEADERS
-    Camera.h
+    CameraUtils.h
     RenderDefinition.h
     RendererDefinition.h
     RenderTarget.h
@@ -18,7 +18,6 @@ source_group("Public" FILES ${RENDERER_HEADERS})
 list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
-    Private/Camera.cpp
     Private/Renderer.cpp
     Private/ForwardRenderer.cpp
     Private/DeferredRenderer.cpp

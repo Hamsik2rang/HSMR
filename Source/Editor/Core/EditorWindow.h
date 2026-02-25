@@ -20,7 +20,6 @@
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class Panel; } }
-/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class EditorCamera; } }
 
 HS_NS_EDITOR_BEGIN
 
@@ -34,7 +33,7 @@ public:
 
 private:
     void setupPanels();
-    void setupTestScene();
+    void setupDefaultScene();
 
     bool onInitialize() override;
     void onNextFrame() override;
@@ -45,6 +44,7 @@ private:
 
     void onRenderGUI();
 
+    void syncEditorCameraToScene();
     void updateSceneCamera(float deltaTime);
     void processShortcuts();
 
@@ -61,12 +61,7 @@ private:
     Scoped<Panel> _resourcePanel;
     Scoped<Panel> _profilerPanel;
 
-    Scoped<EditorCamera> _editorCamera;
-
-    Scoped<Model> _model;
-
-    // Test scene for editor
-    Scoped<Scene> _testScene;
+    Scoped<Scene> _scene;
 };
 
 HS_NS_EDITOR_END

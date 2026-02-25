@@ -14,7 +14,8 @@
 #include "Resource/Mesh.h"
 #include "Resource/Shader.h"
 #include "Resource/Image.h"
-#include "Resource/Model.h"
+
+#include "Renderer/CameraUtils.h"
 
 // ECS Scene support
 #include "Scene/Scene.h"
@@ -33,9 +34,9 @@ RenderResourceManager::~RenderResourceManager()
     ReleaseAll();
 }
 
-CameraResource* RenderResourceManager::GetOrCreateCameraResource(Camera* camera)
+CameraResource* RenderResourceManager::GetOrCreateCameraResource(uint32 index)
 {
-    auto it = _cameraResources.find(camera);
+    auto it = _cameraResources.find(index);
     if (it != _cameraResources.end() && it->second.isValid)
     {
         return &it->second;
@@ -54,12 +55,11 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(Camera* camera)
         return nullptr;
     }
 
-    resource.source = camera;
     resource.isValid = true;
-    _cameraResources[camera] = std::move(resource);
+    _cameraResources[index] = std::move(resource);
 
     HS_LOG(info, "[RenderResourceManager] CameraResource created");
-    return &_cameraResources[camera];
+    return &_cameraResources[index];
 }
 
 void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
@@ -67,9 +67,9 @@ void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
     _activeCameraResource = resource;
 }
 
-RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(Model* model)
+RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(uint32 entityId)
 {
-    auto it = _perDrawBuffers.find(model);
+    auto it = _perDrawBuffers.find(entityId);
     if (it != _perDrawBuffers.end())
     {
         return it->second;
@@ -86,36 +86,53 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(Model* model)
         return nullptr;
     }
 
-    _perDrawBuffers[model] = buffer;
+    _perDrawBuffers[entityId] = buffer;
     return buffer;
 }
 
 SceneResource RenderResourceManager::BuildSceneResource(
-    const std::vector<Model*>& models,
-    const std::vector<Camera*>& cameras,
     Scene* scene,
     ShaderLibrary* shaderLibrary)
 {
     SceneResource sceneResource;
 
-    // 1. Cameras → CameraResource
-    for (auto* camera : cameras)
+    if (!scene) return sceneResource;
+
+    auto& registry = scene->GetRegistry();
+    bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
+
+    // 1. Cameras: CameraComponent + TransformComponent → CameraResource
+    auto cameraView = registry.view<TransformComponent, CameraComponent>();
+    uint32 cameraIndex = 0;
+    for (auto entity : cameraView)
     {
-        CameraResource* camRes = GetOrCreateCameraResource(camera);
+        auto& transform = cameraView.get<TransformComponent>(entity);
+        auto& camera = cameraView.get<CameraComponent>(entity);
+
+        PerView perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+        CameraResource* camRes = GetOrCreateCameraResource(cameraIndex);
         if (camRes)
         {
+            camRes->perViewData = perView;
             sceneResource.cameraResources.push_back(camRes);
         }
+        ++cameraIndex;
     }
 
     // 2. Lights (TODO: Scene LightComponent → LightResource)
 
-    // 3. Models → RenderModel
-    for (auto* model : models)
+    // 3. MeshRenderer entities → RenderModel
+    auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
+    for (auto entity : meshView)
     {
-        Material* mat = model->GetMaterial();
-        Mesh* mesh = model->GetMesh();
-        if (!mat || !mesh) continue;
+        auto& transform = meshView.get<TransformComponent>(entity);
+        auto& meshRenderer = meshView.get<MeshRendererComponent>(entity);
+
+        if (!meshRenderer.IsValidForRendering()) continue;
+
+        Mesh* mesh = meshRenderer.mesh;
+        Material* mat = meshRenderer.GetMaterial(0);
+        if (!mesh || !mat) continue;
 
         // Assign default shader if needed
         Shader* shader = mat->GetShader();
@@ -133,8 +150,8 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
-        // Get or create GPU resources
-        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(model);
+        uint32 entityId = static_cast<uint32>(entity);
+        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(entityId);
         if (!perDrawBuffer) continue;
 
         // Set active resources for layout creation
@@ -149,28 +166,13 @@ SceneResource RenderResourceManager::BuildSceneResource(
         if (!meshRes) continue;
 
         RenderModel renderModel;
-        renderModel.source = model;
+        renderModel.worldMatrix = transform.worldMatrix;
+        renderModel.inverseWorldMatrix = glm::inverse(renderModel.worldMatrix);
+        renderModel.material = mat;
         renderModel.perDrawBuffer = perDrawBuffer;
         renderModel.meshResource = meshRes;
         renderModel.materialResource = matRes;
         sceneResource.renderModels.push_back(renderModel);
-    }
-
-    // 4. ECS Scene entities (TODO: MeshRendererComponent → RenderModel)
-    if (scene)
-    {
-        auto& registry = scene->GetRegistry();
-        auto view = registry.view<TransformComponent, MeshRendererComponent>();
-
-        for (auto entity : view)
-        {
-            auto& meshRenderer = view.get<MeshRendererComponent>(entity);
-            if (!meshRenderer.IsValidForRendering() || !meshRenderer.isVisible)
-                continue;
-
-            // TODO: ECS entities need a PerDraw buffer keying strategy
-            // (currently skip - placeholder for future implementation)
-        }
     }
 
     return sceneResource;
