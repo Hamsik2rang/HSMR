@@ -63,7 +63,7 @@ bool ProjectLauncherWindow::onInitialize()
     RecentProjects::Get().Load();
 
     // Set default project path to Documents
-    auto* sysContext = hs::SystemContext::Get();
+    auto* sysContext = SystemContext::Get();
     if (sysContext && !sysContext->userDocumentsDir.empty())
     {
         strncpy(_newProjectPathBuffer, sysContext->userDocumentsDir.c_str(),
@@ -269,8 +269,8 @@ void ProjectLauncherWindow::drawProjectList()
         {
             if (ImGui::MenuItem("Open in Explorer"))
             {
-                std::string folder = hs::FileSystem::GetDirectory(project.path);
-                hs::FileDialog::OpenInExplorer(folder);
+                std::string folder = FileSystem::GetDirectory(project.path);
+                FileDialog::OpenInExplorer(folder);
             }
             if (ImGui::MenuItem("Remove from List"))
             {
@@ -346,7 +346,7 @@ void ProjectLauncherWindow::drawNewProjectDialog()
         ImGui::SameLine();
         if (ImGui::Button("Browse...", ImVec2(80, 0)))
         {
-            std::string folder = hs::FileDialog::OpenFolder();
+            std::string folder = FileDialog::OpenFolder();
             if (!folder.empty())
             {
                 strncpy(_newProjectPathBuffer, folder.c_str(), sizeof(_newProjectPathBuffer) - 1);
@@ -414,18 +414,18 @@ void ProjectLauncherWindow::drawNewProjectDialog()
 
 void ProjectLauncherWindow::drawOpenProjectDialog()
 {
-    hs::FileDialogFilter filters[] = {
+    FileDialogFilter filters[] = {
         {"HSMR Project", "*.hsproj"},
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::OpenFile(filters, 2);
-    if (!path.empty() && hs::FileSystem::Exist(path))
+    std::string path = FileDialog::OpenFile(filters, 2);
+    if (!path.empty() && FileSystem::Exist(path))
     {
         _selectedProjectPath = path;
 
         // Extract project name from path
-        std::string name = hs::FileSystem::GetFileNameWithoutExtension(path);
+        std::string name = FileSystem::GetFileNameWithoutExtension(path);
         RecentProjects::Get().AddProject(path, name);
     }
 }
