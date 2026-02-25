@@ -1,6 +1,6 @@
 //
 //  RendererDefinition.h
-//  RenderPath
+//  Renderer
 //
 //  Created by Yongsik Im on 2/14/25.
 //
@@ -18,9 +18,14 @@
 
 HS_NS_BEGIN
 
-class RenderResourceManager;
-class ShaderLibrary;
 class Scene;
+
+// Forward declarations for GPU resource types
+struct CameraResource;
+struct LightResource;
+struct MeshResource;
+struct MaterialResource;
+class RHIBuffer;
 
 struct HS_RENDERER_API RenderTargetInfo
 {
@@ -49,17 +54,21 @@ enum class ERenderGroup : uint16
     Ui          = 2000
 };
 
-struct HS_RENDERER_API RenderParameter
+// 렌더링 단위: Model의 GPU 리소스 묶음 (ModelResource 개념 흡수)
+struct HS_RENDERER_API RenderModel
 {
-    // Legacy: Direct model list (for backward compatibility)
-    std::vector<Model*> models;
-    std::vector<Camera*> cameras;
+    Model* source = nullptr;                        // 원본 Model (Transform 접근용)
+    RHIBuffer* perDrawBuffer = nullptr;             // PerDraw UBO
+    MeshResource* meshResource = nullptr;           // VB/IB
+    MaterialResource* materialResource = nullptr;   // Shader/Textures/ResourceSet
+};
 
-    // ECS Scene for MeshRendererComponent-based rendering
-    Scene* scene = nullptr;
-
-    RenderResourceManager* resourceManager = nullptr;
-    ShaderLibrary* shaderLibrary = nullptr;
+// 씬 전체의 렌더링용 GPU 리소스 집합
+struct HS_RENDERER_API SceneResource
+{
+    std::vector<CameraResource*> cameraResources;
+    std::vector<LightResource*> lightResources;
+    std::vector<RenderModel> renderModels;
 };
 
 HS_NS_END

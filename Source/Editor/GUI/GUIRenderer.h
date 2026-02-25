@@ -9,16 +9,16 @@
 
 #include "Precompile.h"
 
-#include "Renderer/RenderPath.h"
+#include "Renderer/Renderer.h"
 
 
 HS_NS_EDITOR_BEGIN
 
-class HS_EDITOR_API GUIRenderer final : public RenderPath
+class HS_EDITOR_API GUIRenderer final : public Renderer
 {
 public:
 	GUIRenderer(RHIContext* rhiContext)
-		: RenderPath(rhiContext)
+		: Renderer(rhiContext)
 	{
 	}
 

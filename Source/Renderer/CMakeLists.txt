@@ -7,9 +7,9 @@ set(RENDERER_HEADERS
     RenderDefinition.h
     RendererDefinition.h
     RenderTarget.h
-    RenderPath.h
-    ForwardPath.h
-    DeferredPath.h
+    Renderer.h
+    ForwardRenderer.h
+    DeferredRenderer.h
     RenderResourceManager.h
     ShaderLibrary.h
 )
@@ -19,9 +19,9 @@ list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
     Private/Camera.cpp
-    Private/RenderPath.cpp
-    Private/ForwardPath.cpp
-    Private/DeferredPath.cpp
+    Private/Renderer.cpp
+    Private/ForwardRenderer.cpp
+    Private/DeferredRenderer.cpp
     Private/RenderTarget.cpp
     Private/RenderResourceManager.cpp
     Private/ShaderLibrary.cpp

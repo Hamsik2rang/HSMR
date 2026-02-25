@@ -15,7 +15,7 @@
 #include "Renderer/RenderTarget.h"
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
-/*#include "Renderer/RenderPath.h"*/ namespace hs { class RenderPath; }
+/*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
@@ -50,7 +50,7 @@ private:
 
     void setupResources();
 
-    Scoped<RenderPath> _renderer;
+    Scoped<Renderer> _renderer;
 
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;

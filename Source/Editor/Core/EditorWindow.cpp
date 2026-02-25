@@ -9,7 +9,7 @@
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 
-#include "Renderer/ForwardPath.h"
+#include "Renderer/ForwardRenderer.h"
 #include "Renderer/RenderPass/ForwardOpaquePass.h"
 #include "Resource/ObjectManager.h"
 
@@ -130,23 +130,20 @@ void EditorWindow::onRender()
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
-    RenderParameter param{};
+    std::vector<Model*> models;
+    models.push_back(_model.get());
 
-    param.models.push_back(_model.get());
-
-    // Pass ECS Scene for MeshRendererComponent-based rendering
-    param.scene = _testScene.get();
-
+    std::vector<Camera*> cameras;
     Camera* sceneCamera = static_cast<ScenePanel*>(_scenePanel.get())->GetCamera();
     if (sceneCamera)
     {
-        param.cameras.push_back(sceneCamera);
+        cameras.push_back(sceneCamera);
     }
 
     // 1. Render Scene to Scene Panel
     {
         HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
-        _renderer->Render(param, curRT);
+        _renderer->Render(models, cameras, _testScene.get(), curRT);
     }
 
     static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);

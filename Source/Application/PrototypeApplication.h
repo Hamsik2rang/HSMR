@@ -18,7 +18,7 @@ namespace hs
 class Window;
 class RHIContext;
 class Swapchain;
-class RenderPath;
+class Renderer;
 }
 
 HS_NS_BEGIN
@@ -128,7 +128,7 @@ private:
 //    Scoped<ShaderWatcher> _shaderWatcher;
 
     // Rendering
-    Scoped<RenderPath> _renderer;
+    Scoped<Renderer> _renderer;
 
     // UI state
     bool _showProfiler = false;

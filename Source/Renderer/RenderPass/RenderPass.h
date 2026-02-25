@@ -15,7 +15,7 @@
 
 HS_NS_BEGIN
 
-class RenderPath;
+class Renderer;
 class RHICommandBuffer;
 class RHIFramebuffer;
 
@@ -39,7 +39,7 @@ constexpr bool operator<(ERenderingOrder lhs, ERenderingOrder rhs)
 class HS_RENDERER_API RenderPass
 {
 public:
-    RenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
+    RenderPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
 
     virtual ~RenderPass() = default;
 
@@ -48,7 +48,7 @@ public:
     virtual void Configure(RenderTarget* renderTarget) = 0;
 
     virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) = 0;
-    virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const RenderParameter& param) = 0;
+    virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) = 0;
 
     virtual void OnAfterRendering() = 0;
 
@@ -56,7 +56,7 @@ public:
 
     HS_FORCEINLINE bool IsExecutable() const { return _isExecutable; }
 
-    HS_FORCEINLINE RenderPath* GetRenderer() const { return _renderer; }
+    HS_FORCEINLINE Renderer* GetRenderer() const { return _renderer; }
 
     HS_FORCEINLINE const RenderPassInfo& GetFixedSettingForCurrentPass() const { return _renderPassInfo; }
 
@@ -65,7 +65,7 @@ public:
     ERenderingOrder renderingOrder;
 
 protected:
-    RenderPath* _renderer;
+    Renderer* _renderer;
     bool      _isExecutable = true;
     size_t    frameIndex;
 

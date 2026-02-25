@@ -6,10 +6,10 @@
 //
 
 #include "Renderer/RenderPass/RenderPass.h"
-#include "Renderer/RenderPath.h"
+#include "Renderer/Renderer.h"
 
 HS_NS_BEGIN
-RenderPass::RenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
+RenderPass::RenderPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder)
     : name(name)
     , _renderer(renderer)
     , renderingOrder(renderingOrder)

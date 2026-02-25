@@ -1,6 +1,6 @@
 #include "Editor/EntryPoint/EditorMain.h"
 
-#include "Renderer/RenderPath.h"
+#include "Renderer/Renderer.h"
 
 #include "Editor/Core/EditorApplication.h"
 

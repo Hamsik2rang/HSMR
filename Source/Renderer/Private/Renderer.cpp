@@ -1,22 +1,25 @@
 //
-//  RenderPath.mm
+//  Renderer.cpp
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
 //
-#include "Renderer/RenderPath.h"
+#include "Renderer/Renderer.h"
 
 #include "Core/Log.h"
 #include "Core/SystemContext.h"
 
 #include "RHI/Swapchain.h"
+#include "Renderer/Camera.h"
+#include "Renderer/RenderDefinition.h"
 #include "Renderer/RenderPass/RenderPass.h"
 #include "Renderer/RenderResourceManager.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Resource/Model.h"
 
 HS_NS_BEGIN
 
-RenderPath::RHIHandleCache::RHIHandleCache(RenderPath* renderer)
+Renderer::RHIHandleCache::RHIHandleCache(Renderer* renderer)
     : _renderer(renderer)
     , _renderPassCache()
     , _framebufferCache()
@@ -24,7 +27,7 @@ RenderPath::RHIHandleCache::RHIHandleCache(RenderPath* renderer)
 {
 }
 
-RenderPath::RHIHandleCache::~RHIHandleCache()
+Renderer::RHIHandleCache::~RHIHandleCache()
 {
     //...
     RHIContext* rhiContext = _renderer->GetRHIContext();
@@ -61,7 +64,7 @@ RenderPath::RHIHandleCache::~RHIHandleCache()
     _gPipelineCache.clear();
 }
 
-RHIRenderPass* RenderPath::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
+RHIRenderPass* Renderer::RHIHandleCache::GetRenderPass(const RenderPassInfo& info)
 {
     size_t hash = std::hash<RenderPassInfo>{}(info);
 
@@ -75,7 +78,7 @@ RHIRenderPass* RenderPath::RHIHandleCache::GetRenderPass(const RenderPassInfo& i
     return _renderPassCache[hash];
 }
 
-RHIFramebuffer* RenderPath::RHIHandleCache::GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget)
+RHIFramebuffer* Renderer::RHIHandleCache::GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget)
 {
     size_t hash = HashCombine64(std::hash<RenderTarget>{}(*renderTarget), std::hash<RHIRenderPass>{}(*renderPass));
 
@@ -97,12 +100,12 @@ RHIFramebuffer* RenderPath::RHIHandleCache::GetFramebuffer(RHIRenderPass* render
     return _framebufferCache[hash];
 }
 
-RHIGraphicsPipeline* RenderPath::RHIHandleCache::GetGraphicsPipeline(const GraphicsPipelineInfo& info)
+RHIGraphicsPipeline* Renderer::RHIHandleCache::GetGraphicsPipeline(const GraphicsPipelineInfo& info)
 {
     return nullptr;
 }
 
-RenderPath::RenderPath(RHIContext* context)
+Renderer::Renderer(RHIContext* context)
     : _rhiContext(context)
     , _currentRenderTarget(nullptr)
     , frameIndex(0)
@@ -110,12 +113,12 @@ RenderPath::RenderPath(RHIContext* context)
 {
 }
 
-RenderPath::~RenderPath()
+Renderer::~Renderer()
 {
     Shutdown();
 }
 
-bool RenderPath::Initialize()
+bool Renderer::Initialize()
 {
     _rhiHandleCache = new RHIHandleCache(this);
 
@@ -125,7 +128,7 @@ bool RenderPath::Initialize()
     std::string shaderSourceDir = SystemContext::Get()->assetDirectory + "Shaders";
     if (!_shaderLibrary->Initialize(shaderSourceDir))
     {
-        HS_LOG(error, "[RenderPath] ShaderLibrary initialization failed");
+        HS_LOG(error, "[Renderer] ShaderLibrary initialization failed");
     }
 
     _isInitialized = true;
@@ -133,7 +136,7 @@ bool RenderPath::Initialize()
     return _isInitialized;
 }
 
-void RenderPath::NextFrame(Swapchain* swapchain)
+void Renderer::NextFrame(Swapchain* swapchain)
 {
     frameIndex = _rhiContext->AcquireNextImage(swapchain);
     if (frameIndex == UINT32_MAX)
@@ -144,17 +147,21 @@ void RenderPath::NextFrame(Swapchain* swapchain)
     _curCommandBuffer = swapchain->GetCommandBufferForCurrentFrame();
 }
 
-void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget)
+void Renderer::Render(
+    const std::vector<Model*>& models,
+    const std::vector<Camera*>& cameras,
+    Scene* scene,
+    RenderTarget* renderTarget)
 {
-    // TODO: Renderer쪽으로 빼긴 했는데...
-    for(auto* model : param.models)
+    for (auto* model : models)
     {
         model->Update();
     }
 
-    RenderParameter extParam = param;
-    extParam.resourceManager = _resourceManager;
-    extParam.shaderLibrary = _shaderLibrary;
+    SceneResource sceneResource = _resourceManager->BuildSceneResource(
+        models, cameras, scene, _shaderLibrary);
+
+    _updateSceneBuffers(sceneResource);
 
     for (auto* pass : _rendererPasses)
     {
@@ -167,7 +174,7 @@ void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget
 
         RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(pass->GetFixedSettingForCurrentPass());
 
-        pass->Execute(_curCommandBuffer, renderPass, extParam);
+        pass->Execute(_curCommandBuffer, renderPass, sceneResource);
     }
 
     for (auto* pass : _rendererPasses)
@@ -176,7 +183,43 @@ void RenderPath::Render(const RenderParameter& param, RenderTarget* renderTarget
     }
 }
 
-void RenderPath::Shutdown()
+void Renderer::_updateSceneBuffers(const SceneResource& sceneResource)
+{
+    // Update PerView UBOs for all cameras
+    for (CameraResource* camRes : sceneResource.cameraResources)
+    {
+        Camera* camera = camRes->source;
+        if (!camera) continue;
+
+        camera->Update();
+
+        PerView perViewData{};
+        perViewData.viewMatrix                  = camera->GetViewMatrix();
+        perViewData.projectionMatrix            = camera->GetProjectionMatrix();
+        perViewData.viewProjectionMatrix        = camera->GetViewProjectionMatrix();
+        perViewData.inverseViewMatrix           = camera->GetInverseViewMatrix();
+        perViewData.inverseProjectionMatrix     = camera->GetInverseProjectionMatrix();
+        perViewData.inverseViewProjectionMatrix = camera->GetInverseViewProjectionMatrix();
+        perViewData.cameraPosition              = glm::vec4(camera->GetPosition(), 1.0f);
+
+        _curCommandBuffer->UpdateBuffer(camRes->perViewBuffer, 0, &perViewData, sizeof(PerView));
+    }
+
+    // Update PerDraw UBOs for all models
+    for (const RenderModel& renderModel : sceneResource.renderModels)
+    {
+        Model* model = renderModel.source;
+        if (!model) continue;
+
+        PerDraw perDrawData{};
+        perDrawData.modelMatrix        = model->GetWorldMatrix();
+        perDrawData.inverseModelMatrix = model->GetInverseWorldMatrix();
+
+        _curCommandBuffer->UpdateBuffer(renderModel.perDrawBuffer, 0, &perDrawData, sizeof(PerDraw));
+    }
+}
+
+void Renderer::Shutdown()
 {
     for (size_t i = 0; i < _rendererPasses.size(); i++)
     {

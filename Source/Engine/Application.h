@@ -12,7 +12,7 @@
 #include "Core/SystemContext.h"
 #include "RHI/RHIContext.h"
 
-namespace hs { class RenderPath; }
+namespace hs { class Renderer; }
 namespace hs { class Scene; }
 namespace hs { class Window; }
 HS_NS_BEGIN

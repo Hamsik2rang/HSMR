@@ -1,5 +1,5 @@
 //
-//  RenderPath.h
+//  Renderer.h
 //  HSMR
 //
 //  Created by Yongsik Im on 1/29/25.
@@ -13,6 +13,7 @@
 #include "Renderer/RendererDefinition.h"
 #include "RHI/RHIDefinition.h"
 #include "RHI/RHIContext.h"
+#include "Renderer/RenderResourceManager.h"
 
 #include <vector>
 #include <unordered_map>
@@ -28,15 +29,15 @@ namespace hs
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API RenderPath
+class HS_RENDERER_API Renderer
 {
 public:
     class RHIHandleCache
     {
-        friend RenderPath;
+        friend Renderer;
 
     public:
-        RHIHandleCache(RenderPath* renderer);
+        RHIHandleCache(Renderer* renderer);
         ~RHIHandleCache();
 
         RHIRenderPass* GetRenderPass(const RenderPassInfo& info);
@@ -44,21 +45,26 @@ public:
         RHIGraphicsPipeline* GetGraphicsPipeline(const GraphicsPipelineInfo& info);
 
     private:
-        RenderPath* _renderer;
+        Renderer* _renderer;
 
         std::unordered_map<size_t, RHIRenderPass*> _renderPassCache;
         std::unordered_map<size_t, RHIFramebuffer*> _framebufferCache;
         std::unordered_map<size_t, RHIGraphicsPipeline*> _gPipelineCache;
     };
 
-    RenderPath(RHIContext* rhiContext);
-    virtual ~RenderPath();
+    Renderer(RHIContext* rhiContext);
+    virtual ~Renderer();
 
     virtual bool Initialize();
 
     virtual void NextFrame(Swapchain* swapchain);
 
-    virtual void Render(const RenderParameter& param, RenderTarget* renderTexture);
+    virtual void Render(
+        const std::vector<Model*>& models,
+        const std::vector<Camera*>& cameras,
+        Scene* scene,
+        RenderTarget* renderTarget
+    );
 
     virtual void AddPass(RenderPass* pass)
     {
@@ -91,6 +97,9 @@ protected:
     bool _isPassListSorted = true;
 
     RenderTarget* _currentRenderTarget;
+
+private:
+    void _updateSceneBuffers(const SceneResource& sceneResource);
 };
 
 HS_NS_END

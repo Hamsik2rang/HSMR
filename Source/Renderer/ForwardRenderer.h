@@ -3,11 +3,11 @@
 
 #include "Precompile.h"
 
-#include "Renderer/RenderPath.h"
+#include "Renderer/Renderer.h"
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API ForwardRenderer : public RenderPath
+class HS_RENDERER_API ForwardRenderer : public Renderer
 {
 public:
     ForwardRenderer(RHIContext* rhiContext);

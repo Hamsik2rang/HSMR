@@ -15,7 +15,7 @@ HS_NS_BEGIN
 class HS_RENDERER_API ForwardRenderPass : public RenderPass
 {
 public:
-    ForwardRenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder);
+    ForwardRenderPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder);
     ~ForwardRenderPass() override {}
 
 protected:

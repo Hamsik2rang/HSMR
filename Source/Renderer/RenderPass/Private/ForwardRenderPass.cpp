@@ -3,7 +3,7 @@
 HS_NS_BEGIN
 
 
-ForwardRenderPass::ForwardRenderPass(const char* name, RenderPath* renderer, ERenderingOrder renderingOrder)
+ForwardRenderPass::ForwardRenderPass(const char* name, Renderer* renderer, ERenderingOrder renderingOrder)
 : RenderPass(name, renderer, renderingOrder)
 {
 }
