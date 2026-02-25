@@ -1,5 +1,7 @@
 #include "Renderer/RenderResourceManager.h"
 #include "Renderer/RenderDefinition.h"
+#include "Renderer/RendererDefinition.h"
+#include "Renderer/ShaderLibrary.h"
 
 #include "Core/Log.h"
 #include "Core/Hash.h"
@@ -12,6 +14,12 @@
 #include "Resource/Mesh.h"
 #include "Resource/Shader.h"
 #include "Resource/Image.h"
+#include "Resource/Model.h"
+
+// ECS Scene support
+#include "Scene/Scene.h"
+#include "Scene/Entity.h"
+#include "Scene/Components/Components.h"
 
 HS_NS_BEGIN
 
@@ -46,6 +54,7 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(Camera* camera)
         return nullptr;
     }
 
+    resource.source = camera;
     resource.isValid = true;
     _cameraResources[camera] = std::move(resource);
 
@@ -58,37 +67,113 @@ void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
     _activeCameraResource = resource;
 }
 
-ModelResource* RenderResourceManager::GetOrCreateModelResource(Model* model)
+RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(Model* model)
 {
-    auto it = _modelResources.find(model);
-    if (it != _modelResources.end() && it->second.isValid)
+    auto it = _perDrawBuffers.find(model);
+    if (it != _perDrawBuffers.end())
     {
-        return &it->second;
+        return it->second;
     }
 
-    ModelResource resource;
-
     PerDraw perDrawZero{};
-    resource.perDrawBuffer = _rhiContext->CreateBuffer(
+    RHIBuffer* buffer = _rhiContext->CreateBuffer(
         "PerDraw UBO", &perDrawZero, sizeof(PerDraw),
         EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
 
-    if (!resource.perDrawBuffer)
+    if (!buffer)
     {
         HS_LOG(error, "[RenderResourceManager] Failed to create PerDraw buffer");
         return nullptr;
     }
 
-    resource.isValid = true;
-    _modelResources[model] = std::move(resource);
-
-    HS_LOG(info, "[RenderResourceManager] ModelResource created");
-    return &_modelResources[model];
+    _perDrawBuffers[model] = buffer;
+    return buffer;
 }
 
-void RenderResourceManager::SetActiveModelResource(ModelResource* resource)
+SceneResource RenderResourceManager::BuildSceneResource(
+    const std::vector<Model*>& models,
+    const std::vector<Camera*>& cameras,
+    Scene* scene,
+    ShaderLibrary* shaderLibrary)
 {
-    _activeModelResource = resource;
+    SceneResource sceneResource;
+
+    // 1. Cameras → CameraResource
+    for (auto* camera : cameras)
+    {
+        CameraResource* camRes = GetOrCreateCameraResource(camera);
+        if (camRes)
+        {
+            sceneResource.cameraResources.push_back(camRes);
+        }
+    }
+
+    // 2. Lights (TODO: Scene LightComponent → LightResource)
+
+    // 3. Models → RenderModel
+    for (auto* model : models)
+    {
+        Material* mat = model->GetMaterial();
+        Mesh* mesh = model->GetMesh();
+        if (!mat || !mesh) continue;
+
+        // Assign default shader if needed
+        Shader* shader = mat->GetShader();
+        if ((!shader || !shader->IsCompiledEx()) && shaderLibrary)
+        {
+            Shader* defaultShader = shaderLibrary->GetOrCompile("BlinnPhong");
+            if (defaultShader)
+            {
+                mat->SetShader(defaultShader);
+                shader = defaultShader;
+            }
+        }
+
+        if (!shader || !shader->IsCompiledEx()) continue;
+
+        const ShaderReflectionDataEx& reflection = shader->GetReflection();
+
+        // Get or create GPU resources
+        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(model);
+        if (!perDrawBuffer) continue;
+
+        // Set active resources for layout creation
+        SetActiveCameraResource(
+            sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0]);
+        _activePerDrawBuffer = perDrawBuffer;
+
+        MaterialResource* matRes = GetOrCreateMaterialResources(mat);
+        if (!matRes) continue;
+
+        MeshResource* meshRes = GetOrCreateMeshResources(mesh, reflection);
+        if (!meshRes) continue;
+
+        RenderModel renderModel;
+        renderModel.source = model;
+        renderModel.perDrawBuffer = perDrawBuffer;
+        renderModel.meshResource = meshRes;
+        renderModel.materialResource = matRes;
+        sceneResource.renderModels.push_back(renderModel);
+    }
+
+    // 4. ECS Scene entities (TODO: MeshRendererComponent → RenderModel)
+    if (scene)
+    {
+        auto& registry = scene->GetRegistry();
+        auto view = registry.view<TransformComponent, MeshRendererComponent>();
+
+        for (auto entity : view)
+        {
+            auto& meshRenderer = view.get<MeshRendererComponent>(entity);
+            if (!meshRenderer.IsValidForRendering() || !meshRenderer.isVisible)
+                continue;
+
+            // TODO: ECS entities need a PerDraw buffer keying strategy
+            // (currently skip - placeholder for future implementation)
+        }
+    }
+
+    return sceneResource;
 }
 
 MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* material)
@@ -485,7 +570,7 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         }
         else if (buf.name == "perDraw" || buf.name == "PerDraw")
         {
-            targetBuffer = _activeModelResource ? _activeModelResource->perDrawBuffer : nullptr;
+            targetBuffer = _activePerDrawBuffer;
         }
         else
         {
@@ -719,11 +804,11 @@ void RenderResourceManager::ReleaseAll()
     }
     _cameraResources.clear();
 
-    for (auto& [model, res] : _modelResources)
+    for (auto& [model, buffer] : _perDrawBuffers)
     {
-        if (res.perDrawBuffer) _rhiContext->DestroyBuffer(res.perDrawBuffer);
+        if (buffer) _rhiContext->DestroyBuffer(buffer);
     }
-    _modelResources.clear();
+    _perDrawBuffers.clear();
 
     for (auto& [image, res] : _imageResources)
     {
@@ -733,7 +818,7 @@ void RenderResourceManager::ReleaseAll()
     _imageResources.clear();
 
     _activeCameraResource = nullptr;
-    _activeModelResource = nullptr;
+    _activePerDrawBuffer = nullptr;
 }
 
 HS_NS_END

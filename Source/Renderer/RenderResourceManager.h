@@ -72,16 +72,20 @@ struct HS_RENDERER_API MeshResource
 // Cached RHI resources per camera (PerView UBO)
 struct HS_RENDERER_API CameraResource
 {
+    Camera* source = nullptr;
     RHIBuffer* perViewBuffer = nullptr;
     bool isValid = false;
 };
 
-// Cached RHI resources per model (PerDraw UBO)
-struct HS_RENDERER_API ModelResource
+struct HS_RENDERER_API LightResource
 {
-    RHIBuffer* perDrawBuffer = nullptr;
-    bool isValid = false;
+    RHIBuffer* lightBuffer = nullptr;
 };
+
+// Forward declarations
+struct SceneResource;
+class ShaderLibrary;
+class Scene;
 
 class HS_RENDERER_API RenderResourceManager
 {
@@ -89,13 +93,17 @@ public:
     RenderResourceManager(RHIContext* rhiContext);
     ~RenderResourceManager();
 
+    // CPU 데이터로부터 GPU-resolved SceneResource 구축
+    SceneResource BuildSceneResource(
+        const std::vector<Model*>& models,
+        const std::vector<Camera*>& cameras,
+        Scene* scene,
+        ShaderLibrary* shaderLibrary
+    );
+
     // Camera resources (PerView UBO, cached per camera)
     CameraResource* GetOrCreateCameraResource(Camera* camera);
     void SetActiveCameraResource(CameraResource* resource);
-
-    // Model resources (PerDraw UBO, cached per model)
-    ModelResource* GetOrCreateModelResource(Model* model);
-    void SetActiveModelResource(ModelResource* resource);
 
     // Material resources (cached)
     MaterialResource* GetOrCreateMaterialResources(Material* material);
@@ -110,6 +118,8 @@ public:
     void ReleaseAll();
 
 private:
+    RHIBuffer* getOrCreatePerDrawBuffer(Model* model);
+
     MaterialResource createMaterialResources(Material* material);
     ImageResource createImageResource(Image* image);
     RHIResourceLayout* createResourceLayoutFromReflection(const ShaderReflectionDataEx& reflection, Material* material);
@@ -118,10 +128,10 @@ private:
     RHIContext* _rhiContext;
 
     CameraResource* _activeCameraResource = nullptr;
-    ModelResource* _activeModelResource = nullptr;
+    RHIBuffer* _activePerDrawBuffer = nullptr;
 
     std::unordered_map<Camera*, CameraResource> _cameraResources;
-    std::unordered_map<Model*, ModelResource> _modelResources;
+    std::unordered_map<Model*, RHIBuffer*> _perDrawBuffers;
     std::unordered_map<Material*, MaterialResource> _materialResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
     std::unordered_map<Image*, ImageResource> _imageResources;
