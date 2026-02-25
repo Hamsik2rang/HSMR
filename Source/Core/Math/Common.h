@@ -27,7 +27,6 @@ HS_NS_BEGIN
 struct HS_CORE_API Math
 {
     static bool EpsilonEqual(float lhs, float rhs);
-    
 };
 
 HS_NS_END
