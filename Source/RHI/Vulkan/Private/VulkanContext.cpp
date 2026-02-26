@@ -855,6 +855,44 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 
         initialLayout = VK_IMAGE_LAYOUT_GENERAL;
     }
+    else if (isColorRenderTarget && isSampledTexture && !isSwapchainTexture)
+    {
+        // Offscreen color render targets that will be sampled need an initial layout transition
+        // to avoid UNDEFINED layout when first sampled (e.g., by ImGui before the first render pass completes)
+        VkCommandBuffer transitionCmd = beginSingleTimeCommands();
+
+        VkImageSubresourceRange subresourceRange = {};
+        subresourceRange.aspectMask              = VK_IMAGE_ASPECT_COLOR_BIT;
+        subresourceRange.baseMipLevel            = 0;
+        subresourceRange.levelCount              = imageCreateInfo.mipLevels;
+        subresourceRange.baseArrayLayer          = 0;
+        subresourceRange.layerCount              = imageCreateInfo.arrayLayers;
+
+        VkImageMemoryBarrier imageMemoryBarrier{};
+        imageMemoryBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imageMemoryBarrier.image               = imageVk;
+        imageMemoryBarrier.subresourceRange    = subresourceRange;
+        imageMemoryBarrier.srcAccessMask       = 0;
+        imageMemoryBarrier.dstAccessMask       = VK_ACCESS_SHADER_READ_BIT;
+        imageMemoryBarrier.oldLayout           = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageMemoryBarrier.newLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        vkCmdPipelineBarrier(
+            transitionCmd,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &imageMemoryBarrier
+        );
+
+        endSingleTimeCommands(transitionCmd);
+
+        initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
 
     VkImageAspectFlagBits aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     if (info.isDepthStencilBuffer)
@@ -1575,6 +1613,7 @@ VkRenderPass VulkanContext::createRenderPass(const RenderPassInfo& info)
     renderPassInfo.subpassCount    = 1;
     renderPassInfo.pSubpasses      = &subPass;
     renderPassInfo.dependencyCount = 0;
+    renderPassInfo.pDependencies   = nullptr;
 
     VkRenderPass renderPassVk;
     vkCreateRenderPass(_device, &renderPassInfo, nullptr, &renderPassVk);

@@ -260,10 +260,12 @@ void SimpleWindow::renderOverlay()
     RenderTarget* curRT = &_renderTargets[imageIndex];
     RHITexture* sceneTexture = curRT->GetColorTexture(0);
 
-    ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+    ImVec2 viewportPos  = mainViewport->Pos;
+    ImVec2 viewportSize = mainViewport->Size;
 
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(displaySize);
+    ImGui::SetNextWindowPos(viewportPos);
+    ImGui::SetNextWindowSize(viewportSize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("##SceneViewport", nullptr,
         ImGuiWindowFlags_NoDecoration |
@@ -275,12 +277,12 @@ void SimpleWindow::renderOverlay()
         ImGuiWindowFlags_NoScrollbar |
         ImGuiWindowFlags_NoScrollWithMouse);
 
-    ImGuiExtension::ImageOffscreen(sceneTexture, displaySize);
+    ImGuiExtension::ImageOffscreen(sceneTexture, viewportSize);
     ImGui::End();
     ImGui::PopStyleVar();
 
     // Stats overlay
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 10), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
     ImGui::Begin("Stats", nullptr,
         ImGuiWindowFlags_NoDecoration |
