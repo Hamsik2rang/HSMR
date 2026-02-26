@@ -10,10 +10,7 @@
 
 #include "imgui.h"
 
-// ImGuizmo - HAS_IMGUIZMO is defined by CMake when ImGuizmo is available
-#ifdef HAS_IMGUIZMO
 #include "ImGuizmo.h"
-#endif
 
 HS_NS_BEGIN
 
@@ -58,7 +55,6 @@ bool GizmoController::Manipulate(Camera* camera, SceneObject* object)
 {
     if (!_enabled || !camera || !object) return false;
 
-#if HAS_IMGUIZMO
     ImGuizmo::SetOrthographic(camera->GetProjectionType() == Camera::EProjectionType::Orthographic);
     ImGuizmo::SetDrawlist();
 
@@ -153,41 +149,12 @@ bool GizmoController::Manipulate(Camera* camera, SceneObject* object)
     }
 
     return changed;
-#else
-    // Fallback without ImGuizmo - show simple UI controls
-    ImGuiIO& io = ImGui::GetIO();
-
-    // Draw a simple axis indicator at object position
-    glm::vec2 screenPos = camera->WorldToScreenPoint(object->GetPosition());
-
-    // Convert from NDC to screen coordinates
-    screenPos.x = (screenPos.x + 1.0f) * 0.5f * io.DisplaySize.x;
-    screenPos.y = (1.0f - screenPos.y) * 0.5f * io.DisplaySize.y;
-
-    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-
-    // Draw axis lines
-    float axisLength = 50.0f;
-    drawList->AddLine(
-        ImVec2(screenPos.x, screenPos.y),
-        ImVec2(screenPos.x + axisLength, screenPos.y),
-        IM_COL32(255, 0, 0, 255), 2.0f); // X axis - red
-
-    drawList->AddLine(
-        ImVec2(screenPos.x, screenPos.y),
-        ImVec2(screenPos.x, screenPos.y - axisLength),
-        IM_COL32(0, 255, 0, 255), 2.0f); // Y axis - green
-
-    // Show transform controls in Inspector instead
-    return false;
-#endif
 }
 
 void GizmoController::DrawGrid(Camera* camera, float gridSize)
 {
     if (!camera) return;
 
-#if HAS_IMGUIZMO
     glm::mat4 view = camera->GetViewMatrix();
     glm::mat4 proj = camera->GetProjectionMatrix();
     glm::mat4 identity = glm::mat4(1.0f);
@@ -198,55 +165,12 @@ void GizmoController::DrawGrid(Camera* camera, float gridSize)
         glm::value_ptr(identity),
         gridSize
     );
-#else
-    // Fallback grid drawing with ImGui
-    ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-
-    // Draw simple grid lines on XZ plane
-    int gridLines = static_cast<int>(gridSize);
-    float halfSize = gridSize * 0.5f;
-
-    for (int i = -gridLines; i <= gridLines; ++i)
-    {
-        glm::vec3 startX(-halfSize, 0.0f, static_cast<float>(i));
-        glm::vec3 endX(halfSize, 0.0f, static_cast<float>(i));
-
-        glm::vec2 screenStart = camera->WorldToScreenPoint(startX);
-        glm::vec2 screenEnd = camera->WorldToScreenPoint(endX);
-
-        // Convert NDC to screen
-        screenStart.x = (screenStart.x + 1.0f) * 0.5f * io.DisplaySize.x;
-        screenStart.y = (1.0f - screenStart.y) * 0.5f * io.DisplaySize.y;
-        screenEnd.x = (screenEnd.x + 1.0f) * 0.5f * io.DisplaySize.x;
-        screenEnd.y = (1.0f - screenEnd.y) * 0.5f * io.DisplaySize.y;
-
-        ImU32 color = (i == 0) ? IM_COL32(255, 0, 0, 128) : IM_COL32(128, 128, 128, 64);
-        drawList->AddLine(ImVec2(screenStart.x, screenStart.y), ImVec2(screenEnd.x, screenEnd.y), color);
-
-        // Z lines
-        glm::vec3 startZ(static_cast<float>(i), 0.0f, -halfSize);
-        glm::vec3 endZ(static_cast<float>(i), 0.0f, halfSize);
-
-        screenStart = camera->WorldToScreenPoint(startZ);
-        screenEnd = camera->WorldToScreenPoint(endZ);
-
-        screenStart.x = (screenStart.x + 1.0f) * 0.5f * io.DisplaySize.x;
-        screenStart.y = (1.0f - screenStart.y) * 0.5f * io.DisplaySize.y;
-        screenEnd.x = (screenEnd.x + 1.0f) * 0.5f * io.DisplaySize.x;
-        screenEnd.y = (1.0f - screenEnd.y) * 0.5f * io.DisplaySize.y;
-
-        color = (i == 0) ? IM_COL32(0, 0, 255, 128) : IM_COL32(128, 128, 128, 64);
-        drawList->AddLine(ImVec2(screenStart.x, screenStart.y), ImVec2(screenEnd.x, screenEnd.y), color);
-    }
-#endif
 }
 
 void GizmoController::DrawViewManipulator(Camera* camera, float size)
 {
     if (!camera) return;
 
-#if HAS_IMGUIZMO
     ImGuiIO& io = ImGui::GetIO();
 
     // Position in top-right corner
@@ -263,10 +187,6 @@ void GizmoController::DrawViewManipulator(Camera* camera, float size)
         ImVec2(size, size),
         0x10101010
     );
-
-    // Note: To apply view changes, would need to decompose view matrix
-    // back to camera position/rotation
-#endif
 }
 
 HS_NS_END

@@ -21,9 +21,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "Core/ThirdParty/glm/gtx/matrix_decompose.hpp"
 
-#ifdef HAS_IMGUIZMO
 #include <ImGuizmo.h>
-#endif
 
 HS_NS_EDITOR_BEGIN
 
@@ -46,14 +44,12 @@ void ScenePanel::Update(float deltaTime)
     static glm::vec3 moveDir                  = glm::vec3(0.0f);
 
     // Only process camera input when viewport is hovered and gizmo is not being used
-#ifdef HAS_IMGUIZMO
     if (ImGuizmo::IsUsing())
     {
         _isMouseTracking             = false;
         _rightClickStartedInViewport = false;
         return;
     }
-#endif
 
     // Check if right-click just started (using ImGui to detect click event)
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
@@ -229,7 +225,6 @@ void ScenePanel::Draw()
 
 void ScenePanel::drawTransformGizmo()
 {
-#ifdef HAS_IMGUIZMO
     Entity selectedEntity = EditorContext::Get().GetSelectedEntity();
     if (!selectedEntity.IsValid() || !selectedEntity.HasComponent<TransformComponent>())
         return;
@@ -337,16 +332,13 @@ void ScenePanel::drawTransformGizmo()
     {
         context.SetGizmoActive(ImGuizmo::IsUsing());
     }
-#endif
 }
 
 void ScenePanel::handlePicking()
 {
-#ifdef HAS_IMGUIZMO
     // Don't pick while using gizmo
     if (ImGuizmo::IsOver() || ImGuizmo::IsUsing())
         return;
-#endif
 
     // Only pick on left click in viewport
     if (!_viewportHovered || !ImGui::IsMouseClicked(ImGuiMouseButton_Left))
