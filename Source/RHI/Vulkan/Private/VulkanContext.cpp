@@ -1579,7 +1579,7 @@ VkRenderPass VulkanContext::createRenderPass(const RenderPassInfo& info)
     VkRenderPass renderPassVk;
     vkCreateRenderPass(_device, &renderPassInfo, nullptr, &renderPassVk);
 
-    return renderPassVk; // Placeholder, implement the rest of the function
+    return renderPassVk;
 }
 
 VkFramebuffer VulkanContext::createFramebuffer(const FramebufferInfo& info)

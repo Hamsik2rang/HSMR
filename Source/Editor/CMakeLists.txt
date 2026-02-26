@@ -7,6 +7,8 @@ set(EDITOR_CORE_HEADERS
     Core/EditorWindow.h
     Core/EditorCamera.h
     Core/EditorContext.h
+    Core/SimpleApplication.h
+    Core/SimpleWindow.h
 )
 
 source_group("Core\\Public" FILES ${EDITOR_CORE_HEADERS})
@@ -18,6 +20,8 @@ set(EDITOR_CORE_SOURCES
     Core/EditorWindow.cpp
     Core/EditorCamera.cpp
     Core/EditorContext.cpp
+    Core/SimpleApplication.cpp
+    Core/SimpleWindow.cpp
 )
 
 source_group("Core\\Private" FILES ${EDITOR_CORE_SOURCES})
@@ -26,6 +30,7 @@ list(APPEND TOTAL_FILES ${EDITOR_CORE_SOURCES})
 
 set(EDITOR_ENTRY_POINT_HEADERS
     EntryPoint/EditorMain.h
+    EntryPoint/SimpleMain.h
 )
 
 source_group("EntryPoint\\Public" FILES ${EDITOR_ENTRY_POINT_HEADERS})
@@ -40,6 +45,7 @@ if(APPLE)
 else()
     set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/Windows/EditorMain.cpp
+        EntryPoint/Windows/SimpleMain.cpp
     )
 endif()
 

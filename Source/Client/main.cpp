@@ -7,8 +7,7 @@
 
 #ifdef HS_EDITOR_MODE
 #include "Editor/EntryPoint/EditorMain.h"
-
-#define hs_main(argc, argv) hs_editor_main((argc), (argv))
+#include "Editor/EntryPoint/SimpleMain.h"
 
 #else // !HS_EDITOR_MODE
 // #include ...
@@ -21,5 +20,15 @@
 int main(int argc, char* argv[])
 {
     hs::CommandLine::Initialize(argc, argv);
-    return hs_main(argc, argv);
+
+#ifdef HS_EDITOR_MODE
+    if (hs::CommandLine::HasFlag("--simple"))
+    {
+        return hs_simple_main(argc, argv);
+    }
+    return hs_editor_main(argc, argv);
+#else
+    // return hs_play_main(argc, argv);
+    return 0;
+#endif
 }

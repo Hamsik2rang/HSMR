@@ -39,6 +39,8 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     for (size_t i = 0; i < _renderTargets.size(); i++)
     {
         RenderTargetInfo info{};
+        info.width = width;
+        info.height = height;
         info.colorTextureCount = 1;
         info.colorTextureInfos.resize(info.colorTextureCount);
         for (size_t j = 0; j < info.colorTextureCount; j++)

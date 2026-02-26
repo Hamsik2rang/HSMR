@@ -58,6 +58,12 @@ void RenderTarget::Update(const RenderTargetInfo& info)
 
 void RenderTarget::Update(uint32 width, uint32 height)
 {
+    if (width == 0 || height == 0)
+    {
+        HS_ASSERT(false, "RenderTarget::Update() called with zero dimension (width=%u, height=%u)", width, height);
+        return;
+    }
+
     if (_info.width == width && _info.height == height)
     {
         return;
