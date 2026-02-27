@@ -40,6 +40,7 @@ list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_HEADERS})
 if(APPLE)
     set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/OSX/EditorMain.mm
+        EntryPoint/OSX/SimpleMain.mm
     )
 
 else()
