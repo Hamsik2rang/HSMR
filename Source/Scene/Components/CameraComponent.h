@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/TypeId.h"
 #include "Core/Math/Common.h"
 
 HS_NS_BEGIN
@@ -17,6 +18,8 @@ HS_NS_BEGIN
  */
 struct HS_SCENE_API CameraComponent
 {
+    HS_GENERATE_TYPEID(CameraComponent)
+
     enum class EProjectionType : uint8
     {
         Perspective,

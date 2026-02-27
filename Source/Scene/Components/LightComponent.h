@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/TypeId.h"
 #include "Core/Math/Common.h"
 
 HS_NS_BEGIN
@@ -27,6 +28,8 @@ enum class ELightType : uint8
  */
 struct HS_SCENE_API LightComponent
 {
+    HS_GENERATE_TYPEID(LightComponent)
+
     ELightType type = ELightType::Directional;
 
     glm::vec3 color{ 1.0f, 1.0f, 1.0f };

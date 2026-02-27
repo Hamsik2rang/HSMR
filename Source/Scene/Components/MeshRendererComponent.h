@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/TypeId.h"
 #include "Core/Math/Common.h"
 
 #include <vector>
@@ -128,6 +129,8 @@ struct HS_SCENE_API AABB
  */
 struct HS_SCENE_API MeshRendererComponent
 {
+    HS_GENERATE_TYPEID(MeshRendererComponent)
+
     // Mesh reference
     Mesh* mesh = nullptr;
 

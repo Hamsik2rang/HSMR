@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/TypeId.h"
 #include <string>
 
 HS_NS_BEGIN
@@ -17,6 +18,8 @@ HS_NS_BEGIN
  */
 struct HS_SCENE_API TagComponent
 {
+    HS_GENERATE_TYPEID(TagComponent)
+
     std::string name = "Entity";
     uint32 layer = 0;
     bool isStatic = false;

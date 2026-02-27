@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/TypeId.h"
 #include "Core/Math/Common.h"
 #include <entt/entt.hpp>
 #include <vector>
@@ -20,6 +21,8 @@ HS_NS_BEGIN
  */
 struct HS_SCENE_API TransformComponent
 {
+    HS_GENERATE_TYPEID(TransformComponent)
+
     // Local transform (부모 기준)
     glm::vec3 position{ 0.0f, 0.0f, 0.0f };
     glm::quat rotation{ 1.0f, 0.0f, 0.0f, 0.0f };  // identity quaternion
