@@ -12,6 +12,7 @@ set(RENDERER_HEADERS
     DeferredRenderer.h
     RenderResourceManager.h
     ShaderLibrary.h
+    RenderGraph.h
 )
 
 source_group("Public" FILES ${RENDERER_HEADERS})
@@ -24,6 +25,7 @@ set(RENDERER_SOURCES
     Private/RenderTarget.cpp
     Private/RenderResourceManager.cpp
     Private/ShaderLibrary.cpp
+    Private/RenderGraph.cpp
 )
 
 source_group("Private" FILES ${RENDERER_SOURCES})
