@@ -84,7 +84,10 @@ void SceneGraph::SetParent(entt::entity child, entt::entity parent)
     }
 
     // Dirty 표시
-    MarkDirty(child);
+    if (_registry.all_of<TransformComponent>(child))
+    {
+        _registry.get<TransformComponent>(child).isDirty = true;
+    }
 }
 
 void SceneGraph::RemoveParent(entt::entity child)
@@ -250,23 +253,6 @@ bool SceneGraph::IsDescendantOf(entt::entity descendant, entt::entity ancestor) 
     return IsAncestorOf(ancestor, descendant);
 }
 
-void SceneGraph::UpdateWorldTransforms()
-{
-    // 모든 루트에서 시작하여 재귀적으로 업데이트
-    for (auto root : _roots)
-    {
-        if (_registry.valid(root) && _registry.all_of<TransformComponent>(root))
-        {
-            updateWorldTransformRecursive(root, glm::mat4(1.0f));
-        }
-    }
-}
-
-void SceneGraph::MarkDirty(entt::entity entity)
-{
-    markDirtyRecursive(entity);
-}
-
 void SceneGraph::AddRoot(entt::entity entity)
 {
     if (std::find(_roots.begin(), _roots.end(), entity) == _roots.end())
@@ -281,43 +267,6 @@ void SceneGraph::RemoveRoot(entt::entity entity)
     if (it != _roots.end())
     {
         _roots.erase(it);
-    }
-}
-
-void SceneGraph::updateWorldTransformRecursive(entt::entity entity, const glm::mat4& parentWorld)
-{
-    if (!_registry.valid(entity) || !_registry.all_of<TransformComponent>(entity))
-    {
-        return;
-    }
-
-    auto& transform = _registry.get<TransformComponent>(entity);
-
-    // World matrix 계산
-    glm::mat4 localMatrix = transform.GetLocalMatrix();
-    transform.worldMatrix = parentWorld * localMatrix;
-    transform.isDirty = false;
-
-    // 자식들 재귀 업데이트
-    for (auto child : transform.children)
-    {
-        updateWorldTransformRecursive(child, transform.worldMatrix);
-    }
-}
-
-void SceneGraph::markDirtyRecursive(entt::entity entity)
-{
-    if (!_registry.valid(entity) || !_registry.all_of<TransformComponent>(entity))
-    {
-        return;
-    }
-
-    auto& transform = _registry.get<TransformComponent>(entity);
-    transform.isDirty = true;
-
-    for (auto child : transform.children)
-    {
-        markDirtyRecursive(child);
     }
 }
 

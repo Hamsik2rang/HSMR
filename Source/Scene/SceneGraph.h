@@ -65,18 +65,6 @@ public:
      */
     const std::vector<entt::entity>& GetRoots() const { return _roots; }
 
-    // ===== Transform 전파 =====
-
-    /**
-     * @brief 모든 dirty transform 업데이트
-     */
-    void UpdateWorldTransforms();
-
-    /**
-     * @brief 특정 entity와 그 자손들을 dirty로 표시
-     */
-    void MarkDirty(entt::entity entity);
-
     // ===== 계층 순회 =====
 
     /**
@@ -105,9 +93,6 @@ public:
     void RemoveRoot(entt::entity entity);
 
 private:
-    void updateWorldTransformRecursive(entt::entity entity, const glm::mat4& parentWorld);
-    void markDirtyRecursive(entt::entity entity);
-
     entt::registry& _registry;
     std::vector<entt::entity> _roots;
     static const std::vector<entt::entity> _emptyChildren;

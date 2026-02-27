@@ -24,11 +24,22 @@ set(SCENE_COMPONENT_HEADERS
 source_group("Components\\Public" FILES ${SCENE_COMPONENT_HEADERS})
 list(APPEND TOTAL_FILES ${SCENE_COMPONENT_HEADERS})
 
+set(SCENE_SYSTEM_HEADERS
+    Systems/IComponentSystem.h
+    Systems/TransformSystem.h
+    Systems/MeshBoundsSystem.h
+)
+
+source_group("Systems\\Public" FILES ${SCENE_SYSTEM_HEADERS})
+list(APPEND TOTAL_FILES ${SCENE_SYSTEM_HEADERS})
+
 set(SCENE_SOURCES
     Private/Scene.cpp
     Private/SceneGraph.cpp
     Private/Entity.cpp
     Private/SceneSerializer.cpp
+    Private/TransformSystem.cpp
+    Private/MeshBoundsSystem.cpp
 )
 
 source_group("Private" FILES ${SCENE_SOURCES})

@@ -5,6 +5,8 @@
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
+#include "Scene/Systems/TransformSystem.h"
+#include "Scene/Systems/MeshBoundsSystem.h"
 #include "Core/Log.h"
 
 HS_NS_BEGIN
@@ -13,6 +15,8 @@ Scene::Scene(const std::string& name)
     : _name(name)
     , _sceneGraph(_registry)
 {
+    AddSystem<TransformSystem>(_sceneGraph);
+    AddSystem<MeshBoundsSystem>();
     HS_LOG(info, "[Scene] Created scene: {}", _name.c_str());
 }
 
@@ -167,10 +171,10 @@ std::vector<Entity> Scene::FindStaticEntities()
 
 void Scene::Update(float deltaTime)
 {
-    // Transform 전파
-    _sceneGraph.UpdateWorldTransforms();
-
-    // 추가 업데이트 로직은 여기에...
+    for (auto& system : _systems)
+    {
+        system->Update(_registry, deltaTime);
+    }
 }
 
 size_t Scene::GetEntityCount() const

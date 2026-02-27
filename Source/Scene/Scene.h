@@ -7,6 +7,7 @@
 
 #include "Precompile.h"
 #include "Scene/SceneGraph.h"
+#include "Scene/Systems/IComponentSystem.h"
 #include "Scene/Components/Components.h"
 #include <entt/entt.hpp>
 #include <string>
@@ -120,6 +121,14 @@ public:
      */
     void Update(float deltaTime);
 
+    // ===== System 관리 =====
+
+    template<typename T, typename... Args>
+    T* AddSystem(Args&&... args);
+
+    template<typename T>
+    T* GetSystem();
+
     // ===== SceneGraph 접근 =====
 
     SceneGraph& GetSceneGraph() { return _sceneGraph; }
@@ -175,7 +184,33 @@ private:
     std::string _name;
     entt::registry _registry;
     SceneGraph _sceneGraph;
+    std::vector<Scoped<IComponentSystem>> _systems;
 };
+
+// ===== Template Implementations =====
+
+template<typename T, typename... Args>
+T* Scene::AddSystem(Args&&... args)
+{
+    auto system = MakeScoped<T>(std::forward<Args>(args)...);
+    T* ptr = system.get();
+    _systems.push_back(std::move(system));
+    return ptr;
+}
+
+template<typename T>
+T* Scene::GetSystem()
+{
+    TypeId targetId = T::GetStaticTypeId();
+    for (auto& system : _systems)
+    {
+        if (system->GetTypeId() == targetId)
+        {
+            return static_cast<T*>(system.get());
+        }
+    }
+    return nullptr;
+}
 
 HS_NS_END
 
