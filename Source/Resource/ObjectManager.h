@@ -20,7 +20,15 @@
 #include "Resource/Material.h"
 #include "Resource/Model.h"
 
+#include <unordered_map>
+
 HS_NS_BEGIN
+
+struct ModelLoadResult
+{
+    Mesh* mesh = nullptr;
+    Material* material = nullptr;
+};
 
 class HS_RESOURCE_API ObjectManager
 {
@@ -49,6 +57,9 @@ public:
                           std::vector<Scoped<Material>>& outMaterials,
                           bool isAbsolutePath = false);
     static bool LoadModel(const std::string& path, Scoped<Model>& outModel, bool isAbsolutePath = false);
+
+    // Cached overload: ObjectManager owns the resources, returns raw pointers
+    static ModelLoadResult LoadModel(const std::string& path, bool isAbsolutePath = false);
 
     static const Image* GetFallbackImage2DWhite();
     static const Image* GetFallbackImage2DBlack();
@@ -87,6 +98,8 @@ private:
     static Scoped<Mesh> s_fallbackMeshCube;
     static Scoped<Mesh> s_fallbackMeshSphere;
 
+    // Model cache (owns loaded resources)
+    static std::unordered_map<std::string, Scoped<Model>> s_modelCache;
 };
 
 

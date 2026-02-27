@@ -37,6 +37,8 @@ Scoped<Mesh> ObjectManager::s_fallbackMeshPlane;
 Scoped<Mesh> ObjectManager::s_fallbackMeshCube;
 Scoped<Mesh> ObjectManager::s_fallbackMeshSphere;
 
+std::unordered_map<std::string, Scoped<Model>> ObjectManager::s_modelCache;
+
 bool ObjectManager::Initialize()
 {
     // Get resource path from engine context
@@ -141,6 +143,8 @@ void ObjectManager::Finalize()
     {
         s_fallbackMeshSphere = nullptr;
     }
+
+    s_modelCache.clear();
 
     s_isInitialize = false;
 }
@@ -1160,6 +1164,28 @@ bool ObjectManager::LoadModel(const std::string& path, Scoped<Model>& outModel, 
     outModel->SetMaterial(std::move(materials.front()));
 
     return true;
+}
+
+ModelLoadResult ObjectManager::LoadModel(const std::string& path, bool isAbsolutePath)
+{
+    // Cache hit
+    auto it = s_modelCache.find(path);
+    if (it != s_modelCache.end())
+    {
+        Model* model = it->second.get();
+        return { model->GetMesh(), model->GetMaterial() };
+    }
+
+    // Cache miss: load via existing overload
+    Scoped<Model> model;
+    if (!LoadModel(path, model, isAbsolutePath) || !model)
+    {
+        return {};
+    }
+
+    ModelLoadResult result{ model->GetMesh(), model->GetMaterial() };
+    s_modelCache[path] = std::move(model);
+    return result;
 }
 
 bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>& outMeshes, std::vector<Scoped<Material>>& outMaterials, bool isAbsolutePath)
