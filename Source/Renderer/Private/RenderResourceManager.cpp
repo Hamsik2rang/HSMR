@@ -104,13 +104,10 @@ SceneResource RenderResourceManager::BuildSceneResource(
     // 1. Cameras: CameraComponent + TransformComponent → CameraResource
     auto cameraView = registry.view<TransformComponent, CameraComponent>();
     uint32 cameraIndex = 0;
-    for (auto entity : cameraView)
+    for (auto [entity, transform, camera] : cameraView.each())
     {
-        auto& transform = cameraView.get<TransformComponent>(entity);
-        auto& camera = cameraView.get<CameraComponent>(entity);
-
         PerView perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
-        CameraResource* camRes = GetOrCreateCameraResource(cameraIndex);
+        CameraResource* camRes = GetOrCreateCameraResource(&camera);
         if (camRes)
         {
             camRes->perViewData = perView;
@@ -123,11 +120,8 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
     // 3. MeshRenderer entities → RenderModel
     auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
-    for (auto entity : meshView)
+    for (auto [entity, transform, meshRenderer]: meshView.each())
     {
-        auto& transform = meshView.get<TransformComponent>(entity);
-        auto& meshRenderer = meshView.get<MeshRendererComponent>(entity);
-
         if (!meshRenderer.IsValidForRendering()) continue;
 
         Mesh* mesh = meshRenderer.mesh;
@@ -151,7 +145,7 @@ SceneResource RenderResourceManager::BuildSceneResource(
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
         uint32 entityId = static_cast<uint32>(entity);
-        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(entityId);
+        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(&transform);
         if (!perDrawBuffer) continue;
 
         // Set active resources for layout creation

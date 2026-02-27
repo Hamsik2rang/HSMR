@@ -124,9 +124,8 @@ void Scene::destroyEntityRecursive(entt::entity entity)
 Entity Scene::FindEntityByName(const std::string& name)
 {
     auto view = _registry.view<TagComponent>();
-    for (auto entity : view)
+    for (auto [entity, tag] : view.each())
     {
-        const auto& tag = view.get<TagComponent>(entity);
         if (tag.name == name)
         {
             return Entity(entity, this);
@@ -140,9 +139,8 @@ std::vector<Entity> Scene::FindEntitiesByLayer(uint32 layer)
     std::vector<Entity> result;
 
     auto view = _registry.view<TagComponent>();
-    for (auto entity : view)
+    for (auto [entity, tag] : view.each())
     {
-        const auto& tag = view.get<TagComponent>(entity);
         if (tag.layer == layer)
         {
             result.emplace_back(entity, this);
@@ -157,9 +155,8 @@ std::vector<Entity> Scene::FindStaticEntities()
     std::vector<Entity> result;
 
     auto view = _registry.view<TagComponent>();
-    for (auto entity : view)
+    for (auto [entity, tag] : view.each())
     {
-        const auto& tag = view.get<TagComponent>(entity);
         if (tag.isStatic)
         {
             result.emplace_back(entity, this);
@@ -186,9 +183,8 @@ size_t Scene::GetActiveEntityCount() const
 {
     size_t count = 0;
     auto view = _registry.view<TagComponent>();
-    for (auto entity : view)
+    for (auto [entity, tag] : view.each())
     {
-        const auto& tag = view.get<TagComponent>(entity);
         if (tag.isActive)
         {
             count++;
@@ -200,9 +196,8 @@ size_t Scene::GetActiveEntityCount() const
 Entity Scene::GetPrimaryCamera()
 {
     auto view = _registry.view<CameraComponent>();
-    for (auto entity : view)
+    for (auto [entity, camera] : view.each())
     {
-        const auto& camera = view.get<CameraComponent>(entity);
         if (camera.isPrimary)
         {
             return Entity(entity, this);
@@ -221,9 +216,8 @@ void Scene::SetPrimaryCamera(Entity camera)
 
     // 기존 primary 해제
     auto view = _registry.view<CameraComponent>();
-    for (auto entity : view)
+    for (auto [entity, cam] : view.each())
     {
-        auto& cam = view.get<CameraComponent>(entity);
         cam.isPrimary = false;
     }
 

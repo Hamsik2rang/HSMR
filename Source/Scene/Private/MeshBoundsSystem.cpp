@@ -12,10 +12,8 @@ HS_NS_BEGIN
 void MeshBoundsSystem::Update(entt::registry& registry, float deltaTime)
 {
     auto view = registry.view<TransformComponent, MeshRendererComponent>();
-    for (auto entity : view)
+    for (auto [entity, transform, meshRenderer] : view.each())
     {
-        auto& transform = view.get<TransformComponent>(entity);
-        auto& meshRenderer = view.get<MeshRendererComponent>(entity);
         meshRenderer.UpdateWorldBounds(transform.worldMatrix);
     }
 }

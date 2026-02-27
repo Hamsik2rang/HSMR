@@ -414,14 +414,11 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
 
     // First pass: AABB picking for entities with MeshRendererComponent
     auto meshView = scene->View<TransformComponent, MeshRendererComponent>();
-    for (auto entityHandle : meshView)
+    for (auto [entityHandle, transform, meshRenderer] : meshView.each())
     {
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
             continue;
-
-        const auto& transform    = entity.GetComponent<TransformComponent>();
-        const auto& meshRenderer = entity.GetComponent<MeshRendererComponent>();
 
         // Use worldBounds if valid, otherwise create default bounds from transform
         AABB bounds = meshRenderer.worldBounds;
@@ -448,7 +445,7 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
 
     // Second pass: Sphere picking for entities without MeshRendererComponent
     auto view = scene->View<TransformComponent, TagComponent>();
-    for (auto entityHandle : view)
+    for (auto [entityHandle, transform, tag] : view.each())
     {
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
@@ -458,8 +455,7 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
         if (entity.HasComponent<MeshRendererComponent>())
             continue;
 
-        const auto& transform = entity.GetComponent<TransformComponent>();
-        glm::vec3 entityPos   = transform.GetWorldPosition();
+        glm::vec3 entityPos = transform.GetWorldPosition();
 
         // Simple sphere test (radius based on scale)
         float radius = glm::length(transform.scale) * 0.5f;

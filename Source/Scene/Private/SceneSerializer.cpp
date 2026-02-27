@@ -301,12 +301,11 @@ std::string SceneSerializer::SaveToString()
     std::vector<Entity> rootEntities;
     auto view = _scene->View<TagComponent, TransformComponent>();
 
-    for (auto entityHandle : view)
+    for (auto [entityHandle, tag, transform] : view.each())
     {
         Entity entity = _scene->GetEntity(entityHandle);
         if (!entity.IsValid()) continue;
 
-        const auto& transform = entity.GetComponent<TransformComponent>();
         if (!transform.HasParent())
         {
             rootEntities.push_back(entity);
@@ -507,7 +506,7 @@ void SceneSerializer::ClearScene()
     // Collect all entities first (to avoid iterator invalidation)
     std::vector<Entity> entities;
     auto view = _scene->View<TagComponent>();
-    for (auto entityHandle : view)
+    for (auto [entityHandle, tag] : view.each())
     {
         entities.push_back(_scene->GetEntity(entityHandle));
     }
