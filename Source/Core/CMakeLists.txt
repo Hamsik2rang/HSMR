@@ -9,6 +9,7 @@ set(CORE_HEADERS
     Flag.h
     Hash.h
     Log.h
+    TypeId.h
     Object.h
     SystemContext.h
 )
