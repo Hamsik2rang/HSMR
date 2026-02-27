@@ -21,6 +21,12 @@ HS_NS_BEGIN
 class HS_RESOURCE_API Mesh : public Object
 {
 public:
+    struct Bound
+    {
+        glm::vec4 min;
+        glm::vec4 max;
+    };
+
     Mesh()
         : Object(EType::Mesh)
     {}
@@ -76,6 +82,9 @@ public:
     HS_FORCEINLINE bool HasTangents() const { return !_tangent.empty(); }
     HS_FORCEINLINE bool HasIndices() const { return !_indices.empty(); }
 
+    // Bounds
+    HS_FORCEINLINE const Bound& GetBound() const { return _bound; }
+
     // Material management
     void SetMaterialIndex(int32 index) { _materialIndex = index; }
     HS_FORCEINLINE int32 GetMaterialIndex() const { return _materialIndex; }
@@ -98,11 +107,7 @@ private:
     std::vector<Mesh*> _subMeshes;
     std::vector<uint32> _indices;
 
-    struct Bound
-    {
-        glm::vec4 min;
-        glm::vec4 max;
-    } _bound;
+    Bound _bound;
     int32 _materialIndex = -1; // Index to material in the material array
 
     // RHI Resources
