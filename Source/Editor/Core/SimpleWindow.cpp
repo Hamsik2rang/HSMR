@@ -18,6 +18,7 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/SimpleApplication.h"
 #include "Editor/Core/EditorCamera.h"
+#include "Resource/ObjectManager.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -154,10 +155,27 @@ void SimpleWindow::setupDefaultScene()
     auto& camera = cameraEntity.AddComponent<CameraComponent>();
     camera.isPrimary = true;
 
-    // Test mesh entity
+    // Load DamagedHelmet model
+    std::string gltfPath = std::string("GLTF") + HS_DIR_SEPERATOR
+                         + "DamagedHelmet" + HS_DIR_SEPERATOR
+                         + "DamagedHelmet.gltf";
+    auto [mesh, material] = ObjectManager::LoadModel(gltfPath);
+
+    // Damaged Helmet entity
     Entity entity = _scene->CreateEntity("Damaged Helmet");
-    entity.GetComponent<TransformComponent>().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    entity.AddComponent<MeshRendererComponent>();
+    if (mesh)
+    {
+        auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+        meshRenderer.mesh = mesh;
+        if (material)
+        {
+            meshRenderer.materials.push_back(material);
+        }
+
+        // Set local bounds from mesh
+        const auto& bound = mesh->GetBound();
+        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+    }
 
     _scene->Update(0.0f);
 }
