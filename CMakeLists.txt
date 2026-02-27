@@ -167,11 +167,6 @@ set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 set(HS_SHADER_DIR "Shader")
 
-# New lightweight prototyping framework modules
-set(HS_THIRDPARTY_DIR "Source/ThirdParty")
-set(HS_GIZMO_DIR "Source/Gizmo")
-
-# set(HS_APPLICATION_DIR "Source/Application")
 
 # =========================================
 # 라이브러리 빌드 후 자동 설치 함수 (변경 시에만)
@@ -212,11 +207,6 @@ add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
 add_subdirectory(${HS_SHADER_DIR})
 
-# New lightweight prototyping framework modules
-add_subdirectory(${HS_THIRDPARTY_DIR})
-
-# Gizmo is now part of Application module
-# add_subdirectory(${HS_APPLICATION_DIR})
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}

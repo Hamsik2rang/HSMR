@@ -230,17 +230,26 @@ list(APPEND THIRDPARTY_IMGUI
     ${THIRDPARTY_IMGUI_BACKENDS}
 )
 
+set(THIRDPARTY_IMGUIZMO
+    ThirdParty/ImGuizmo/ImGuizmo.cpp
+)
+
+source_group("ThirdParty\\ImGuizmo" FILES ${THIRDPARTY_IMGUIZMO})
+
+set(THIRDPARTY_IMPLOT
+    ThirdParty/ImPlot/implot.cpp
+    ThirdParty/ImPlot/implot_items.cpp
+)
+
+source_group("ThirdParty\\ImPlot" FILES ${THIRDPARTY_IMPLOT})
+
 set(THIRDPARTY
     ${THIRDPARTY_IMGUI}
+    ${THIRDPARTY_IMGUIZMO}
+    ${THIRDPARTY_IMPLOT}
 )
 
 list(APPEND TOTAL_FILES ${THIRDPARTY})
-
-list(APPEND TOTAL_FILES ${IMGUIZMO_SOURCES})
-source_group("ThirdParty\\ImGuizmo" FILES ${IMGUIZMO_SOURCES})
-
-list(APPEND TOTAL_FILES ${IMPLOT_SOURCES})
-source_group("ThirdParty\\ImPlot" FILES ${IMPLOT_SOURCES})
 
 add_library(${TARGET_NAME}
     SHARED
@@ -279,8 +288,8 @@ target_include_directories(${TARGET_NAME}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../Engine
     PUBLIC ThirdParty
     $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_INCLUDE_DIR}>
-    ${IMGUIZMO_INCLUDE_DIR}
-    ${IMPLOT_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/ImGuizmo
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/ImPlot
     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/ImGui
 )
 
