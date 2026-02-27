@@ -5,9 +5,19 @@
 
 HS_NS_BEGIN
 
+class RenderGraph
+{
+public:
+    class Builder
+    {
+    public:
+    };
+    Builder& GetBuilder() { return _builder; }
 
+private:
+    Builder _builder;
+};
 
 HS_NS_END
-
 
 #endif
