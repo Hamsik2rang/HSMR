@@ -34,9 +34,9 @@ RenderResourceManager::~RenderResourceManager()
     ReleaseAll();
 }
 
-CameraResource* RenderResourceManager::GetOrCreateCameraResource(uint32 index)
+CameraResource* RenderResourceManager::GetOrCreateCameraResource(CameraComponent* cameraComponent)
 {
-    auto it = _cameraResources.find(index);
+    auto it = _cameraResources.find(cameraComponent);
     if (it != _cameraResources.end() && it->second.isValid)
     {
         return &it->second;
@@ -56,10 +56,10 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(uint32 index)
     }
 
     resource.isValid = true;
-    _cameraResources[index] = std::move(resource);
+    _cameraResources[cameraComponent] = std::move(resource);
 
     HS_LOG(info, "[RenderResourceManager] CameraResource created");
-    return &_cameraResources[index];
+    return &_cameraResources[cameraComponent];
 }
 
 void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
@@ -67,9 +67,9 @@ void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
     _activeCameraResource = resource;
 }
 
-RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(uint32 entityId)
+RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* transform)
 {
-    auto it = _perDrawBuffers.find(entityId);
+    auto it = _perDrawBuffers.find(transform);
     if (it != _perDrawBuffers.end())
     {
         return it->second;
@@ -86,7 +86,7 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(uint32 entityId)
         return nullptr;
     }
 
-    _perDrawBuffers[entityId] = buffer;
+    _perDrawBuffers[transform] = buffer;
     return buffer;
 }
 

@@ -12,6 +12,9 @@
 #include "Resource/ResourceDefinition.h"
 #include "ShaderSystem/ShaderSystemDefinition.h"
 
+#include "Scene/Components/CameraComponent.h"
+#include "Scene/Components/TransformComponent.h"
+
 #include <unordered_map>
 #include <vector>
 
@@ -95,7 +98,7 @@ public:
     SceneResource BuildSceneResource(Scene* scene, ShaderLibrary* shaderLibrary);
 
     // Camera resources (PerView UBO)
-    CameraResource* GetOrCreateCameraResource(uint32 index);
+    CameraResource* GetOrCreateCameraResource(CameraComponent* camera);
     void SetActiveCameraResource(CameraResource* resource);
 
     // Material resources (cached)
@@ -111,7 +114,7 @@ public:
     void ReleaseAll();
 
 private:
-    RHIBuffer* getOrCreatePerDrawBuffer(uint32 entityId);
+    RHIBuffer* getOrCreatePerDrawBuffer(TransformComponent* transform);
 
     MaterialResource createMaterialResources(Material* material);
     ImageResource createImageResource(Image* image);
@@ -123,8 +126,8 @@ private:
     CameraResource* _activeCameraResource = nullptr;
     RHIBuffer* _activePerDrawBuffer       = nullptr;
 
-    std::unordered_map<uint32, CameraResource> _cameraResources;
-    std::unordered_map<uint32, RHIBuffer*> _perDrawBuffers;
+    std::unordered_map<CameraComponent*, CameraResource> _cameraResources;
+    std::unordered_map<TransformComponent*, RHIBuffer*> _perDrawBuffers;
     std::unordered_map<Material*, MaterialResource> _materialResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
     std::unordered_map<Image*, ImageResource> _imageResources;
