@@ -195,7 +195,11 @@ void SimpleWindow::syncEditorCameraToScene()
 
     transform.SetPosition(editorTransform.position);
     transform.SetRotation(editorTransform.rotation);
+    bool wasPrimary = camera.isPrimary;
+    bool wasActive = camera.isActive;
     camera = editorCameraComp;
+    camera.isPrimary = wasPrimary;
+    camera.isActive = wasActive;
 }
 
 void SimpleWindow::processCameraInput(float deltaTime)

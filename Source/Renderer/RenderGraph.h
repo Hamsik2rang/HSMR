@@ -1,4 +1,4 @@
-#ifndef __HS_RENDER_GRAPH_H__
+ï»¿#ifndef __HS_RENDER_GRAPH_H__
 #define __HS_RENDER_GRAPH_H__
 
 #include "Precompile.h"
@@ -17,7 +17,7 @@ public:
 	{
         ShaderRead = 0,
         ColorAttachmentWrite,
-        ReadWrite, // ¡ç General ·¹ÀÌ¾Æ¿ô, UAV¿¡ ÇØ´ç
+        ReadWrite, // â† General ë ˆì´ì•„ì›ƒ, UAVì— í•´ë‹¹
         DepthAttachmentRead,
         DepthAttachmentWrite,
         DepthStencilAttachmentRead,
@@ -25,7 +25,7 @@ public:
         TransferRead,
         TransferWrite,
         ComputeShaderRead,
-        ComputeShaderWrite, // ¡ç Compute UAV Write¿¡ ÇØ´ç
+        ComputeShaderWrite, // â† Compute UAV Writeì— í•´ë‹¹
         FragmentShaderReadSampledImageOrUniformTexelBuffer,
         Present
 	};

@@ -39,26 +39,31 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(CameraComponent
     auto it = _cameraResources.find(cameraComponent);
     if (it != _cameraResources.end() && it->second.isValid)
     {
-        return &it->second;
+        auto* resource = &it->second;
+
+        _rhiContext->UpdateBuffer(resource->perViewBuffer, 0, &resource->perViewData, sizeof(PerView));
     }
-
-    CameraResource resource;
-
-    PerView perViewZero{};
-    resource.perViewBuffer = _rhiContext->CreateBuffer(
-        "PerView UBO", &perViewZero, sizeof(PerView),
-        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
-
-    if (!resource.perViewBuffer)
+    else
     {
-        HS_LOG(error, "[RenderResourceManager] Failed to create PerView buffer");
-        return nullptr;
+        CameraResource resource{};
+
+        PerView perViewZero{};
+        resource.perViewBuffer = _rhiContext->CreateBuffer(
+            "PerView UBO", &perViewZero, sizeof(PerView),
+            EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
+        );
+
+        if (!resource.perViewBuffer)
+        {
+            HS_LOG(error, "[RenderResourceManager] Failed to create PerView buffer");
+            return nullptr;
+        }
+
+        resource.isValid                  = true;
+        _cameraResources[cameraComponent] = std::move(resource);
+
+        HS_LOG(info, "[RenderResourceManager] CameraResource created");
     }
-
-    resource.isValid = true;
-    _cameraResources[cameraComponent] = std::move(resource);
-
-    HS_LOG(info, "[RenderResourceManager] CameraResource created");
     return &_cameraResources[cameraComponent];
 }
 
@@ -78,7 +83,8 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* t
     PerDraw perDrawZero{};
     RHIBuffer* buffer = _rhiContext->CreateBuffer(
         "PerDraw UBO", &perDrawZero, sizeof(PerDraw),
-        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
+        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
+    );
 
     if (!buffer)
     {
@@ -92,21 +98,22 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* t
 
 SceneResource RenderResourceManager::BuildSceneResource(
     Scene* scene,
-    ShaderLibrary* shaderLibrary)
+    ShaderLibrary* shaderLibrary
+)
 {
     SceneResource sceneResource;
 
     if (!scene) return sceneResource;
 
-    auto& registry = scene->GetRegistry();
+    auto& registry   = scene->GetRegistry();
     bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 
     // 1. Cameras: CameraComponent + TransformComponent → CameraResource
-    auto cameraView = registry.view<TransformComponent, CameraComponent>();
+    auto cameraView    = registry.view<TransformComponent, CameraComponent>();
     uint32 cameraIndex = 0;
     for (auto [entity, transform, camera] : cameraView.each())
     {
-        PerView perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+        PerView perView        = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
         CameraResource* camRes = GetOrCreateCameraResource(&camera);
         if (camRes)
         {
@@ -120,11 +127,11 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
     // 3. MeshRenderer entities → RenderModel
     auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
-    for (auto [entity, transform, meshRenderer]: meshView.each())
+    for (auto [entity, transform, meshRenderer] : meshView.each())
     {
         if (!meshRenderer.IsValidForRendering()) continue;
 
-        Mesh* mesh = meshRenderer.mesh;
+        Mesh* mesh    = meshRenderer.mesh;
         Material* mat = meshRenderer.GetMaterial(0);
         if (!mesh || !mat) continue;
 
@@ -144,13 +151,14 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
-        uint32 entityId = static_cast<uint32>(entity);
+        uint32 entityId          = static_cast<uint32>(entity);
         RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(&transform);
         if (!perDrawBuffer) continue;
 
         // Set active resources for layout creation
         SetActiveCameraResource(
-            sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0]);
+            sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0]
+        );
         _activePerDrawBuffer = perDrawBuffer;
 
         MaterialResource* matRes = GetOrCreateMaterialResources(mat);
@@ -160,12 +168,12 @@ SceneResource RenderResourceManager::BuildSceneResource(
         if (!meshRes) continue;
 
         RenderModel renderModel;
-        renderModel.worldMatrix = transform.worldMatrix;
+        renderModel.worldMatrix        = transform.worldMatrix;
         renderModel.inverseWorldMatrix = glm::inverse(renderModel.worldMatrix);
-        renderModel.material = mat;
-        renderModel.perDrawBuffer = perDrawBuffer;
-        renderModel.meshResource = meshRes;
-        renderModel.materialResource = matRes;
+        renderModel.material           = mat;
+        renderModel.perDrawBuffer      = perDrawBuffer;
+        renderModel.meshResource       = meshRes;
+        renderModel.materialResource   = matRes;
         sceneResource.renderModels.push_back(renderModel);
     }
 
@@ -212,9 +220,9 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     // Build vertex input descriptor from reflection
     VertexInputStateDescriptor viDesc{};
     VertexInputLayoutDescriptor viLayout{};
-    viLayout.binding = 0;
-    viLayout.stride = reflection.vertexInput.stride;
-    viLayout.stepRate = 1;
+    viLayout.binding       = 0;
+    viLayout.stride        = reflection.vertexInput.stride;
+    viLayout.stepRate      = 1;
     viLayout.useInstancing = false;
     viDesc.layouts.push_back(viLayout);
 
@@ -222,17 +230,17 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     {
         VertexInputAttributeDescriptor viAttr{};
         viAttr.location = attr.location;
-        viAttr.binding = 0;
-        viAttr.format = attr.format;
-        viAttr.offset = attr.offset;
+        viAttr.binding  = 0;
+        viAttr.format   = attr.format;
+        viAttr.offset   = attr.offset;
         viDesc.attributes.push_back(viAttr);
     }
 
     // Standard pipeline settings
     DepthStencilStateDescriptor dsDesc{};
-    dsDesc.depthTestEnable = true;
+    dsDesc.depthTestEnable  = true;
     dsDesc.depthWriteEnable = true;
-    dsDesc.depthCompareOp = ECompareOp::Less;
+    dsDesc.depthCompareOp   = ECompareOp::Less;
 
     ColorBlendStateDescriptor cbDesc{};
     cbDesc.attachmentCount = renderPass->info.colorAttachmentCount;
@@ -243,12 +251,12 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     }
 
     RasterizerStateDescriptor rsDesc{};
-    rsDesc.cullMode = material->IsTwoSided() ? ECullMode::None : ECullMode::Back;
-    rsDesc.frontFace = EFrontFace::CounterClockwise;
-    rsDesc.polygonMode = EPolygonMode::Fill;
-    rsDesc.depthClampEnable = false;
+    rsDesc.cullMode                = material->IsTwoSided() ? ECullMode::None : ECullMode::Back;
+    rsDesc.frontFace               = EFrontFace::CounterClockwise;
+    rsDesc.polygonMode             = EPolygonMode::Fill;
+    rsDesc.depthClampEnable        = false;
     rsDesc.rasterizerDiscardEnable = false;
-    rsDesc.depthBiasEnable = false;
+    rsDesc.depthBiasEnable         = false;
 
     ShaderProgramDescriptor spDesc{};
     spDesc.stages.resize(2);
@@ -259,14 +267,14 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     iaDesc.primitiveTopology = EPrimitiveTopology::TriangleList;
 
     GraphicsPipelineInfo gpInfo{};
-    gpInfo.shaderDesc = spDesc;
+    gpInfo.shaderDesc        = spDesc;
     gpInfo.inputAssemblyDesc = iaDesc;
-    gpInfo.vertexInputDesc = viDesc;
-    gpInfo.rasterizerDesc = rsDesc;
-    gpInfo.depthStencilDesc = dsDesc;
-    gpInfo.colorBlendDesc = cbDesc;
-    gpInfo.renderPass = renderPass;
-    gpInfo.resourceLayout = matRes->resourceLayout;
+    gpInfo.vertexInputDesc   = viDesc;
+    gpInfo.rasterizerDesc    = rsDesc;
+    gpInfo.depthStencilDesc  = dsDesc;
+    gpInfo.colorBlendDesc    = cbDesc;
+    gpInfo.renderPass        = renderPass;
+    gpInfo.resourceLayout    = matRes->resourceLayout;
 
     RHIGraphicsPipeline* pipeline = _rhiContext->CreateGraphicsPipeline("AutoPipeline", gpInfo);
     if (pipeline)
@@ -286,7 +294,7 @@ MeshResource* RenderResourceManager::GetOrCreateMeshResources(Mesh* mesh, const 
     }
 
     const auto& positions = mesh->GetPosition();
-    const auto& indices = mesh->GetIndices();
+    const auto& indices   = mesh->GetIndices();
     if (positions.empty() || indices.empty()) return nullptr;
 
     MeshResource resources;
@@ -299,15 +307,17 @@ MeshResource* RenderResourceManager::GetOrCreateMeshResources(Mesh* mesh, const 
     resources.vertexBuffer = _rhiContext->CreateBuffer(
         "Mesh VB", interleavedData.data(),
         interleavedData.size() * sizeof(float),
-        EBufferUsage::Vertex, EBufferMemoryOption::Mapped);
+        EBufferUsage::Vertex, EBufferMemoryOption::Mapped
+    );
 
     resources.indexBuffer = _rhiContext->CreateBuffer(
         "Mesh IB", indices.data(),
         indices.size() * sizeof(uint32),
-        EBufferUsage::Index, EBufferMemoryOption::Mapped);
+        EBufferUsage::Index, EBufferMemoryOption::Mapped
+    );
 
     resources.indexCount = static_cast<uint32>(indices.size());
-    resources.isValid = true;
+    resources.isValid    = true;
 
     _meshResources[mesh] = std::move(resources);
     return &_meshResources[mesh];
@@ -327,8 +337,7 @@ ImageResource* RenderResourceManager::GetOrCreateImageResource(Image* image)
     if (resource.isValid)
     {
         _imageResources[image] = std::move(resource);
-        HS_LOG(info, "[RenderResourceManager] ImageResource created (%ux%u)",
-               _imageResources[image].width, _imageResources[image].height);
+        HS_LOG(info, "[RenderResourceManager] ImageResource created (%ux%u)", _imageResources[image].width, _imageResources[image].height);
         return &_imageResources[image];
     }
 
@@ -345,8 +354,8 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
         return resource;
     }
 
-    uint32 width = image->GetWidth();
-    uint32 height = image->GetHeight();
+    uint32 width   = image->GetWidth();
+    uint32 height  = image->GetHeight();
     uint8 channels = image->GetChannel();
 
     // Determine pixel format
@@ -375,7 +384,7 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
             rgbaData[i * 4 + 3] = 255;
         }
         imageData = rgbaData.data();
-        dataSize = rgbaData.size();
+        dataSize  = rgbaData.size();
     }
     else
     {
@@ -384,18 +393,19 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
 
     // Create RHITexture
     TextureInfo texInfo{};
-    texInfo.format = format;
-    texInfo.type = ETextureType::Tex2D;
-    texInfo.usage = ETextureUsage::Sampled | ETextureUsage::Static;  // STATIC adds TRANSFER_DST for data upload
-    texInfo.extent.width = width;
+    texInfo.format        = format;
+    texInfo.type          = ETextureType::Tex2D;
+    texInfo.usage         = ETextureUsage::Sampled | ETextureUsage::Static; // STATIC adds TRANSFER_DST for data upload
+    texInfo.extent.width  = width;
     texInfo.extent.height = height;
-    texInfo.extent.depth = 1;
-    texInfo.mipLevel = 1;
-    texInfo.arrayLength = 1;
-    texInfo.byteSize = dataSize;
+    texInfo.extent.depth  = 1;
+    texInfo.mipLevel      = 1;
+    texInfo.arrayLength   = 1;
+    texInfo.byteSize      = dataSize;
 
     resource.texture = _rhiContext->CreateTexture(
-        "ImageTex", const_cast<void*>(imageData), texInfo);
+        "ImageTex", const_cast<void*>(imageData), texInfo
+    );
 
     if (!resource.texture)
     {
@@ -405,13 +415,13 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
 
     // Create RHISampler
     SamplerInfo sampInfo{};
-    sampInfo.type = ETextureType::Tex2D;
-    sampInfo.minFilter = EFilterMode::Linear;
-    sampInfo.magFilter = EFilterMode::Linear;
+    sampInfo.type       = ETextureType::Tex2D;
+    sampInfo.minFilter  = EFilterMode::Linear;
+    sampInfo.magFilter  = EFilterMode::Linear;
     sampInfo.mipmapMode = EFilterMode::Linear;
-    sampInfo.addressU = EAddressMode::Repeat;
-    sampInfo.addressV = EAddressMode::Repeat;
-    sampInfo.addressW = EAddressMode::Repeat;
+    sampInfo.addressU   = EAddressMode::Repeat;
+    sampInfo.addressV   = EAddressMode::Repeat;
+    sampInfo.addressW   = EAddressMode::Repeat;
 
     resource.sampler = _rhiContext->CreateSampler("ImageSampler", sampInfo);
 
@@ -423,9 +433,9 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
         return resource;
     }
 
-    resource.width = width;
-    resource.height = height;
-    resource.format = format;
+    resource.width   = width;
+    resource.height  = height;
+    resource.format  = format;
     resource.isValid = true;
 
     return resource;
@@ -445,16 +455,11 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
     // Debug: Log reflection info
-    HS_LOG(info, "[RenderResourceManager] Shader '%s' reflection: %zu buffers, %zu textures, %zu samplers",
-           shader->GetShaderName().c_str(),
-           reflection.bufferBindings.size(),
-           reflection.textureBindings.size(),
-           reflection.samplerBindings.size());
+    HS_LOG(info, "[RenderResourceManager] Shader '%s' reflection: %zu buffers, %zu textures, %zu samplers", shader->GetShaderName().c_str(), reflection.bufferBindings.size(), reflection.textureBindings.size(), reflection.samplerBindings.size());
 
     for (const auto& tex : reflection.textureBindings)
     {
-        HS_LOG(info, "[RenderResourceManager]   Texture: '%s' binding=%u set=%u",
-               tex.name.c_str(), tex.binding, tex.set);
+        HS_LOG(info, "[RenderResourceManager]   Texture: '%s' binding=%u set=%u", tex.name.c_str(), tex.binding, tex.set);
     }
 
     // Create RHI shaders from bytecode
@@ -468,20 +473,22 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     ShaderInfo vsInfo{};
-    vsInfo.stage = EShaderStage::Vertex;
-    vsInfo.entryName = shader->GetEntryPoint(EShaderStage::Vertex);
+    vsInfo.stage           = EShaderStage::Vertex;
+    vsInfo.entryName       = shader->GetEntryPoint(EShaderStage::Vertex);
     resources.vertexShader = _rhiContext->CreateShader(
         "VS", vsInfo,
         reinterpret_cast<const char*>(vsBytecode->data()),
-        vsBytecode->size());
+        vsBytecode->size()
+    );
 
     ShaderInfo fsInfo{};
-    fsInfo.stage = EShaderStage::Fragment;
-    fsInfo.entryName = shader->GetEntryPoint(EShaderStage::Fragment);
+    fsInfo.stage             = EShaderStage::Fragment;
+    fsInfo.entryName         = shader->GetEntryPoint(EShaderStage::Fragment);
     resources.fragmentShader = _rhiContext->CreateShader(
         "FS", fsInfo,
         reinterpret_cast<const char*>(fsBytecode->data()),
-        fsBytecode->size());
+        fsBytecode->size()
+    );
 
     if (!resources.vertexShader || !resources.fragmentShader)
     {
@@ -506,8 +513,7 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     resources.isValid = true;
-    HS_LOG(info, "[RenderResourceManager] Material resources created for shader '%s'",
-           shader->GetShaderName().c_str());
+    HS_LOG(info, "[RenderResourceManager] Material resources created for shader '%s'", shader->GetShaderName().c_str());
     return resources;
 }
 
@@ -551,7 +557,8 @@ static EMaterialTextureType mapTextureNameToType(const std::string& name)
 }
 
 RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
-    const ShaderReflectionDataEx& reflection, Material* material)
+    const ShaderReflectionDataEx& reflection, Material* material
+)
 {
     std::vector<ResourceBinding> bindings;
 
@@ -581,9 +588,9 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         if ((buf.stages & EShaderStage::Vertex) != EShaderStage::None)
         {
             ResourceBinding binding{};
-            binding.type = buf.resourceType;
-            binding.stage = EShaderStage::Vertex;
-            binding.binding = static_cast<uint8>(buf.binding);
+            binding.type       = buf.resourceType;
+            binding.stage      = EShaderStage::Vertex;
+            binding.binding    = static_cast<uint8>(buf.binding);
             binding.arrayCount = 1;
             binding.resource.buffers.push_back(targetBuffer);
             binding.resource.offsets.push_back(0);
@@ -592,9 +599,9 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         if ((buf.stages & EShaderStage::Fragment) != EShaderStage::None)
         {
             ResourceBinding binding{};
-            binding.type = buf.resourceType;
-            binding.stage = EShaderStage::Fragment;
-            binding.binding = static_cast<uint8>(buf.binding);
+            binding.type       = buf.resourceType;
+            binding.stage      = EShaderStage::Fragment;
+            binding.binding    = static_cast<uint8>(buf.binding);
             binding.arrayCount = 1;
             binding.resource.buffers.push_back(targetBuffer);
             binding.resource.offsets.push_back(0);
@@ -603,9 +610,9 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
 #elif __WINDOWS__
         // Vulkan: combined stage visibility
         ResourceBinding binding{};
-        binding.type = buf.resourceType;
-        binding.stage = buf.stages;
-        binding.binding = static_cast<uint8>(buf.binding);
+        binding.type       = buf.resourceType;
+        binding.stage      = buf.stages;
+        binding.binding    = static_cast<uint8>(buf.binding);
         binding.arrayCount = 1;
         binding.resource.buffers.push_back(targetBuffer);
         binding.resource.offsets.push_back(0);
@@ -620,20 +627,18 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         {
             // Map shader texture name to material texture type
             EMaterialTextureType texType = mapTextureNameToType(tex.name);
-            Image* image = material->GetTexture(texType);
+            Image* image                 = material->GetTexture(texType);
 
             if (!image)
             {
-                HS_LOG(debug, "[RenderResourceManager] No texture for '%s' (type %d)",
-                       tex.name.c_str(), static_cast<int>(texType));
+                HS_LOG(debug, "[RenderResourceManager] No texture for '%s' (type %d)", tex.name.c_str(), static_cast<int>(texType));
                 continue;
             }
 
             ImageResource* imgRes = GetOrCreateImageResource(image);
             if (!imgRes || !imgRes->isValid)
             {
-                HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'",
-                       tex.name.c_str());
+                HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'", tex.name.c_str());
                 continue;
             }
 
@@ -642,9 +647,9 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
             if ((tex.stages & EShaderStage::Fragment) != EShaderStage::None)
             {
                 ResourceBinding texBinding{};
-                texBinding.type = EResourceType::SampledImage;
-                texBinding.stage = EShaderStage::Fragment;
-                texBinding.binding = static_cast<uint8>(tex.binding);
+                texBinding.type       = EResourceType::SampledImage;
+                texBinding.stage      = EShaderStage::Fragment;
+                texBinding.binding    = static_cast<uint8>(tex.binding);
                 texBinding.arrayCount = 1;
                 texBinding.resource.textures.push_back(imgRes->texture);
                 bindings.push_back(std::move(texBinding));
@@ -655,29 +660,28 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
                     if ((samp.stages & EShaderStage::Fragment) != EShaderStage::None)
                     {
                         ResourceBinding sampBinding{};
-                        sampBinding.type = EResourceType::Sampler;
-                        sampBinding.stage = EShaderStage::Fragment;
-                        sampBinding.binding = static_cast<uint8>(samp.binding);
+                        sampBinding.type       = EResourceType::Sampler;
+                        sampBinding.stage      = EShaderStage::Fragment;
+                        sampBinding.binding    = static_cast<uint8>(samp.binding);
                         sampBinding.arrayCount = 1;
                         sampBinding.resource.samplers.push_back(imgRes->sampler);
                         bindings.push_back(std::move(sampBinding));
-                        break;  // Use first matching sampler
+                        break; // Use first matching sampler
                     }
                 }
             }
 #elif __WINDOWS__
             // Vulkan: combined image sampler
             ResourceBinding binding{};
-            binding.type = EResourceType::CombinedImageSampler;
-            binding.stage = tex.stages;
-            binding.binding = static_cast<uint8>(tex.binding);
+            binding.type       = EResourceType::CombinedImageSampler;
+            binding.stage      = tex.stages;
+            binding.binding    = static_cast<uint8>(tex.binding);
             binding.arrayCount = 1;
             binding.resource.textures.push_back(imgRes->texture);
             binding.resource.samplers.push_back(imgRes->sampler);
             bindings.push_back(std::move(binding));
 
-            HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u",
-                   tex.name.c_str(), tex.binding);
+            HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
 #endif
         }
     }
@@ -690,11 +694,13 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
     return _rhiContext->CreateResourceLayout(
         "AutoLayout",
         bindings.data(),
-        static_cast<uint32>(bindings.size()));
+        static_cast<uint32>(bindings.size())
+    );
 }
 
 std::vector<float> RenderResourceManager::buildInterleavedVertexData(
-    Mesh* mesh, const ShaderVertexInputLayout& vertexLayout)
+    Mesh* mesh, const ShaderVertexInputLayout& vertexLayout
+)
 {
     uint32 vertexCount = mesh->GetVertexCount();
     if (vertexCount == 0) return {};
@@ -705,16 +711,16 @@ std::vector<float> RenderResourceManager::buildInterleavedVertexData(
 
     std::vector<float> data(vertexCount * floatsPerVertex, 0.0f);
 
-    const auto& positions = mesh->GetPosition();
-    const auto& normals = mesh->GetNormal();
+    const auto& positions  = mesh->GetPosition();
+    const auto& normals    = mesh->GetNormal();
     const auto& texcoords0 = mesh->GetTexCoord(0);
-    const auto& colors = mesh->GetColor();
-    const auto& tangents = mesh->GetTangent();
+    const auto& colors     = mesh->GetColor();
+    const auto& tangents   = mesh->GetTangent();
 
     for (const auto& attr : vertexLayout.attributes)
     {
         uint32 floatOffset = attr.offset / sizeof(float);
-        uint32 components = attr.size / sizeof(float);
+        uint32 components  = attr.size / sizeof(float);
 
         // Match semantic to mesh data
         std::string sem = attr.semantic;
@@ -726,27 +732,27 @@ std::vector<float> RenderResourceManager::buildInterleavedVertexData(
 
         if (sem.find("POSITION") != std::string::npos)
         {
-            srcData = positions.data();
+            srcData       = positions.data();
             srcComponents = 3;
         }
         else if (sem.find("NORMAL") != std::string::npos)
         {
-            srcData = normals.empty() ? nullptr : normals.data();
+            srcData       = normals.empty() ? nullptr : normals.data();
             srcComponents = 3;
         }
         else if (sem.find("TEXCOORD") != std::string::npos)
         {
-            srcData = texcoords0.empty() ? nullptr : texcoords0.data();
+            srcData       = texcoords0.empty() ? nullptr : texcoords0.data();
             srcComponents = 2;
         }
         else if (sem.find("COLOR") != std::string::npos)
         {
-            srcData = colors.empty() ? nullptr : colors.data();
+            srcData       = colors.empty() ? nullptr : colors.data();
             srcComponents = 4;
         }
         else if (sem.find("TANGENT") != std::string::npos)
         {
-            srcData = tangents.empty() ? nullptr : tangents.data();
+            srcData       = tangents.empty() ? nullptr : tangents.data();
             srcComponents = 3;
         }
 
@@ -814,7 +820,7 @@ void RenderResourceManager::ReleaseAll()
     _imageResources.clear();
 
     _activeCameraResource = nullptr;
-    _activePerDrawBuffer = nullptr;
+    _activePerDrawBuffer  = nullptr;
 }
 
 HS_NS_END
