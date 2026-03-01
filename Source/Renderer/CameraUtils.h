@@ -67,7 +67,7 @@ struct CameraUtils
         perView.inverseViewMatrix = glm::inverse(viewMatrix);
         perView.inverseProjectionMatrix = glm::inverse(projectionMatrix);
         perView.inverseViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-        perView.cameraPosition = glm::vec4(transform.position, 1.0f);
+        perView.cameraPosition = transform.position;
 
         return perView;
     }

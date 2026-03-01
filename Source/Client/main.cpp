@@ -22,11 +22,11 @@ int main(int argc, char* argv[])
     hs::CommandLine::Initialize(argc, argv);
 
 #ifdef HS_EDITOR_MODE
-    if (hs::CommandLine::HasFlag("--simple"))
+    if (hs::CommandLine::HasFlag("-advanced"))
     {
-        return hs_simple_main(argc, argv);
+        return hs_editor_main(argc, argv);
     }
-    return hs_editor_main(argc, argv);
+    return hs_simple_main(argc, argv);
 #else
     // return hs_play_main(argc, argv);
     return 0;

@@ -8,10 +8,10 @@ public struct PerViewUBO
     public float4x4 inverseViewMatrix;
     public float4x4 inverseProjectionMatrix;
     public float4x4 inverseViewProjectionMatrix;
-    public float4 cameraPosition;
-    public float2 resolution;
+    public float3 cameraPosition;
     public float time;
-    public float padding;
+    public float2 resolution;
+    public float2 padding;
 };
 public ConstantBuffer<PerViewUBO> perView;
 

@@ -1,4 +1,5 @@
 #include "RHI/Metal/MetalContext.h"
+#include "RHI/Metal/MetalDefinition.h"
 
 #include "RHI/Metal/MetalSwapchain.h"
 #include "RHI/Metal/MetalUtility.h"
@@ -146,17 +147,18 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         const auto& curAttribute = info.vertexInputDesc.attributes[i];
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
-        vertexDesc.attributes[i].bufferIndex = curAttribute.binding;
+        vertexDesc.attributes[i].bufferIndex = kMetalVertexBufferBaseIndex + curAttribute.binding;
         vertexDesc.attributes[i].format      = MetalUtility::ToVertexFormat(curAttribute.format);
     }
 
     for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
     {
         const auto& curLayout = info.vertexInputDesc.layouts[i];
+        NSUInteger layoutIdx  = kMetalVertexBufferBaseIndex + i;
 
-        vertexDesc.layouts[i].stride       = curLayout.stride;
-        vertexDesc.layouts[i].stepRate     = static_cast<uint8>(curLayout.stepRate);
-        vertexDesc.layouts[i].stepFunction = curLayout.useInstancing ? MTLVertexStepFunctionPerInstance : MTLVertexStepFunctionPerVertex;
+        vertexDesc.layouts[layoutIdx].stride       = curLayout.stride;
+        vertexDesc.layouts[layoutIdx].stepRate     = static_cast<uint8>(curLayout.stepRate);
+        vertexDesc.layouts[layoutIdx].stepFunction = curLayout.useInstancing ? MTLVertexStepFunctionPerInstance : MTLVertexStepFunctionPerVertex;
     }
 
     pipelineDesc.vertexDescriptor = vertexDesc;

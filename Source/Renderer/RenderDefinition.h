@@ -9,11 +9,68 @@
 
 #include "Precompile.h"
 #include "Core/Math/Common.h"
+#include "RHI/RHIDefinition.h"
 
 #define HS_SHADER_ALIGNED alignas(16)
 
 HS_NS_BEGIN
 
+#pragma region RenderGraph
+enum class ERGPassFlag
+{
+    None           = 0,
+    Raster         = 1 << 0,
+    Compute        = 1 << 1,
+    AsyncCompute   = 1 << 2,
+    Copy           = 1 << 3,
+    NeverCull      = 1 << 4,
+    SkipRenderPass = 1 << 5,
+    NeverMerge     = 1 << 6,
+    NeverParallel  = 1 << 7,
+};
+
+enum class ERGBufferAccess
+{
+    ReadOnly = 0,
+    ReadWrite, // SSBO
+};
+
+enum class ERGTextureAccess
+{
+    ReadOnly = 0,
+    ColorAttachmentWrite,
+    ReadWrite, // ← General 레이아웃, UAV에 해당
+    DepthAttachmentRead,
+    DepthAttachmentWrite,
+    DepthStencilAttachmentRead,
+    DepthStencilAttachmentWrite,
+    TransferRead,
+    TransferWrite,
+    ComputeShaderRead,
+    ComputeShaderWrite, // ← Compute UAV Write에 해당
+    FragmentShaderReadSampledImageOrUniformTexelBuffer,
+    Present
+};
+
+
+struct ERGTextureDescriptor
+{
+    TextureInfo info;
+    ERGTextureAccess access;
+    const char* name;
+};
+
+struct ERGBufferDescriptor
+{
+    BufferInfo info;
+    ERGBufferAccess access;
+    const char* name;
+};
+
+
+#pragma endregion
+
+#pragma region Shader Uniform Layouts
 // TODO: 리플렉션으로 자동 구성하는게 이상적임
 struct HS_SHADER_ALIGNED PerDraw
 {
@@ -30,15 +87,22 @@ struct HS_SHADER_ALIGNED PerView
     glm::mat4x4 inverseProjectionMatrix;
     glm::mat4x4 inverseViewProjectionMatrix;
 
-    glm::vec4 cameraPosition; // w: padding
+    glm::vec3 cameraPosition; // w: padding
+    float time;
+    glm::vec2 resolution;
+    float padding_0;
+    float padding_1;
 };
 
-struct HS_SHADER_ALIGNED PerFrame
+struct HS_SHADER_ALIGNED LightUBO
 {
-    glm::vec2 viewportSize;
-    float time;
-    float padding;
+    glm::vec4 position;
+    glm::vec3 color;
+    float intensity;
+    glm::vec3 direction;
+    int type;
 };
+#pragma endregion
 
 HS_NS_END
 

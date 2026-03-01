@@ -149,6 +149,8 @@ set(PANEL_HEADERS
     Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
     Panel/ProfilerPanel.h
+    Panel/SimpleMenuPanel.h
+    Panel/SimpleInspectorPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -156,15 +158,17 @@ source_group("Panel\\Public" FILES ${PANEL_HEADERS})
 list(APPEND TOTAL_FILES ${PANEL_HEADERS})
 
 set(PANEL_SOURCES
-    Panel/Panel.cpp
-    Panel/DockspacePanel.cpp
-    Panel/ScenePanel.cpp
-    Panel/InspectorPanel.cpp
-    Panel/MenuPanel.cpp
-    Panel/ResourcePanel.cpp
-    Panel/SceneStatusPanel.cpp
-    Panel/HierarchyPanel.cpp
-    Panel/ProfilerPanel.cpp
+    Panel/Private/Panel.cpp
+    Panel/Private/DockspacePanel.cpp
+    Panel/Private/ScenePanel.cpp
+    Panel/Private/InspectorPanel.cpp
+    Panel/Private/MenuPanel.cpp
+    Panel/Private/ResourcePanel.cpp
+    Panel/Private/SceneStatusPanel.cpp
+    Panel/Private/HierarchyPanel.cpp
+    Panel/Private/ProfilerPanel.cpp
+    Panel/Private/SimpleMenuPanel.cpp
+    Panel/Private/SimpleInspectorPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

@@ -1,4 +1,5 @@
 #include "RHI/Metal/MetalCommandHandle.h"
+#include "RHI/Metal/MetalDefinition.h"
 
 #include "RHI/Metal/MetalContext.h"
 #include "RHI/Metal/MetalResourceHandle.h"
@@ -216,7 +217,7 @@ void MetalCommandBuffer::BindVertexBuffers(const RHIBuffer* const* vertexBuffers
     {
         auto vertexBuffer = static_cast<const MetalBuffer*>(vertexBuffers[i]);
 
-        [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:i];
+        [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:kMetalVertexBufferBaseIndex + i];
     }
 }
 
