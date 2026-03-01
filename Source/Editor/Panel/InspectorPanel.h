@@ -25,6 +25,11 @@ public:
     void Cleanup() override;
     void Draw() override;
 
+protected:
+    // Helper widgets
+    bool drawVec3Control(const char* label, glm::vec3& values, float resetValue = 0.0f, float speed = 0.1f);
+    void drawColorEdit(const char* label, glm::vec3& color);
+
 private:
     // Component editors
     void drawTagComponent(Entity entity);
@@ -33,9 +38,6 @@ private:
     void drawCameraComponent(Entity entity);
     void drawLightComponent(Entity entity);
 
-    // Helper widgets
-    bool drawVec3Control(const char* label, glm::vec3& values, float resetValue = 0.0f, float speed = 0.1f);
-    void drawColorEdit(const char* label, glm::vec3& color);
 
     // Add component popup
     void drawAddComponentButton(Entity entity);

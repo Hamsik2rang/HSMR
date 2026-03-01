@@ -393,7 +393,7 @@ void InspectorPanel::drawLightComponent(Entity entity)
         int currentType = static_cast<int>(light.type);
         if (ImGui::Combo("Type", &currentType, lightTypes, 3))
         {
-            light.type = static_cast<ELightType>(currentType);
+            light.type =  static_cast<ELightType>(currentType);
         }
 
         // Color
