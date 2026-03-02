@@ -58,6 +58,11 @@ struct HS_SCENE_API TransformComponent
         isDirty = true;
     }
 
+    glm::vec3 GetEulerAngles() const
+    {
+        return glm::degrees(glm::eulerAngles(rotation));
+    }
+
     void SetEulerAngles(const glm::vec3& eulerDegrees)
     {
         rotation = glm::quat(glm::radians(eulerDegrees));
@@ -123,6 +128,78 @@ struct HS_SCENE_API TransformComponent
             glm::length(glm::vec3(worldMatrix[2]))
         );
     }
+
+    glm::quat GetWorldRotation() const
+    {
+        glm::vec3 ws = GetWorldScale();
+        glm::mat3 rotMat(
+            glm::vec3(worldMatrix[0]) / ws.x,
+            glm::vec3(worldMatrix[1]) / ws.y,
+            glm::vec3(worldMatrix[2]) / ws.z
+        );
+        return glm::normalize(glm::quat_cast(rotMat));
+    }
+
+    glm::vec3 GetWorldEulerAngles() const
+    {
+        return glm::degrees(glm::eulerAngles(GetWorldRotation()));
+    }
+
+    // ===== World Transform Setters (역산하여 로컬에 반영) =====
+
+    void SetWorldPosition(const glm::vec3& worldPos)
+    {
+        if (HasParent())
+        {
+            // TODO: 부모의 worldMatrix가 최신이어야 정확하다.
+            //       TransformSystem 업데이트 후 호출을 권장.
+            glm::mat4 parentInv = glm::inverse(worldMatrix * glm::inverse(GetLocalMatrix()));
+            position = glm::vec3(parentInv * glm::vec4(worldPos, 1.0f));
+        }
+        else
+        {
+            position = worldPos;
+        }
+        isDirty = true;
+    }
+
+    void SetWorldRotation(const glm::quat& worldRot)
+    {
+        if (HasParent())
+        {
+            glm::quat parentWorldRot = getParentWorldRotation();
+            rotation = glm::inverse(parentWorldRot) * worldRot;
+        }
+        else
+        {
+            rotation = worldRot;
+        }
+        isDirty = true;
+    }
+
+    void SetWorldEulerAngles(const glm::vec3& worldEulerDegrees)
+    {
+        SetWorldRotation(glm::quat(glm::radians(worldEulerDegrees)));
+    }
+
+private:
+    glm::quat getParentWorldRotation() const
+    {
+        glm::mat4 parentWorld = worldMatrix * glm::inverse(GetLocalMatrix());
+        glm::vec3 parentScale(
+            glm::length(glm::vec3(parentWorld[0])),
+            glm::length(glm::vec3(parentWorld[1])),
+            glm::length(glm::vec3(parentWorld[2]))
+        );
+        glm::mat3 parentRotMat(
+            glm::vec3(parentWorld[0]) / parentScale.x,
+            glm::vec3(parentWorld[1]) / parentScale.y,
+            glm::vec3(parentWorld[2]) / parentScale.z
+        );
+        return glm::normalize(glm::quat_cast(parentRotMat));
+    }
+
+public:
 
     // ===== Hierarchy Helpers =====
 
