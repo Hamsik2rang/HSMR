@@ -101,6 +101,8 @@ public:
 
     operator bool() const { return IsValid(); }
     operator entt::entity() const { return _handle; }
+    
+    static const Entity Invalid() { return Entity(entt::null, nullptr); }
 
 private:
     entt::entity _handle{ entt::null };
