@@ -96,8 +96,6 @@ protected:
 
     RenderTarget* _currentRenderTarget;
 
-private:
-    void _updateSceneBuffers(const SceneResource& sceneResource);
 };
 
 HS_NS_END

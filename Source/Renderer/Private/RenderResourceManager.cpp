@@ -72,19 +72,63 @@ void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
     _activeCameraResource = resource;
 }
 
-RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* transform)
+LightResource* RenderResourceManager::GetOrCreateLightResource(LightComponent* light, TransformComponent* transform)
 {
-    auto it = _perDrawBuffers.find(transform);
-    if (it != _perDrawBuffers.end())
+    bool created = false;
+
+    auto it = _lightResources.find(light);
+
+    if (it == _lightResources.end())
     {
-        return it->second;
+        LightResource resource{};
+        _lightResources[light] = resource;
+        created                = true;
+    }
+    LightResource* resource = &_lightResources[light];
+
+    LightUBO lightBuffer{
+        .position  = glm::vec4(transform->GetWorldPosition(), 0.0f),
+        .color     = light->color,
+        .direction = transform->GetForward(),
+        .intensity = light->intensity,
+        .type      = static_cast<int>(light->type)
+    };
+
+    if (created)
+    {
+        resource->lightBuffer = _rhiContext->CreateBuffer("Light Buffer", &lightBuffer, sizeof(LightUBO), EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
+    }
+    else
+    {
+        _rhiContext->UpdateBuffer(resource->lightBuffer, 0, &lightBuffer, sizeof(LightUBO));
     }
 
-    PerDraw perDrawZero{};
-    RHIBuffer* buffer = _rhiContext->CreateBuffer(
-        "PerDraw UBO", &perDrawZero, sizeof(PerDraw),
-        EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
-    );
+    return &_lightResources[light];
+}
+
+RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* transform)
+{
+    RHIBuffer* buffer = nullptr;
+
+    PerDraw perDraw{
+        .modelMatrix        = transform->GetLocalMatrix(),
+        .inverseModelMatrix = glm::inverse(transform->GetLocalMatrix())
+    };
+
+    auto it = _perDrawBuffers.find(transform);
+    if (it == _perDrawBuffers.end())
+    {
+        buffer = _rhiContext->CreateBuffer(
+            "PerDraw UBO", &perDraw, sizeof(PerDraw),
+            EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
+        );
+        _perDrawBuffers[transform] = buffer;
+    }
+    else
+    {
+        buffer = _perDrawBuffers[transform];
+        _rhiContext->UpdateBuffer(buffer, 0, &perDraw, sizeof(PerDraw));
+    }
 
     if (!buffer)
     {
@@ -92,7 +136,6 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* t
         return nullptr;
     }
 
-    _perDrawBuffers[transform] = buffer;
     return buffer;
 }
 
@@ -124,6 +167,14 @@ SceneResource RenderResourceManager::BuildSceneResource(
     }
 
     // 2. Lights (TODO: Scene LightComponent → LightResource)
+    auto lightView = registry.view<TransformComponent, LightComponent>();
+    for (auto [entity, transform, light] : lightView.each())
+    {
+        LightUBO lightUBO       = {};
+        LightResource* lightRes = GetOrCreateLightResource(&light, &transform);
+
+        sceneResource.lightResources.push_back(lightRes);
+    }
 
     // 3. MeshRenderer entities → RenderModel
     auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
@@ -151,7 +202,6 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
-        uint32 entityId          = static_cast<uint32>(entity);
         RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(&transform);
         if (!perDrawBuffer) continue;
 
@@ -528,29 +578,43 @@ static EMaterialTextureType mapTextureNameToType(const std::string& name)
         lowerName.find("diffuse") != std::string::npos ||
         lowerName.find("basecolor") != std::string::npos ||
         lowerName.find("base_color") != std::string::npos)
+    {
         return EMaterialTextureType::Diffuse;
+    }
 
     if (lowerName.find("normal") != std::string::npos)
+    {
         return EMaterialTextureType::Normal;
+    }
 
     if (lowerName.find("metallic") != std::string::npos ||
         lowerName.find("metalness") != std::string::npos)
+    {
         return EMaterialTextureType::Metallic;
+    }
 
     if (lowerName.find("roughness") != std::string::npos)
+    {
         return EMaterialTextureType::Roughness;
+    }
 
     if (lowerName.find("emission") != std::string::npos ||
         lowerName.find("emissive") != std::string::npos)
+    {
         return EMaterialTextureType::Emission;
+    }
 
     if (lowerName.find("ao") != std::string::npos ||
         lowerName.find("occlusion") != std::string::npos ||
         lowerName.find("ambient") != std::string::npos)
+    {
         return EMaterialTextureType::AmbientOcclusion;
+    }
 
     if (lowerName.find("specular") != std::string::npos)
+    {
         return EMaterialTextureType::Specular;
+    }
 
     // Default to diffuse
     return EMaterialTextureType::Diffuse;
@@ -574,6 +638,10 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         else if (buf.name == "perDraw" || buf.name == "PerDraw")
         {
             targetBuffer = _activePerDrawBuffer;
+        }
+        else if (buf.name == "lightUBO" || buf.name == "LightUBO")
+        {
+            targetBuffer = _lightResources.begin()->second.lightBuffer; // TODO: 고쳐야함!! Additional Lights를 지원해야 됨
         }
         else
         {

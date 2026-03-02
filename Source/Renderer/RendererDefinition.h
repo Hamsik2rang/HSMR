@@ -13,7 +13,6 @@
 #include "Resource/Material.h"
 #include "Resource/Mesh.h"
 
-
 HS_NS_BEGIN
 
 class Scene;
@@ -57,10 +56,10 @@ struct HS_RENDERER_API RenderModel
 {
     glm::mat4 worldMatrix{1.0f};
     glm::mat4 inverseWorldMatrix{1.0f};
-    Material* material = nullptr;                   // 파이프라인 룩업용
-    RHIBuffer* perDrawBuffer = nullptr;             // PerDraw UBO
-    MeshResource* meshResource = nullptr;           // VB/IB
-    MaterialResource* materialResource = nullptr;   // Shader/Textures/ResourceSet
+    Material* material                 = nullptr; // 파이프라인 룩업용
+    RHIBuffer* perDrawBuffer           = nullptr; // PerDraw UBO
+    MeshResource* meshResource         = nullptr; // VB/IB
+    MaterialResource* materialResource = nullptr; // Shader/Textures/ResourceSet
 };
 
 // 씬 전체의 렌더링용 GPU 리소스 집합

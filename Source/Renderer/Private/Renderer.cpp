@@ -152,8 +152,6 @@ void Renderer::Render(
 
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
-    _updateSceneBuffers(sceneResource);
-
     for (auto* pass : _rendererPasses)
     {
         pass->OnBeforeRendering(frameIndex);
@@ -171,27 +169,6 @@ void Renderer::Render(
     for (auto* pass : _rendererPasses)
     {
         pass->OnAfterRendering();
-    }
-}
-
-void Renderer::_updateSceneBuffers(const SceneResource& sceneResource)
-{
-    // Update PerView UBOs for all cameras
-    for (CameraResource* camRes : sceneResource.cameraResources)
-    {
-        if (!camRes || !camRes->isValid) continue;
-
-        _curCommandBuffer->UpdateBuffer(camRes->perViewBuffer, 0, &camRes->perViewData, sizeof(PerView));
-    }
-
-    // Update PerDraw UBOs for all models
-    for (const RenderModel& renderModel : sceneResource.renderModels)
-    {
-        PerDraw perDrawData{};
-        perDrawData.modelMatrix        = renderModel.worldMatrix;
-        perDrawData.inverseModelMatrix = renderModel.inverseWorldMatrix;
-
-        _curCommandBuffer->UpdateBuffer(renderModel.perDrawBuffer, 0, &perDrawData, sizeof(PerDraw));
     }
 }
 

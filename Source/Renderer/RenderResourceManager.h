@@ -14,6 +14,7 @@
 
 #include "Scene/Components/CameraComponent.h"
 #include "Scene/Components/TransformComponent.h"
+#include "Scene/Components/LightComponent.h"
 
 #include <unordered_map>
 #include <vector>
@@ -100,6 +101,8 @@ public:
     // Camera resources (PerView UBO)
     CameraResource* GetOrCreateCameraResource(CameraComponent* camera);
     void SetActiveCameraResource(CameraResource* resource);
+    
+    LightResource* GetOrCreateLightResource(LightComponent* light, TransformComponent* trnasform);
 
     // Material resources (cached)
     MaterialResource* GetOrCreateMaterialResources(Material* material);
@@ -127,6 +130,7 @@ private:
     RHIBuffer* _activePerDrawBuffer       = nullptr;
 
     std::unordered_map<CameraComponent*, CameraResource> _cameraResources;
+    std::unordered_map<LightComponent*, LightResource> _lightResources;
     std::unordered_map<TransformComponent*, RHIBuffer*> _perDrawBuffers;
     std::unordered_map<Material*, MaterialResource> _materialResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
