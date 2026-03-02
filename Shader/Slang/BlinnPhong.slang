@@ -1,6 +1,9 @@
 module BlinnPhong;
 import GlobalUniform;
 
+ConstantBuffer<PerViewUBO> perView;
+ConstantBuffer<PerDrawUBO> perDraw;
+ConstantBuffer<LightUBO> lightUBO;
 Sampler2D albedoSampler : register(s0);
 
 struct VSInput
@@ -45,8 +48,8 @@ FSInput VertexMain(VSInput input)
 float4 FragmentMain(FSInput input) : SV_Target
 {
     float3 N = normalize(input.normalWS);
-    float3 L = normalize(float3(1.0, 1.0, 0.5));
-    float3 V = normalize(perView.cameraPosition.xyz - input.positionWS);
+    float3 L = normalize(lightUBO.directionAndType.xyz); // Directional Light
+    float3 V = normalize(perView.cameraPositionAndTime.xyz - input.positionWS);
     float3 H = normalize(L + V);
 
     float3 lightColor  = float3(1.0, 0.98, 0.95);

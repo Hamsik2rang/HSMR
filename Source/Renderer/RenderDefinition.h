@@ -11,8 +11,6 @@
 #include "Core/Math/Common.h"
 #include "RHI/RHIDefinition.h"
 
-#define HS_SHADER_ALIGNED alignas(16)
-
 HS_NS_BEGIN
 
 #pragma region RenderGraph
@@ -52,7 +50,6 @@ enum class ERGTextureAccess
     Present
 };
 
-
 struct ERGTextureDescriptor
 {
     TextureInfo info;
@@ -67,10 +64,12 @@ struct ERGBufferDescriptor
     const char* name;
 };
 
-
 #pragma endregion
 
 #pragma region Shader Uniform Layouts
+
+#define HS_SHADER_ALIGNED alignas(16)
+
 // TODO: 리플렉션으로 자동 구성하는게 이상적임
 struct HS_SHADER_ALIGNED PerDraw
 {
@@ -86,21 +85,48 @@ struct HS_SHADER_ALIGNED PerView
     glm::mat4x4 inverseViewMatrix;
     glm::mat4x4 inverseProjectionMatrix;
     glm::mat4x4 inverseViewProjectionMatrix;
+    union
+    {
+        glm::vec3 camPosAndTime;
+        struct
+        {
+            glm::vec3 cameraPosition; // w: padding
+            float time;
+        };
+    };
+    union
+    {
+        glm::vec4 resolutionAndPadding;
+        struct
+        {
 
-    glm::vec3 cameraPosition; // w: padding
-    float time;
-    glm::vec2 resolution;
-    float padding_0;
-    float padding_1;
+            glm::vec2 resolution;
+            glm::vec2 padding;
+        };
+    };
 };
 
 struct HS_SHADER_ALIGNED LightUBO
 {
     glm::vec4 position;
-    glm::vec3 color;
-    float intensity;
-    glm::vec3 direction;
-    int type;
+    union
+    {
+        glm::vec4 colorAndIntensity;
+        struct
+        {
+            glm::vec3 color;
+            float intensity;
+        };
+    };
+    union
+    {
+        glm::vec4 directionAndType;
+        struct
+        {
+            glm::vec3 direction;
+            int type;
+        };
+    };
 };
 #pragma endregion
 

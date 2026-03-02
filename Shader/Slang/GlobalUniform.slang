@@ -8,25 +8,20 @@ public struct PerViewUBO
     public float4x4 inverseViewMatrix;
     public float4x4 inverseProjectionMatrix;
     public float4x4 inverseViewProjectionMatrix;
-    public float3 cameraPosition;
-    public float time;
-    public float2 resolution;
-    public float2 padding;
+    public float4 cameraPositionAndTime;
+    public float4 resolutionAndPadding;
 };
-public ConstantBuffer<PerViewUBO> perView;
 
 public struct PerDrawUBO
 {
     public float4x4 modelMatrix;
     public float4x4 inverseModelMatrix;
 };
-public ConstantBuffer<PerDrawUBO> perDraw;
 
 public struct LightUBO
 {
     public float4 position;
-    public float3 color;
-    public float intensity;
-    public float3 direction;
-    public int type;
+    public float4 colorAndIntensity;
+    public float4 directionAndType;
 };
+
