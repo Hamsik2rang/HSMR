@@ -18,6 +18,8 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/SimpleApplication.h"
 #include "Editor/Core/EditorCamera.h"
+
+
 #include "Resource/ObjectManager.h"
 
 HS_NS_EDITOR_BEGIN
@@ -54,13 +56,17 @@ bool SimpleWindow::onInitialize()
     float aspect = static_cast<float>(_nativeWindow.surfaceWidth) / static_cast<float>(_nativeWindow.surfaceHeight);
     _camera->SetAspectRatio(aspect);
 
+    // NOTE: setupDefaultScene()에서 inspectorPanel을 사용하기 때문에 Initialize순서가 바뀌면 안된다.
+    _inspectorPanel = MakeScoped<SimpleInspectorPanel>(this);
+    _inspectorPanel->Setup();
+
     setupDefaultScene();
 
     // ImGui event handler
     void* handler = nullptr;
     ImGuiExtension::SetProcessEventHandler(&handler);
     SetPreEventHandler(handler);
-
+    
     return true;
 }
 
@@ -112,7 +118,7 @@ void SimpleWindow::onRender()
     _renderer->Render(_scene.get(), curRT);
 
     // Render ImGui overlay (scene displayed fullscreen + overlay widgets)
-    renderOverlay();
+    onRenderGUI();
 
     cmdBuffer->End();
     _rhiContext->Submit(_swapchain, &cmdBuffer, 1);
@@ -151,30 +157,48 @@ void SimpleWindow::setupDefaultScene()
     _scene = MakeScoped<Scene>("Simple Scene");
 
     // Camera entity
-    Entity cameraEntity = _scene->CreateEntity("Camera");
-    auto& camera = cameraEntity.AddComponent<CameraComponent>();
-    camera.isPrimary = true;
-
-    // Load DamagedHelmet model
-    std::string gltfPath = std::string("GLTF") + HS_DIR_SEPERATOR
-                         + "DamagedHelmet" + HS_DIR_SEPERATOR
-                         + "DamagedHelmet.gltf";
-    auto [mesh, material] = ObjectManager::LoadModel(gltfPath);
-
-    // Damaged Helmet entity
-    Entity entity = _scene->CreateEntity("Damaged Helmet");
-    if (mesh)
     {
-        auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
-        meshRenderer.mesh = mesh;
-        if (material)
-        {
-            meshRenderer.materials.push_back(material);
-        }
+        Entity cameraEntity = _scene->CreateEntity("Camera");
+        auto& camera = cameraEntity.AddComponent<CameraComponent>();
+        camera.isPrimary = true;
+        
+        _inspectorPanel->SetMainCamera(cameraEntity);
+    }
+    
+    // Main light(Directional) entity
+    {
+        Entity lightEntity = _scene->CreateEntity("Directional Light");
+        auto& light = lightEntity.AddComponent<LightComponent>();
+        auto& transform = lightEntity.GetComponent<TransformComponent>();
+        transform.SetPosition(glm::vec3(1.0f, 5.0f, 1.0f));
+        
+        _inspectorPanel->SetMainLight(lightEntity);
+    }
+    
+    // Load DamagedHelmet model
+    {
+        std::string gltfPath = std::string("GLTF") + HS_DIR_SEPERATOR
+                             + "DamagedHelmet" + HS_DIR_SEPERATOR
+                             + "DamagedHelmet.gltf";
+        auto [mesh, material] = ObjectManager::LoadModel(gltfPath);
 
-        // Set local bounds from mesh
-        const auto& bound = mesh->GetBound();
-        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+        // Damaged Helmet entity
+        Entity entity = _scene->CreateEntity("Damaged Helmet");
+        if (mesh)
+        {
+            auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+            meshRenderer.mesh = mesh;
+            if (material)
+            {
+                meshRenderer.materials.push_back(material);
+            }
+
+            // Set local bounds from mesh
+            const auto& bound = mesh->GetBound();
+            meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+        }
+        
+        _inspectorPanel->SetTarget(entity);
     }
 
     _scene->Update(0.0f);
@@ -272,57 +296,63 @@ void SimpleWindow::processCameraInput(float deltaTime)
     _camera->Move(_moveDir * deltaTime * _currentCameraSpeed);
 }
 
-void SimpleWindow::renderOverlay()
+void SimpleWindow::onRenderGUI()
 {
     GUIContext* guiContext = GetGUIContext();
     guiContext->BeginRender(_swapchain);
 
+    drawHelperOverlayGUI();
+    _inspectorPanel->Draw();
+    
+    guiContext->EndRender();
+}
+
+void SimpleWindow::drawHelperOverlayGUI()
+{
     // Display scene as fullscreen background
     uint8 imageIndex = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
     RHITexture* sceneTexture = curRT->GetColorTexture(0);
-
+    
     ImGuiViewport* mainViewport = ImGui::GetMainViewport();
     ImVec2 viewportPos  = mainViewport->Pos;
     ImVec2 viewportSize = mainViewport->Size;
-
+    
     ImGui::SetNextWindowPos(viewportPos);
     ImGui::SetNextWindowSize(viewportSize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("##SceneViewport", nullptr,
-        ImGuiWindowFlags_NoDecoration |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoScrollWithMouse);
-
+                 ImGuiWindowFlags_NoDecoration |
+                 ImGuiWindowFlags_NoMove |
+                 ImGuiWindowFlags_NoResize |
+                 ImGuiWindowFlags_NoSavedSettings |
+                 ImGuiWindowFlags_NoBringToFrontOnFocus |
+                 ImGuiWindowFlags_NoFocusOnAppearing |
+                 ImGuiWindowFlags_NoScrollbar |
+                 ImGuiWindowFlags_NoScrollWithMouse);
+    
     ImGuiExtension::ImageOffscreen(sceneTexture, viewportSize);
     ImGui::End();
     ImGui::PopStyleVar();
-
+    
     // Stats overlay
     ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 10), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
     ImGui::Begin("Stats", nullptr,
-        ImGuiWindowFlags_NoDecoration |
-        ImGuiWindowFlags_AlwaysAutoResize |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoNav);
-
+                 ImGuiWindowFlags_NoDecoration |
+                 ImGuiWindowFlags_AlwaysAutoResize |
+                 ImGuiWindowFlags_NoSavedSettings |
+                 ImGuiWindowFlags_NoFocusOnAppearing |
+                 ImGuiWindowFlags_NoNav);
+    
     ImGuiIO& io = ImGui::GetIO();
     ImGui::Text("FPS: %.1f (%.2f ms)", io.Framerate, 1000.0f / io.Framerate);
     ImGui::Text("Resolution: %ux%u", _swapchain->GetWidth(), _swapchain->GetHeight());
     ImGui::Separator();
     ImGui::Text("RMB + WASD: Move Camera");
     ImGui::Text("RMB + Mouse: Look Around");
-
+    
     ImGui::End();
-
-    guiContext->EndRender();
 }
 
 HS_NS_EDITOR_END

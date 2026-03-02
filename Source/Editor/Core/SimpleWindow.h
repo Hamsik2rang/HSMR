@@ -5,6 +5,8 @@
 
 #include "Engine/Window.h"
 
+#include "Editor/Panel/SimpleInspectorPanel.h"
+
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
@@ -28,12 +30,15 @@ private:
     void onRender() override;
     void onPresent() override;
     void onShutdown() override;
+    
+    void onRenderGUI();
 
     void setupDefaultScene();
     void syncEditorCameraToScene();
     void processCameraInput(float deltaTime);
-    void renderOverlay();
-
+    
+    void drawHelperOverlayGUI();
+    
     Scoped<Renderer> _renderer;
     Scoped<Scene> _scene;
     Scoped<EditorCamera> _camera;
@@ -47,6 +52,8 @@ private:
     // Camera deceleration state
     float _currentCameraSpeed = 0.0f;
     glm::vec3 _moveDir = glm::vec3(0.0f);
+    
+    Scoped<SimpleInspectorPanel> _inspectorPanel;
 };
 
 HS_NS_EDITOR_END

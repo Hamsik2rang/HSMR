@@ -31,17 +31,26 @@ void SimpleInspectorPanel::Draw()
         if (ImGui::CollapsingHeader("Camera"))
         {
             auto& transform = _mainCameraEntity.GetComponent<TransformComponent>();
-            auto worldPos = transform.GetWorldPosition();
-            drawVec3Control("Position", worldPos, 0.0f, 0.1f);
-            
-            
+            // Camera는 GUI 조작으로 이동시키지 않아야 함.
+            auto worldPos   = transform.GetWorldPosition();
+            drawVec3Control("Camera Position", worldPos, 0.0f, 0.1f);
+            auto worldRot = transform.GetWorldEulerAngles();
+            drawVec3Control("Camera Rotation", worldRot, 0.0f, 1.0f);
         }
     }
 
     if (_mainLightEntity.IsValid())
     {
-        bool open = ImGui::CollapsingHeader("Main Light");
+        if (ImGui::CollapsingHeader("Main Light"))
         {
+            auto& transform = _mainLightEntity.GetComponent<TransformComponent>();
+            auto worldPos   = transform.GetWorldPosition();
+            drawVec3Control("Light Position", worldPos, 0.0f, 0.1f);
+            transform.SetWorldPosition(worldPos);
+            
+            auto worldRot = transform.GetWorldEulerAngles();
+            drawVec3Control("Light Rotation", worldRot, 0.0f, 1.0f);
+            transform.SetWorldEulerAngles(worldRot);
         }
     }
 
