@@ -20,6 +20,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #endif
 
 #include "ImGui/imgui_impl_vulkan.h"
+#include "ThirdParty/ImGuizmo/ImGuizmo.h"
 
 #include <unordered_map>
 
@@ -195,6 +196,7 @@ void ImGuiExtension::BeginRender(hs::Swapchain* swapchain)
     ImGui_ImplWin32_NewFrame();
 #endif
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 void ImGuiExtension::EndRender()

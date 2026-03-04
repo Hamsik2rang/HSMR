@@ -1,7 +1,10 @@
 #include "Editor/Panel/SimpleInspectorPanel.h"
 
 #include "ThirdParty/ImGui/imgui.h"
+#include "ImGui/imgui_internal.h"
 #include "Editor/Core/EditorCamera.h"
+
+#include "Core/HAL/Input.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -53,17 +56,17 @@ void SimpleInspectorPanel::Draw()
     if (ImGui::CollapsingHeader("Gizmo", ImGuiTreeNodeFlags_DefaultOpen))
     {
         // W/E/R keyboard shortcuts (only when no text input is active)
-        if (!ImGui::GetIO().WantTextInput)
+        if (!ImGui::GetIO().WantTextInput && !Input::IsPressed(Input::Button::MouseRight))
         {
-            if (ImGui::IsKeyPressed(ImGuiKey_W))
+            if (ImGui::IsKeyPressed(ImGuiKey_Q))
             {
                 _gizmoOperation = ImGuizmo::TRANSLATE;
             }
-            if (ImGui::IsKeyPressed(ImGuiKey_E))
+            if (ImGui::IsKeyPressed(ImGuiKey_W))
             {
                 _gizmoOperation = ImGuizmo::ROTATE;
             }
-            if (ImGui::IsKeyPressed(ImGuiKey_R))
+            if (ImGui::IsKeyPressed(ImGuiKey_E))
             {
                 _gizmoOperation = ImGuizmo::SCALE;
             }
@@ -146,14 +149,36 @@ void SimpleInspectorPanel::Draw()
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
 
+            // Tell ImGuizmo to accept mouse input from the SceneViewport window,
+            // since the gizmo is drawn on the foreground drawlist but the mouse
+            // hovers over the scene viewport, not the Control Panel.
+            ImGuiWindow* sceneWindow = ImGui::FindWindowByName("##SceneViewport");
+            if (sceneWindow)
+            {
+                ImGuizmo::SetAlternativeWindow(sceneWindow);
+            }
+
             ImGuiViewport* mainViewport = ImGui::GetMainViewport();
             ImGuizmo::SetRect(
                 mainViewport->Pos.x, mainViewport->Pos.y,
                 mainViewport->Size.x, mainViewport->Size.y
             );
 
-            const glm::mat4& viewMatrix = _editorCamera->GetViewMatrix();
-            const glm::mat4& projMatrix = _editorCamera->GetProjectionMatrix();
+            // ImGuizmo extracts camera direction from inverse(view) column 2.
+            // In LH that column points forward, but ImGuizmo expects RH where
+            // it points backward.  Negate only the Z row of the LH view matrix
+            // and pair with perspectiveRH so screen x,y stay identical to LH
+            // while the camera-direction extraction matches RH convention.
+            glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
+            viewMatrix[0][2]     = -viewMatrix[0][2];
+            viewMatrix[1][2]     = -viewMatrix[1][2];
+            viewMatrix[2][2]     = -viewMatrix[2][2];
+            viewMatrix[3][2]     = -viewMatrix[3][2];
+
+            glm::mat4 projMatrix = glm::perspectiveRH(
+                _editorCamera->GetFov(), _editorCamera->GetAspectRatio(),
+                _editorCamera->GetNearZ(), _editorCamera->GetFarZ()
+            );
 
             glm::mat4 objectMatrix = transform.worldMatrix;
             glm::mat4 deltaMatrix(1.0f);
@@ -186,9 +211,11 @@ void SimpleInspectorPanel::Draw()
                 }
                 else
                 {
-                    // Has parent: apply deltaMatrix to local transform
+                    // Has parent: objectMatrix is the new world matrix from ImGuizmo
+                    // Convert back to local space: newLocal = inv(parentWorld) * newWorld
                     glm::mat4 localMatrix = transform.GetLocalMatrix();
-                    glm::mat4 newLocal = deltaMatrix * localMatrix;
+                    glm::mat4 parentWorld = transform.worldMatrix * glm::inverse(localMatrix);
+                    glm::mat4 newLocal    = glm::inverse(parentWorld) * objectMatrix;
 
                     float matTranslation[3], matRotation[3], matScale[3];
                     ImGuizmo::DecomposeMatrixToComponents(

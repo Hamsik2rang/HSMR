@@ -89,8 +89,8 @@ LightResource* RenderResourceManager::GetOrCreateLightResource(LightComponent* l
     LightUBO lightBuffer{
         .position  = glm::vec4(transform->GetWorldPosition(), 0.0f),
         .color     = light->color,
-        .direction = transform->GetForward(),
         .intensity = light->intensity,
+        .direction = transform->GetForward(),
         .type      = static_cast<int>(light->type)
     };
 

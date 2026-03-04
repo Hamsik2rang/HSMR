@@ -111,21 +111,21 @@ struct HS_SHADER_ALIGNED LightUBO
     glm::vec4 position;
     union
     {
-        glm::vec4 colorAndIntensity;
         struct
         {
             glm::vec3 color;
             float intensity;
         };
+        glm::vec4 colorAndIntensity;
     };
     union
     {
-        glm::vec4 directionAndType;
         struct
         {
             glm::vec3 direction;
             int type;
         };
+        glm::vec4 directionAndType;
     };
 };
 #pragma endregion
