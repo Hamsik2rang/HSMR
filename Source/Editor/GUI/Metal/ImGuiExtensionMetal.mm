@@ -1,4 +1,5 @@
 #include "Editor/GUI/ImGuiExtension.h"
+#include "ThirdParty/ImGuizmo/ImGuizmo.h"
 
 #include "Engine/Window.h"
 
@@ -202,6 +203,7 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
 #endif
 
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 void ImGuiExtension::EndRender()

@@ -2,6 +2,7 @@
 
 #include "Core/HAL/Input.h"
 #include "Core/Math/Common.h"
+#include "ThirdParty/ImGuizmo/ImGuizmo.h"
 
 #include "RHI/Swapchain.h"
 #include "RHI/RenderHandle.h"
@@ -59,6 +60,7 @@ bool SimpleWindow::onInitialize()
     // NOTE: setupDefaultScene()에서 inspectorPanel을 사용하기 때문에 Initialize순서가 바뀌면 안된다.
     _inspectorPanel = MakeScoped<SimpleInspectorPanel>(this);
     _inspectorPanel->Setup();
+    _inspectorPanel->SetEditorCamera(_camera.get());
 
     setupDefaultScene();
 
@@ -228,6 +230,12 @@ void SimpleWindow::syncEditorCameraToScene()
 
 void SimpleWindow::processCameraInput(float deltaTime)
 {
+    // Block camera input while gizmo is being manipulated
+    if (ImGuizmo::IsUsing())
+    {
+        return;
+    }
+
     static constexpr float moveSpeedDecelFactor = 0.5f;
 
     bool isMoveDirectionUpdated = false;
