@@ -53,6 +53,9 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 
     void EndRenderPass() override;
 
+    void BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea) override;
+    void EndRendering() override;
+
     // Compute commands
     void BindComputePipeline(RHIComputePipeline* pipeline) override;
     void BindComputeResourceSet(RHIResourceSet* rSet) override;

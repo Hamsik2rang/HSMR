@@ -13,59 +13,6 @@
 
 HS_NS_BEGIN
 
-#pragma region RenderGraph
-enum class ERGPassFlag
-{
-    None           = 0,
-    Raster         = 1 << 0,
-    Compute        = 1 << 1,
-    AsyncCompute   = 1 << 2,
-    Copy           = 1 << 3,
-    NeverCull      = 1 << 4,
-    SkipRenderPass = 1 << 5,
-    NeverMerge     = 1 << 6,
-    NeverParallel  = 1 << 7,
-};
-
-enum class ERGBufferAccess
-{
-    ReadOnly = 0,
-    ReadWrite, // SSBO
-};
-
-enum class ERGTextureAccess
-{
-    ReadOnly = 0,
-    ColorAttachmentWrite,
-    ReadWrite, // ← General 레이아웃, UAV에 해당
-    DepthAttachmentRead,
-    DepthAttachmentWrite,
-    DepthStencilAttachmentRead,
-    DepthStencilAttachmentWrite,
-    TransferRead,
-    TransferWrite,
-    ComputeShaderRead,
-    ComputeShaderWrite, // ← Compute UAV Write에 해당
-    FragmentShaderReadSampledImageOrUniformTexelBuffer,
-    Present
-};
-
-struct ERGTextureDescriptor
-{
-    TextureInfo info;
-    ERGTextureAccess access;
-    const char* name;
-};
-
-struct ERGBufferDescriptor
-{
-    BufferInfo info;
-    ERGBufferAccess access;
-    const char* name;
-};
-
-#pragma endregion
-
 #pragma region Shader Uniform Layouts
 
 #define HS_SHADER_ALIGNED alignas(16)

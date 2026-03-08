@@ -25,11 +25,26 @@ set(RENDERER_SOURCES
     Private/RenderTarget.cpp
     Private/RenderResourceManager.cpp
     Private/ShaderLibrary.cpp
-    Private/RenderGraph.cpp
 )
 
 source_group("Private" FILES ${RENDERER_SOURCES})
 list(APPEND TOTAL_FILES ${RENDERER_SOURCES})
+
+set(RENDERER_RENDER_GRAPH_HEADERS
+    RenderGraph/RenderGraphBuilder.h
+    RenderGraph/RenderGraphResource.h
+)
+
+source_group("RenderGraph\\Public" FILES ${RENDERER_RENDER_GRAPH_HEADERS})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_HEADERS})
+
+set(RENDERER_RENDER_GRAPH_SOURCES
+    RenderGraph/Private/RenderGraphBuilder.cpp
+    RenderGraph/Private/RenderGraphResource.cpp
+)
+
+source_group("RenderGraph\\Private" FILES ${RENDERER_RENDER_GRAPH_SOURCES})
+list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 
 set(RENDERER_RENDER_PASS_HEADERS
     RenderPass/RenderPass.h

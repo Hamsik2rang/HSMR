@@ -1,3 +1,4 @@
+#include "RenderGraphBuilder.h"
 #include "Resource/Shader.h"
 #include "Resource/ObjectManager.h"
 

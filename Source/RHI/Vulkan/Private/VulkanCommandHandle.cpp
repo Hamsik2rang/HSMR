@@ -206,6 +206,14 @@ void VulkanCommandBuffer::EndRenderPass()
     _isGraphicsBegan = false;
 }
 
+void VulkanCommandBuffer::BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea)
+{
+}
+
+void VulkanCommandBuffer::EndRendering()
+{
+}
+
 void VulkanCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
 {
 }
