@@ -30,6 +30,8 @@ public:
 
     void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) override;
     void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) override;
+    
+    void AddToGraph(RenderGraphBuilder& graphBuilder) override;
 
     void OnAfterRendering() override;
 

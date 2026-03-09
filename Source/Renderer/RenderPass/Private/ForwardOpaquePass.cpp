@@ -76,9 +76,7 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
     // Always begin the render pass to ensure proper image layout transitions and clear
     commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
-    commandBuffer->SetViewport(Viewport{0.0f, 0.0f,
-        static_cast<float>(framebuffer->info.width),
-        static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
+    commandBuffer->SetViewport(Viewport{0.0f, 0.0f, static_cast<float>(framebuffer->info.width), static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
     commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
 
     for (const auto& renderModel : sceneResource.renderModels)
@@ -102,6 +100,11 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
     commandBuffer->EndRenderPass();
     commandBuffer->PopDebugMark();
+}
+
+void ForwardOpaquePass::AddToGraph(RenderGraphBuilder& graphBuilder)
+{
+    
 }
 
 void ForwardOpaquePass::OnAfterRendering()

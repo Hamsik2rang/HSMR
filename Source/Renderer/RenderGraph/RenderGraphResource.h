@@ -1,4 +1,4 @@
-﻿#ifndef __HS_RENDER_GRAPH_RESOURCE_H__
+#ifndef __HS_RENDER_GRAPH_RESOURCE_H__
 #define __HS_RENDER_GRAPH_RESOURCE_H__
 
 #include "Precompile.h"
@@ -58,21 +58,28 @@ struct RGBufferDescriptor
     const char* name;
 };
 
+class RGPass;
+
 class RGHandle
 {
+    friend class RenderGraphBuilder;
+
 public:
-    bool IsCulled() const
+    virtual bool IsCulled() const
     {
         return _refCount == 0;
     }
 
 protected:
+    uint32 _id       = 0;
     uint32 _version  = 0;
     uint32 _refCount = 0;
 };
 
 class RGTexture : public RGHandle
 {
+    friend class RenderGraphBuilder;
+
 public:
 private:
     RHITexture* _rhiTexture;
@@ -82,16 +89,40 @@ private:
 // Graphics Pass에선 사용할 일이 없습니다.
 class RGBuffer : public RGHandle
 {
+    friend class RenderGraphBuilder;
+
 public:
 private:
     RHIBuffer* _rhiBuffer;
+    std::vector<RGPass*> _writers;
 };
 
 class RGPass : public RGHandle
 {
-public:
-private:
+    friend class RenderGraphBuilder;
 
+public:
+    RGPass(std::string name, std::function<void()> fnSetup, std::function<void(RHICommandBuffer&)> fnExecute)
+        : _name{name}
+        , _fnSetup{fnSetup}
+        , _fnExecute{fnExecute}
+    {}
+
+    bool IsCulled() const override
+    {
+    }
+    
+    void Setup() { _fnSetup(); }
+    void Execute(RHICommandBuffer& cmdBuffer) { _fnExecute(cmdBuffer); }
+
+private:
+    uint32 _index = 0;
+    std::string _name = "";
+    std::function<void()> _fnSetup;
+    std::function<void(RHICommandBuffer& cmdBuffer)> _fnExecute;
+
+    std::vector<RGHandle*> _writeHandles;
+    std::vector<RGHandle*> _readHandles;
 };
 
 HS_NS_END

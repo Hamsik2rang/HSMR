@@ -48,8 +48,13 @@ RGBuffer* RenderGraphBuilder::FindBuffer(RHIBuffer* buffer) const
     return nullptr;
 }
 
-void RenderGraphBuilder::AddPass(const char* passName, std::function<void()>& fnSetup, std::function<void(RHICommandBuffer&)>& fnExecute)
+RGPass RenderGraphBuilder::AddPass(const char* passName, std::function<void()> fnSetup, std::function<void(RHICommandBuffer&)> fnExecute)
 {
+    RGPass pass{passName, fnSetup, fnExecute};
+
+    _passes.push_back(pass); // TODO: Name 중복 해결 필요
+
+    return pass;
 }
 
 void RenderGraphBuilder::Setup(RHICommandBuffer* cmdBuffer)
@@ -60,19 +65,28 @@ void RenderGraphBuilder::Setup(RHICommandBuffer* cmdBuffer)
 
 void RenderGraphBuilder::Compile()
 {
-
+    for (auto& pass : _passes)
+    {
+        // 직접 걸어준 의존성은 컴파일에서 신경 안써도 됨
+//        if (_passDependencyMap.find(&pass) != _passDependencyMap.end())
+//        {
+//            
+//        }
+        pass.
+    }
 }
 
 void RenderGraphBuilder::Execute()
 {
+    for (auto& pass : _sortedPass)
+    {
+        pass.Execute(_currentCmdBuffer);
+    }
 }
 
 void RenderGraphBuilder::Reset()
 {
     _currentCmdBuffer = nullptr;
 }
-
-
-
 
 HS_NS_END

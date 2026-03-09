@@ -12,6 +12,7 @@
 #include "RHI/RenderHandle.h"
 #include "Renderer/RendererDefinition.h"
 #include "Renderer/RenderTarget.h"
+#include "Renderer/RenderGraph.h"
 
 HS_NS_BEGIN
 
@@ -51,6 +52,8 @@ public:
     virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) = 0;
 
     virtual void OnAfterRendering() = 0;
+    
+    virtual void AddToGraph(RenderGraphBuilder& graphBuilder) = 0;
 
     virtual void Clear() {}
 
