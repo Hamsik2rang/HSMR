@@ -255,6 +255,16 @@ void MetalCommandBuffer::EndRenderPass()
     _isRenderPassBegan = false;
 }
 
+void MetalCommandBuffer::BeginRendering(const RenderPassInfo &renderPassInfo, const Area &renderArea)
+{
+    
+}
+
+void MetalCommandBuffer::EndRendering()
+{
+    
+}
+
 void MetalCommandBuffer::BindComputePipeline(RHIComputePipeline* pipeline)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");

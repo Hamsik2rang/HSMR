@@ -57,6 +57,10 @@ public:
     void DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount) override;
     void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) override;
     void EndRenderPass() override;
+    
+    // TODO: Bindless Rendering & Dynamic Rendering
+    void BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea) override;
+    void EndRendering() override;
 
     // Compute commands
     void BindComputePipeline(RHIComputePipeline* pipeline) override;
