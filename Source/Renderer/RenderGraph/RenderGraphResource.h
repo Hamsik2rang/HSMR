@@ -4,6 +4,8 @@
 #include "Precompile.h"
 
 #include "RHI/RHIDefinition.h"
+#include "RHI/CommandHandle.h"
+#include "RHI/ResourceHandle.h"
 
 HS_NS_BEGIN
 
@@ -31,7 +33,7 @@ enum class ERGTextureAccess
 {
     ReadOnly = 0,
     ColorAttachmentWrite,
-    ReadWrite, // ← General 레이아웃, UAV에 해당
+    ReadWrite, // General 레이아웃, UAV에 해당
     DepthAttachmentRead,
     DepthAttachmentWrite,
     DepthStencilAttachmentRead,
@@ -39,7 +41,7 @@ enum class ERGTextureAccess
     TransferRead,
     TransferWrite,
     ComputeShaderRead,
-    ComputeShaderWrite, // ← Compute UAV Write에 해당
+    ComputeShaderWrite, // Compute UAV Write에 해당
     FragmentShaderReadSampledImageOrUniformTexelBuffer,
     Present
 };
@@ -58,40 +60,49 @@ struct RGBufferDescriptor
     const char* name;
 };
 
-class RGHandle
+class RGPass;
+
+class RGResource
 {
+    friend class RenderGraphBuilder;
+
 public:
     bool IsCulled() const
     {
         return _refCount == 0;
     }
 
+    virtual RHIHandle* GetRHIHandle() const = 0;
+
 protected:
     uint32 _version  = 0;
     uint32 _refCount = 0;
+
+    std::vector<RGPass*> _writers;
 };
 
-class RGTexture : public RGHandle
+class RGTexture : public RGResource
 {
+    friend class RenderGraphBuilder;
+
 public:
+    RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiTexture); }
+
 private:
     RHITexture* _rhiTexture;
 };
 
 // TODO: Compute Pass에서 UAV로 사용할 수 있는 버퍼는 RGBuffer로 표현할 수 있도록 해야 합니다. (예: ReadWrite 접근 권한)
 // Graphics Pass에선 사용할 일이 없습니다.
-class RGBuffer : public RGHandle
+class RGBuffer : public RGResource
 {
+    friend class RenderGraphBuilder;
+
 public:
+    RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiBuffer); }
+
 private:
     RHIBuffer* _rhiBuffer;
-};
-
-class RGPass : public RGHandle
-{
-public:
-private:
-
 };
 
 HS_NS_END
