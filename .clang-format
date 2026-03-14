@@ -3,7 +3,7 @@ BasedOnStyle: Microsoft
 ColumnLimit: 0
 IndentWidth: 4
 AccessModifierOffset: -4
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: DontAlign
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignConsecutiveShortCaseStatements:
@@ -27,7 +27,8 @@ AllowShortFunctionsOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 AllowShortEnumsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
-AllowShortLambdasOnASingleLine: true
+AllowShortLambdasOnASingleLine: false
+LambdaBodyIndentation: OuterScope
 NamespaceIndentation: None
 CompactNamespaces: false
 Cpp11BracedListStyle: true
@@ -43,6 +44,7 @@ PackConstructorInitializers: Never
 BreakConstructorInitializers: BeforeComma
 BreakBeforeBraces: Custom
 BraceWrapping:
+  BeforeLambdaBody: true
   SplitEmptyFunction: false
   AfterUnion: true
   AfterCaseLabel: true
