@@ -4,102 +4,85 @@
 #include "Precompile.h"
 
 #include "RHI/CommandHandle.h"
+#include "RHI/RHIContext.h"
 #include "Renderer/RenderDefinition.h"
-
 #include "Renderer/RenderGraph/RenderGraphResource.h"
 
+#include "Core/Memory/MemoryPool.h"
+
 #include <functional>
+#include <concepts>
 
 HS_NS_BEGIN
-
-struct RGPassParameters
-{
-    std::vector<RGTextureDescriptor> textures;
-    std::vector<RGBufferDescriptor> buffers;
-};
-
-class RenderGraphBuilder;
-
-class  RGPass
-{
-    friend class RenderGraphBuilder;
-
-public:
-    RGPass(const char* name, const RGPassParameters& params, std::function<void(RHICommandBuffer&)> fnExecute)
-        : _name(name)
-        , _params(params)
-        , _fnExecute(fnExecute)
-        , _isExecuted(false)
-        , _isCompiled(false)
-        , _isCulled(false)
-    {
-    }
-
-    virtual ~RGPass();
-
-    HS_FORCEINLINE void Execute(RHICommandBuffer& cmdBuffer)
-    {
-        _fnExecute(cmdBuffer);
-        _isExecuted = true;
-    }
-
-    HS_FORCEINLINE bool IsCulled() const { return _isCulled; }
-    HS_FORCEINLINE bool IsCompiled() const { return _isCompiled; }
-    HS_FORCEINLINE bool IsExecuted() const { return _isExecuted; }
-
-    HS_FORCEINLINE const char* GetName() const { return _name; }
-
-
-private:
-    const char* _name;
-    RGPassParameters _params;
-    std::function<void(RHICommandBuffer&)> _fnExecute;
-    bool _isExecuted = false;
-    bool _isCompiled = false;
-    bool _isCulled   = false;
-
-    std::vector<RGPass*> _upstreams;   // 먼저 실행되어야 하는 패스들
-    std::vector<RGPass*> _downstreams; // 먼저 실행되어야 하는 패스들에 의존하는 패스들, 즉 이 패스가 먼저 실행되어야 하는 패스들
-};
 
 class RenderGraphBuilder
 {
 public:
-    RenderGraphBuilder();
-    ~RenderGraphBuilder();
+	RenderGraphBuilder();
+	RenderGraphBuilder(const RenderGraphBuilder&) = delete;
+	~RenderGraphBuilder();
 
-    RGTexture* RegisterExternalTexture(RHITexture* texture);
-    void UnregisterExternalTexture(RHITexture* texture);
-    RGTexture* AcquireTexture(const RGTextureDescriptor& desc);
-    RGTexture* FindTexture(RHITexture* texture) const;
-    RGTexture* FindTexture(uint32 id) const;
+	RenderGraphBuilder& operator=(const RenderGraphBuilder&) = delete;
 
-    RGBuffer* RegisterExternalBuffer(RHIBuffer* buffer);
-    void UnregisterExternalBuffer(RHIBuffer* buffer);
-    RGBuffer* AcquireBuffer(const RGBufferDescriptor& desc);
-    RGBuffer* FindBuffer(RHIBuffer* buffer) const;
+	RGTexture* RegisterExternalTexture(RHITexture* texture);
+	RGTexture* CreateTexture(const RGTextureDescriptor& desc);
+	RGTexture* FindTexture(RHITexture* texture) const;
+	RGTexture* FindTexture(uint32 id) const;
 
-    void AddPass(const char* passName, const RGPassParameters& passParams, std::function<void(RHICommandBuffer&)> fnExecute);
+	RGBuffer* RegisterExternalBuffer(RHIBuffer* buffer);
+	RGBuffer* CreateBuffer(const RGBufferDescriptor& desc);
+	RGBuffer* FindBuffer(RHIBuffer* buffer) const;
 
-    void Setup(RHICommandBuffer* cmdBuffer);
-    void Compile();
-    void Execute();
-    void Reset();
+	template <typename TPassParams,
+		std::invocable<RenderGraphBuilder&, RGPass*, TPassParams*> TFnSetup,
+		std::invocable<RHICommandBuffer&> TFnExecute>
+	void AddPass(const char* passName,
+		ERGPassFlag passFlags,
+		TPassParams* passParams,
+		TFnSetup fnSetup,
+		TFnExecute fnExecute)
+	{
+		RGPass* pass = _allocator.Allocate<RGLambdaPass<TPassParams>>(_frameIndex, passName, passFlags, passParams, fnExecute);
+		fnSetup(*this, pass, passParams);
+
+		_passes.push_back(std::move(pass));
+	}
+
+	void Setup(RHICommandBuffer* cmdBuffer);
+	void Compile();
+	void Execute();
+	void Reset();
+
+	void AddDependency(RGResource* resource, RGPass* pass);
 
 private:
-    void addDependency(RGTextureDescriptor& desc, RGPass* pass);
-    void addDependency(RGBufferDescriptor& desc, RGPass* pass);
-    void traverse(RGPass* pass);
+	RHIContext* _rhiContext = nullptr;
+	RHICommandBuffer* _currentCmdBuffer = nullptr;
 
-    RHICommandBuffer* _currentCmdBuffer = nullptr;
+	uint8 _frameIndex = static_cast<uint8>(-1);
+	constexpr static uint8 s_maxFramesInFlight = 2;
 
-    uint8 _frameIndex                          = static_cast<uint8>(-1);
-    constexpr static uint8 s_maxFramesInFlight = 2;
+	std::vector<Scoped<RHITexture>> _rhiTextures[s_maxFramesInFlight];
+	std::vector<Scoped<RHIBuffer>> _rhiBuffers[s_maxFramesInFlight];
 
-    std::vector<RGTexture*> _textures[s_maxFramesInFlight];
-    std::vector<RGBuffer*> _buffers[s_maxFramesInFlight];
+	std::vector<RGPass*> _passes;
+	std::vector<RGPass*> _executablePasses;
+	std::unordered_map<RGPass*, std::vector<RGResource*>> _resourceDependencyMap;
+	std::unordered_map<RHIHandle*, RGResource*> _externalRHIHandleMap;
 
-    std::vector<RGPass> _passes;
+	struct RHITextureRegistry
+	{
+		std::unordered_map<TextureInfo, std::vector<RHITexture*>> _freedTextures;
+		std::unordered_map<TextureInfo, std::vector<RHITexture*>> _usedTextures;
+	} _rhiTextureRegistry;
+
+	struct RHIBufferRgistry
+	{
+		std::unordered_map<BufferInfo, std::vector<RHIBuffer*>> _freedBuffers;
+		std::unordered_map<BufferInfo, std::vector<RHIBuffer*>> _usedBuffers;
+	} _rhiBufferRegistry;
+
+	LinearAllocator<65536, 8, 2> _allocator;
 };
 
 HS_NS_END

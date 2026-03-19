@@ -98,6 +98,8 @@ public:
     // CPU 데이터로부터 GPU-resolved SceneResource 구축
     SceneResource BuildSceneResource(Scene* scene, ShaderLibrary* shaderLibrary);
 
+    // TODO: 지금은 프레임 구분 없이 (프록시)리소스를 생성하는데, 이거 프레임인덱스 받아서 만들어야 한다. 
+
     // Camera resources (PerView UBO)
     CameraResource* GetOrCreateCameraResource(CameraComponent* camera);
     void SetActiveCameraResource(CameraResource* resource);

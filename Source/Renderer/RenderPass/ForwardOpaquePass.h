@@ -28,7 +28,6 @@ public:
 
     void Configure(RenderTarget* renderTarget) override;
 
-    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) override;
     void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) override;
 
     void OnAfterRendering() override;

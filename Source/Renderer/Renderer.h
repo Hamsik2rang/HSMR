@@ -15,6 +15,8 @@
 #include "RHI/RHIContext.h"
 #include "Renderer/RenderResourceManager.h"
 
+#include "Renderer/RenderGraph.h"
+
 #include <vector>
 #include <unordered_map>
 
@@ -96,6 +98,7 @@ protected:
 
     RenderTarget* _currentRenderTarget;
 
+    RenderGraphBuilder _graphBuilder;
 };
 
 HS_NS_END

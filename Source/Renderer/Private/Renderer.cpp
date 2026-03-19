@@ -149,7 +149,6 @@ void Renderer::Render(
     Scene* scene,
     RenderTarget* renderTarget)
 {
-
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
     for (auto* pass : _rendererPasses)

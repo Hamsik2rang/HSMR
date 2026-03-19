@@ -10,7 +10,7 @@
 HS_NS_BEGIN
 
 #pragma region RenderGraph
-enum class ERGPassFlag
+enum class ERGPassFlag : uint16
 {
     None           = 0,
     Raster         = 1 << 0,
@@ -22,6 +22,26 @@ enum class ERGPassFlag
     NeverMerge     = 1 << 6,
     NeverParallel  = 1 << 7,
 };
+
+HS_FORCEINLINE ERGPassFlag operator&(const ERGPassFlag& lhs, const ERGPassFlag& rhs)
+{
+    return static_cast<ERGPassFlag>(static_cast<uint16>(lhs) & static_cast<uint16>(rhs));
+}
+
+HS_FORCEINLINE ERGPassFlag operator|(const ERGPassFlag& lhs, const ERGPassFlag& rhs)
+{
+    return static_cast<ERGPassFlag>(static_cast<uint16>(lhs) | static_cast<uint16>(rhs));
+}
+
+HS_FORCEINLINE bool operator==(ERGPassFlag lhs, ERGPassFlag rhs)
+{
+    return static_cast<uint16>(lhs) == static_cast<uint16>(rhs);
+}
+
+HS_FORCEINLINE bool operator!=(ERGPassFlag lhs, ERGPassFlag rhs)
+{
+    return !(lhs == rhs);
+}
 
 enum class ERGBufferAccess
 {
@@ -67,18 +87,24 @@ class RGResource
     friend class RenderGraphBuilder;
 
 public:
-    bool IsCulled() const
+    enum class EType
     {
-        return _refCount == 0;
-    }
+        Texture,
+        Buffer,
+        // UniformBuffer, // TODO: Uniform Buffer는 RGBuffer로 표현할 수 있도록 해야 합니다. (예: ReadOnly 접근 권한)
+	};
+    RGResource(EType type) : _type{ type } {}
+
+    HS_FORCEINLINE bool IsCulled() const { return _refCount == 0; }
 
     virtual RHIHandle* GetRHIHandle() const = 0;
 
 protected:
-    uint32 _version  = 0;
+    EType _type;
     uint32 _refCount = 0;
 
     std::vector<RGPass*> _writers;
+    std::vector<RGPass*> _readers;
 };
 
 class RGTexture : public RGResource
@@ -86,9 +112,16 @@ class RGTexture : public RGResource
     friend class RenderGraphBuilder;
 
 public:
+    RGTexture(RGTextureDescriptor desc)
+        : RGResource(EType::Texture)
+        , _desc(desc)
+        , _rhiTexture(nullptr)
+    {
+    }
     RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiTexture); }
 
 private:
+    RGTextureDescriptor _desc;
     RHITexture* _rhiTexture;
 };
 
@@ -99,10 +132,94 @@ class RGBuffer : public RGResource
     friend class RenderGraphBuilder;
 
 public:
+    RGBuffer(RGBufferDescriptor desc)
+		: RGResource(EType::Buffer)
+        , _desc(desc)
+        , _rhiBuffer(nullptr)
+    {
+    }
     RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiBuffer); }
 
 private:
+    RGBufferDescriptor _desc;
     RHIBuffer* _rhiBuffer;
+};
+
+// TODO: 추후 구체화
+//class RGUniformBuffer : public RGResource
+//{
+//    friend class RenderGraphBuilder;
+//
+//public:
+//    RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiBuffer); }
+//
+//private:
+//    RHIBuffer* _rhiBuffer;
+//};
+
+class RGPass
+{
+    friend class RenderGraphBuilder;
+
+public:
+    RGPass(const char* name, ERGPassFlag flag)
+        : _name(name)
+        , _flags(flag)
+        , _isExecuted(false)
+        , _isCompiled(false)
+        , _isCulled(false)
+    {
+    }
+
+    virtual ~RGPass()
+    {
+        _upstreams.clear();
+        _downstreams.clear();
+        _isExecuted = false;
+        _isCompiled = false;
+        _isCulled   = true;
+    }
+
+    virtual void Execute(RHICommandBuffer& cmdBuffer) = 0;
+
+    HS_FORCEINLINE bool IsCulled() const { return _isCulled; }
+    HS_FORCEINLINE bool IsCompiled() const { return _isCompiled; }
+    HS_FORCEINLINE bool IsExecuted() const { return _isExecuted; }
+
+    HS_FORCEINLINE const char* GetName() const { return _name; }
+    HS_FORCEINLINE ERGPassFlag GetFlags() const { return _flags; }
+
+private:
+    const char* _name;
+    bool _isExecuted   = false;
+    bool _isCompiled   = false;
+    bool _isCulled     = false;
+    ERGPassFlag _flags = ERGPassFlag::None;
+    std::vector<RGPass*> _upstreams;   // 먼저 실행되어야 하는 패스들
+    std::vector<RGPass*> _downstreams; // 먼저 실행되어야 하는 패스들에 의존하는 패스들, 즉 이 패스가 먼저 실행되어야 하는 패스들
+
+    bool _isChecked = false; // Topological Sort에서 임시로 사용되는 플래그
+};
+
+template <typename TPassParams>
+class RGLambdaPass : public RGPass
+{
+public:
+    RGLambdaPass(const char* name, ERGPassFlag flags, TPassParams* params, std::function<void(RHICommandBuffer&)> fnExecute)
+        : RGPass(name, flags)
+        , _params(params)
+        , _fnExecute(fnExecute)
+    {
+    }
+    ~RGLambdaPass() override = default;
+    void Execute(RHICommandBuffer& cmdBuffer) override
+    {
+        _fnExecute(cmdBuffer);
+    }
+
+private:
+    TPassParams* _params;
+    std::function<void(RHICommandBuffer&)> _fnExecute;
 };
 
 HS_NS_END

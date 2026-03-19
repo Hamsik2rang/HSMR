@@ -58,11 +58,6 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
     _renderPassInfo.isSwapchainRenderPass = false;
 }
 
-void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass)
-{
-    // No-op: use the 3-arg version
-}
-
 void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource)
 {
     RenderResourceManager* resMgr = _renderer->GetResourceManager();

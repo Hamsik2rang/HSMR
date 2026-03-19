@@ -41,6 +41,8 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(CameraComponent
     {
         auto* resource = &it->second;
 
+        // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
+        // TODO: cameraComponent이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: CameraComponent에 dirty flag 추가)
         _rhiContext->UpdateBuffer(resource->perViewBuffer, 0, &resource->perViewData, sizeof(PerView));
     }
     else
@@ -86,13 +88,12 @@ LightResource* RenderResourceManager::GetOrCreateLightResource(LightComponent* l
     }
     LightResource* resource = &_lightResources[light];
 
-    LightUBO lightBuffer{
-        .position  = glm::vec4(transform->GetWorldPosition(), 0.0f),
-        .color     = light->color,
-        .intensity = light->intensity,
-        .direction = transform->GetForward(),
-        .type      = static_cast<int>(light->type)
-    };
+    LightUBO lightBuffer{};
+    lightBuffer.position  = glm::vec4(transform->GetWorldPosition(), 0.0f);
+    lightBuffer.color     = light->color;
+    lightBuffer.intensity = light->intensity;
+    lightBuffer.direction = transform->GetForward();
+    lightBuffer.type      = static_cast<int>(light->type);
 
     if (created)
     {
@@ -100,6 +101,8 @@ LightResource* RenderResourceManager::GetOrCreateLightResource(LightComponent* l
     }
     else
     {
+        // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
+        // TODO: light이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: LightComponent에 dirty flag 추가)
         _rhiContext->UpdateBuffer(resource->lightBuffer, 0, &lightBuffer, sizeof(LightUBO));
     }
 
@@ -126,6 +129,9 @@ RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* t
     }
     else
     {
+        // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
+        // TODO: transform이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: TransformComponent에 dirty flag 추가)
+        // 현재는 간단히 매 호출마다 업데이트하도록 구현
         buffer = _perDrawBuffers[transform];
         _rhiContext->UpdateBuffer(buffer, 0, &perDraw, sizeof(PerDraw));
     }

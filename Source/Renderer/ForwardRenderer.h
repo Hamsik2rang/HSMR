@@ -13,6 +13,8 @@ public:
     ForwardRenderer(RHIContext* rhiContext);
     ~ForwardRenderer() override;
 
+    void Render(Scene* scene, RenderTarget* renderTarget) override;
+
     //...
 
 private:
