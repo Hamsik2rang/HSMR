@@ -47,7 +47,6 @@ public:
 
     virtual void Configure(RenderTarget* renderTarget) = 0;
 
-    virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass) = 0;
     virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) = 0;
 
     virtual void OnAfterRendering() = 0;

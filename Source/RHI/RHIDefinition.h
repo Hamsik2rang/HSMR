@@ -15,8 +15,14 @@
 #include <vector>
 #include <string>
 
-namespace hs { struct NativeWindow; }
-namespace hs { class Swapchain; }
+namespace hs
+{
+struct NativeWindow;
+}
+namespace hs
+{
+class Swapchain;
+}
 
 HS_NS_BEGIN
 
@@ -45,30 +51,30 @@ public:
 	RHIHandle() = delete;
 	RHIHandle(RHIHandle::EType type, const char* name)
 		: _type(type)
-		, name(name)
+		, _name(name)
 	{}
 
 	// RAII: Virtual destructor calls Release() automatically
 	virtual ~RHIHandle()
 	{
 		//// Only cleanup if we're the last reference
-		//if (_refs == 1)
+		// if (_refs == 1)
 		//{
 		//	delete this;
-		//}
+		// }
 	}
 
 	// Copy constructor - increase reference count
-	RHIHandle(const RHIHandle& other) = delete;  // Disable copy to prevent issues
+	RHIHandle(const RHIHandle& other) = delete; // Disable copy to prevent issues
 
 	// Move constructor - transfer ownership
 	RHIHandle(RHIHandle&& other) noexcept
 		: _type(other._type)
-		, name(other.name)
+		, _name(other._name)
 		, _refs(other._refs)
 		, _hash(other._hash)
 	{
-		other._refs = 0;  // Moved-from object should not trigger destruction
+		other._refs = 0; // Moved-from object should not trigger destruction
 	}
 
 	// Move assignment
@@ -84,7 +90,7 @@ public:
 
 			// Transfer from other
 			_type = other._type;
-			name = other.name;
+			_name = other._name;
 			_refs = other._refs;
 			_hash = other._hash;
 			other._refs = 0;
@@ -93,8 +99,8 @@ public:
 	}
 
 	HS_FORCEINLINE RHIHandle::EType GetType() const { return _type; }
-	HS_FORCEINLINE uint32           GetHash() const { return _hash; }
-	HS_FORCEINLINE void GetName(const char* name) { this->name = name; }
+	HS_FORCEINLINE uint32 GetHash() const { return _hash; }
+	HS_FORCEINLINE const char* GetName() const { return _name; }
 
 	// For external reference counting when needed
 	HS_FORCEINLINE int Retain()
@@ -117,14 +123,14 @@ public:
 	HS_FORCEINLINE int GetRefCount() const { return _refs; }
 	HS_FORCEINLINE bool IsValid() const { return _refs > 0; }
 
-	const char* name;
 
 protected:
 	// Pure virtual method for platform-specific resource cleanup
-	//virtual void OnDestroy() = 0;
+	// virtual void OnDestroy() = 0;
 
-	EType  _type;
-	int    _refs = 1;      // Start with 1 reference
+	const char* _name;
+	EType _type;
+	int _refs = 1; // Start with 1 reference
 	uint32 _hash = 0;
 };
 
@@ -133,16 +139,16 @@ enum class ERHIPlatform
 	Invalid = 0,
 	Vulkan,
 	Metal,
-	//DIRECTX12,
-	//OPENGL,
-	//OPENGL_ES,
-	//WEBGPU,
+	// DIRECTX12,
+	// OPENGL,
+	// OPENGL_ES,
+	// WEBGPU,
 	Virtual,
 };
 
 enum class EVertexFormat
 {
-    Invalid,
+	Invalid,
 
 	Float,
 	Float2,
@@ -235,7 +241,7 @@ HS_FORCEINLINE ETextureUsage operator&(ETextureUsage lhs, ETextureUsage rhs)
 
 HS_FORCEINLINE ETextureUsage operator&=(ETextureUsage& lhs, ETextureUsage rhs)
 {
-	lhs =  lhs & rhs;
+	lhs = lhs & rhs;
 	return lhs;
 }
 
@@ -246,8 +252,8 @@ HS_FORCEINLINE bool operator!=(ETextureUsage lhs, uint16 rhs)
 
 struct TextureInfo
 {
-	EPixelFormat  format = EPixelFormat::R8G8B8A8Unorm;
-	ETextureType  type = ETextureType::Tex2D;
+	EPixelFormat format = EPixelFormat::R8G8B8A8Unorm;
+	ETextureType type = ETextureType::Tex2D;
 	ETextureUsage usage = ETextureUsage::Unknown;
 	struct
 	{
@@ -265,6 +271,23 @@ struct TextureInfo
 	Swapchain* swapchain = nullptr;
 	bool isDepthStencilBuffer = false;
 	bool useGenerateMipmap = false;
+
+	bool operator==(const TextureInfo& other) const
+	{
+		return format == other.format
+			&& type == other.type
+			&& usage == other.usage
+			&& extent.width == other.extent.width
+			&& extent.height == other.extent.height
+			&& extent.depth == other.extent.depth
+			&& mipLevel == other.mipLevel
+			&& arrayLength == other.arrayLength
+			&& byteSize == other.byteSize
+			&& isCompressed == other.isCompressed
+			&& isSwapchainTexture == other.isSwapchainTexture
+			&& isDepthStencilBuffer == other.isDepthStencilBuffer
+			&& useGenerateMipmap == other.useGenerateMipmap;
+	}
 };
 
 enum class EFilterMode
@@ -287,8 +310,8 @@ enum class EAddressMode
 struct SamplerInfo
 {
 	ETextureType type;
-	EFilterMode  minFilter;
-	EFilterMode  magFilter;
+	EFilterMode minFilter;
+	EFilterMode magFilter;
 	EFilterMode mipmapMode;
 	EAddressMode addressU;
 	EAddressMode addressV;
@@ -344,8 +367,14 @@ enum class EBufferMemoryOption
 
 struct BufferInfo
 {
-	EBufferUsage        usage;
+	EBufferUsage usage;
 	EBufferMemoryOption memoryOption;
+
+	bool operator==(const BufferInfo& other) const
+	{
+		return usage == other.usage
+			&& memoryOption == other.memoryOption;
+	}
 };
 
 struct RHITexture;
@@ -355,8 +384,8 @@ struct RHIResourceLayout;
 struct RenderTexture
 {
 	EPixelFormat format;
-	uint32       width;
-	uint32       height;
+	uint32 width;
+	uint32 height;
 
 	std::vector<RHITexture*> colorBuffers;
 	RHITexture* depthStencilBuffer;
@@ -367,7 +396,7 @@ struct SwapchainInfo
 	bool useDepth;
 	bool useStencil;
 	bool useMSAA;
-    bool enableVSync;
+	bool enableVSync;
 
 	const NativeWindow* nativeWindow;
 };
@@ -406,15 +435,23 @@ struct ClearValue
 		{
 			float depth;
 			float stencil;
-		}depthStencil;
+		} depthStencil;
 	};
 };
 
 struct Area
 {
-	Area() : x(0), y(0), width(1), height(1) {}
+	Area()
+		: x(0)
+		, y(0)
+		, width(1)
+		, height(1)
+	{}
 	Area(uint32 x, uint32 y, uint32 width, uint32 height)
-		: x(x), y(y), width(width), height(height)
+		: x(x)
+		, y(y)
+		, width(width)
+		, height(height)
 	{}
 
 	uint32 x;
@@ -425,20 +462,20 @@ struct Area
 
 struct Attachment
 {
-	EPixelFormat	format;
-	ELoadAction		loadAction;
-	EStoreAction	storeAction;
-	ClearValue		clearValue;
-	uint8			sampleCount;
-	bool			isDepthStencil = false;
+	EPixelFormat format;
+	ELoadAction loadAction;
+	EStoreAction storeAction;
+	ClearValue clearValue;
+	uint8 sampleCount;
+	bool isDepthStencil = false;
 };
 
 struct RenderPassInfo
 {
 	std::vector<Attachment> colorAttachments;
-	//std::vector<Attachment> resolveColorAttachments; // TODO: Resolve Color Attachments
-	Attachment              depthStencilAttachment;
-	uint8					colorAttachmentCount;
+	// std::vector<Attachment> resolveColorAttachments; // TODO: Resolve Color Attachments
+	Attachment depthStencilAttachment;
+	uint8 colorAttachmentCount;
 
 	bool useDepthStencilAttachment = false;
 	bool isSwapchainRenderPass = false;
@@ -485,7 +522,7 @@ enum class EShaderParameterType
 	Mat44,
 
 	Struct // Constant Buffer
-	//,..
+		   //,..
 };
 
 struct ShaderParameterValue
@@ -538,7 +575,7 @@ enum class EShaderLanguage
 	Spirv,
 	Msl,
 	Hlsl,
-	//GLSL,
+	// GLSL,
 };
 
 #ifdef DOMAIN
@@ -616,7 +653,7 @@ struct ResourceBinding
 {
 	struct Resource
 	{
-		std::vector<RHIBuffer*>  buffers;
+		std::vector<RHIBuffer*> buffers;
 		std::vector<RHITexture*> textures;
 		std::vector<RHISampler*> samplers;
 
@@ -624,17 +661,16 @@ struct ResourceBinding
 	};
 
 	EResourceType type;
-	EShaderStage  stage;
-	uint8         binding;
-	uint8         arrayCount;
-	Resource      resource;
+	EShaderStage stage;
+	uint8 binding;
+	uint8 arrayCount;
+	Resource resource;
 
 	std::string name;
-	uint32      nameHash;
+	uint32 nameHash;
 };
 
 class RHIShader;
-
 
 struct ShaderProgramDescriptor
 {
@@ -645,8 +681,8 @@ struct VertexInputLayoutDescriptor
 {
 	uint32 binding; // Metal에서는 무시됩니다.
 	uint32 stride;
-	uint8  stepRate : 7;
-	bool   useInstancing : 1;
+	uint8 stepRate : 7;
+	bool useInstancing : 1;
 };
 
 struct VertexInputAttributeDescriptor
@@ -659,7 +695,7 @@ struct VertexInputAttributeDescriptor
 
 struct VertexInputStateDescriptor
 {
-	std::vector<VertexInputLayoutDescriptor>    layouts;
+	std::vector<VertexInputLayoutDescriptor> layouts;
 	std::vector<VertexInputAttributeDescriptor> attributes;
 };
 
@@ -743,22 +779,22 @@ struct ColorBlendAttachmentDescriptor
 
 	EBlendFactor srcColorFactor;
 	EBlendFactor dstColorFactor;
-	EBlendOp     colorBlendOp;
+	EBlendOp colorBlendOp;
 
 	EBlendFactor srcAlphaFactor;
 	EBlendFactor dstAlphaFactor;
-	EBlendOp     alphaBlendOp;
+	EBlendOp alphaBlendOp;
 
 	uint32 writeMask = 0x0000'000F;
 };
 
 struct ColorBlendStateDescriptor
 {
-	bool                                        logicOpEnable;
-	ELogicOp                                    blendLogic;
-	uint32                                      attachmentCount;
+	bool logicOpEnable;
+	ELogicOp blendLogic;
+	uint32 attachmentCount;
 	std::vector<ColorBlendAttachmentDescriptor> attachments;
-	float                                       blendConstants[4];
+	float blendConstants[4];
 };
 
 enum class EPolygonMode
@@ -786,17 +822,17 @@ enum class EFrontFace
 
 struct RasterizerStateDescriptor
 {
-	bool			depthClampEnable;
-	bool			rasterizerDiscardEnable;
-	EPolygonMode	polygonMode;
-	ECullMode		cullMode;
-	EFrontFace		frontFace;
-	bool			depthBiasEnable;
-	float			depthBias;
-	float			depthBiasClamp;
-	float			depthBiasSlope;
-	float			depthBiasConstant; // Metal에서는 무시됩니다.
-	float			lineWidth;
+	bool depthClampEnable;
+	bool rasterizerDiscardEnable;
+	EPolygonMode polygonMode;
+	ECullMode cullMode;
+	EFrontFace frontFace;
+	bool depthBiasEnable;
+	float depthBias;
+	float depthBiasClamp;
+	float depthBiasSlope;
+	float depthBiasConstant; // Metal에서는 무시됩니다.
+	float lineWidth;
 };
 
 struct MultiSampleStateDescriptor
@@ -835,22 +871,22 @@ struct StencilTestDescriptor
 	EStencilOp passOp;
 	EStencilOp depthFailOp;
 	ECompareOp compareOp;
-	uint32     compareMask;
-	uint32     writeMask;
-	uint32     reference;
+	uint32 compareMask;
+	uint32 writeMask;
+	uint32 reference;
 };
 
 struct DepthStencilStateDescriptor
 {
-	bool                  depthTestEnable;
-	bool                  depthWriteEnable;
-	ECompareOp            depthCompareOp;
-	bool                  depthBoundTestEnable;
-	bool                  stencilTestEnable;
+	bool depthTestEnable;
+	bool depthWriteEnable;
+	ECompareOp depthCompareOp;
+	bool depthBoundTestEnable;
+	bool stencilTestEnable;
 	StencilTestDescriptor stencilFront;
 	StencilTestDescriptor stencilBack;
-	float                 minDepthBound;
-	float                 maxDepthBound;
+	float minDepthBound;
+	float maxDepthBound;
 };
 
 struct TesellationStateDescriptor
@@ -861,14 +897,14 @@ struct TesellationStateDescriptor
 struct GraphicsPipelineInfo
 {
 	//...
-	ShaderProgramDescriptor			shaderDesc;
-	InputAssemblyStateDescriptor	inputAssemblyDesc;
-	TesellationStateDescriptor		tesellationDesc;
-	VertexInputStateDescriptor		vertexInputDesc;
-	RasterizerStateDescriptor		rasterizerDesc;
-	MultiSampleStateDescriptor		multisampleDesc;
-	DepthStencilStateDescriptor		depthStencilDesc;
-	ColorBlendStateDescriptor		colorBlendDesc;
+	ShaderProgramDescriptor shaderDesc;
+	InputAssemblyStateDescriptor inputAssemblyDesc;
+	TesellationStateDescriptor tesellationDesc;
+	VertexInputStateDescriptor vertexInputDesc;
+	RasterizerStateDescriptor rasterizerDesc;
+	MultiSampleStateDescriptor multisampleDesc;
+	DepthStencilStateDescriptor depthStencilDesc;
+	ColorBlendStateDescriptor colorBlendDesc;
 
 	RHIResourceLayout* resourceLayout;
 	RHIRenderPass* renderPass;
@@ -884,82 +920,82 @@ HS_NS_END
 
 namespace std
 {
-	template <>
-	struct hash<hs::Attachment>
+template <>
+struct hash<hs::Attachment>
+{
+	size_t operator()(const hs::Attachment& key) const
 	{
-		size_t operator()(const hs::Attachment& key) const
-		{
-			size_t h = hs::HashCombine(
-				static_cast<uint32>(key.format),
-				static_cast<uint32>(key.loadAction),
-				static_cast<uint32>(key.storeAction));
-			h = hs::HashCombine(static_cast<uint32>(h), static_cast<uint32>(key.isDepthStencil));
-			return h;
-		}
-	};
+		size_t h = hs::HashCombine(
+			static_cast<uint32>(key.format),
+			static_cast<uint32>(key.loadAction),
+			static_cast<uint32>(key.storeAction));
+		h = hs::HashCombine(static_cast<uint32>(h), static_cast<uint32>(key.isDepthStencil));
+		return h;
+	}
+};
 
-	template <>
-	struct hash<hs::RenderPassInfo>
+template <>
+struct hash<hs::RenderPassInfo>
+{
+	size_t operator()(const hs::RenderPassInfo& key) const
 	{
-		size_t operator()(const hs::RenderPassInfo& key) const
+		size_t h = hs::HashCombine(
+			static_cast<uint32>(key.colorAttachmentCount),
+			static_cast<uint32>(key.useDepthStencilAttachment),
+			static_cast<uint32>(key.isSwapchainRenderPass));
+
+		std::hash<hs::Attachment> attachmentHash;
+		for (size_t i = 0; i + 1 < key.colorAttachmentCount; i += 2)
 		{
-			size_t h = hs::HashCombine(
-				static_cast<uint32>(key.colorAttachmentCount),
-				static_cast<uint32>(key.useDepthStencilAttachment),
-				static_cast<uint32>(key.isSwapchainRenderPass));
-
-			std::hash<hs::Attachment> attachmentHash;
-			for (size_t i = 0; i + 1 < key.colorAttachmentCount; i += 2)
-			{
-				h = hs::HashCombine64(h, attachmentHash(key.colorAttachments[i]), attachmentHash(key.colorAttachments[i + 1]));
-			}
-
-			size_t b = (key.colorAttachmentCount % 2 != 0) ? attachmentHash(key.colorAttachments.back()) : 0;
-			size_t c = (key.useDepthStencilAttachment) ? attachmentHash(key.depthStencilAttachment) : 0;
-			h = hs::HashCombine64(h, b, c);
-			return h;
+			h = hs::HashCombine64(h, attachmentHash(key.colorAttachments[i]), attachmentHash(key.colorAttachments[i + 1]));
 		}
-	};
 
-	template <>
-	struct hash<hs::TextureInfo>
+		size_t b = (key.colorAttachmentCount % 2 != 0) ? attachmentHash(key.colorAttachments.back()) : 0;
+		size_t c = (key.useDepthStencilAttachment) ? attachmentHash(key.depthStencilAttachment) : 0;
+		h = hs::HashCombine64(h, b, c);
+		return h;
+	}
+};
+
+template <>
+struct hash<hs::TextureInfo>
+{
+	size_t operator()(const hs::TextureInfo& key) const
 	{
-		size_t operator()(const hs::TextureInfo& key) const
-		{
-			size_t h = hs::HashCombine(key.extent.width, key.extent.height, key.extent.depth);
-			h = hs::HashCombine64(h, static_cast<uint32>(key.format), static_cast<uint32>(key.type));
-			h = hs::HashCombine64(h, static_cast<uint32>(key.usage), key.mipLevel);
-			h = hs::HashCombine64(h, key.arrayLength, key.byteSize);
-			h = hs::HashCombine64(h, key.isCompressed, key.isSwapchainTexture);
-			h = hs::HashCombine64(h, key.isDepthStencilBuffer, key.useGenerateMipmap);
-			return h;
-		}
-	};
+		size_t h = hs::HashCombine(key.extent.width, key.extent.height, key.extent.depth);
+		h = hs::HashCombine64(h, static_cast<uint32>(key.format), static_cast<uint32>(key.type));
+		h = hs::HashCombine64(h, static_cast<uint32>(key.usage), key.mipLevel);
+		h = hs::HashCombine64(h, key.arrayLength, key.byteSize);
+		h = hs::HashCombine64(h, key.isCompressed, key.isSwapchainTexture);
+		h = hs::HashCombine64(h, key.isDepthStencilBuffer, key.useGenerateMipmap);
+		return h;
+	}
+};
 
-	template <>
-	struct hash<hs::SamplerInfo>
+template <>
+struct hash<hs::SamplerInfo>
+{
+	size_t operator()(const hs::SamplerInfo& key) const
 	{
-		size_t operator()(const hs::SamplerInfo& key) const
-		{
-			size_t h = hs::HashCombine(
-				static_cast<uint32>(key.type),
-				static_cast<uint32>(key.minFilter),
-				static_cast<uint32>(key.magFilter));
-			h = hs::HashCombine64(h, static_cast<uint32>(key.mipmapMode), static_cast<uint32>(key.addressU));
-			h = hs::HashCombine64(h, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
-			h = hs::HashCombine64(h, key.isPixelCoordinate);
-			return h;
-		}
-	};
+		size_t h = hs::HashCombine(
+			static_cast<uint32>(key.type),
+			static_cast<uint32>(key.minFilter),
+			static_cast<uint32>(key.magFilter));
+		h = hs::HashCombine64(h, static_cast<uint32>(key.mipmapMode), static_cast<uint32>(key.addressU));
+		h = hs::HashCombine64(h, static_cast<uint32>(key.addressV), static_cast<uint32>(key.addressW));
+		h = hs::HashCombine64(h, key.isPixelCoordinate);
+		return h;
+	}
+};
 
-	template <>
-	struct hash<hs::BufferInfo>
+template <>
+struct hash<hs::BufferInfo>
+{
+	size_t operator()(const hs::BufferInfo& key) const
 	{
-		size_t operator()(const hs::BufferInfo& key) const
-		{
-			return hs::HashCombine(static_cast<uint32>(key.usage), static_cast<uint32>(key.memoryOption));
-		}
-	};
-}
+		return hs::HashCombine(static_cast<uint32>(key.usage), static_cast<uint32>(key.memoryOption));
+	}
+};
+} // namespace std
 
 #endif
