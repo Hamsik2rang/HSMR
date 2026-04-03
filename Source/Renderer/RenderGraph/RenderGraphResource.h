@@ -1,4 +1,4 @@
-#ifndef __HS_RENDER_GRAPH_RESOURCE_H__
+﻿#ifndef __HS_RENDER_GRAPH_RESOURCE_H__
 #define __HS_RENDER_GRAPH_RESOURCE_H__
 
 #include "Precompile.h"
@@ -78,7 +78,6 @@ struct RGBufferDescriptor
     BufferInfo info;
     ERGBufferAccess access;
     const char* name;
-    size_t byteSize = 0;
 };
 
 class RGPass;
@@ -93,20 +92,12 @@ public:
         Texture,
         Buffer,
         // UniformBuffer, // TODO: Uniform Buffer는 RGBuffer로 표현할 수 있도록 해야 합니다. (예: ReadOnly 접근 권한)
-    };
+	};
     RGResource(EType type) : _type{ type } {}
 
     HS_FORCEINLINE bool IsCulled() const { return _refCount == 0; }
 
     virtual RHIHandle* GetRHIHandle() const = 0;
-
-    // LinearAllocator는 소멸자를 호출하지 않으므로 Reset 전에 명시적으로 호출해야 합니다.
-    virtual void Cleanup()
-    {
-        _writers.clear();
-        _readers.clear();
-        _refCount = 0;
-    }
 
 protected:
     EType _type;
@@ -142,7 +133,7 @@ class RGBuffer : public RGResource
 
 public:
     RGBuffer(RGBufferDescriptor desc)
-        : RGResource(EType::Buffer)
+		: RGResource(EType::Buffer)
         , _desc(desc)
         , _rhiBuffer(nullptr)
     {
@@ -153,6 +144,18 @@ private:
     RGBufferDescriptor _desc;
     RHIBuffer* _rhiBuffer;
 };
+
+// TODO: 추후 구체화
+//class RGUniformBuffer : public RGResource
+//{
+//    friend class RenderGraphBuilder;
+//
+//public:
+//    RHIHandle* GetRHIHandle() const override { return static_cast<RHIHandle*>(_rhiBuffer); }
+//
+//private:
+//    RHIBuffer* _rhiBuffer;
+//};
 
 class RGPass
 {
@@ -168,20 +171,16 @@ public:
     {
     }
 
-    virtual ~RGPass() = default;
-
-    virtual void Execute(RHICommandBuffer& cmdBuffer) = 0;
-
-    // LinearAllocator는 소멸자를 호출하지 않으므로 Reset 전에 명시적으로 호출해야 합니다.
-    virtual void Cleanup()
+    virtual ~RGPass()
     {
         _upstreams.clear();
         _downstreams.clear();
-        _isChecked  = false;
-        _isCompiled = false;
         _isExecuted = false;
-        _isCulled   = false;
+        _isCompiled = false;
+        _isCulled   = true;
     }
+
+    virtual void Execute(RHICommandBuffer& cmdBuffer) = 0;
 
     HS_FORCEINLINE bool IsCulled() const { return _isCulled; }
     HS_FORCEINLINE bool IsCompiled() const { return _isCompiled; }
@@ -197,7 +196,7 @@ private:
     bool _isCulled     = false;
     ERGPassFlag _flags = ERGPassFlag::None;
     std::vector<RGPass*> _upstreams;   // 먼저 실행되어야 하는 패스들
-    std::vector<RGPass*> _downstreams; // 이 패스 이후에 실행되어야 하는 패스들
+    std::vector<RGPass*> _downstreams; // 먼저 실행되어야 하는 패스들에 의존하는 패스들, 즉 이 패스가 먼저 실행되어야 하는 패스들
 
     bool _isChecked = false; // Topological Sort에서 임시로 사용되는 플래그
 };
@@ -209,20 +208,13 @@ public:
     RGLambdaPass(const char* name, ERGPassFlag flags, TPassParams* params, std::function<void(RHICommandBuffer&)> fnExecute)
         : RGPass(name, flags)
         , _params(params)
-        , _fnExecute(std::move(fnExecute))
+        , _fnExecute(fnExecute)
     {
     }
     ~RGLambdaPass() override = default;
-
     void Execute(RHICommandBuffer& cmdBuffer) override
     {
         _fnExecute(cmdBuffer);
-    }
-
-    void Cleanup() override
-    {
-        RGPass::Cleanup();
-        _fnExecute = nullptr; // std::function 내부 힙 할당 해제
     }
 
 private:
