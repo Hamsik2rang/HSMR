@@ -115,11 +115,16 @@ void VulkanDevice::createLogicalDevice()
     float queuePriority        = 0.0f;
     queueInfo.pQueuePriorities = &queuePriority;
 
+    features11.sType                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    features11.shaderDrawParameters = VK_TRUE;
+    features11.pNext                = nullptr;
+
     features12.sType                                    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     features12.descriptorIndexing                       = VK_TRUE;
     features12.descriptorBindingVariableDescriptorCount = VK_TRUE;
     features12.runtimeDescriptorArray                   = VK_TRUE;
     features12.bufferDeviceAddress                      = VK_TRUE;
+    features12.pNext                                    = &features11;
 
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     features13.synchronization2 = VK_TRUE;

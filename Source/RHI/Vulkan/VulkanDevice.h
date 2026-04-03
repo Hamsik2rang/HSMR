@@ -32,6 +32,7 @@ public:
 
 	VkPhysicalDeviceProperties properties;
 	VkPhysicalDeviceFeatures features;
+    VkPhysicalDeviceVulkan11Features features11{};
     VkPhysicalDeviceVulkan12Features features12{};
     VkPhysicalDeviceVulkan13Features features13{};
 

@@ -129,6 +129,8 @@ bool Renderer::Initialize()
         HS_LOG(error, "[Renderer] ShaderLibrary initialization failed");
     }
 
+    _graphBuilder.Initialize(_rhiContext);
+
     _isInitialized = true;
 
     return _isInitialized;
