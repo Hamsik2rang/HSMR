@@ -15,6 +15,15 @@ ForwardRenderer::~ForwardRenderer()
 {
 }
 
+void ForwardRenderer::Shutdown()
+{
+    // GridPass를 _resourceManager보다 먼저 해제합니다.
+    // Renderer::Shutdown()이 _resourceManager를 삭제하면 머티리얼 ResourceSet 해제 시
+    // vkResetDescriptorPool이 호출되어 같은 풀의 GridSet까지 무효화됩니다.
+    _gridPass.reset();
+    Renderer::Shutdown();
+}
+
 void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
 {
     _currentRenderTarget = renderTarget;
@@ -47,6 +56,44 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
     RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(renderPassInfo);
+
+    // ------------------------------------------------------------------
+    // Grid Pass lazy init
+    // ------------------------------------------------------------------
+    if (!_gridPass)
+    {
+        _gridPass = MakeScoped<ForwardGridPass>();
+        if (!_gridPass->Initialize(_shaderLibrary, _rhiContext))
+        {
+            HS_LOG(warning, "[ForwardRenderer] GridPass 초기화 실패 — Grid.slang 확인 필요");
+        }
+    }
+
+    // Grid Pass용 RenderPassInfo — Opaque 결과를 이어받으므로 loadAction=Load
+    RenderPassInfo gridPassInfo{};
+    gridPassInfo.colorAttachmentCount = 1;
+    Attachment gca{};
+    gca.format         = rtInfo.colorTextureInfos[0].format;
+    gca.clearValue     = ClearValue(0.0f, 0.0f, 0.0f, 0.0f);
+    gca.isDepthStencil = false;
+    gca.loadAction     = ELoadAction::Load;
+    gca.storeAction    = EStoreAction::Store;
+    gridPassInfo.colorAttachments.push_back(gca);
+
+    if (rtInfo.useDepthStencilTexture)
+    {
+        Attachment gdsa{};
+        gdsa.format                            = rtInfo.depthStencilInfo.format;
+        gdsa.clearValue                        = ClearValue(1.0f, 0.0f);
+        gdsa.isDepthStencil                    = true;
+        gdsa.loadAction                        = ELoadAction::Load;
+        gdsa.storeAction                       = EStoreAction::Store;
+        gridPassInfo.depthStencilAttachment    = gdsa;
+        gridPassInfo.useDepthStencilAttachment = true;
+    }
+    gridPassInfo.isSwapchainRenderPass = false;
+
+    RHIRenderPass* gridRenderPass = GetHandleCache()->GetRenderPass(gridPassInfo);
 
     // ------------------------------------------------------------------
     // RenderGraph 프레임 시작
@@ -108,6 +155,61 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 commandBuffer.BindIndexBuffer(renderModel.meshResource->indexBuffer);
                 commandBuffer.DrawIndexed(0, renderModel.meshResource->indexCount, 1, 0);
             }
+
+            commandBuffer.EndRenderPass();
+            commandBuffer.PopDebugMark();
+        });
+
+    struct GridPassParameters
+    {
+    } gridParams;
+
+    _graphBuilder.AddPass("Grid", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &gridParams,
+
+        // Setup: 의존성 선언
+        [&](RenderGraphBuilder& builder, RGPass* pass, GridPassParameters*) -> void
+        {
+            // color: Write (Grid도 color를 수정)
+            RGTexture* colorTex = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0));
+            builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+
+            // depth: Read — Opaque.Write(depth) → Grid.Read(depth) 의존성으로 실행 순서 보장
+            if (rtInfo.useDepthStencilTexture)
+            {
+                RGTexture* depthTex = builder.RegisterExternalTexture(renderTarget->GetDepthStencilTexture());
+                builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
+            }
+        },
+
+        // Execute: 렌더링 커맨드 기록
+        [&](RHICommandBuffer& commandBuffer) -> void
+        {
+            if (!_gridPass || !_gridPass->IsInitialized()) return;
+
+            RHIBuffer* perViewBuffer = sceneResource.cameraResources.empty()
+                ? nullptr : sceneResource.cameraResources[0]->perViewBuffer;
+
+            RHIGraphicsPipeline* pipeline = _gridPass->GetOrCreatePipeline(
+                gridRenderPass, gridPassInfo, perViewBuffer);
+            if (!pipeline) return;
+
+            RHIFramebuffer* framebuffer = GetHandleCache()->GetFramebuffer(
+                gridRenderPass, _currentRenderTarget);
+            if (!framebuffer) return;
+
+            float debugColor[4]{0.4f, 0.8f, 0.4f, 1.0f};
+            commandBuffer.PushDebugMark("Grid Pass", debugColor);
+
+            Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+            commandBuffer.BeginRenderPass(gridRenderPass, framebuffer, area);
+            commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
+                static_cast<float>(framebuffer->info.width),
+                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
+            commandBuffer.SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+
+            commandBuffer.BindPipeline(pipeline);
+            commandBuffer.BindResourceSet(_gridPass->GetResourceSet());
+            commandBuffer.DrawArrays(0, 3, 1); // fullscreen triangle, 버텍스 버퍼 없음
 
             commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();
