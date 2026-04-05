@@ -11,6 +11,14 @@ struct FSInput
     float3 farPoint   : TEXCOORD1;
 };
 
+#ifdef HS_TARGET_METAL
+struct FSOutput
+{
+    float4 color : SV_Target;
+    float  depth : SV_Depth;
+};
+#endif
+
 // clip 공간 좌표를 역변환해 월드 공간 레이의 시작/끝 점을 구합니다.
 float3 unprojectPoint(float x, float y, float z, float4x4 invVP)
 {
@@ -63,27 +71,78 @@ float4 grid(float3 fragPos, float scale)
     return color;
 }
 
-[shader("fragment")]
-float4 FragmentMain(FSInput input) : SV_Target
+#ifdef HS_TARGET_METAL
+// Metal fallback: derivatives/discard 없이 world-space 반복 패턴으로 선을 만듭니다.
+float4 gridMetal(float3 fragPos, float scale)
 {
+    float2 coord = fragPos.xz * scale;
+    float2 cell  = abs(frac(coord - 0.5) - 0.5);
+    float  line  = min(cell.x, cell.y);
+
+    float thickness = (scale >= 1.0) ? 0.035 : 0.02;
+    float alpha     = 1.0 - smoothstep(0.0, thickness, line);
+    float4 color    = float4(0.2, 0.2, 0.2, alpha);
+
+    //float axisWidth = 0.04 / max(scale, 0.0001);
+    //if (abs(fragPos.x) < axisWidth)
+    //    color.z = 1.0;
+    //if (abs(fragPos.z) < axisWidth)
+    //    color.x = 1.0;
+
+    return color;
+}
+#endif
+
+[shader("fragment")]
+#ifdef HS_TARGET_METAL
+FSOutput FragmentMain(FSInput input)
+#else
+float4 FragmentMain(FSInput input) : SV_Target
+#endif
+{
+    #ifdef HS_TARGET_METAL
+    FSOutput output;
+    output.color = float4(0.0, 0.0, 0.0, 0.0);
+    output.depth = 1.0;
+    #endif
+
     // Y=0 평면과 레이의 교점을 계산합니다.
     float t = -input.nearPoint.y / (input.farPoint.y - input.nearPoint.y);
 
     // Y=0 평면 뒤(t<0)나 너무 먼 곳(t>1)은 그리지 않습니다.
+#ifdef HS_TARGET_METAL
+    if (t < 0.0 || t > 1.0)
+        return output;
+#else
     if (t < 0.0 || t > 1.0)
         discard;
+#endif
 
     float3 fragPos = input.nearPoint + t * (input.farPoint - input.nearPoint);
 
+#ifdef HS_TARGET_METAL
+    float4 color = gridMetal(fragPos, 1.0) + gridMetal(fragPos, 0.1);
+#else
     float4 color = grid(fragPos, 1.0) + grid(fragPos, 0.1);
+#endif
 
     // 원점에서 멀어질수록 페이드 아웃합니다.
     float dist = length(fragPos.xz);
     float fade = 1.0 - smoothstep(50.0, 100.0, dist);
     color.a   *= fade;
 
+#ifdef HS_TARGET_METAL
+    if (color.a < 0.005)
+        return output;
+
+    float4 fragPosCS = mul(perView.viewProjectionMatrix, float4(fragPos, 1.0));
+    output.color = color;
+    output.depth = saturate(fragPosCS.z / fragPosCS.w);
+    return output;
+#else
     if (color.a < 0.005)
         discard;
 
     return color;
+#endif
 }
