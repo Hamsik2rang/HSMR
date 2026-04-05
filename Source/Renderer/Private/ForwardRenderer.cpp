@@ -209,7 +209,7 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
 
             commandBuffer.BindPipeline(pipeline);
             commandBuffer.BindResourceSet(_gridPass->GetResourceSet());
-            commandBuffer.DrawArrays(0, 3, 1); // fullscreen triangle, 버텍스 버퍼 없음
+            commandBuffer.DrawArrays(0, 6, 1); // fullscreen triangle, 버텍스 버퍼 없음
 
             commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();

@@ -22,7 +22,7 @@ bool ForwardGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
 {
     _rhiContext = rhiContext;
 
-    Shader* shader = shaderLibrary->GetOrCompile("Grid", EShaderStage::Vertex | EShaderStage::Fragment);
+    Shader* shader = shaderLibrary->GetOrCompile("GridDepth", EShaderStage::Vertex | EShaderStage::Fragment);
     if (!shader || !shader->IsCompiledEx())
     {
         HS_LOG(error, "[ForwardGridPass] Grid 셰이더 컴파일 실패 — Grid.slang 확인 필요");
@@ -129,6 +129,7 @@ void ForwardGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     binding.binding    = 0;
     binding.arrayCount = 1;
     binding.resource.buffers.push_back(perViewBuffer);
+    binding.resource.offsets.push_back(0); // Buffer면 Offset도 함께
 
     _resourceLayout = _rhiContext->CreateResourceLayout("GridLayout", &binding, 1);
     if (!_resourceLayout)

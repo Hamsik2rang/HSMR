@@ -129,6 +129,7 @@ struct HS_SHADER_SYSTEM_API ShaderBufferBindingInfo
     uint32 nameHash = 0;
     uint32 set = 0;         // Descriptor set index
     uint32 binding = 0;     // Binding slot
+    NativeShaderBindingSlots nativeBindingSlots;
     uint32 totalSize = 0;   // Total byte size
     EShaderStage stages = EShaderStage::None;   // Bitmask: which stages use this
     EResourceType resourceType = EResourceType::UniformBuffer;
@@ -142,6 +143,7 @@ struct HS_SHADER_SYSTEM_API ShaderTextureBindingInfo
     uint32 nameHash = 0;
     uint32 set = 0;
     uint32 binding = 0;
+    NativeShaderBindingSlots nativeBindingSlots;
     EShaderStage stages = EShaderStage::None;
     uint32 dimension = 2;   // 1D, 2D, 3D, Cube
 };
@@ -153,6 +155,7 @@ struct HS_SHADER_SYSTEM_API ShaderSamplerBindingInfo
     uint32 nameHash = 0;
     uint32 set = 0;
     uint32 binding = 0;
+    NativeShaderBindingSlots nativeBindingSlots;
     EShaderStage stages = EShaderStage::None;
 };
 

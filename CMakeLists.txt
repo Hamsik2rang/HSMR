@@ -73,6 +73,7 @@ endif()
 option(HSMR_USE_SDL "Use SDL3 for platform abstraction" ON)
 option(HSMR_ENABLE_IMGUI "Enable ImGui integration" ON)
 option(HSMR_ENABLE_TRACY "Enable Tracy profiler" ON)
+option(HSMR_SHADER_TRANSPILE_DEBUG "Dump runtime Slang transpile outputs" OFF)
 
 # SDL3 Configuration
 if(HSMR_USE_SDL)
@@ -166,7 +167,6 @@ set(HS_SHADER_SYSTEM_DIR "Source/ShaderSystem")
 set(HS_EDITOR_DIR "Source/Editor")
 set(HS_CLIENT_DIR "Source/Client")
 set(HS_SHADER_DIR "Shader")
-
 
 # =========================================
 # 라이브러리 빌드 후 자동 설치 함수 (변경 시에만)

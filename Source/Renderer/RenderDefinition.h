@@ -46,6 +46,8 @@ struct HS_SHADER_ALIGNED LightUBO
     HS_SHADER_ALIGNED glm::vec3 direction;
     HS_SHADER_ALIGNED int type;
 };
+static_assert(sizeof(LightUBO) == 80, "Something Wrong");
+
 #pragma endregion
 
 HS_NS_END
