@@ -1201,7 +1201,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 
     VulkanResourceSet* resourceSetVK = new VulkanResourceSet(name);
     resourceSetVK->handle            = rSetVk;
-    resourceSetVK->layoutVK          = layoutVK;
+    resourceSetVK->layouts.push_back(resourceLayouts);
 
     setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
 
