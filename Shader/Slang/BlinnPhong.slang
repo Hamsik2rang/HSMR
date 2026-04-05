@@ -48,8 +48,8 @@ FSInput VertexMain(VSInput input)
 float4 FragmentMain(FSInput input) : SV_Target
 {
     float3 N = normalize(input.normalWS);
-    float3 L = normalize(lightUBO.directionAndType.xyz); // Directional Light
-    float3 V = normalize(perView.cameraPositionAndTime.xyz - input.positionWS);
+    float3 L = normalize(lightUBO.direction.xyz); // Directional Light
+    float3 V = normalize(perView.cameraPos.xyz - input.positionWS);
     float3 H = normalize(L + V);
 
     float3 lightColor  = float3(1.0, 0.98, 0.95);
