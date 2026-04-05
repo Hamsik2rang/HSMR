@@ -80,7 +80,8 @@ struct HS_RHI_API VulkanResourceSet : public RHIResourceSet
     {}
     ~VulkanResourceSet() final = default;
 
-    VkDescriptorSet handle         = VK_NULL_HANDLE;
+    VkDescriptorSet       handle   = VK_NULL_HANDLE;
+    VkDescriptorPool      pool     = VK_NULL_HANDLE;
     VulkanResourceLayout* layoutVK = nullptr;
 };
 

@@ -20,31 +20,31 @@ HS_NS_BEGIN
 // TODO: 리플렉션으로 자동 구성하는게 이상적임
 struct HS_SHADER_ALIGNED PerDraw
 {
-    glm::mat4x4 modelMatrix;
-    glm::mat4x4 inverseModelMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 modelMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 inverseModelMatrix;
 };
 
 struct HS_SHADER_ALIGNED PerView
 {
-    glm::mat4x4 viewMatrix;
-    glm::mat4x4 projectionMatrix;
-    glm::mat4x4 viewProjectionMatrix;
-    glm::mat4x4 inverseViewMatrix;
-    glm::mat4x4 inverseProjectionMatrix;
-    glm::mat4x4 inverseViewProjectionMatrix;
-    glm::vec3 cameraPosition; // w: padding
-    float time;
-    glm::vec2 resolution;
-    glm::vec2 padding;
+    HS_SHADER_ALIGNED glm::mat4x4 viewMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 projectionMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 viewProjectionMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 inverseViewMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 inverseProjectionMatrix;
+    HS_SHADER_ALIGNED glm::mat4x4 inverseViewProjectionMatrix;
+    HS_SHADER_ALIGNED glm::vec3 cameraPosition; // w: padding
+    HS_SHADER_ALIGNED float time;
+    HS_SHADER_ALIGNED glm::vec2 resolution;
+    HS_SHADER_ALIGNED glm::vec2 padding;
 };
 
 struct HS_SHADER_ALIGNED LightUBO
 {
-    glm::vec4 position;
-    glm::vec3 color;
-    float intensity;
-    glm::vec3 direction;
-    int type;
+    HS_SHADER_ALIGNED glm::vec4 position;
+    HS_SHADER_ALIGNED glm::vec3 color;
+    HS_SHADER_ALIGNED float intensity;
+    HS_SHADER_ALIGNED glm::vec3 direction;
+    HS_SHADER_ALIGNED int type;
 };
 #pragma endregion
 

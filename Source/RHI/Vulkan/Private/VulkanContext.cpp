@@ -1069,7 +1069,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
     VulkanResourceLayout* layoutVK = static_cast<VulkanResourceLayout*>(resourceLayouts);
 
     // Create a Vulkan resource set
-    VkDescriptorSet rSetVk = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr);
+    VkDescriptorPool usedPool  = VK_NULL_HANDLE;
+    VkDescriptorSet  rSetVk    = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr, usedPool);
 
     if (rSetVk == VK_NULL_HANDLE)
     {
@@ -1201,6 +1202,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 
     VulkanResourceSet* resourceSetVK = new VulkanResourceSet(name);
     resourceSetVK->handle            = rSetVk;
+    resourceSetVK->pool              = usedPool;
     resourceSetVK->layoutVK          = layoutVK;
 
     setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
@@ -1214,8 +1216,9 @@ void VulkanContext::DestroyResourceSet(RHIResourceSet* resourceSet)
     VulkanResourceSet* resourceSetVK = static_cast<VulkanResourceSet*>(resourceSet);
     if (resourceSetVK->handle != VK_NULL_HANDLE)
     {
-        _descriptorPoolAllocator.FreeDescriptorSet(resourceSetVK->handle);
+        _descriptorPoolAllocator.FreeDescriptorSet(resourceSetVK->handle, resourceSetVK->pool);
         resourceSetVK->handle = VK_NULL_HANDLE;
+        resourceSetVK->pool   = VK_NULL_HANDLE;
     }
     delete resourceSetVK;
 }

@@ -54,7 +54,8 @@ void VulkanDescriptorPoolAllocator::Finalize()
     _fullPools.clear();
 }
 
-VkDescriptorSet VulkanDescriptorPoolAllocator::AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next)
+VkDescriptorSet VulkanDescriptorPoolAllocator::AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next,
+                                                                       VkDescriptorPool& outPool)
 {
     VkDescriptorPool pool = acquirePool();
 
@@ -69,7 +70,6 @@ VkDescriptorSet VulkanDescriptorPoolAllocator::AllocateDescriptorSet(const VkDes
     VkResult result = vkAllocateDescriptorSets(_device->logicalDevice, &allocInfo, &descriptorSet);
     if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_ERROR_FRAGMENTED_POOL)
     {
-
         _fullPools.push_back(pool);
 
         pool                     = acquirePool();
@@ -79,27 +79,17 @@ VkDescriptorSet VulkanDescriptorPoolAllocator::AllocateDescriptorSet(const VkDes
     }
 
     _readyPools.push_back(pool);
+    outPool = pool;
 
     return descriptorSet;
 }
 
-void VulkanDescriptorPoolAllocator::FreeDescriptorSet(VkDescriptorSet set)
+void VulkanDescriptorPoolAllocator::FreeDescriptorSet(VkDescriptorSet set, VkDescriptorPool pool)
 {
-    if (set == VK_NULL_HANDLE)
-    {
-        return;
-    }
-    // Reset the descriptor set
-    vkFreeDescriptorSets(_device->logicalDevice, _readyPools.back(), 1, &set);
-    // Add the pool back to the ready pools
-    if (!_readyPools.empty())
-    {
-        vkResetDescriptorPool(_device->logicalDevice, _readyPools.back(), 0);
-    }
-    else
-    {
-        vkResetDescriptorPool(_device->logicalDevice, _fullPools.back(), 0);
-    }
+    if (set == VK_NULL_HANDLE || pool == VK_NULL_HANDLE) return;
+    vkFreeDescriptorSets(_device->logicalDevice, pool, 1, &set);
+    // vkResetDescriptorPool을 호출하지 않습니다.
+    // 풀 전체 정리는 Finalize()에서만 수행합니다.
 }
 
 VkDescriptorPool VulkanDescriptorPoolAllocator::acquirePool()
