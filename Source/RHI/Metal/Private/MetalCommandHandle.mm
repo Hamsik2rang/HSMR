@@ -11,6 +11,20 @@
 
 HS_NS_BEGIN
 
+static uint32 resolveStageBinding(const ResourceBinding& binding, EShaderStage stage)
+{
+    const uint32 resolved = binding.nativeBindingSlots.GetStageBindingOr(binding.binding, stage);
+    if (!binding.nativeBindingSlots.HasStageBinding(stage))
+    {
+//        HS_LOG(debug,
+//               "[MetalCommandBuffer] Fallback to logical binding %u for resource '%s' on stage %u",
+//               static_cast<uint32>(binding.binding),
+//               binding.name.empty() ? "(unnamed)" : binding.name.c_str(),
+//               static_cast<uint32>(stage));
+    }
+    return resolved;
+}
+
 //
 // id<MTLCommandBuffer>        handle;
 // id<MTLRenderCommandEncoder> curRenderEncoder;
@@ -171,18 +185,22 @@ void MetalCommandBuffer::BindResourceSet(RHIResourceSet* rSet)
             {
                 case EResourceType::UniformBuffer:
                 {
-                    bindBuffers(rb.stage, rb.binding, rb.resource.buffers.data(), rb.resource.offsets.data(), rb.arrayCount);
+                    bindBuffers(rb);
                 }
                 break;
                 case EResourceType::CombinedImageSampler:
                 case EResourceType::SampledImage:
                 {
-                    bindTextures(rb.stage, rb.binding, rb.resource.textures.data(), rb.arrayCount);
+                    bindTextures(rb);
+                    if (rb.type == EResourceType::CombinedImageSampler && !rb.resource.samplers.empty())
+                    {
+                        bindSamplers(rb);
+                    }
                 }
                 break;
                 case EResourceType::Sampler:
                 {
-                    bindSamplers(rb.stage, rb.binding, rb.resource.samplers.data(), rb.arrayCount);
+                    bindSamplers(rb);
                 }
                 break;
                 default:
@@ -308,7 +326,8 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
                         MetalBuffer* buffer = static_cast<MetalBuffer*>(rb.resource.buffers[k]);
-                        [curComputeEncoder setBuffer:buffer->handle offset:rb.resource.offsets[k] atIndex:rb.binding + k];
+                        const uint32 bindingIndex = resolveStageBinding(rb, EShaderStage::Compute);
+                        [curComputeEncoder setBuffer:buffer->handle offset:rb.resource.offsets[k] atIndex:bindingIndex + k];
                     }
                 }
                 break;
@@ -319,7 +338,8 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
                         MetalTexture* texture = static_cast<MetalTexture*>(rb.resource.textures[k]);
-                        [curComputeEncoder setTexture:texture->handle atIndex:rb.binding + k];
+                        const uint32 bindingIndex = resolveStageBinding(rb, EShaderStage::Compute);
+                        [curComputeEncoder setTexture:texture->handle atIndex:bindingIndex + k];
                     }
                 }
                 break;
@@ -328,7 +348,8 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     for (uint8 k = 0; k < rb.arrayCount; k++)
                     {
                         MetalSampler* sampler = static_cast<MetalSampler*>(rb.resource.samplers[k]);
-                        [curComputeEncoder setSamplerState:sampler->handle atIndex:rb.binding + k];
+                        const uint32 bindingIndex = resolveStageBinding(rb, EShaderStage::Compute);
+                        [curComputeEncoder setSamplerState:sampler->handle atIndex:bindingIndex + k];
                     }
                 }
                 break;
@@ -415,92 +436,68 @@ void MetalCommandBuffer::PopDebugMark()
     [curRenderEncoder popDebugGroup];
 }
 
-void MetalCommandBuffer::bindBuffers(EShaderStage stage, uint8 binding, RHIBuffer* const* buffers, const uint32* offsets, uint8 arrayCount)
+void MetalCommandBuffer::bindBuffers(const ResourceBinding& binding)
 {
-    MetalBuffer* const* MetalBuffers = reinterpret_cast<MetalBuffer* const*>(buffers);
-    std::vector<id<MTLBuffer>> handles(arrayCount);
-    std::vector<NSUInteger> nsOffsets(arrayCount);
-    for (size_t i = 0; i < arrayCount; i++)
+    MetalBuffer* const* metalBuffers = reinterpret_cast<MetalBuffer* const*>(binding.resource.buffers.data());
+    std::vector<id<MTLBuffer>> handles(binding.arrayCount);
+    std::vector<NSUInteger> nsOffsets(binding.arrayCount);
+    for (size_t i = 0; i < binding.arrayCount; i++)
     {
-        handles[i] = MetalBuffers[i]->handle;
-        nsOffsets[i] = offsets[i];
+        handles[i] = metalBuffers[i]->handle;
+        nsOffsets[i] = binding.resource.offsets[i];
     }
 
-    switch (stage)
+    if ((binding.stage & EShaderStage::Vertex) != EShaderStage::None)
     {
-        case EShaderStage::Vertex:
-        {
-            [curRenderEncoder setVertexBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        case EShaderStage::Fragment:
-        {
-            [curRenderEncoder setFragmentBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Vertex);
+        [curRenderEncoder setVertexBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
+    }
+    if ((binding.stage & EShaderStage::Fragment) != EShaderStage::None)
+    {
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Fragment);
+        [curRenderEncoder setFragmentBuffers:handles.data() offsets:nsOffsets.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
     }
 }
 
-void MetalCommandBuffer::bindTextures(EShaderStage stage, uint8 binding, RHITexture* const* textures, uint8 arrayCount)
+void MetalCommandBuffer::bindTextures(const ResourceBinding& binding)
 {
-    MetalTexture* const* mtlTextures = reinterpret_cast<MetalTexture* const*>(textures);
-    std::vector<id<MTLTexture>> handles(arrayCount);
-    for (size_t i = 0; i < arrayCount; i++)
+    MetalTexture* const* mtlTextures = reinterpret_cast<MetalTexture* const*>(binding.resource.textures.data());
+    std::vector<id<MTLTexture>> handles(binding.arrayCount);
+    for (size_t i = 0; i < binding.arrayCount; i++)
     {
         handles[i] = mtlTextures[i]->handle;
     }
 
-    switch (stage)
+    if ((binding.stage & EShaderStage::Vertex) != EShaderStage::None)
     {
-        case EShaderStage::Vertex:
-        {
-            [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        case EShaderStage::Fragment:
-        {
-            [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Vertex);
+        [curRenderEncoder setVertexTextures:handles.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
+    }
+    if ((binding.stage & EShaderStage::Fragment) != EShaderStage::None)
+    {
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Fragment);
+        [curRenderEncoder setFragmentTextures:handles.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
     }
 }
 
-void MetalCommandBuffer::bindSamplers(EShaderStage stage, uint8 binding, RHISampler* const* samplers, uint8 arrayCount)
+void MetalCommandBuffer::bindSamplers(const ResourceBinding& binding)
 {
-    MetalSampler* const* mtlSamplers = reinterpret_cast<MetalSampler* const*>(samplers);
-    std::vector<id<MTLSamplerState>> handles(arrayCount);
-    for (size_t i = 0; i < arrayCount; i++)
+    MetalSampler* const* mtlSamplers = reinterpret_cast<MetalSampler* const*>(binding.resource.samplers.data());
+    std::vector<id<MTLSamplerState>> handles(binding.arrayCount);
+    for (size_t i = 0; i < binding.arrayCount; i++)
     {
         handles[i] = mtlSamplers[i]->handle;
     }
 
-    switch (stage)
+    if ((binding.stage & EShaderStage::Vertex) != EShaderStage::None)
     {
-        case EShaderStage::Vertex:
-        {
-            [curRenderEncoder setVertexSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        case EShaderStage::Fragment:
-        {
-            [curRenderEncoder setFragmentSamplerStates:handles.data() withRange:NSMakeRange(binding, arrayCount)];
-        }
-        break;
-        default:
-        {
-            HS_LOG(crash, "Not Implemented ResourceType");
-        }
-        break;
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Vertex);
+        [curRenderEncoder setVertexSamplerStates:handles.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
+    }
+    if ((binding.stage & EShaderStage::Fragment) != EShaderStage::None)
+    {
+        const uint32 stageBinding = resolveStageBinding(binding, EShaderStage::Fragment);
+        [curRenderEncoder setFragmentSamplerStates:handles.data() withRange:NSMakeRange(stageBinding, binding.arrayCount)];
     }
 }
 HS_NS_END

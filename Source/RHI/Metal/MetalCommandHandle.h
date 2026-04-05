@@ -91,9 +91,9 @@ public:
     id<MTLCommandQueue> cmdQueue;
 
 private:
-    void bindBuffers(EShaderStage stage, uint8 binding, RHIBuffer* const* buffers, const uint32* offsets, uint8 arrayCount);
-    void bindTextures(EShaderStage stage, uint8 binding, RHITexture* const* textures, uint8 arrayCount);
-    void bindSamplers(EShaderStage stage, uint8 binding, RHISampler* const* samplers, uint8 arrayCount);
+    void bindBuffers(const ResourceBinding& binding);
+    void bindTextures(const ResourceBinding& binding);
+    void bindSamplers(const ResourceBinding& binding);
 
     bool _isBegan;
     bool _isRenderPassBegan;

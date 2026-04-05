@@ -315,7 +315,7 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
 
     if (nil == library)
     {
-        HS_LOG(crash, "Fail to cretae MTLLibrary");
+        HS_LOG(crash, "Fail to cretae MTLLibrary, error code: %d");
         return nullptr;
     }
     NSString* entry = [NSString stringWithCString:info.entryName encoding:NSUTF8StringEncoding];
@@ -589,6 +589,10 @@ void MetalContext::DestroyResourceLayout(RHIResourceLayout* resLayout)
 RHIResourceSet* MetalContext::CreateResourceSet(const char* name, RHIResourceLayout* resourceLayout)
 {
     MetalResourceSet* resSetMetal = new MetalResourceSet(name);
+    if (resourceLayout)
+    {
+        resSetMetal->layouts.push_back(resourceLayout);
+    }
 
     return static_cast<RHIResourceSet*>(resSetMetal);
 }
