@@ -563,10 +563,6 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
 
     // Create resource set
     resources.resourceSet = _rhiContext->CreateResourceSet("AutoResourceSet", resources.resourceLayout);
-    if (resources.resourceSet)
-    {
-        resources.resourceSet->layouts.push_back(resources.resourceLayout);
-    }
 
     resources.isValid = true;
     HS_LOG(info, "[RenderResourceManager] Material resources created for shader '%s'", shader->GetShaderName().c_str());
@@ -631,6 +627,63 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
 )
 {
     std::vector<ResourceBinding> bindings;
+    auto appendBufferBinding = [&bindings](const ShaderBufferBindingInfo& buf, RHIBuffer* targetBuffer)
+    {
+        ResourceBinding binding{};
+        binding.type               = buf.resourceType;
+        binding.stage              = buf.stages;
+        binding.binding            = static_cast<uint8>(buf.binding);
+        binding.arrayCount         = 1;
+        binding.name               = buf.name;
+        binding.nameHash           = buf.nameHash;
+        binding.nativeBindingSlots = buf.nativeBindingSlots;
+        binding.resource.buffers.push_back(targetBuffer);
+        binding.resource.offsets.push_back(0);
+        bindings.push_back(std::move(binding));
+    };
+
+    auto appendTextureBinding = [&bindings](const ShaderTextureBindingInfo& tex, RHITexture* texture)
+    {
+        ResourceBinding binding{};
+        binding.type               = EResourceType::SampledImage;
+        binding.stage              = tex.stages;
+        binding.binding            = static_cast<uint8>(tex.binding);
+        binding.arrayCount         = 1;
+        binding.name               = tex.name;
+        binding.nameHash           = tex.nameHash;
+        binding.nativeBindingSlots = tex.nativeBindingSlots;
+        binding.resource.textures.push_back(texture);
+        bindings.push_back(std::move(binding));
+    };
+
+    auto appendSamplerBinding = [&bindings](const ShaderSamplerBindingInfo& samp, RHISampler* sampler)
+    {
+        ResourceBinding binding{};
+        binding.type               = EResourceType::Sampler;
+        binding.stage              = samp.stages;
+        binding.binding            = static_cast<uint8>(samp.binding);
+        binding.arrayCount         = 1;
+        binding.name               = samp.name;
+        binding.nameHash           = samp.nameHash;
+        binding.nativeBindingSlots = samp.nativeBindingSlots;
+        binding.resource.samplers.push_back(sampler);
+        bindings.push_back(std::move(binding));
+    };
+
+    auto appendCombinedBinding = [&bindings](const ShaderTextureBindingInfo& tex, RHITexture* texture, RHISampler* sampler)
+    {
+        ResourceBinding binding{};
+        binding.type               = EResourceType::CombinedImageSampler;
+        binding.stage              = tex.stages;
+        binding.binding            = static_cast<uint8>(tex.binding);
+        binding.arrayCount         = 1;
+        binding.name               = tex.name;
+        binding.nameHash           = tex.nameHash;
+        binding.nativeBindingSlots = tex.nativeBindingSlots;
+        binding.resource.textures.push_back(texture);
+        binding.resource.samplers.push_back(sampler);
+        bindings.push_back(std::move(binding));
+    };
 
     // 1. Buffer bindings (perView, perDraw)
     for (const auto& buf : reflection.bufferBindings)
@@ -656,42 +709,7 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         }
 
         if (!targetBuffer) continue;
-
-#ifdef __APPLE__
-        // Metal: separate bindings per stage
-        if ((buf.stages & EShaderStage::Vertex) != EShaderStage::None)
-        {
-            ResourceBinding binding{};
-            binding.type       = buf.resourceType;
-            binding.stage      = EShaderStage::Vertex;
-            binding.binding    = static_cast<uint8>(buf.binding);
-            binding.arrayCount = 1;
-            binding.resource.buffers.push_back(targetBuffer);
-            binding.resource.offsets.push_back(0);
-            bindings.push_back(std::move(binding));
-        }
-        if ((buf.stages & EShaderStage::Fragment) != EShaderStage::None)
-        {
-            ResourceBinding binding{};
-            binding.type       = buf.resourceType;
-            binding.stage      = EShaderStage::Fragment;
-            binding.binding    = static_cast<uint8>(buf.binding);
-            binding.arrayCount = 1;
-            binding.resource.buffers.push_back(targetBuffer);
-            binding.resource.offsets.push_back(0);
-            bindings.push_back(std::move(binding));
-        }
-#elif __WINDOWS__
-        // Vulkan: combined stage visibility
-        ResourceBinding binding{};
-        binding.type       = buf.resourceType;
-        binding.stage      = buf.stages;
-        binding.binding    = static_cast<uint8>(buf.binding);
-        binding.arrayCount = 1;
-        binding.resource.buffers.push_back(targetBuffer);
-        binding.resource.offsets.push_back(0);
-        bindings.push_back(std::move(binding));
-#endif
+        appendBufferBinding(buf, targetBuffer);
     }
 
     // 2. Texture bindings (combined image sampler)
@@ -715,48 +733,36 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
                 HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'", tex.name.c_str());
                 continue;
             }
-
-#ifdef __APPLE__
-            // Metal: separate texture and sampler bindings per stage
-            if ((tex.stages & EShaderStage::Fragment) != EShaderStage::None)
+            const ShaderSamplerBindingInfo* matchedSampler = nullptr;
+            for (const auto& samp : reflection.samplerBindings)
             {
-                ResourceBinding texBinding{};
-                texBinding.type       = EResourceType::SampledImage;
-                texBinding.stage      = EShaderStage::Fragment;
-                texBinding.binding    = static_cast<uint8>(tex.binding);
-                texBinding.arrayCount = 1;
-                texBinding.resource.textures.push_back(imgRes->texture);
-                bindings.push_back(std::move(texBinding));
-
-                // Find matching sampler binding
-                for (const auto& samp : reflection.samplerBindings)
+                if (samp.nameHash == tex.nameHash && samp.stages == tex.stages)
                 {
-                    if ((samp.stages & EShaderStage::Fragment) != EShaderStage::None)
-                    {
-                        ResourceBinding sampBinding{};
-                        sampBinding.type       = EResourceType::Sampler;
-                        sampBinding.stage      = EShaderStage::Fragment;
-                        sampBinding.binding    = static_cast<uint8>(samp.binding);
-                        sampBinding.arrayCount = 1;
-                        sampBinding.resource.samplers.push_back(imgRes->sampler);
-                        bindings.push_back(std::move(sampBinding));
-                        break; // Use first matching sampler
-                    }
+                    matchedSampler = &samp;
+                    break;
+                }
+                if (!matchedSampler && samp.nameHash == tex.nameHash)
+                {
+                    matchedSampler = &samp;
                 }
             }
-#elif __WINDOWS__
-            // Vulkan: combined image sampler
-            ResourceBinding binding{};
-            binding.type       = EResourceType::CombinedImageSampler;
-            binding.stage      = tex.stages;
-            binding.binding    = static_cast<uint8>(tex.binding);
-            binding.arrayCount = 1;
-            binding.resource.textures.push_back(imgRes->texture);
-            binding.resource.samplers.push_back(imgRes->sampler);
-            bindings.push_back(std::move(binding));
+
+            if (!matchedSampler && !reflection.samplerBindings.empty())
+            {
+                matchedSampler = &reflection.samplerBindings.front();
+            }
+
+            if (matchedSampler)
+            {
+                appendTextureBinding(tex, imgRes->texture);
+                appendSamplerBinding(*matchedSampler, imgRes->sampler);
+            }
+            else
+            {
+                appendCombinedBinding(tex, imgRes->texture, imgRes->sampler);
+            }
 
             HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
-#endif
         }
     }
 
