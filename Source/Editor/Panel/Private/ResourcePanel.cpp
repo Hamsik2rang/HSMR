@@ -15,9 +15,12 @@
 #include "Scene/Components/Components.h"
 
 #include "Resource/Model.h"
+#include "Resource/Mesh.h"
 
 #include "ImGui/imgui.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 
 HS_NS_EDITOR_BEGIN
@@ -112,9 +115,9 @@ void ResourcePanel::Draw()
         ImGui::SameLine();
     }
 
-    // Right: Asset grid
-    ImGui::BeginChild("AssetGrid", ImVec2(0, 0), true);
-    drawAssetGrid();
+    // Right: Asset list
+    ImGui::BeginChild("AssetList", ImVec2(0, 0), true);
+    drawAssetList();
     ImGui::EndChild();
 
     // Context menu
@@ -249,7 +252,7 @@ void ResourcePanel::drawFolderTreeNode(const FolderEntry& folder)
     }
 }
 
-void ResourcePanel::drawAssetGrid()
+void ResourcePanel::drawAssetList()
 {
     auto assets = AssetDatabase::Get().GetAssetsInFolder(_currentPath);
     auto subFolders = AssetDatabase::Get().GetSubFolders(_currentPath);
@@ -258,15 +261,8 @@ void ResourcePanel::drawAssetGrid()
     std::string searchStr(_searchBuffer);
     for (auto& c : searchStr) c = static_cast<char>(std::tolower(c));
 
-    float padding = 8.0f;
-    float cellSize = _thumbnailSize + padding;
-    float panelWidth = ImGui::GetContentRegionAvail().x;
-    int columnCount = static_cast<int>(panelWidth / cellSize);
-    if (columnCount < 1) columnCount = 1;
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 3.0f));
 
-    ImGui::Columns(columnCount, nullptr, false);
-
-    // Draw subfolders first
     for (const auto& folderPath : subFolders)
     {
         size_t lastSlash = folderPath.rfind('/');
@@ -284,37 +280,15 @@ void ResourcePanel::drawAssetGrid()
         }
 
         ImGui::PushID(folderPath.c_str());
-
-        ImGui::BeginGroup();
-
-        // Folder button
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
-        if (ImGui::Button(ICON_FA_FOLDER, ImVec2(_thumbnailSize, _thumbnailSize)))
+        std::string label = std::string(ICON_FA_FOLDER) + " " + folderName;
+        bool isSelected = (folderPath == _currentPath);
+        if (ImGui::Selectable(label.c_str(), isSelected, 0, ImVec2(-1.0f, 0.0f)))
         {
             navigateToFolder(folderPath);
         }
-        ImGui::PopStyleColor();
-
-        // Folder name (truncated)
-        float textWidth = ImGui::CalcTextSize(folderName.c_str()).x;
-        if (textWidth > _thumbnailSize)
-        {
-            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + _thumbnailSize);
-            ImGui::TextWrapped("%s", folderName.c_str());
-            ImGui::PopTextWrapPos();
-        }
-        else
-        {
-            ImGui::TextUnformatted(folderName.c_str());
-        }
-
-        ImGui::EndGroup();
-
         ImGui::PopID();
-        ImGui::NextColumn();
     }
 
-    // Draw assets
     for (const auto* asset : assets)
     {
         // Apply search filter
@@ -327,10 +301,9 @@ void ResourcePanel::drawAssetGrid()
         }
 
         drawAssetItem(asset);
-        ImGui::NextColumn();
     }
 
-    ImGui::Columns(1);
+    ImGui::PopStyleVar();
 }
 
 void ResourcePanel::drawAssetItem(const AssetEntry* asset)
@@ -339,24 +312,14 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
 
     bool isSelected = (_selectedAssetPath == asset->relativePath);
 
-    ImGui::BeginGroup();
-
-    // Asset type icon/thumbnail
     const char* icon = GetAssetTypeIcon(asset->type);
-
-    ImVec4 buttonColor = isSelected
-        ? ImVec4(0.3f, 0.5f, 0.7f, 0.8f)
-        : ImVec4(0.2f, 0.2f, 0.2f, 0.5f);
-
-    ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
-    if (ImGui::Button(icon, ImVec2(_thumbnailSize, _thumbnailSize)))
+    std::string label = std::string(icon) + " " + asset->name;
+    if (ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick, ImVec2(-1.0f, 0.0f)))
     {
         _selectedAssetPath = asset->relativePath;
     }
-    ImGui::PopStyleColor();
 
-    // Double-click to open/import
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
     {
         if (asset->type == EAssetType::Model)
         {
@@ -378,6 +341,12 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
                     if (model->GetMaterial())
                     {
                         meshRenderer.materials.push_back(model->GetMaterial());
+                    }
+                    if (meshRenderer.mesh)
+                    {
+                        const auto& bound = meshRenderer.mesh->GetBound();
+                        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                        meshRenderer.boundsDirty = true;
                     }
 
                     EditorContext::Get().SetSelectedEntity(entity);
@@ -415,21 +384,6 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
         ImGui::TextDisabled("Size: %llu bytes", asset->fileSize);
         ImGui::EndTooltip();
     }
-
-    // Asset name (truncated)
-    float textWidth = ImGui::CalcTextSize(asset->name.c_str()).x;
-    if (textWidth > _thumbnailSize)
-    {
-        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + _thumbnailSize);
-        ImGui::TextWrapped("%s", asset->name.c_str());
-        ImGui::PopTextWrapPos();
-    }
-    else
-    {
-        ImGui::TextUnformatted(asset->name.c_str());
-    }
-
-    ImGui::EndGroup();
 
     ImGui::PopID();
 }

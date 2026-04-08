@@ -62,6 +62,7 @@ void InspectorPanel::Draw()
 
     if (!selectedEntity.IsValid())
     {
+        EditorContext::Get().ClearSelection();
         ImGui::TextDisabled("No entity selected");
         ImGui::End();
         return;
@@ -156,6 +157,19 @@ void InspectorPanel::drawTransformComponent(Entity entity)
             transform.SetScale(scale);
         }
 
+        ImGui::Separator();
+        glm::vec3 worldPosition = transform.GetWorldPosition();
+        ImGui::Text("World Position: %.3f, %.3f, %.3f", worldPosition.x, worldPosition.y, worldPosition.z);
+        ImGui::Text("Children: %zu", transform.children.size());
+        if (transform.HasParent())
+        {
+            ImGui::Text("Parent: %u", static_cast<uint32>(transform.parent));
+        }
+        else
+        {
+            ImGui::TextDisabled("Parent: None");
+        }
+
         ImGui::Unindent();
     }
 }
@@ -212,6 +226,12 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                     if (model)
                     {
                         meshRenderer.mesh = model->GetMesh();
+                        if (meshRenderer.mesh)
+                        {
+                            const auto& bound = meshRenderer.mesh->GetBound();
+                            meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                            meshRenderer.boundsDirty = true;
+                        }
 
                         // Also assign material if available and no materials set
                         if (meshRenderer.materials.empty() && model->GetMaterial())
@@ -219,8 +239,6 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                             meshRenderer.materials.push_back(model->GetMaterial());
                         }
 
-                        // Update bounds from mesh if available
-                        // TODO: Get bounds from mesh when Mesh::GetBounds() is implemented
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -242,11 +260,17 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                     ImGui::PushID(static_cast<int>(i));
 
                     Material* mat = meshRenderer.GetMaterial(i);
-                    const char* matName = mat ? "Assigned" : "None";
 
                     char label[32];
                     snprintf(label, sizeof(label), "[%u]", i);
-                    ImGui::Text("%s %s", label, matName);
+                    if (mat)
+                    {
+                        ImGui::Text("%s Material #%llu", label, static_cast<unsigned long long>(mat->GetObjectId()));
+                    }
+                    else
+                    {
+                        ImGui::TextDisabled("%s None", label);
+                    }
 
                     ImGui::PopID();
                 }
@@ -355,6 +379,9 @@ void InspectorPanel::drawCameraComponent(Entity entity)
         // Flags
         ImGui::Checkbox("Primary", &camera.isPrimary);
         ImGui::Checkbox("Active", &camera.isActive);
+
+        ImGui::Separator();
+        ImGui::DragFloat4("Viewport", &camera.viewport.x, 0.01f, 0.0f, 1.0f, "%.2f");
 
         ImGui::Unindent();
     }

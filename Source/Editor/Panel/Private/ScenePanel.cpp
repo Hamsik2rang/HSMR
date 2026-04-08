@@ -16,6 +16,7 @@
 #include "Scene/Components/Components.h"
 
 #include "Resource/Model.h"
+#include "Resource/Mesh.h"
 
 // For matrix decomposition
 #define GLM_ENABLE_EXPERIMENTAL
@@ -197,6 +198,12 @@ void ScenePanel::Draw()
                     Entity entity      = scene->CreateEntity(entityName);
                     auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
                     meshRenderer.mesh  = model->GetMesh();
+                    if (meshRenderer.mesh)
+                    {
+                        const auto& bound = meshRenderer.mesh->GetBound();
+                        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                        meshRenderer.boundsDirty = true;
+                    }
                     if (model->GetMaterial())
                     {
                         meshRenderer.materials.push_back(model->GetMaterial());
@@ -419,6 +426,10 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
             continue;
+        if (!meshRenderer.isVisible)
+            continue;
+        if (entity.HasComponent<TagComponent>() && !entity.GetComponent<TagComponent>().isActive)
+            continue;
 
         // Use worldBounds if valid, otherwise create default bounds from transform
         AABB bounds = meshRenderer.worldBounds;
@@ -449,6 +460,8 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
     {
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
+            continue;
+        if (!tag.isActive)
             continue;
 
         // Skip if already has MeshRendererComponent (handled above)
