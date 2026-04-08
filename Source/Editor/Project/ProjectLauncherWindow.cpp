@@ -325,7 +325,7 @@ void ProjectLauncherWindow::drawNewProjectDialog()
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(550, 220));
+    ImGui::SetNextWindowSize(ImVec2(600, 300));
 
     if (ImGui::BeginPopupModal("New Project", &_showNewProjectDialog, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -362,7 +362,7 @@ void ProjectLauncherWindow::drawNewProjectDialog()
             fullPath += HS_DIR_SEPERATOR;
         }
         fullPath += _newProjectNameBuffer;
-        ImGui::TextDisabled("Project will be created at: %s", fullPath.c_str());
+        //ImGui::TextDisabled("Project will be created at: %s", fullPath.c_str());
 
         ImGui::Spacing();
         ImGui::Separator();
