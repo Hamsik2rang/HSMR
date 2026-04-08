@@ -105,15 +105,15 @@ inline const char* GetAssetTypeIcon(EAssetType type)
 {
     switch (type)
     {
-        case EAssetType::Texture:  return "\xef\x87\x85";  // ICON_FA_IMAGE
-        case EAssetType::Model:    return "\xef\x86\xb2";  // ICON_FA_CUBE
-        case EAssetType::Material: return "\xef\x97\xbf";  // ICON_FA_PALETTE
-        case EAssetType::Shader:   return "\xef\x84\xae";  // ICON_FA_CODE
-        case EAssetType::Scene:    return "\xef\x80\x88";  // ICON_FA_FILM
-        case EAssetType::Audio:    return "\xef\x80\xa1";  // ICON_FA_MUSIC
-        case EAssetType::Font:     return "\xef\x80\xb1";  // ICON_FA_FONT
-        case EAssetType::Prefab:   return "\xef\x86\xae";  // ICON_FA_BOXES
-        default:                   return "\xef\x85\x9b";  // ICON_FA_FILE
+        case EAssetType::Texture:  return "[Tex]";
+        case EAssetType::Model:    return "[Model]";
+        case EAssetType::Material: return "[Mat]";
+        case EAssetType::Shader:   return "[Shader]";
+        case EAssetType::Scene:    return "[Scene]";
+        case EAssetType::Audio:    return "[Audio]";
+        case EAssetType::Font:     return "[Font]";
+        case EAssetType::Prefab:   return "[Prefab]";
+        default:                   return "[File]";
     }
 }
 

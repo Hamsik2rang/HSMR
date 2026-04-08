@@ -27,10 +27,10 @@ HS_NS_EDITOR_BEGIN
 
 // FontAwesome icons (fallback if not available)
 #ifndef ICON_FA_FOLDER
-#define ICON_FA_FOLDER "\xef\x81\xbc"
+#define ICON_FA_FOLDER "[Folder]"
 #endif
 #ifndef ICON_FA_FOLDER_OPEN
-#define ICON_FA_FOLDER_OPEN "\xef\x81\xbe"
+#define ICON_FA_FOLDER_OPEN "[Open]"
 #endif
 #ifndef ICON_FA_ARROW_LEFT
 #define ICON_FA_ARROW_LEFT "<"
@@ -233,7 +233,8 @@ void ResourcePanel::drawFolderTreeNode(const FolderEntry& folder)
     }
 
     const char* icon = (folder.relativePath == _currentPath) ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER;
-    std::string label = std::string(icon) + " " + folder.name;
+    std::string displayName = folder.name.empty() ? "Assets" : folder.name;
+    std::string label = std::string(icon) + " " + displayName;
 
     bool isOpen = ImGui::TreeNodeEx(label.c_str(), flags);
 
@@ -269,6 +270,10 @@ void ResourcePanel::drawAssetList()
         std::string folderName = (lastSlash != std::string::npos)
             ? folderPath.substr(lastSlash + 1)
             : folderPath;
+        if (folderName.empty())
+        {
+            folderName = folderPath;
+        }
 
         // Apply search filter
         if (!searchStr.empty())
@@ -313,7 +318,8 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
     bool isSelected = (_selectedAssetPath == asset->relativePath);
 
     const char* icon = GetAssetTypeIcon(asset->type);
-    std::string label = std::string(icon) + " " + asset->name;
+    const std::string& displayName = asset->name.empty() ? asset->relativePath : asset->name;
+    std::string label = std::string(icon) + " " + displayName;
     if (ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick, ImVec2(-1.0f, 0.0f)))
     {
         _selectedAssetPath = asset->relativePath;
@@ -370,7 +376,7 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
                                    asset->relativePath.size() + 1);
 
         // Drag preview
-        ImGui::Text("%s %s", icon, asset->name.c_str());
+        ImGui::Text("%s %s", icon, displayName.c_str());
 
         ImGui::EndDragDropSource();
     }
@@ -379,7 +385,7 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("%s", asset->name.c_str());
+        ImGui::Text("%s", displayName.c_str());
         ImGui::TextDisabled("Type: %s", GetAssetTypeName(asset->type));
         ImGui::TextDisabled("Size: %llu bytes", asset->fileSize);
         ImGui::EndTooltip();
