@@ -21,11 +21,10 @@ MetalSwapchain::MetalSwapchain(const SwapchainInfo& info)
     , _imageIndex(0)
     , _maxFrameCount(3)
     , _drawable(nil)
+    , _colorTextures(nullptr)
 {
     const NativeWindow* nh = info.nativeWindow;
     nativeHandle           = nh->handle;
-
-    NSWindow* window     = (__bridge NSWindow*)(nh->handle);
 
     _commandBuffers = new RHICommandBuffer*[_maxFrameCount];
 
@@ -36,8 +35,7 @@ MetalSwapchain::MetalSwapchain(const SwapchainInfo& info)
         _commandBuffers[i] = rhiContext->CreateCommandBuffer("CommandBuffer in Swapchain");
     }
 
-    setRenderPass();
-    setFramebuffers();
+    setRenderTargets();
 }
 
 MetalSwapchain::~MetalSwapchain()
@@ -52,38 +50,21 @@ MetalSwapchain::~MetalSwapchain()
             _commandBuffers[i] = nullptr;
         }
         
-        if(nullptr != _framebuffers[i])
+        if(nullptr != _colorTextures[i])
         {
-            rhiContext->DestroyFramebuffer(_framebuffers[i]);
-            _framebuffers[i] = nullptr;
+            rhiContext->DestroyTexture(_colorTextures[i]);
+            _colorTextures[i] = nullptr;
         }
     }
     delete[] _commandBuffers;
-    delete[] _framebuffers;
+    delete[] _colorTextures;
 }
 
-void MetalSwapchain::setRenderPass()
+void MetalSwapchain::setRenderTargets()
 {
-    RenderPassInfo info{};
-    info.isSwapchainRenderPass = true;
-    info.colorAttachmentCount  = 1;
-    Attachment colorAttachment{};
-    colorAttachment.format         = EPixelFormat::B8G8A8R8Unorm;
-    colorAttachment.clearValue     = ClearValue(0.5, 0.5, 0.5, 1.0);
-    colorAttachment.loadAction     = ELoadAction::Clear;
-    colorAttachment.storeAction    = EStoreAction::Store;
-    colorAttachment.isDepthStencil = false;
-    info.colorAttachments.push_back(colorAttachment);
+    HS_ASSERT(_colorTextures == nullptr, "Swapchain render targets already exist. Destroy them before creating new ones.");
 
-    _renderPass = RHIContext::Get()->CreateRenderPass("RenderPass in Swapchain", info);
-}
-
-void MetalSwapchain::setFramebuffers()
-{
-    HS_ASSERT(_framebuffers == nullptr, "Framebuffer is already exists. you should destroy it before creating new one.");
-
-    RHIContext* rhiContext = RHIContext::Get();
-    _framebuffers          = new RHIFramebuffer*[_maxFrameCount];
+    _colorTextures         = new RHITexture*[_maxFrameCount]{nullptr};
 
     for (uint8 i = 0; i < _maxFrameCount; i++)
     {
@@ -103,19 +84,7 @@ void MetalSwapchain::setFramebuffers()
         tInfo.byteSize             = tInfo.extent.width * tInfo.extent.height * 4; // Assuming 4 bytes per pixel
         tInfo.isDepthStencilBuffer = false;
 
-        RHITexture* texture = rhiContext->CreateTexture("Swapchain Framebffer Texture", nullptr, tInfo);
-
-        FramebufferInfo fbInfo{};
-        fbInfo.depthStencilBuffer     = nullptr;
-        fbInfo.resolveBuffer          = nullptr;
-        fbInfo.isSwapchainFramebuffer = true;
-        fbInfo.width                  = tInfo.extent.width;
-        fbInfo.height                 = tInfo.extent.height;
-        fbInfo.renderPass             = _renderPass;
-        fbInfo.colorBuffers.push_back(texture);
-
-        RHIFramebuffer* framebuffer = rhiContext->CreateFramebuffer("Swapchain Framebuffer", fbInfo);
-        _framebuffers[i]            = framebuffer;
+        _colorTextures[i] = new MetalTexture("Swapchain Texture", tInfo);
     }
 }
 

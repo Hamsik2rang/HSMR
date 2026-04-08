@@ -32,11 +32,22 @@ public:
     LegacyRenderingHandles GetLegacyRenderingHandles(const RenderingInfo& renderingInfo);
 
 private:
-    VkRenderPass createRenderPass(const RenderPassInfo& info);
+    struct LegacyRenderPassInfo
+    {
+        std::vector<Attachment> colorAttachments;
+        Attachment depthStencilAttachment;
+        uint8 colorAttachmentCount = 0;
+        bool useDepthStencilAttachment = false;
+        bool isSwapchainRenderPass = false;
+    };
+
+    VkRenderPass createRenderPass(const LegacyRenderPassInfo& info);
     VkFramebuffer createFramebuffer(VkRenderPass renderPass, const RenderingInfo& renderingInfo);
 
+    size_t makeRenderPassKey(const LegacyRenderPassInfo& info) const;
     size_t makeFramebufferKey(VkRenderPass renderPass, const RenderingInfo& renderingInfo) const;
-    RenderPassInfo makeCompatibleRenderPassInfo(const PipelineRenderTargetLayout& layout) const;
+    LegacyRenderPassInfo makeRenderPassInfo(const RenderingInfo& renderingInfo) const;
+    LegacyRenderPassInfo makeCompatibleRenderPassInfo(const PipelineRenderTargetLayout& layout) const;
 
     VulkanContext* _context = nullptr;
     VulkanDevice* _device = nullptr;

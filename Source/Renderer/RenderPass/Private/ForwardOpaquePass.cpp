@@ -32,16 +32,22 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
 
     const RenderTargetInfo& rtInfo = _currentRenderTarget->GetInfo();
 
-    _renderPassInfo = {};
+    _renderingInfo = {};
+    _renderingInfo.colorAttachmentCount = 1;
+    _renderingInfo.renderArea = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+    _renderingInfo.enableAutomaticTransitions = false;
 
-    _renderPassInfo.colorAttachmentCount = 1;
     Attachment ca{};
     ca.format         = rtInfo.colorTextureInfos[0].format;
     ca.clearValue     = ClearValue(0.33f, 0.33f, 0.33f, 1.0f);
     ca.isDepthStencil = false;
     ca.loadAction     = ELoadAction::Clear;
     ca.storeAction    = EStoreAction::Store;
-    _renderPassInfo.colorAttachments.push_back(ca);
+
+    RenderingAttachmentInfo colorAttachment{};
+    colorAttachment.texture = _currentRenderTarget->GetColorTexture(0);
+    colorAttachment.attachment = ca;
+    _renderingInfo.colorAttachments.push_back(colorAttachment);
 
     if (rtInfo.useDepthStencilTexture)
     {
@@ -51,37 +57,31 @@ void ForwardOpaquePass::Configure(RenderTarget* renderTarget)
         dsa.isDepthStencil                        = true;
         dsa.loadAction                            = ELoadAction::Clear;
         dsa.storeAction                           = EStoreAction::Store;
-        _renderPassInfo.depthStencilAttachment    = dsa;
-        _renderPassInfo.useDepthStencilAttachment = true;
+        _renderingInfo.depthStencilAttachment.texture = _currentRenderTarget->GetDepthStencilTexture();
+        _renderingInfo.depthStencilAttachment.attachment = dsa;
+        _renderingInfo.useDepthStencilAttachment = true;
     }
-
-    _renderPassInfo.isSwapchainRenderPass = false;
 }
 
-void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource)
+void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, const SceneResource& sceneResource)
 {
     RenderResourceManager* resMgr = _renderer->GetResourceManager();
-
-    RHIFramebuffer* framebuffer = _renderer->GetHandleCache()->GetFramebuffer(renderPass, _currentRenderTarget);
 
     float debugColor[4]{0.2f, 0.5f, 0.8f, 1.0f};
     commandBuffer->PushDebugMark("Opaque Pass", debugColor);
 
-    Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-
-    // Always begin the render pass to ensure proper image layout transitions and clear
-    commandBuffer->BeginRenderPass(renderPass, framebuffer, area);
+    commandBuffer->BeginRendering(_renderingInfo);
     commandBuffer->SetViewport(Viewport{0.0f, 0.0f,
-        static_cast<float>(framebuffer->info.width),
-        static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-    commandBuffer->SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+        static_cast<float>(_currentRenderTarget->GetWidth()),
+        static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+    commandBuffer->SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
 
     for (const auto& renderModel : sceneResource.renderModels)
     {
         // Get pipeline (pass-specific, can't be pre-resolved)
         Material* mat = renderModel.material;
         if (!mat) continue;
-        RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, renderPass);
+        RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, _renderingInfo.ToRenderTargetLayout());
         if (!pipeline) continue;
 
         // Bind and draw using pre-resolved resources
@@ -95,7 +95,7 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
         commandBuffer->DrawIndexed(0, renderModel.meshResource->indexCount, 1, 0);
     }
 
-    commandBuffer->EndRenderPass();
+    commandBuffer->EndRendering();
     commandBuffer->PopDebugMark();
 }
 

@@ -9,7 +9,6 @@ set(RHI_HEADERS
     RHIContext.h
     RHIDefinition.h
     Swapchain.h
-    TransientResourceAllocator.h
 )
 
 source_group("Public" FILES ${RHI_HEADERS})
@@ -39,7 +38,6 @@ if(WIN32)
         Vulkan/VulkanResourceHandle.h
         Vulkan/VulkanStagingBuffer.h
         Vulkan/VulkanSwapchain.h
-        Vulkan/VulkanTransientResourceAllocator.h
         Vulkan/VulkanUtility.h
     )
 
@@ -57,7 +55,6 @@ if(WIN32)
         Vulkan/Private/VulkanResourceHandle.cpp
         Vulkan/Private/VulkanStagingBuffer.cpp
         Vulkan/Private/VulkanSwapchain.cpp
-        Vulkan/Private/VulkanTransientResourceAllocator.cpp
         Vulkan/Private/VulkanUtility.cpp
     )
 

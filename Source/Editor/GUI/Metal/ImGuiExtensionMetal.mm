@@ -6,7 +6,6 @@
 #include "RHI/Metal/MetalContext.h"
 #include "RHI/Metal/MetalUtility.h"
 #include "RHI/Metal/MetalResourceHandle.h"
-#include "RHI/Metal/MetalRenderHandle.h"
 #include "RHI/Metal/MetalCommandHandle.h"
 #include "RHI/Metal/MetalSwapchain.h"
 
@@ -115,6 +114,40 @@ HS_NS_EDITOR_BEGIN
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
 uint8 ImGuiExtension::s_currentImageIndex     = 0;
 
+static RenderingInfo MakeSwapchainRenderingInfo(Swapchain* swapchain)
+{
+    RenderingInfo renderingInfo{};
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.isSwapchainRendering = true;
+    renderingInfo.renderArea = Area(0, 0, swapchain->GetWidth(), swapchain->GetHeight());
+
+    RenderingAttachmentInfo colorAttachment{};
+    colorAttachment.texture = swapchain->GetCurrentColorTexture();
+    colorAttachment.attachment.format = EPixelFormat::B8G8A8R8Unorm;
+    colorAttachment.attachment.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+    colorAttachment.attachment.loadAction = ELoadAction::Load;
+    colorAttachment.attachment.storeAction = EStoreAction::Store;
+    colorAttachment.attachment.sampleCount = 1;
+    renderingInfo.colorAttachments.push_back(colorAttachment);
+
+    return renderingInfo;
+}
+
+static MTLRenderPassDescriptor* MakeRenderPassDescriptor(const RenderingInfo& renderingInfo)
+{
+    MTLRenderPassDescriptor* renderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
+    for (uint32 i = 0; i < renderingInfo.colorAttachmentCount; i++)
+    {
+        const RenderingAttachmentInfo& attachmentInfo = renderingInfo.colorAttachments[i];
+        MetalTexture* texture = static_cast<MetalTexture*>(attachmentInfo.texture);
+        renderPassDesc.colorAttachments[i].texture = texture->handle;
+        renderPassDesc.colorAttachments[i].loadAction = MetalUtility::ToLoadAction(attachmentInfo.attachment.loadAction);
+        renderPassDesc.colorAttachments[i].storeAction = MetalUtility::ToStoreAction(attachmentInfo.attachment.storeAction);
+        renderPassDesc.colorAttachments[i].clearColor = MetalUtility::ToClearColor(attachmentInfo.attachment.clearValue.color);
+    }
+    return renderPassDesc;
+}
+
 void ImGuiExtension::ImageOffscreen(RHITexture* use_texture, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
 {
     MetalTexture* texMetal = static_cast<MetalTexture*>(use_texture);
@@ -162,10 +195,9 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
 {
     s_currentSwapchain = swapchain;
 
-    MetalSwapchain* swMetal = static_cast<MetalSwapchain*>(swapchain);
     const NativeWindow* nativeWindow = swapchain->GetInfo().nativeWindow;
-
-    MTLRenderPassDescriptor* rpDesc = static_cast<MetalRenderPass*>(swMetal->GetRenderPass())->handle;
+    RenderingInfo renderingInfo = MakeSwapchainRenderingInfo(swapchain);
+    MTLRenderPassDescriptor* rpDesc = MakeRenderPassDescriptor(renderingInfo);
 
 #ifdef __SDL__
     // === SDL3 path ===
@@ -186,6 +218,7 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
     ImGui_ImplSDL3_NewFrame();
 #else
     // === Native macOS path ===
+    MetalSwapchain* swMetal = static_cast<MetalSwapchain*>(swapchain);
     NSWindow* window = (__bridge NSWindow*)swMetal->nativeHandle;
     HSViewController* vc = (HSViewController*)[window delegate];
     NSView* view = [vc view];
@@ -209,9 +242,8 @@ void ImGuiExtension::BeginRender(Swapchain* swapchain)
 void ImGuiExtension::EndRender()
 {
     MetalCommandBuffer* cmdMetalBuffer = static_cast<MetalCommandBuffer*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
-    RHIFramebuffer* framebuffer        = s_currentSwapchain->GetFramebufferForCurrentFrame();
-    Area area{0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight()};
-    cmdMetalBuffer->BeginRenderPass(s_currentSwapchain->GetRenderPass(), framebuffer, area);
+    RenderingInfo renderingInfo = MakeSwapchainRenderingInfo(s_currentSwapchain);
+    cmdMetalBuffer->BeginRendering(renderingInfo);
 
     ImGui::Render();
     ImDrawData* drawData = ImGui::GetDrawData();
@@ -219,8 +251,7 @@ void ImGuiExtension::EndRender()
     ImGui_ImplMetal_RenderDrawData(drawData, cmdMetalBuffer->handle, cmdMetalBuffer->curRenderEncoder);
 
     // End the main render encoder before handling additional viewports
-    [cmdMetalBuffer->curRenderEncoder endEncoding];
-    cmdMetalBuffer->curRenderEncoder = nil;
+    cmdMetalBuffer->EndRendering();
 
     // Update and render additional platform windows (multi-viewport)
     ImGuiIO& io = ImGui::GetIO();

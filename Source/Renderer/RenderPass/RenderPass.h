@@ -17,7 +17,6 @@ HS_NS_BEGIN
 
 class Renderer;
 class RHICommandBuffer;
-class RHIFramebuffer;
 
 enum class HS_RENDERER_API ERenderingOrder : uint16
 {
@@ -47,7 +46,7 @@ public:
 
     virtual void Configure(RenderTarget* renderTarget) = 0;
 
-    virtual void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) = 0;
+    virtual void Execute(RHICommandBuffer* commandBuffer, const SceneResource& sceneResource) = 0;
 
     virtual void OnAfterRendering() = 0;
 
@@ -57,7 +56,7 @@ public:
 
     HS_FORCEINLINE Renderer* GetRenderer() const { return _renderer; }
 
-    HS_FORCEINLINE const RenderPassInfo& GetFixedSettingForCurrentPass() const { return _renderPassInfo; }
+    HS_FORCEINLINE const RenderingInfo& GetRenderingInfo() const { return _renderingInfo; }
 
     const char* name;
 
@@ -68,7 +67,7 @@ protected:
     bool      _isExecutable = true;
     size_t    frameIndex;
 
-    RenderPassInfo _renderPassInfo;
+    RenderingInfo _renderingInfo;
 };
 
 HS_NS_END

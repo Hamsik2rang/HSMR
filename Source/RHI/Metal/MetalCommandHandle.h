@@ -16,10 +16,8 @@ HS_NS_BEGIN
 
 class MetalContext;
 
-struct MetalRenderPass;
 struct MetalGraphicsPipeline;
 struct MetalComputePipeline;
-struct MetalFramebuffer;
 
 struct MetalBuffer;
 struct MetalTexture;
@@ -47,7 +45,6 @@ public:
     void End() override;
     void Reset() override;
 
-    void BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea) override;
     void BindPipeline(RHIGraphicsPipeline* pipeline) override;
     void BindResourceSet(RHIResourceSet* rSet) override;
     void SetViewport(const Viewport& viewport) override;
@@ -56,8 +53,6 @@ public:
     void BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount) override;
     void DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount) override;
     void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) override;
-    void EndRenderPass() override;
-    
     void BeginRendering(const RenderingInfo& renderingInfo) override;
     void EndRendering() override;
 
@@ -81,8 +76,6 @@ public:
     id<MTLRenderCommandEncoder> curRenderEncoder;
     id<MTLComputeCommandEncoder> curComputeEncoder;
     MTLRenderPassDescriptor*    curRenderPassDesc;
-    MetalRenderPass*            curBindRenderPass;
-    MetalFramebuffer*           curBindFramebuffer;
     MetalGraphicsPipeline*      curBindPipeline;
     MetalComputePipeline*       curBindComputePipeline;
     MetalBuffer*                curBindIndexBuffer;

@@ -254,16 +254,6 @@ MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* 
     return nullptr;
 }
 
-RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* material, RHIRenderPass* renderPass)
-{
-    if (!renderPass)
-    {
-        return nullptr;
-    }
-
-    return GetOrCreatePipeline(material, MakePipelineRenderTargetLayout(renderPass->info));
-}
-
 RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* material, const PipelineRenderTargetLayout& renderTargetLayout)
 {
     MaterialResource* matRes = GetOrCreateMaterialResources(material);
@@ -339,7 +329,6 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     gpInfo.rasterizerDesc    = rsDesc;
     gpInfo.depthStencilDesc  = dsDesc;
     gpInfo.colorBlendDesc    = cbDesc;
-    gpInfo.renderPass        = nullptr;
     gpInfo.renderTargetLayout = renderTargetLayout;
     gpInfo.resourceLayout    = matRes->resourceLayout;
 

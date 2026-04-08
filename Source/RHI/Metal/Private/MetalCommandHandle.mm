@@ -47,8 +47,6 @@ MetalCommandBuffer::MetalCommandBuffer(const char* name, id<MTLDevice> device, i
     , curRenderEncoder(nil)
     , curComputeEncoder(nil)
     , curRenderPassDesc(nil)
-    , curBindRenderPass(nullptr)
-    , curBindFramebuffer(nullptr)
     , curBindPipeline(nullptr)
     , curBindComputePipeline(nullptr)
     , curBindIndexBuffer(nullptr)
@@ -66,8 +64,6 @@ void MetalCommandBuffer::Begin()
     curRenderEncoder      = nil;
     curComputeEncoder     = nil;
     curRenderPassDesc     = nil;
-    curBindRenderPass     = nullptr;
-    curBindFramebuffer    = nullptr;
     curBindPipeline       = nullptr;
     curBindComputePipeline = nullptr;
     curBindIndexBuffer    = nullptr;
@@ -102,57 +98,6 @@ void MetalCommandBuffer::Reset()
     _isBegan = false;
 }
 
-void MetalCommandBuffer::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea)
-{
-    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
-    HS_CHECK(renderPass, "RenderPass is null");
-
-    if (renderPass->info.isSwapchainRenderPass)
-    {
-        //        HS_ASSERT(framebuffer->info.isSwapchainFramebuffer, "Swapchain RenderPass, but Framebuffer isn't");
-        curRenderPassDesc = static_cast<MetalRenderPass*>(renderPass)->handle;
-    }
-    else
-    {
-        HS_CHECK(framebuffer, "Framebuffer is null");
-        HS_CHECK(renderPass == framebuffer->info.renderPass, "RenderPass is not same with Framebuffer's RenderPass");
-        curRenderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
-
-        bool useDepthStencil = renderPass->info.useDepthStencilAttachment;
-
-        size_t i = 0;
-        for (; i < renderPass->info.colorAttachmentCount; i++)
-        {
-            const Attachment& curAttachment = renderPass->info.colorAttachments[i];
-
-            curRenderPassDesc.colorAttachments[i].texture     = static_cast<MetalTexture*>(framebuffer->info.colorBuffers[i])->handle;
-            curRenderPassDesc.colorAttachments[i].loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
-            curRenderPassDesc.colorAttachments[i].storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
-            curRenderPassDesc.colorAttachments[i].clearColor  = MetalUtility::ToClearColor(curAttachment.clearValue.color);
-        }
-
-        if (useDepthStencil)
-        {
-            const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
-            curRenderPassDesc.depthAttachment.texture     = static_cast<MetalTexture*>(framebuffer->info.depthStencilBuffer)->handle;
-            curRenderPassDesc.depthAttachment.loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
-            curRenderPassDesc.depthAttachment.storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
-            curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depthStencil.depth);
-        }
-    }
-
-    if (nil != curRenderEncoder)
-    {
-        [curRenderEncoder endEncoding];
-    }
-
-    curRenderEncoder          = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
-    curBindRenderPass         = static_cast<MetalRenderPass*>(renderPass);
-    curBindRenderPass->handle = curRenderPassDesc;
-    curBindFramebuffer        = static_cast<MetalFramebuffer*>(framebuffer);
-    _isRenderPassBegan        = true;
-}
-
 void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
@@ -161,7 +106,7 @@ void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
     curBindPipeline = static_cast<MetalGraphicsPipeline*>(pipeline);
 
     [curRenderEncoder setRenderPipelineState:curBindPipeline->pipelineState];
-    if (curBindRenderPass->info.useDepthStencilAttachment)
+    if (pipeline->info.renderTargetLayout.useDepthStencilAttachment)
     {
         [curRenderEncoder setDepthStencilState:curBindPipeline->depthStencilState];
     }
@@ -263,7 +208,7 @@ void MetalCommandBuffer::DrawIndexed(const uint32 firstIndex, const uint32 index
                                baseInstance:0];
 }
 
-void MetalCommandBuffer::EndRenderPass()
+void MetalCommandBuffer::EndRendering()
 {
     if (nil != curRenderEncoder)
     {
@@ -272,8 +217,6 @@ void MetalCommandBuffer::EndRenderPass()
     }
 
     curRenderPassDesc  = nil;
-    curBindRenderPass  = nullptr;
-    curBindFramebuffer = nullptr;
     curBindPipeline    = nullptr;
 
     _isRenderPassBegan = false;
@@ -311,11 +254,6 @@ void MetalCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
 
     curRenderEncoder = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
     _isRenderPassBegan = true;
-}
-
-void MetalCommandBuffer::EndRendering()
-{
-    EndRenderPass();
 }
 
 void MetalCommandBuffer::BindComputePipeline(RHIComputePipeline* pipeline)

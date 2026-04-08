@@ -24,7 +24,7 @@ public:
 
 	~GUIRenderer() final = default;
 
-	virtual void AddPass(RHIRenderPass* pass) final
+	virtual void AddPass(RenderPass* pass) final
 	{
 		return;
 	}

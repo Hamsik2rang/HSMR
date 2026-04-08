@@ -148,18 +148,6 @@ void ForwardGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     _perViewBuffer = perViewBuffer;
 }
 
-RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(RHIRenderPass* renderPass,
-                                                           const RenderPassInfo& renderPassInfo,
-                                                           RHIBuffer* perViewBuffer)
-{
-    if (!renderPass)
-    {
-        return nullptr;
-    }
-
-    return GetOrCreatePipeline(MakePipelineRenderTargetLayout(renderPassInfo), perViewBuffer);
-}
-
 RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
                                                           RHIBuffer* perViewBuffer)
 {
@@ -240,7 +228,6 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTa
     gpInfo.rasterizerDesc    = rsDesc;
     gpInfo.depthStencilDesc  = dsDesc;
     gpInfo.colorBlendDesc    = cbDesc;
-    gpInfo.renderPass        = nullptr;
     gpInfo.renderTargetLayout = renderTargetLayout;
     gpInfo.resourceLayout    = _resourceLayout;
 

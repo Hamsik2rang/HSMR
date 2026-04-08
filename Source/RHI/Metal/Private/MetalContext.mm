@@ -77,14 +77,10 @@ uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
     id<CAMetalDrawable> drawable = [layer nextDrawable];
     swMetal->_drawable           = drawable;
 
-    MTLRenderPassDescriptor* rpDesc        = [MTLRenderPassDescriptor renderPassDescriptor];
-    rpDesc.colorAttachments[0].clearColor  = MTLClearColorMake(0.2f, 0.2f, 0.2f, 1.0f);
-    rpDesc.colorAttachments[0].texture     = drawable.texture;
-    rpDesc.colorAttachments[0].loadAction  = MTLLoadActionClear;
-    rpDesc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    MetalTexture* colorTexture = static_cast<MetalTexture*>(swMetal->GetCurrentColorTexture());
+    colorTexture->handle = drawable.texture;
 
-    MetalRenderPass* swMetalRenderPass = static_cast<MetalRenderPass*>(swMetal->GetRenderPass());
-    swMetalRenderPass->handle          = rpDesc;
+    return swMetal->_frameIndex;
 }
 
 Swapchain* MetalContext::CreateSwapchain(SwapchainInfo info)
@@ -100,39 +96,6 @@ void MetalContext::DestroySwapchain(Swapchain* swapchain)
     // Swapchain에 들어간 view, layer등은 모두 reference이기 때문에 별도로 제거할 필요가 없다.
     swMetal->nativeHandle   = nullptr;
     delete swMetal;
-}
-
-RHIRenderPass* MetalContext::CreateRenderPass(const char* name, const RenderPassInfo& info)
-{
-    MetalRenderPass* rpMetal = new MetalRenderPass(name, info);
-
-    return static_cast<RHIRenderPass*>(rpMetal);
-}
-
-void MetalContext::DestroyRenderPass(RHIRenderPass* renderPass)
-{
-    MetalRenderPass* rpMetal = static_cast<MetalRenderPass*>(renderPass);
-
-    delete rpMetal;
-}
-
-RHIFramebuffer* MetalContext::CreateFramebuffer(const char* name, const FramebufferInfo& info)
-{
-    MetalFramebuffer* fbMetal = new MetalFramebuffer(name, info);
-
-    if (info.isSwapchainFramebuffer)
-    {
-        //...
-    }
-
-    return static_cast<RHIFramebuffer*>(fbMetal);
-}
-
-void MetalContext::DestroyFramebuffer(RHIFramebuffer* framebuffer)
-{
-    MetalFramebuffer* fbMetal = static_cast<MetalFramebuffer*>(framebuffer);
-
-    delete fbMetal;
 }
 
 RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
@@ -183,10 +146,6 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     pipelineDesc.vertexDescriptor = vertexDesc;
 
     PipelineRenderTargetLayout renderTargetLayout = info.renderTargetLayout;
-    if (renderTargetLayout.colorAttachmentCount == 0 && info.renderPass != nullptr)
-    {
-        renderTargetLayout = MakePipelineRenderTargetLayout(info.renderPass->info);
-    }
 
     for (size_t i = 0; i < renderTargetLayout.colorAttachmentCount; i++)
     {
@@ -544,6 +503,25 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
     [desc release];
 
     return static_cast<RHITexture*>(mtlTexture);
+}
+
+RHITextureMemoryRequirements MetalContext::GetTextureMemoryRequirements(const TextureInfo& info)
+{
+    return {};
+}
+
+RHIHeap* MetalContext::CreateHeap(const RHIHeapInfo& info)
+{
+    return nullptr;
+}
+
+void MetalContext::DestroyHeap(RHIHeap* heap)
+{
+}
+
+RHITexture* MetalContext::CreateTexture(const char* name, const TextureInfo& info, RHIHeap* heap, uint64 offset)
+{
+    return nullptr;
 }
 
 RHITexture* MetalContext::CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage)

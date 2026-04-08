@@ -14,7 +14,6 @@
 #include "RHI/Vulkan/VulkanDevice.h"
 #include "RHI/Vulkan/VulkanDescriptorPoolAllocator.h"
 #include "RHI/Vulkan/VulkanRenderingCache.h"
-#include "RHI/Vulkan/VulkanTransientResourceAllocator.h"
 
 HS_NS_BEGIN
 
@@ -35,12 +34,6 @@ public:
     Swapchain* CreateSwapchain(SwapchainInfo info) final;
     void DestroySwapchain(Swapchain* swapchain) final;
 
-    RHIRenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) final;
-    void DestroyRenderPass(RHIRenderPass* renderPass) final;
-
-    RHIFramebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) final;
-    void DestroyFramebuffer(RHIFramebuffer* framebuffer) final;
-
     RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) final;
     void DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) final;
 
@@ -59,6 +52,10 @@ public:
 
     RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) final;
     RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) final;
+    RHITextureMemoryRequirements GetTextureMemoryRequirements(const TextureInfo& info) final;
+    RHIHeap* CreateHeap(const RHIHeapInfo& info) final;
+    void DestroyHeap(RHIHeap* heap) final;
+    RHITexture* CreateTexture(const char* name, const TextureInfo& info, RHIHeap* heap, uint64 offset) final;
     void DestroyTexture(RHITexture* texture) final;
 
     RHISampler* CreateSampler(const char* name, const SamplerInfo& info) final;
@@ -90,7 +87,6 @@ public:
 
     HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::Vulkan; }
     HS_FORCEINLINE const RHICapabilities& GetCapabilities() const override { return _device.GetCapabilities(); }
-    HS_FORCEINLINE RHITransientResourceAllocator* GetTransientResourceAllocator() override { return &_transientResourceAllocator; }
 
     // TODO: ImGui 백엔드 변경되면 없애야합니다.
     HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }
@@ -106,12 +102,12 @@ private:
     bool createInstance();
     void createDefaultCommandPool();
     VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
-    VkRenderPass createRenderPass(const RenderPassInfo& info);
-    VkFramebuffer createFramebuffer(const FramebufferInfo& info);
     VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout);
     VkPipeline createComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout);
 
     uint32 getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties);
+    VkImageCreateInfo makeTextureCreateInfo(const TextureInfo& info, bool useAlias) const;
+    VkImageAspectFlags getImageAspectMask(const TextureInfo& info) const;
 
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -130,7 +126,6 @@ private:
     VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
     VulkanDescriptorPoolAllocator _descriptorPoolAllocator;
     VulkanRenderingCache _renderingCache;
-    VulkanTransientResourceAllocator _transientResourceAllocator;
 
     VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
     bool _isInitialized                      = false;

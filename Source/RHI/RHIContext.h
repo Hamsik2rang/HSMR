@@ -15,7 +15,6 @@
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 #include "RHI/ResourceHandle.h"
-#include "RHI/TransientResourceAllocator.h"
 
 HS_NS_BEGIN
 
@@ -37,12 +36,6 @@ public:
 	virtual Swapchain* CreateSwapchain(SwapchainInfo info) = 0;
 	virtual void DestroySwapchain(Swapchain* swapchain) = 0;
 
-	virtual RHIRenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) = 0;
-	virtual void DestroyRenderPass(RHIRenderPass* renderPass) = 0;
-
-	virtual RHIFramebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) = 0;
-	virtual void DestroyFramebuffer(RHIFramebuffer* framebuffer) = 0;
-
 	virtual RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) = 0;
 	virtual void DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) = 0;
 
@@ -61,6 +54,10 @@ public:
 
 	virtual RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) = 0;
 	virtual RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) = 0;
+    virtual RHITextureMemoryRequirements GetTextureMemoryRequirements(const TextureInfo& info) = 0;
+    virtual RHIHeap* CreateHeap(const RHIHeapInfo& info) = 0;
+    virtual void DestroyHeap(RHIHeap* heap) = 0;
+    virtual RHITexture* CreateTexture(const char* name, const TextureInfo& info, RHIHeap* heap, uint64 offset) = 0;
 	virtual void DestroyTexture(RHITexture* texture) = 0;
 
 	virtual RHISampler* CreateSampler(const char* name, const SamplerInfo& info) = 0;
@@ -89,7 +86,6 @@ public:
     
     virtual ERHIPlatform GetCurrentPlatform() const = 0;
     virtual const RHICapabilities& GetCapabilities() const = 0;
-    virtual RHITransientResourceAllocator* GetTransientResourceAllocator() { return nullptr; }
 
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();

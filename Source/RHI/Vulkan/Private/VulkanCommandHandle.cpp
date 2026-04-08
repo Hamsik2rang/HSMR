@@ -120,66 +120,6 @@ void VulkanCommandBuffer::Reset()
     _isBegan = false;
 }
 
-void VulkanCommandBuffer::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea)
-{
-    static std::vector<VkClearValue> clearValues;
-
-    HS_ASSERT(renderPass && framebuffer, "both renderPass and framebuffer should't be nullptr");
-    HS_ASSERT(_isBegan, "CommandBuffer has not began");
-    HS_ASSERT(_isGraphicsBegan == false, "Graphics Pass is already began");
-    HS_ASSERT(_isComputeBegan == false, "Compute Pass is aready began");
-    HS_ASSERT(_isBlitBegan == false, "Blit Pass is already began");
-
-    VulkanRenderPass* renderPassVK         = static_cast<VulkanRenderPass*>(renderPass);
-    const RenderPassInfo& renderPassInfo   = renderPassVK->info;
-    VulkanFramebuffer* framebufferVK       = static_cast<VulkanFramebuffer*>(framebuffer);
-    const FramebufferInfo& framebufferInfo = framebufferVK->info;
-
-    HS_ASSERT(framebufferInfo.renderPass == renderPass, "RenderPass and Framebuffer are not matched.");
-
-    uint8 attachmentCount = static_cast<uint8>(renderPassInfo.colorAttachmentCount) + static_cast<uint8>(renderPassInfo.useDepthStencilAttachment);
-    if (clearValues.size() < attachmentCount)
-    {
-        clearValues.resize(attachmentCount);
-    }
-
-    size_t attachmentIndex = 0;
-    for (; attachmentIndex < renderPassInfo.colorAttachmentCount; attachmentIndex++)
-    {
-        ::memcpy(clearValues[attachmentIndex].color.float32, renderPassInfo.colorAttachments[attachmentIndex].clearValue.color, sizeof(float[4]));
-    }
-
-    if (renderPassInfo.useDepthStencilAttachment)
-    {
-        clearValues[attachmentIndex].depthStencil.depth   = renderPassInfo.depthStencilAttachment.clearValue.depthStencil.depth;
-        clearValues[attachmentIndex].depthStencil.stencil = renderPassInfo.depthStencilAttachment.clearValue.depthStencil.stencil;
-        attachmentIndex++;
-    }
-
-    VkRect2D area{};
-    area.offset.x      = renderArea.x;
-    area.offset.y      = renderArea.y;
-    area.extent.width  = renderArea.width;
-    area.extent.height = renderArea.height;
-
-    VkRenderPassBeginInfo beginInfo{};
-    beginInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    beginInfo.clearValueCount = attachmentCount;
-    beginInfo.pClearValues    = clearValues.data();
-    beginInfo.renderArea      = area;
-    beginInfo.renderPass      = renderPassVK->handle;
-    beginInfo.framebuffer     = framebufferVK->handle;
-    beginInfo.pNext           = nullptr;
-
-    VkSubpassBeginInfo subpassBeginInfo{};
-
-    vkCmdBeginRenderPass(handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    _isGraphicsBegan = true;
-    _isComputeBegan  = false;
-    _isBlitBegan     = false;
-}
-
 void VulkanCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
 {
     HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
@@ -257,13 +197,6 @@ void VulkanCommandBuffer::DrawArrays(const uint32 firstVertex, const uint32 vert
 void VulkanCommandBuffer::DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset)
 {
     vkCmdDrawIndexed(handle, indexCount, instanceCount, firstIndex, vertexOffset, 0);
-}
-
-void VulkanCommandBuffer::EndRenderPass()
-{
-    HS_ASSERT(_isGraphicsBegan && _isBegan, "RenderPass has not begun");
-    vkCmdEndRenderPass(handle);
-    _isGraphicsBegan = false;
 }
 
 void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)

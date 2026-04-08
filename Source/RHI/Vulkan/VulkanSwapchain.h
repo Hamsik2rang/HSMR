@@ -35,7 +35,7 @@ public:
         HS_ASSERT(index < _maxFrameCount, "out of index");
         return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]);
     }
-    HS_FORCEINLINE RHIFramebuffer* GetFramebufferForCurrentFrame() const override { return _framebuffers[_curImageIndex]; }
+    HS_FORCEINLINE RHITexture* GetCurrentColorTexture() const override { return _colorTextures[_curImageIndex]; }
 
     VkSwapchainKHR handle = VK_NULL_HANDLE;
 
@@ -56,8 +56,7 @@ private:
     bool initSwapchainVK(VulkanContext* rhiContext, VkInstance instance, VulkanDevice* deviceVulkan);
     void destroySwapchainVK();
 
-    void setRenderPass();
-    void setFramebuffers();
+    void setRenderTargets();
     void getSwapchainImages();
 
     void chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -67,7 +66,7 @@ private:
     uint32 _curImageIndex = static_cast<uint32>(-1);
     VulkanDevice* _deviceVulkan;
     VulkanCommandBuffer** _commandBufferVKs;
-    RHIFramebuffer** _framebuffers;
+    RHITexture** _colorTextures;
     bool _isSuspended;
     bool _isInitialized = false;
 };

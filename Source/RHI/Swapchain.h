@@ -15,7 +15,7 @@
 namespace hs
 {
 class RHICommandBuffer;
-class RHIFramebuffer;
+class RHITexture;
 } // namespace hs
 
 HS_NS_BEGIN
@@ -35,17 +35,14 @@ public:
     virtual uint8 GetCurrentImageIndex() const                           = 0;
     virtual RHICommandBuffer* GetCommandBufferForCurrentFrame() const    = 0;
     virtual RHICommandBuffer* GetCommandBufferByIndex(uint8 index) const = 0;
-    virtual RHIFramebuffer* GetFramebufferForCurrentFrame() const        = 0;
+    virtual RHITexture* GetCurrentColorTexture() const                   = 0;
 
     HS_FORCEINLINE uint32 GetWidth() { return _info.nativeWindow->surfaceWidth; }
     HS_FORCEINLINE uint32 GetHeight() { return _info.nativeWindow->surfaceHeight; }
 
     HS_FORCEINLINE SwapchainInfo GetInfo() const { return _info; }
-    HS_FORCEINLINE RHIRenderPass* GetRenderPass() const { return _renderPass; }
-
 protected:
     SwapchainInfo _info;
-    RHIRenderPass* _renderPass;
 };
 
 HS_NS_END

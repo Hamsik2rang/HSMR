@@ -79,7 +79,7 @@ VkRenderPass VulkanRenderingCache::GetCompatibleRenderPass(const PipelineRenderT
         return it->second;
     }
 
-    RenderPassInfo info = makeCompatibleRenderPassInfo(layout);
+    LegacyRenderPassInfo info = makeCompatibleRenderPassInfo(layout);
     VkRenderPass renderPass = createRenderPass(info);
     _compatibleRenderPassCache[key] = renderPass;
     return renderPass;
@@ -89,8 +89,8 @@ VulkanRenderingCache::LegacyRenderingHandles VulkanRenderingCache::GetLegacyRend
 {
     LegacyRenderingHandles handles{};
 
-    RenderPassInfo renderPassInfo = renderingInfo.ToRenderPassInfo();
-    size_t renderPassKey = std::hash<RenderPassInfo>{}(renderPassInfo);
+    LegacyRenderPassInfo renderPassInfo = makeRenderPassInfo(renderingInfo);
+    size_t renderPassKey = makeRenderPassKey(renderPassInfo);
     auto renderPassIt = _renderPassCache.find(renderPassKey);
     if (renderPassIt != _renderPassCache.end())
     {
@@ -117,7 +117,7 @@ VulkanRenderingCache::LegacyRenderingHandles VulkanRenderingCache::GetLegacyRend
     return handles;
 }
 
-VkRenderPass VulkanRenderingCache::createRenderPass(const RenderPassInfo& info)
+VkRenderPass VulkanRenderingCache::createRenderPass(const LegacyRenderPassInfo& info)
 {
     uint32 attachmentCount = info.colorAttachmentCount + static_cast<uint32>(info.useDepthStencilAttachment);
 
@@ -240,9 +240,48 @@ size_t VulkanRenderingCache::makeFramebufferKey(VkRenderPass renderPass, const R
     return key;
 }
 
-RenderPassInfo VulkanRenderingCache::makeCompatibleRenderPassInfo(const PipelineRenderTargetLayout& layout) const
+size_t VulkanRenderingCache::makeRenderPassKey(const LegacyRenderPassInfo& info) const
 {
-    RenderPassInfo info{};
+    size_t key = HashCombine(
+        static_cast<uint32>(info.colorAttachmentCount),
+        static_cast<uint32>(info.useDepthStencilAttachment),
+        static_cast<uint32>(info.isSwapchainRenderPass));
+
+    std::hash<Attachment> attachmentHash;
+    for (uint32 i = 0; i < info.colorAttachmentCount; i++)
+    {
+        key = HashCombine64(key, attachmentHash(info.colorAttachments[i]));
+    }
+
+    if (info.useDepthStencilAttachment)
+    {
+        key = HashCombine64(key, attachmentHash(info.depthStencilAttachment));
+    }
+
+    return key;
+}
+
+VulkanRenderingCache::LegacyRenderPassInfo VulkanRenderingCache::makeRenderPassInfo(const RenderingInfo& renderingInfo) const
+{
+    LegacyRenderPassInfo info{};
+    info.colorAttachmentCount = renderingInfo.colorAttachmentCount;
+    info.useDepthStencilAttachment = renderingInfo.useDepthStencilAttachment;
+    info.isSwapchainRenderPass = renderingInfo.isSwapchainRendering;
+    info.colorAttachments.reserve(renderingInfo.colorAttachments.size());
+    for (const RenderingAttachmentInfo& attachmentInfo : renderingInfo.colorAttachments)
+    {
+        info.colorAttachments.push_back(attachmentInfo.attachment);
+    }
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        info.depthStencilAttachment = renderingInfo.depthStencilAttachment.attachment;
+    }
+    return info;
+}
+
+VulkanRenderingCache::LegacyRenderPassInfo VulkanRenderingCache::makeCompatibleRenderPassInfo(const PipelineRenderTargetLayout& layout) const
+{
+    LegacyRenderPassInfo info{};
     info.colorAttachmentCount = layout.colorAttachmentCount;
     info.useDepthStencilAttachment = layout.useDepthStencilAttachment;
     info.isSwapchainRenderPass = layout.isSwapchainRenderPass;
