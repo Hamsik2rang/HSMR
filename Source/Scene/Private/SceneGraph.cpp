@@ -86,7 +86,7 @@ void SceneGraph::SetParent(entt::entity child, entt::entity parent)
     // Dirty 표시
     if (_registry.all_of<TransformComponent>(child))
     {
-        _registry.get<TransformComponent>(child).isDirty = true;
+        _registry.get<TransformComponent>(child).MarkDirty();
     }
 }
 

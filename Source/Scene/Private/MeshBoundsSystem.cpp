@@ -14,7 +14,11 @@ void MeshBoundsSystem::Update(entt::registry& registry, float deltaTime)
     auto view = registry.view<TransformComponent, MeshRendererComponent>();
     for (auto [entity, transform, meshRenderer] : view.each())
     {
-        meshRenderer.UpdateWorldBounds(transform.worldMatrix);
+        if (meshRenderer.boundsDirty || meshRenderer.boundsWorldVersion != transform.worldVersion)
+        {
+            meshRenderer.UpdateWorldBounds(transform.worldMatrix);
+            meshRenderer.boundsWorldVersion = transform.worldVersion;
+        }
     }
 }
 

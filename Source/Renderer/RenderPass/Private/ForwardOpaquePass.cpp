@@ -86,7 +86,8 @@ void ForwardOpaquePass::Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* 
 
         // Bind and draw using pre-resolved resources
         commandBuffer->BindPipeline(pipeline);
-        commandBuffer->BindResourceSet(renderModel.materialResource->resourceSet);
+        if (!renderModel.drawResource || !renderModel.drawResource->resourceSet) continue;
+        commandBuffer->BindResourceSet(renderModel.drawResource->resourceSet);
 
         uint32 vbOffset     = 0;
         const RHIBuffer* vb = renderModel.meshResource->vertexBuffer;

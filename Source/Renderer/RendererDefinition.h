@@ -7,6 +7,7 @@
 #ifndef __HS_RENDERER_DEFINITION_H__
 #define __HS_RENDERER_DEFINITION_H__
 
+#include "Renderer/RenderDefinition.h"
 #include "RHI/RHIDefinition.h"
 #include "Resource/Image.h"
 #include "Resource/Shader.h"
@@ -22,6 +23,7 @@ struct CameraResource;
 struct LightResource;
 struct MeshResource;
 struct MaterialResource;
+struct DrawResource;
 class RHIBuffer;
 
 struct HS_RENDERER_API RenderTargetInfo
@@ -60,6 +62,35 @@ struct HS_RENDERER_API RenderModel
     RHIBuffer* perDrawBuffer           = nullptr; // PerDraw UBO
     MeshResource* meshResource         = nullptr; // VB/IB
     MaterialResource* materialResource = nullptr; // Shader/Textures/ResourceSet
+    DrawResource* drawResource         = nullptr; // Per-view/per-draw merged ResourceSet
+};
+
+struct HS_RENDERER_API RenderViewSnapshot
+{
+    uint64 viewId = 0;
+    PerView perView{};
+};
+
+struct HS_RENDERER_API RenderLightSnapshot
+{
+    uint64 lightId = 0;
+    LightUBO light{};
+};
+
+struct HS_RENDERER_API RenderPrimitiveSnapshot
+{
+    uint64 primitiveId = 0;
+    uint32 worldVersion = 0;
+    glm::mat4 worldMatrix{1.0f};
+    Mesh* mesh = nullptr;
+    Material* material = nullptr;
+};
+
+struct HS_RENDERER_API RenderSceneSnapshot
+{
+    std::vector<RenderViewSnapshot> views;
+    std::vector<RenderLightSnapshot> lights;
+    std::vector<RenderPrimitiveSnapshot> primitives;
 };
 
 // 씬 전체의 렌더링용 GPU 리소스 집합

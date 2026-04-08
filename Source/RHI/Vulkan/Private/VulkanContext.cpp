@@ -576,6 +576,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     VulkanBuffer* bufferVK = new VulkanBuffer(name, info);
     bufferVK->handle       = bufferVk;
     bufferVK->memory       = bufferMemory;
+    bufferVK->byteSize     = dataSize;
 
     setDebugObjectName(VK_OBJECT_TYPE_BUFFER, reinterpret_cast<uint64>(bufferVk), name);
 
@@ -604,8 +605,25 @@ void VulkanContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, cons
     HS_ASSERT(buffer, "Buffer is nullptr");
     HS_ASSERT(srcData, "Source data is nullptr");
     HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
-    HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
     VulkanBuffer* bufferVK    = static_cast<VulkanBuffer*>(buffer);
+    if (buffer->info.memoryOption == EBufferMemoryOption::Mapped ||
+        buffer->info.memoryOption == EBufferMemoryOption::Dynamic)
+    {
+        void* mapped = nullptr;
+        VK_CHECK_RESULT(vkMapMemory(
+            _device,
+            bufferVK->memory,
+            static_cast<VkDeviceSize>(dstOffset),
+            static_cast<VkDeviceSize>(dataSize),
+            0,
+            &mapped
+        ));
+        memcpy(mapped, srcData, dataSize);
+        vkUnmapMemory(_device, bufferVK->memory);
+        return;
+    }
+
+    HS_ASSERT(dataSize <= 65536, "vkCmdUpdateBuffer is limited to 65536 bytes");
     // vkCmdUpdateBuffer updates buffer contents inline within the command buffer
     // Note: dataSize must be less than or equal to 65536 bytes
     // Note: dstOffset and dataSize must be multiples of 4

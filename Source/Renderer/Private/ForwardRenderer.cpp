@@ -53,7 +53,8 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
     }
     renderPassInfo.isSwapchainRenderPass = false;
 
-    SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
+    RenderSceneSnapshot sceneSnapshot = _resourceManager->BuildRenderSceneSnapshot(scene, _shaderLibrary);
+    SceneResource sceneResource = _resourceManager->BuildSceneResource(sceneSnapshot);
 
     auto makeRenderingInfo = [&](const RenderPassInfo& sourceInfo) -> RenderingInfo
     {
@@ -173,7 +174,8 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 if (!pipeline) continue;
 
                 commandBuffer.BindPipeline(pipeline);
-                commandBuffer.BindResourceSet(renderModel.materialResource->resourceSet);
+                if (!renderModel.drawResource || !renderModel.drawResource->resourceSet) continue;
+                commandBuffer.BindResourceSet(renderModel.drawResource->resourceSet);
 
                 uint32 vbOffset     = 0;
                 const RHIBuffer* vb = renderModel.meshResource->vertexBuffer;
