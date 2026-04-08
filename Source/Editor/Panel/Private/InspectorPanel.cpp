@@ -8,6 +8,7 @@
 #include "Editor/Panel/InspectorPanel.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Editor/GUI/EditorIcons.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Components/Components.h"
@@ -19,14 +20,6 @@
 #include "ImGui/imgui_internal.h"
 
 #include <cstring>
-
-// Temporary icon definitions if FontAwesome not available
-#ifndef ICON_FA_TIMES
-#define ICON_FA_TIMES "X"
-#endif
-#ifndef ICON_FA_CUBE
-#define ICON_FA_CUBE "\xef\x86\xb2"
-#endif
 
 HS_NS_EDITOR_BEGIN
 
@@ -182,11 +175,11 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
     bool removeComponent = false;
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open = ImGui::CollapsingHeader("Mesh Renderer", flags);
+    bool open                = ImGui::CollapsingHeader("Mesh Renderer", flags);
 
     // Remove button on same line
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (ImGui::Button(ICON_FA_TIMES "##RemoveMeshRenderer"))
+    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveMeshRenderer"))
     {
         removeComponent = true;
     }
@@ -206,8 +199,8 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
 
             // Make a drop target button
             ImVec4 buttonColor = meshRenderer.mesh
-                ? ImVec4(0.2f, 0.4f, 0.2f, 1.0f)
-                : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+                                     ? ImVec4(0.2f, 0.4f, 0.2f, 1.0f)
+                                     : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
             ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
 
             ImGui::Button(meshName, ImVec2(ImGui::GetContentRegionAvail().x, 0));
@@ -228,7 +221,7 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                         meshRenderer.mesh = model->GetMesh();
                         if (meshRenderer.mesh)
                         {
-                            const auto& bound = meshRenderer.mesh->GetBound();
+                            const auto& bound        = meshRenderer.mesh->GetBound();
                             meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
                             meshRenderer.boundsDirty = true;
                         }
@@ -238,7 +231,6 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                         {
                             meshRenderer.materials.push_back(model->GetMaterial());
                         }
-
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -339,11 +331,11 @@ void InspectorPanel::drawCameraComponent(Entity entity)
     bool removeComponent = false;
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open = ImGui::CollapsingHeader("Camera", flags);
+    bool open                = ImGui::CollapsingHeader("Camera", flags);
 
     // Remove button on same line
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (ImGui::Button(ICON_FA_TIMES "##RemoveCamera"))
+    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveCamera"))
     {
         removeComponent = true;
     }
@@ -355,8 +347,8 @@ void InspectorPanel::drawCameraComponent(Entity entity)
         ImGui::Indent();
 
         // Projection type
-        const char* projectionTypes[] = { "Perspective", "Orthographic" };
-        int currentProjection = static_cast<int>(camera.projectionType);
+        const char* projectionTypes[] = {"Perspective", "Orthographic"};
+        int currentProjection         = static_cast<int>(camera.projectionType);
         if (ImGui::Combo("Projection", &currentProjection, projectionTypes, 2))
         {
             camera.projectionType = static_cast<CameraComponent::EProjectionType>(currentProjection);
@@ -400,11 +392,11 @@ void InspectorPanel::drawLightComponent(Entity entity)
     bool removeComponent = false;
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open = ImGui::CollapsingHeader("Light", flags);
+    bool open                = ImGui::CollapsingHeader("Light", flags);
 
     // Remove button on same line
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (ImGui::Button(ICON_FA_TIMES "##RemoveLight"))
+    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveLight"))
     {
         removeComponent = true;
     }
@@ -416,11 +408,11 @@ void InspectorPanel::drawLightComponent(Entity entity)
         ImGui::Indent();
 
         // Light type
-        const char* lightTypes[] = { "Directional", "Point", "Spot" };
-        int currentType = static_cast<int>(light.type);
+        const char* lightTypes[] = {"Directional", "Point", "Spot"};
+        int currentType          = static_cast<int>(light.type);
         if (ImGui::Combo("Type", &currentType, lightTypes, 3))
         {
-            light.type =  static_cast<ELightType>(currentType);
+            light.type = static_cast<ELightType>(currentType);
         }
 
         // Color
@@ -452,8 +444,8 @@ void InspectorPanel::drawLightComponent(Entity entity)
             ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f, 0.0f, 0.1f, "%.4f");
 
             // Shadow map resolution
-            const char* resolutions[] = { "512", "1024", "2048", "4096" };
-            int currentRes = 1; // Default to 1024
+            const char* resolutions[] = {"512", "1024", "2048", "4096"};
+            int currentRes            = 1; // Default to 1024
             if (light.shadowMapResolution == 512) currentRes = 0;
             else if (light.shadowMapResolution == 1024) currentRes = 1;
             else if (light.shadowMapResolution == 2048) currentRes = 2;
@@ -461,7 +453,7 @@ void InspectorPanel::drawLightComponent(Entity entity)
 
             if (ImGui::Combo("Shadow Resolution", &currentRes, resolutions, 4))
             {
-                const uint32 resValues[] = { 512, 1024, 2048, 4096 };
+                const uint32 resValues[]  = {512, 1024, 2048, 4096};
                 light.shadowMapResolution = resValues[currentRes];
             }
         }
@@ -489,8 +481,8 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
     ImGui::Text("%s", label);
     ImGui::NextColumn();
 
-    float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-    ImVec2 buttonSize = { lineHeight * 0.75f, lineHeight };
+    float lineHeight  = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    ImVec2 buttonSize = {lineHeight, lineHeight};
 
     ImGui::PushMultiItemsWidths(3, ImGui::GetContentRegionAvail().x - 3.0f * buttonSize.x + 2.0f * GImGui->Style.ItemInnerSpacing.x);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -499,7 +491,7 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
-    
+
     if (ImGui::Button("X", buttonSize))
     {
         values.x = resetValue;
@@ -567,7 +559,7 @@ void InspectorPanel::drawColorEdit(const char* label, glm::vec3& color)
 
 void InspectorPanel::drawAddComponentButton(Entity entity)
 {
-    float width = ImGui::GetContentRegionAvail().x;
+    float width       = ImGui::GetContentRegionAvail().x;
     float buttonWidth = 200.0f;
     ImGui::SetCursorPosX((width - buttonWidth) / 2.0f);
 

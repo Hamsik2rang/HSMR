@@ -8,6 +8,7 @@
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Editor/GUI/EditorIcons.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -18,20 +19,6 @@
 
 #include <algorithm>
 #include <cstring>
-
-// Temporary icon definitions if FontAwesome not available
-#ifndef ICON_FA_VIDEO
-#define ICON_FA_VIDEO "[C]"
-#endif
-#ifndef ICON_FA_LIGHTBULB
-#define ICON_FA_LIGHTBULB "[L]"
-#endif
-#ifndef ICON_FA_CUBE
-#define ICON_FA_CUBE "[M]"
-#endif
-#ifndef ICON_FA_CIRCLE
-#define ICON_FA_CIRCLE "[o]"
-#endif
 
 HS_NS_EDITOR_BEGIN
 
@@ -378,16 +365,16 @@ const char* HierarchyPanel::getEntityIcon(Entity entity) const
 
     // Check components and return appropriate icon
     if (entity.HasComponent<CameraComponent>())
-        return ICON_FA_VIDEO;
+        return EditorIcons::Camera;
 
     if (entity.HasComponent<LightComponent>())
-        return ICON_FA_LIGHTBULB;
+        return EditorIcons::LightMode;
 
     if (entity.HasComponent<MeshRendererComponent>())
-        return ICON_FA_CUBE;
+        return EditorIcons::ViewInAr;
 
     // Default icon
-    return ICON_FA_CIRCLE;
+    return EditorIcons::Draft;
 }
 
 bool HierarchyPanel::matchesSearch(Entity entity) const

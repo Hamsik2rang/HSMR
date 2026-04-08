@@ -8,6 +8,8 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Editor/GUI/EditorIcons.h"
+
 #include <string>
 
 HS_NS_EDITOR_BEGIN
@@ -99,21 +101,21 @@ inline const char* GetAssetTypeName(EAssetType type)
 }
 
 /**
- * @brief Get icon for asset type (FontAwesome icons)
+ * @brief Get Material Symbols icon for asset type.
  */
 inline const char* GetAssetTypeIcon(EAssetType type)
 {
     switch (type)
     {
-        case EAssetType::Texture:  return "[Tex]";
-        case EAssetType::Model:    return "[Model]";
-        case EAssetType::Material: return "[Mat]";
-        case EAssetType::Shader:   return "[Shader]";
-        case EAssetType::Scene:    return "[Scene]";
-        case EAssetType::Audio:    return "[Audio]";
-        case EAssetType::Font:     return "[Font]";
-        case EAssetType::Prefab:   return "[Prefab]";
-        default:                   return "[File]";
+        case EAssetType::Texture:  return EditorIcons::Image;
+        case EAssetType::Model:    return EditorIcons::ViewInAr;
+        case EAssetType::Material: return EditorIcons::Palette;
+        case EAssetType::Shader:   return EditorIcons::Code;
+        case EAssetType::Scene:    return EditorIcons::Description;
+        case EAssetType::Audio:    return EditorIcons::Settings;
+        case EAssetType::Font:     return EditorIcons::Article;
+        case EAssetType::Prefab:   return EditorIcons::DeployedCode;
+        default:                   return EditorIcons::Draft;
     }
 }
 

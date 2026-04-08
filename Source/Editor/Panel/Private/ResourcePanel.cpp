@@ -8,6 +8,7 @@
 #include "Editor/Panel/ResourcePanel.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/GUI/EditorIcons.h"
 #include "Core/SystemContext.h"
 
 #include "Scene/Scene.h"
@@ -24,26 +25,6 @@
 #include <cstdlib>
 
 HS_NS_EDITOR_BEGIN
-
-// FontAwesome icons (fallback if not available)
-#ifndef ICON_FA_FOLDER
-#define ICON_FA_FOLDER "[Folder]"
-#endif
-#ifndef ICON_FA_FOLDER_OPEN
-#define ICON_FA_FOLDER_OPEN "[Open]"
-#endif
-#ifndef ICON_FA_ARROW_LEFT
-#define ICON_FA_ARROW_LEFT "<"
-#endif
-#ifndef ICON_FA_ARROW_RIGHT
-#define ICON_FA_ARROW_RIGHT ">"
-#endif
-#ifndef ICON_FA_REDO
-#define ICON_FA_REDO "R"
-#endif
-#ifndef ICON_FA_HOME
-#define ICON_FA_HOME "H"
-#endif
 
 ResourcePanel::ResourcePanel(Window* window)
     : Panel(window)
@@ -191,7 +172,7 @@ void ResourcePanel::drawPathBar()
     bool canGoForward = _historyIndex < static_cast<int>(_pathHistory.size()) - 1;
 
     ImGui::BeginDisabled(!canGoBack);
-    if (ImGui::Button(ICON_FA_ARROW_LEFT "##Back"))
+    if (EditorWidgets::IconButton(EditorIcons::Back, "Back"))
     {
         navigateBack();
     }
@@ -200,7 +181,7 @@ void ResourcePanel::drawPathBar()
     ImGui::SameLine();
 
     ImGui::BeginDisabled(!canGoForward);
-    if (ImGui::Button(ICON_FA_ARROW_RIGHT "##Forward"))
+    if (EditorWidgets::IconButton(EditorIcons::Forward, "Forward"))
     {
         navigateForward();
     }
@@ -208,14 +189,14 @@ void ResourcePanel::drawPathBar()
 
     ImGui::SameLine();
 
-    if (ImGui::Button(ICON_FA_HOME "##Home"))
+    if (EditorWidgets::IconButton(EditorIcons::Home, "Home"))
     {
         navigateToFolder("");
     }
 
     ImGui::SameLine();
 
-    if (ImGui::Button(ICON_FA_REDO "##Refresh"))
+    if (EditorWidgets::IconButton(EditorIcons::Refresh, "Refresh"))
     {
         AssetDatabase::Get().Refresh();
     }
@@ -308,7 +289,7 @@ void ResourcePanel::drawFolderTreeNode(const FolderEntry& folder)
         flags |= ImGuiTreeNodeFlags_DefaultOpen;
     }
 
-    const char* icon = (folder.relativePath == _currentPath) ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER;
+    const char* icon = (folder.relativePath == _currentPath) ? EditorIcons::FolderOpen : EditorIcons::Folder;
     std::string displayName = folder.name.empty() ? "Assets" : folder.name;
     std::string label = std::string(icon) + " " + displayName;
 
@@ -373,7 +354,7 @@ void ResourcePanel::drawAssetList()
         }
 
         ImGui::PushID(folderPath.c_str());
-        std::string label = std::string(ICON_FA_FOLDER) + " " + folderName;
+        std::string label = std::string(EditorIcons::Folder) + " " + folderName;
         bool isSelected = (folderPath == _currentPath);
 
         // PushID(folderPath) + visible label 조합입니다.

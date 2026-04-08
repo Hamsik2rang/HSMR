@@ -15,16 +15,26 @@ HS_NS_EDITOR_BEGIN
 namespace
 {
 constexpr float s_editorIndentSpacingRatio = 0.25f;
+constexpr float s_editorFramePaddingYRatio = 0.12f;
+constexpr float s_editorItemSpacingYRatio = 0.20f;
 constexpr float s_fallbackEditorFontSize = 16.0f;
+constexpr float s_materialSymbolFontScale = 1.25f;
+constexpr const char* s_materialSymbolsFontPath = "Fonts/MaterialSymbolsRounded.ttf";
+
+static const ImWchar s_materialSymbolsGlyphRanges[] =
+{
+    0xE000, 0xF8FF,
+    0
+};
 
 void applyEditorStyleMetrics()
 {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    // ImGui's default IndentSpacing is intentionally wide: roughly one full text line plus frame padding.
-    // That works for generic debug UI, but editor panels such as Hierarchy, Inspector, and Assets read more
-    // like Unity/Unreal when tree depth advances by only one or two spaces. Keep the policy centralized here
-    // so individual panels do not need to push the same style override around every TreeNode.
+    // ImGui's default metrics favor generic debug tools. They are comfortable, but editor panels such as
+    // Hierarchy, Inspector, and Assets read more like Unity/Unreal when rows are compact and tree depth advances
+    // only one or two spaces. Keep the policy centralized here so individual panels do not need to push the same
+    // style overrides around every TreeNode, CollapsingHeader, Button, and Input widget.
     float fontSize = ImGui::GetFontSize();
     if (fontSize <= 0.0f)
     {
@@ -32,6 +42,48 @@ void applyEditorStyleMetrics()
     }
 
     style.IndentSpacing = fontSize * s_editorIndentSpacingRatio;
+    style.FramePadding.y = std::max(2.0f, fontSize * s_editorFramePaddingYRatio);
+    style.ItemSpacing.y = std::max(3.0f, fontSize * s_editorItemSpacingYRatio);
+    style.TabCloseButtonMinWidthSelected = 0.0f;
+    style.TabCloseButtonMinWidthUnselected = 0.0f;
+}
+
+ImFont* addEditorFontWithIcons(const std::string& assetDirectory, const std::string& fontPath, float fontSize)
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImFont* font = io.Fonts->AddFontFromFileTTF((assetDirectory + fontPath).c_str(), fontSize);
+    if (!font)
+    {
+        HS_LOG(warning, "[GUI] Failed to load font: %s", fontPath.c_str());
+    }
+
+    std::string iconFontPath = assetDirectory + s_materialSymbolsFontPath;
+    if (hs::FileSystem::Exist(iconFontPath))
+    {
+        ImFontConfig iconConfig;
+        iconConfig.MergeMode = true;
+        iconConfig.PixelSnapH = true;
+        iconConfig.GlyphOffset.y = 2.0f;
+
+        ImFont* iconFont = io.Fonts->AddFontFromFileTTF(
+            iconFontPath.c_str(),
+            fontSize * s_materialSymbolFontScale,
+            &iconConfig,
+            s_materialSymbolsGlyphRanges);
+
+        if (!iconFont)
+        {
+            HS_LOG(warning, "[GUI] Failed to merge Material Symbols font: %s", iconFontPath.c_str());
+        }
+    }
+    else
+    {
+        HS_LOG(warning, "[GUI] Material Symbols font is missing: %s", iconFontPath.c_str());
+    }
+
+    io.Fonts->Build();
+    return font;
 }
 } // namespace
 
@@ -218,9 +270,7 @@ void GUIContext::ApplyDPIScale(float dpiScale)
 
     float scaledFontSize = 16.0f * dpiScale;
     std::string fontName = "Fonts/Malgun-Gothic.ttf";
-    _font = io.Fonts->AddFontFromFileTTF((_assetDirectory + fontName).c_str(), scaledFontSize);
-
-    io.Fonts->Build();
+    _font = addEditorFontWithIcons(_assetDirectory, fontName, scaledFontSize);
 
     applyEditorStyleMetrics();
 
@@ -230,10 +280,7 @@ void GUIContext::ApplyDPIScale(float dpiScale)
 // Font Push/Pop 어떻게?
 void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
 {
-    ImGuiIO& io = ImGui::GetIO();
-    _font       = io.Fonts->AddFontFromFileTTF((_assetDirectory + fontPath).c_str(), defaultFontSize);
-
-    io.Fonts->Build();
+    _font = addEditorFontWithIcons(_assetDirectory, fontPath, defaultFontSize);
 
     applyEditorStyleMetrics();
 }

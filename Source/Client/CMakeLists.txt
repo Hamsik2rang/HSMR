@@ -90,3 +90,12 @@ install(DIRECTORY "${HS_DEPS_LIB_DIR}/" DESTINATION "${INSTALL_FOLDER}")
 
 # install(DIRECTORY "${HS_DEPS_BIN_DIR}/" DESTINATION "${INSTALL_FOLDER}")
 install(DIRECTORY "${HS_ASSET_DIR}/" DESTINATION "${INSTALL_FOLDER}/Assets")
+
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/Assets/Fonts"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${HS_ASSET_DIR}/Fonts/MaterialSymbolsRounded.ttf"
+        "$<TARGET_FILE_DIR:${TARGET_NAME}>/Assets/Fonts/MaterialSymbolsRounded.ttf"
+    COMMENT "[AUTO-INSTALL] Material Symbols font"
+    VERBATIM
+)
