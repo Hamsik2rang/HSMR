@@ -26,6 +26,44 @@
 
 HS_NS_EDITOR_BEGIN
 
+namespace
+{
+glm::mat4 makeImGuizmoViewMatrix(const EditorCamera& editorCamera)
+{
+    glm::mat4 viewMatrix = editorCamera.GetViewMatrix();
+    viewMatrix[0][2] = -viewMatrix[0][2];
+    viewMatrix[1][2] = -viewMatrix[1][2];
+    viewMatrix[2][2] = -viewMatrix[2][2];
+    viewMatrix[3][2] = -viewMatrix[3][2];
+    return viewMatrix;
+}
+
+glm::mat4 makeImGuizmoProjectionMatrix(const EditorCamera& editorCamera)
+{
+    const CameraComponent& camera = editorCamera.GetCameraComponent();
+    if (camera.projectionType == CameraComponent::EProjectionType::Perspective)
+    {
+        return glm::perspectiveRH(
+            editorCamera.GetFov(),
+            editorCamera.GetAspectRatio(),
+            editorCamera.GetNearZ(),
+            editorCamera.GetFarZ());
+    }
+
+    float halfWidth = camera.orthoSize * camera.aspectRatio;
+    float halfHeight = camera.orthoSize;
+    return glm::orthoRH(
+        -halfWidth, halfWidth,
+        -halfHeight, halfHeight,
+        camera.nearPlane, camera.farPlane);
+}
+
+ImVec2 getViewportSize(const ImVec2& viewportMin, const ImVec2& viewportMax)
+{
+    return ImVec2(viewportMax.x - viewportMin.x, viewportMax.y - viewportMin.y);
+}
+}
+
 bool ScenePanel::Setup()
 {
     _editorCamera = MakeScoped<EditorCamera>();
@@ -188,11 +226,11 @@ void ScenePanel::Draw()
     _resolution.width   = static_cast<uint32>(curPanelSize.x);
     _resolution.height  = static_cast<uint32>(curPanelSize.y);
 
-    _viewportMax = ImVec2(_viewportMin.x + static_cast<float>(_resolution.width), _viewportMin.y + static_cast<float>(_resolution.height));
+    _viewportMax = ImVec2(_viewportMin.x + viewportSize.x, _viewportMin.y + viewportSize.y);
 
-    if (_editorCamera && _resolution.height > 0)
+    if (_editorCamera && viewportSize.y > 0.0f)
     {
-        _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
+        _editorCamera->SetAspectRatio(viewportSize.x / viewportSize.y);
     }
     updateCameraControls(_deltaTime);
 
@@ -292,11 +330,12 @@ void ScenePanel::drawTransformGizmo()
     ImGuizmo::SetDrawlist();
 
     // Set the gizmo rect to match our viewport
-    ImGuizmo::SetRect(_viewportMin.x, _viewportMin.y, static_cast<float>(_resolution.width), static_cast<float>(_resolution.height));
+    ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
+    ImGuizmo::SetRect(_viewportMin.x, _viewportMin.y, viewportSize.x, viewportSize.y);
 
     // Get matrices
-    glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
-    glm::mat4 projMatrix = _editorCamera->GetProjectionMatrix();
+    glm::mat4 viewMatrix = makeImGuizmoViewMatrix(*_editorCamera);
+    glm::mat4 projMatrix = makeImGuizmoProjectionMatrix(*_editorCamera);
 
     // Get entity transform
     auto& transform        = selectedEntity.GetComponent<TransformComponent>();
@@ -388,9 +427,13 @@ void ScenePanel::handlePicking()
         mouseY < _viewportMin.y || mouseY > _viewportMax.y)
         return;
 
+    ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
+    if (viewportSize.x <= 0.0f || viewportSize.y <= 0.0f)
+        return;
+
     // Convert to viewport-local coordinates (0-1 range)
-    float viewportX = (mouseX - _viewportMin.x) / static_cast<float>(_resolution.width);
-    float viewportY = (mouseY - _viewportMin.y) / static_cast<float>(_resolution.height);
+    float viewportX = (mouseX - _viewportMin.x) / viewportSize.x;
+    float viewportY = (mouseY - _viewportMin.y) / viewportSize.y;
 
     // Generate ray
     glm::vec3 rayDir    = screenToWorldRay(viewportX, viewportY);
