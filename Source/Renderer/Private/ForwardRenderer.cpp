@@ -26,6 +26,12 @@ void ForwardRenderer::Shutdown()
 
 void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
 {
+    RenderSceneSnapshot sceneSnapshot = _resourceManager->BuildRenderSceneSnapshot(scene, _shaderLibrary);
+    Render(sceneSnapshot, renderTarget);
+}
+
+void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* renderTarget)
+{
     _currentRenderTarget = renderTarget;
     const RenderTargetInfo& rtInfo = _currentRenderTarget->GetInfo();
 
@@ -53,8 +59,7 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
     }
     renderPassInfo.isSwapchainRenderPass = false;
 
-    RenderSceneSnapshot sceneSnapshot = _resourceManager->BuildRenderSceneSnapshot(scene, _shaderLibrary);
-    SceneResource sceneResource = _resourceManager->BuildSceneResource(sceneSnapshot);
+    SceneResource sceneResource = _resourceManager->BuildSceneResource(snapshot);
 
     auto makeRenderingInfo = [&](const RenderPassInfo& sourceInfo) -> RenderingInfo
     {

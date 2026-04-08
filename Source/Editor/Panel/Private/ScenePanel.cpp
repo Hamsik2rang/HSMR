@@ -40,9 +40,16 @@ void ScenePanel::Cleanup()
 
 void ScenePanel::Update(float deltaTime)
 {
+    _deltaTime = deltaTime;
+}
+
+void ScenePanel::updateCameraControls(float deltaTime)
+{
     static constexpr float moveSpeedDecelFactor = 0.5f; // Deceleration factor when no input is given
     static float currentCameraSpeed           = 0.0f;
     static glm::vec3 moveDir                  = glm::vec3(0.0f);
+
+    ImGuiIO& io = ImGui::GetIO();
 
     // Only process camera input when viewport is hovered and gizmo is not being used
     if (ImGuizmo::IsUsing())
@@ -56,7 +63,12 @@ void ScenePanel::Update(float deltaTime)
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         // Only start camera control if click started in this viewport
-        _rightClickStartedInViewport = _viewportHovered;
+        const bool hasViewportBounds = _viewportMax.x > _viewportMin.x && _viewportMax.y > _viewportMin.y;
+        const bool mouseInsideViewport =
+            hasViewportBounds &&
+            io.MousePos.x >= _viewportMin.x && io.MousePos.x <= _viewportMax.x &&
+            io.MousePos.y >= _viewportMin.y && io.MousePos.y <= _viewportMax.y;
+        _rightClickStartedInViewport = _viewportHovered || mouseInsideViewport;
     }
     if (!_rightClickStartedInViewport)
     {
@@ -64,38 +76,37 @@ void ScenePanel::Update(float deltaTime)
     }
 
     bool isMoveDirectionUpdated = false;
-    if (Input::IsPressed(Input::Button::MouseRight))
+    bool cameraDirty = false;
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
     {
 
         // --- Mouse look ---
-        uint16 mouseX, mouseY;
-        Input::GetMousePosition(mouseX, mouseY);
-
         if (_isMouseTracking)
         {
-            float dx = static_cast<float>(mouseX) - static_cast<float>(_lastMouseX);
-            float dy = static_cast<float>(mouseY) - static_cast<float>(_lastMouseY);
+            float dx = io.MouseDelta.x;
+            float dy = io.MouseDelta.y;
 
             if (dx != 0.0f || dy != 0.0f)
             {
                 float rotateSpeed = _editorCamera->GetRotateSpeed();
                 // Rotate(yawDelta, pitchDelta)
                 _editorCamera->Rotate(dx * rotateSpeed, -dy * rotateSpeed);
+                cameraDirty = true;
             }
         }
 
-        _lastMouseX      = mouseX;
-        _lastMouseY      = mouseY;
+        _lastMouseX      = static_cast<uint16>(io.MousePos.x);
+        _lastMouseY      = static_cast<uint16>(io.MousePos.y);
         _isMouseTracking = true;
 
         // --- Keyboard movement ---
         int front = 0, right = 0, up = 0;
-        if (Input::IsPressed(Input::Button::W)) front++;
-        if (Input::IsPressed(Input::Button::S)) front--;
-        if (Input::IsPressed(Input::Button::D)) right++;
-        if (Input::IsPressed(Input::Button::A)) right--;
-        if (Input::IsPressed(Input::Button::E)) up++;
-        if (Input::IsPressed(Input::Button::Q)) up--;
+        if (Input::IsPressed(Input::Button::W) || ImGui::IsKeyDown(ImGuiKey_W)) front++;
+        if (Input::IsPressed(Input::Button::S) || ImGui::IsKeyDown(ImGuiKey_S)) front--;
+        if (Input::IsPressed(Input::Button::D) || ImGui::IsKeyDown(ImGuiKey_D)) right++;
+        if (Input::IsPressed(Input::Button::A) || ImGui::IsKeyDown(ImGuiKey_A)) right--;
+        if (Input::IsPressed(Input::Button::E) || ImGui::IsKeyDown(ImGuiKey_E)) up++;
+        if (Input::IsPressed(Input::Button::Q) || ImGui::IsKeyDown(ImGuiKey_Q)) up--;
 
         if (front != 0 || right != 0 || up != 0)
         {
@@ -111,7 +122,11 @@ void ScenePanel::Update(float deltaTime)
     }
     else
     {
-        _isMouseTracking   = false;
+        _isMouseTracking = false;
+        _rightClickStartedInViewport = false;
+        currentCameraSpeed = 0.0f;
+        moveDir = glm::vec3(0.0f);
+        return;
     }
 
     if (isMoveDirectionUpdated)
@@ -125,11 +140,19 @@ void ScenePanel::Update(float deltaTime)
 
     if (Math::EpsilonEqual(currentCameraSpeed, 0.0f))
     {
+        if (cameraDirty)
+        {
+            _editorCamera->Update();
+        }
         return;
     }
     _editorCamera->Move(moveDir * deltaTime * currentCameraSpeed);
+    cameraDirty = true;
 
-    _editorCamera->Update();
+    if (cameraDirty)
+    {
+        _editorCamera->Update();
+    }
 }
 
 void ScenePanel::Draw()
@@ -171,6 +194,7 @@ void ScenePanel::Draw()
     {
         _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
     }
+    updateCameraControls(_deltaTime);
 
     // Accept ASSET_MODEL drag & drop onto viewport
     if (ImGui::BeginDragDropTarget())

@@ -22,7 +22,64 @@
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
 
+#include <algorithm>
+
 HS_NS_BEGIN
+
+namespace
+{
+struct CameraRenderEntry
+{
+    entt::entity entity = entt::null;
+    TransformComponent* transform = nullptr;
+    CameraComponent* camera = nullptr;
+    uint32 priority = 0;
+};
+
+uint32 getCameraRenderPriority(const CameraComponent& camera)
+{
+    if (camera.isPrimary)
+    {
+        return 0;
+    }
+
+    if (camera.isActive)
+    {
+        return 1;
+    }
+
+    return 2;
+}
+
+template <typename Func>
+void forEachCameraInRenderOrder(Scene* scene, Func&& func)
+{
+    std::vector<CameraRenderEntry> cameras;
+
+    auto view = scene->GetRegistry().view<TransformComponent, CameraComponent>();
+    for (auto [entity, transform, camera] : view.each())
+    {
+        CameraRenderEntry entry{};
+        entry.entity = entity;
+        entry.transform = &transform;
+        entry.camera = &camera;
+        entry.priority = getCameraRenderPriority(camera);
+        cameras.push_back(entry);
+    }
+
+    std::stable_sort(
+        cameras.begin(), cameras.end(),
+        [](const CameraRenderEntry& lhs, const CameraRenderEntry& rhs) -> bool
+        {
+            return lhs.priority < rhs.priority;
+        });
+
+    for (const CameraRenderEntry& camera : cameras)
+    {
+        func(camera.entity, *camera.transform, *camera.camera);
+    }
+}
+}
 
 RenderResourceManager::RenderResourceManager(RHIContext* rhiContext)
     : _rhiContext(rhiContext)
@@ -173,9 +230,7 @@ SceneResource RenderResourceManager::BuildSceneResource(
     bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 
     // 1. Cameras: CameraComponent + TransformComponent → CameraResource
-    auto cameraView    = registry.view<TransformComponent, CameraComponent>();
-    uint32 cameraIndex = 0;
-    for (auto [entity, transform, camera] : cameraView.each())
+    forEachCameraInRenderOrder(scene, [&](entt::entity entity, TransformComponent& transform, CameraComponent& camera)
     {
         PerView perView        = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
         CameraResource* camRes = GetOrCreateCameraResource(static_cast<uint64>(entt::to_integral(entity)), perView);
@@ -183,8 +238,7 @@ SceneResource RenderResourceManager::BuildSceneResource(
         {
             sceneResource.cameraResources.push_back(camRes);
         }
-        ++cameraIndex;
-    }
+    });
 
     // 2. Lights (TODO: Scene LightComponent → LightResource)
     auto lightView = registry.view<TransformComponent, LightComponent>();
@@ -274,14 +328,13 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
     auto& registry = scene->GetRegistry();
     bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 
-    auto cameraView = registry.view<TransformComponent, CameraComponent>();
-    for (auto [entity, transform, camera] : cameraView.each())
+    forEachCameraInRenderOrder(scene, [&](entt::entity entity, TransformComponent& transform, CameraComponent& camera)
     {
         RenderViewSnapshot viewSnapshot{};
         viewSnapshot.viewId  = static_cast<uint64>(entt::to_integral(entity));
         viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
         snapshot.views.push_back(viewSnapshot);
-    }
+    });
 
     auto lightView = registry.view<TransformComponent, LightComponent>();
     for (auto [entity, transform, light] : lightView.each())

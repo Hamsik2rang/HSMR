@@ -33,9 +33,38 @@
 
 #include "Core/Profiler/ProfileDataCollector.h"
 
+#include <limits>
 #include <vector>
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
+{
+    RenderViewSnapshot viewSnapshot{};
+    viewSnapshot.viewId = std::numeric_limits<uint64>::max();
+
+    if (!editorCamera)
+    {
+        return viewSnapshot;
+    }
+
+    editorCamera->Update();
+
+    PerView perView{};
+    perView.viewMatrix = editorCamera->GetViewMatrix();
+    perView.projectionMatrix = editorCamera->GetProjectionMatrix();
+    perView.viewProjectionMatrix = editorCamera->GetViewProjectionMatrix();
+    perView.inverseViewMatrix = editorCamera->GetInverseViewMatrix();
+    perView.inverseProjectionMatrix = editorCamera->GetInverseProjectionMatrix();
+    perView.inverseViewProjectionMatrix = editorCamera->GetInverseViewProjectionMatrix();
+    perView.cameraPosition = editorCamera->GetPosition();
+
+    viewSnapshot.perView = perView;
+    return viewSnapshot;
+}
+}
 
 EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
     : Window(ownerApp, name, width, height, flags)
@@ -123,13 +152,24 @@ void EditorWindow::onRender()
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_renderTargets[imageIndex];
 
-    // Sync EditorCamera → Scene camera entity
-    syncEditorCameraToScene();
-
     // 1. Render Scene to Scene Panel
     {
         HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
-        _renderer->Render(_scene.get(), curRT);
+        ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
+        RenderSceneSnapshot sceneSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
+            _scene.get(), _renderer->GetShaderLibrary());
+        RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(scenePanel->GetEditorCamera());
+
+        if (sceneSnapshot.views.empty())
+        {
+            sceneSnapshot.views.push_back(editorViewSnapshot);
+        }
+        else
+        {
+            sceneSnapshot.views[0] = editorViewSnapshot;
+        }
+
+        _renderer->Render(sceneSnapshot, curRT);
     }
 
     static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
