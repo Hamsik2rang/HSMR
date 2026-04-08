@@ -112,7 +112,7 @@ FSInput VertexMain(uint vertexIndex : SV_VertexID)
 }
 
 [shader("fragment")]
-float4 FragmentMain(FSInput input) : SV_Target
+float4 FragmentMain(FSInput input): SV_Target
 {
     return gridColor(input.uv, input.camPos);
 }

@@ -25,6 +25,6 @@ public struct LightUBO
     public float3 color;
     public float intensity;
     public float3 direction;
-    public int type;
+    public int type; // 0: Directional, 1: Point, 2: Spot
 };
 
