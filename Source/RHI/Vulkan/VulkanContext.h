@@ -14,6 +14,7 @@
 #include "RHI/Vulkan/VulkanDevice.h"
 #include "RHI/Vulkan/VulkanDescriptorPoolAllocator.h"
 #include "RHI/Vulkan/VulkanRenderingCache.h"
+#include "RHI/Vulkan/VulkanTransientResourceAllocator.h"
 
 HS_NS_BEGIN
 
@@ -89,6 +90,7 @@ public:
 
     HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::Vulkan; }
     HS_FORCEINLINE const RHICapabilities& GetCapabilities() const override { return _device.GetCapabilities(); }
+    HS_FORCEINLINE RHITransientResourceAllocator* GetTransientResourceAllocator() override { return &_transientResourceAllocator; }
 
     // TODO: ImGui 백엔드 변경되면 없애야합니다.
     HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }
@@ -128,6 +130,7 @@ private:
     VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
     VulkanDescriptorPoolAllocator _descriptorPoolAllocator;
     VulkanRenderingCache _renderingCache;
+    VulkanTransientResourceAllocator _transientResourceAllocator;
 
     VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
     bool _isInitialized                      = false;

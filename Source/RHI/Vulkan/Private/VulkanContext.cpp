@@ -104,6 +104,7 @@ bool VulkanContext::Initialize()
     }
 
     _renderingCache.Initialize(this, &_device);
+    _transientResourceAllocator.Initialize(&_device);
 
     createDefaultCommandPool();
 
@@ -132,6 +133,7 @@ void VulkanContext::Finalize()
     }
 
     // Cleanup Vulkan resources
+    _transientResourceAllocator.Finalize();
     _renderingCache.Finalize();
 
     if (_defaultCommandPool != VK_NULL_HANDLE)
@@ -935,6 +937,12 @@ void VulkanContext::DestroyTexture(RHITexture* texture)
     // Destroy the Vulkan texture
     VulkanTexture* textureVK = static_cast<VulkanTexture*>(texture);
 
+    if (textureVK->isTransient)
+    {
+        _transientResourceAllocator.ReleaseTexture(texture);
+        return;
+    }
+
     _renderingCache.Reset();
 
     if (textureVK->imageViewVk != VK_NULL_HANDLE)
@@ -947,7 +955,7 @@ void VulkanContext::DestroyTexture(RHITexture* texture)
         vkDestroyImage(_device, textureVK->handle, nullptr);
         textureVK->handle = VK_NULL_HANDLE;
     }
-    if (textureVK->memoryVk != VK_NULL_HANDLE)
+    if (textureVK->ownsMemory && textureVK->memoryVk != VK_NULL_HANDLE)
     {
         vkFreeMemory(_device, textureVK->memoryVk, nullptr);
         textureVK->memoryVk = VK_NULL_HANDLE;
@@ -1507,13 +1515,16 @@ void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const Rende
         const RenderingAttachmentInfo& attachmentInfo = renderingInfo.colorAttachments[i];
         VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
 
-        transitionAttachment(
-            commandBuffer,
-            textureVK,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_ASPECT_COLOR_BIT);
+        if (renderingInfo.enableAutomaticTransitions)
+        {
+            transitionAttachment(
+                commandBuffer,
+                textureVK,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT);
+        }
 
         colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         colorAttachments[i].imageView = textureVK->imageViewVk;
@@ -1527,13 +1538,16 @@ void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const Rende
     if (renderingInfo.useDepthStencilAttachment)
     {
         VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
-        transitionAttachment(
-            commandBuffer,
-            textureVK,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_ASPECT_DEPTH_BIT);
+        if (renderingInfo.enableAutomaticTransitions)
+        {
+            transitionAttachment(
+                commandBuffer,
+                textureVK,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
 
         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         depthAttachment.imageView = textureVK->imageViewVk;
@@ -1580,6 +1594,11 @@ void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const Renderi
     }
     HS_ASSERT(endRendering != nullptr, "Dynamic rendering function is not available");
     endRendering(commandBuffer);
+
+    if (!renderingInfo.enableAutomaticTransitions)
+    {
+        return;
+    }
 
     auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
                                    VulkanTexture* textureVK,

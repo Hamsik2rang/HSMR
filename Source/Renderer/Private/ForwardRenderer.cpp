@@ -62,6 +62,7 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
         renderingInfo.useDepthStencilAttachment = sourceInfo.useDepthStencilAttachment;
         renderingInfo.isSwapchainRendering = sourceInfo.isSwapchainRenderPass;
         renderingInfo.renderArea = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+        renderingInfo.enableAutomaticTransitions = false;
 
         renderingInfo.colorAttachments.reserve(sourceInfo.colorAttachments.size());
         for (uint32 i = 0; i < sourceInfo.colorAttachmentCount; i++)

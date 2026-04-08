@@ -7,6 +7,64 @@
 
 HS_NS_BEGIN
 
+namespace
+{
+struct VulkanTextureStateInfo
+{
+    VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkPipelineStageFlags stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    VkAccessFlags access = 0;
+};
+
+VulkanTextureStateInfo getTextureStateInfo(ERHITextureState state)
+{
+    switch (state)
+    {
+    case ERHITextureState::ShaderRead:
+        return {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT};
+    case ERHITextureState::ColorAttachmentWrite:
+        return {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT};
+    case ERHITextureState::DepthAttachmentRead:
+        return {VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT};
+    case ERHITextureState::DepthAttachmentWrite:
+        return {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT};
+    case ERHITextureState::StorageReadWrite:
+        return {VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT};
+    case ERHITextureState::TransferRead:
+        return {VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT};
+    case ERHITextureState::TransferWrite:
+        return {VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT};
+    case ERHITextureState::Present:
+        return {VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0};
+    case ERHITextureState::Undefined:
+    default:
+        return {};
+    }
+}
+
+VkImageAspectFlags getAspectMask(const TextureInfo& info)
+{
+    switch (info.format)
+    {
+    case EPixelFormat::Depth32:
+        return VK_IMAGE_ASPECT_DEPTH_BIT;
+    case EPixelFormat::Stencil8:
+        return VK_IMAGE_ASPECT_STENCIL_BIT;
+    case EPixelFormat::Depth24Stencil8:
+    case EPixelFormat::Depth32Stencil8:
+        return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    default:
+        return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+}
+}
+
 VulkanCommandQueue::VulkanCommandQueue(const char* name)
     : RHICommandQueue(name)
 {
@@ -303,54 +361,80 @@ void VulkanCommandBuffer::EndComputePass()
     _isComputeBegan          = false;
 }
 
-void VulkanCommandBuffer::TextureBarrier(RHITexture* texture)
+void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count)
 {
     HS_ASSERT(_isBegan, "CommandBuffer has not began");
-
-    VulkanTexture* textureVK = static_cast<VulkanTexture*>(texture);
-
-    // Create image memory barrier for compute shader synchronization
-    VkImageMemoryBarrier barrier{};
-    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.srcAccessMask                   = VK_ACCESS_SHADER_WRITE_BIT;
-    barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
-    barrier.oldLayout                       = VK_IMAGE_LAYOUT_GENERAL;
-    barrier.newLayout                       = VK_IMAGE_LAYOUT_GENERAL;
-    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image                           = textureVK->handle;
-    VkImageAspectFlags aspectMask;
-    switch (textureVK->info.format)
+    if (barriers == nullptr || count == 0)
     {
-    case EPixelFormat::Depth32:
-        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        break;
-    case EPixelFormat::Stencil8:
-        aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-        break;
-    case EPixelFormat::Depth24Stencil8:
-    case EPixelFormat::Depth32Stencil8:
-        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-        break;
-    default:
-        aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        break;
+        return;
     }
-    barrier.subresourceRange.aspectMask     = aspectMask;
-    barrier.subresourceRange.baseMipLevel   = 0;
-    barrier.subresourceRange.levelCount     = textureVK->info.mipLevel;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount     = textureVK->info.arrayLength;
+
+    std::vector<VkImageMemoryBarrier> imageBarriers;
+    imageBarriers.reserve(count);
+    VkPipelineStageFlags srcStages = 0;
+    VkPipelineStageFlags dstStages = 0;
+
+    for (uint32 i = 0; i < count; i++)
+    {
+        const RHITextureBarrierDesc& desc = barriers[i];
+        if (desc.texture == nullptr || desc.before == desc.after)
+        {
+            continue;
+        }
+
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(desc.texture);
+        VulkanTextureStateInfo beforeInfo = getTextureStateInfo(desc.before);
+        VulkanTextureStateInfo afterInfo = getTextureStateInfo(desc.after);
+        VkImageLayout oldLayout = textureVK->layoutVk != VK_IMAGE_LAYOUT_UNDEFINED ? textureVK->layoutVk : beforeInfo.layout;
+        if (oldLayout == afterInfo.layout)
+        {
+            continue;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask = beforeInfo.access;
+        barrier.dstAccessMask = afterInfo.access;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = afterInfo.layout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textureVK->handle;
+        barrier.subresourceRange.aspectMask = getAspectMask(textureVK->info);
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+        imageBarriers.push_back(barrier);
+        srcStages |= beforeInfo.stage;
+        dstStages |= afterInfo.stage;
+        textureVK->layoutVk = afterInfo.layout;
+    }
+
+    if (imageBarriers.empty())
+    {
+        return;
+    }
 
     vkCmdPipelineBarrier(
         handle,
-        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        srcStages == 0 ? VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT : srcStages,
+        dstStages == 0 ? VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT : dstStages,
         0,
         0, nullptr,
         0, nullptr,
-        1, &barrier
+        static_cast<uint32>(imageBarriers.size()), imageBarriers.data()
     );
+}
+
+void VulkanCommandBuffer::TextureBarrier(RHITexture* texture)
+{
+    RHITextureBarrierDesc barrier{};
+    barrier.texture = texture;
+    barrier.before = ERHITextureState::StorageReadWrite;
+    barrier.after = ERHITextureState::ShaderRead;
+    TextureBarrier(&barrier, 1);
 }
 
 HS_NS_END

@@ -120,6 +120,8 @@ private:
 
     // Pass → 해당 패스가 사용하는 리소스 접근 목록
     std::unordered_map<RGPass*, std::vector<RGResourceAccess>> _resourceDependencyMap;
+    std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _textureBarriers;
+    std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _texturePostBarriers;
 
     // 외부에서 등록된 RHIHandle → RGResource 역방향 매핑
     std::unordered_map<RHIHandle*, RGResource*> _externalRHIHandleMap;

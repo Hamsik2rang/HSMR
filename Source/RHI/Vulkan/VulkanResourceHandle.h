@@ -25,6 +25,12 @@ struct HS_RHI_API VulkanTexture : public RHITexture
     VkImageView imageViewVk = VK_NULL_HANDLE;
     VkDeviceMemory memoryVk = VK_NULL_HANDLE;
     VkImageLayout layoutVk  = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkDeviceSize memoryOffset = 0;
+    VkDeviceSize memorySize   = 0;
+    uint32 transientHeapIndex = 0;
+    uint8 transientFrameIndex = 0;
+    bool ownsMemory           = true;
+    bool isTransient          = false;
 };
 
 struct HS_RHI_API VulkanSampler : public RHISampler

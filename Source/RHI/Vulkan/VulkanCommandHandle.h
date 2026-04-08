@@ -65,6 +65,7 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
     void EndComputePass() override;
 
     // Memory barriers
+    void TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count) override;
     void TextureBarrier(RHITexture* texture) override;
 
     void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) override;

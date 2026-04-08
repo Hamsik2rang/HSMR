@@ -160,6 +160,19 @@ enum class ERHIResourceBindingTier
     LegacyDescriptorSet,
 };
 
+enum class ERHITextureState
+{
+    Undefined = 0,
+    ShaderRead,
+    ColorAttachmentWrite,
+    DepthAttachmentRead,
+    DepthAttachmentWrite,
+    StorageReadWrite,
+    TransferRead,
+    TransferWrite,
+    Present,
+};
+
 struct RHICapabilities
 {
     ERHIPlatform platform                      = ERHIPlatform::Invalid;
@@ -566,7 +579,8 @@ struct RenderingInfo
     Area renderArea{};
     uint8 colorAttachmentCount     = 0;
     bool useDepthStencilAttachment = false;
-    bool isSwapchainRendering      = false;
+    bool isSwapchainRendering       = false;
+    bool enableAutomaticTransitions = true;
 
     RenderPassInfo ToRenderPassInfo() const
     {
@@ -590,6 +604,13 @@ struct RenderingInfo
     {
         return MakePipelineRenderTargetLayout(ToRenderPassInfo());
     }
+};
+
+struct RHITextureBarrierDesc
+{
+    RHITexture* texture       = nullptr;
+    ERHITextureState before   = ERHITextureState::Undefined;
+    ERHITextureState after    = ERHITextureState::Undefined;
 };
 
 class RHIRenderPass;

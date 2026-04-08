@@ -67,7 +67,8 @@ public:
     virtual void EndComputePass() = 0;  // End compute encoder and synchronize
 
     // Memory barriers
-    virtual void TextureBarrier(RHITexture* texture) = 0;  // Synchronize texture access
+    virtual void TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count) = 0;
+    virtual void TextureBarrier(RHITexture* texture) = 0;  // Compatibility wrapper for coarse texture synchronization
 
     virtual void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) = 0;
     virtual void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) = 0;

@@ -15,6 +15,7 @@
 #include "RHI/RenderHandle.h"
 #include "RHI/CommandHandle.h"
 #include "RHI/ResourceHandle.h"
+#include "RHI/TransientResourceAllocator.h"
 
 HS_NS_BEGIN
 
@@ -88,6 +89,7 @@ public:
     
     virtual ERHIPlatform GetCurrentPlatform() const = 0;
     virtual const RHICapabilities& GetCapabilities() const = 0;
+    virtual RHITransientResourceAllocator* GetTransientResourceAllocator() { return nullptr; }
 
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();

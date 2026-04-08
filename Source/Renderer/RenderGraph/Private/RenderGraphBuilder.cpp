@@ -4,6 +4,54 @@
 
 HS_NS_BEGIN
 
+namespace
+{
+struct ResourceLifetime
+{
+    int firstPassIdx = -1;
+    int lastPassIdx  = -1;
+};
+
+ERHITextureState ToRHITextureState(ERGTextureAccess access)
+{
+    switch (access)
+    {
+    case ERGTextureAccess::ColorAttachmentWrite:
+        return ERHITextureState::ColorAttachmentWrite;
+    case ERGTextureAccess::DepthAttachmentWrite:
+    case ERGTextureAccess::DepthStencilAttachmentWrite:
+    case ERGTextureAccess::DepthAttachmentRead:
+    case ERGTextureAccess::DepthStencilAttachmentRead:
+        // RenderingInfo does not expose a read-only depth attachment layout yet.
+        // Keep depth attachments in attachment-optimal layout until that is explicit.
+        return ERHITextureState::DepthAttachmentWrite;
+    case ERGTextureAccess::ReadWrite:
+    case ERGTextureAccess::ComputeShaderWrite:
+        return ERHITextureState::StorageReadWrite;
+    case ERGTextureAccess::TransferRead:
+        return ERHITextureState::TransferRead;
+    case ERGTextureAccess::TransferWrite:
+        return ERHITextureState::TransferWrite;
+    case ERGTextureAccess::Present:
+        return ERHITextureState::Present;
+    case ERGTextureAccess::ComputeShaderRead:
+    case ERGTextureAccess::FragmentShaderReadSampledImageOrUniformTexelBuffer:
+    case ERGTextureAccess::ReadOnly:
+    default:
+        return ERHITextureState::ShaderRead;
+    }
+}
+
+bool IsAttachmentAccess(ERGTextureAccess access)
+{
+    return access == ERGTextureAccess::ColorAttachmentWrite ||
+           access == ERGTextureAccess::DepthAttachmentRead ||
+           access == ERGTextureAccess::DepthAttachmentWrite ||
+           access == ERGTextureAccess::DepthStencilAttachmentRead ||
+           access == ERGTextureAccess::DepthStencilAttachmentWrite;
+}
+}
+
 RenderGraphBuilder::RenderGraphBuilder()
 {}
 
@@ -207,6 +255,10 @@ void RenderGraphBuilder::Setup(RHICommandBuffer* cmdBuffer)
 {
     _currentCmdBuffer = cmdBuffer;
     _frameIndex       = (_frameIndex + 1) % s_maxFramesInFlight;
+    if (_rhiContext && _rhiContext->GetTransientResourceAllocator())
+    {
+        _rhiContext->GetTransientResourceAllocator()->BeginFrame(_frameIndex);
+    }
 }
 
 void RenderGraphBuilder::Compile()
@@ -294,11 +346,6 @@ void RenderGraphBuilder::Compile()
     //   - i에서 수명이 시작하는 리소스를 freed 풀에서 할당 (없으면 신규 생성)
     // 수명이 겹치지 않는 동일 스펙의 리소스는 동일한 RHI 핸들을 공유합니다.
     // -------------------------------------------------------------------------
-    struct ResourceLifetime
-    {
-        int firstPassIdx = -1;
-        int lastPassIdx  = -1;
-    };
     std::unordered_map<RGResource*, ResourceLifetime> lifetimes;
 
     const int n = static_cast<int>(_executablePasses.size());
@@ -398,6 +445,24 @@ void RenderGraphBuilder::Compile()
         _rhiBufferRegistry._freedBuffers[info].push_back(rgBuf->_rhiBuffer);
     };
 
+    RHITransientResourceAllocator* transientAllocator = _rhiContext ? _rhiContext->GetTransientResourceAllocator() : nullptr;
+    bool useTransientAllocator = transientAllocator != nullptr && transientAllocator->IsSupported();
+    if (useTransientAllocator)
+    {
+        for (auto& [resource, lt] : lifetimes)
+        {
+            if (isExternal(resource) || resource->_type != RGResource::EType::Texture)
+            {
+                continue;
+            }
+
+            RGTexture* rgTex = static_cast<RGTexture*>(resource);
+            const char* name = rgTex->_desc.name ? rgTex->_desc.name : "RenderGraph Transient Texture";
+            rgTex->_rhiTexture = transientAllocator->CreateTexture(name, rgTex->_desc.info, lt.firstPassIdx, lt.lastPassIdx);
+            HS_ASSERT(rgTex->_rhiTexture != nullptr, "RGTexture '%s' transient allocation failed!", name);
+        }
+    }
+
     // n+1번 순회: i=0..n-1 에서 할당/해제, i=n 에서 마지막 정리
     for (int i = 0; i <= n; i++)
     {
@@ -413,7 +478,10 @@ void RenderGraphBuilder::Compile()
                 }
                 if (resource->_type == RGResource::EType::Texture)
                 {
-                    freeTexture(static_cast<RGTexture*>(resource));
+                    if (!useTransientAllocator)
+                    {
+                        freeTexture(static_cast<RGTexture*>(resource));
+                    }
                 }
                 else if (resource->_type == RGResource::EType::Buffer)
                 {
@@ -436,7 +504,10 @@ void RenderGraphBuilder::Compile()
             }
             if (resource->_type == RGResource::EType::Texture)
             {
-                allocTexture(static_cast<RGTexture*>(resource));
+                if (!useTransientAllocator)
+                {
+                    allocTexture(static_cast<RGTexture*>(resource));
+                }
             }
             else if (resource->_type == RGResource::EType::Buffer)
             {
@@ -444,45 +515,116 @@ void RenderGraphBuilder::Compile()
             }
         }
     }
+
+    _textureBarriers.clear();
+    _texturePostBarriers.clear();
+    std::unordered_map<RGResource*, ERGTextureAccess> currentAccessMap;
+    const bool skipLegacyAttachmentBarriers = _rhiContext &&
+        _rhiContext->GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass;
+
+    for (RGPass* pass : _executablePasses)
+    {
+        auto depIt = _resourceDependencyMap.find(pass);
+        if (depIt == _resourceDependencyMap.end())
+        {
+            continue;
+        }
+
+        for (const RGResourceAccess& access : depIt->second)
+        {
+            if (access.resource->_type != RGResource::EType::Texture)
+            {
+                continue;
+            }
+            if (skipLegacyAttachmentBarriers && IsAttachmentAccess(access.textureAccess))
+            {
+                currentAccessMap[access.resource] = access.textureAccess;
+                continue;
+            }
+
+            RGTexture* rgTex = static_cast<RGTexture*>(access.resource);
+            if (rgTex->_rhiTexture == nullptr)
+            {
+                continue;
+            }
+
+            auto currentIt = currentAccessMap.find(access.resource);
+            ERGTextureAccess currentAccess = currentIt != currentAccessMap.end()
+                ? currentIt->second
+                : rgTex->_desc.access;
+
+            if (currentAccess != access.textureAccess)
+            {
+                RHITextureBarrierDesc barrier{};
+                barrier.texture = rgTex->_rhiTexture;
+                barrier.before = ToRHITextureState(currentAccess);
+                barrier.after = ToRHITextureState(access.textureAccess);
+                if (barrier.before != barrier.after)
+                {
+                    _textureBarriers[pass].push_back(barrier);
+                }
+                currentAccessMap[access.resource] = access.textureAccess;
+            }
+        }
+    }
+
+    for (auto& [resource, lt] : lifetimes)
+    {
+        if (resource->_type != RGResource::EType::Texture || lt.lastPassIdx < 0 ||
+            lt.lastPassIdx >= static_cast<int>(_executablePasses.size()))
+        {
+            continue;
+        }
+        if (skipLegacyAttachmentBarriers)
+        {
+            continue;
+        }
+
+        RGTexture* rgTex = static_cast<RGTexture*>(resource);
+        if (rgTex->_rhiTexture == nullptr)
+        {
+            continue;
+        }
+
+        auto currentIt = currentAccessMap.find(resource);
+        ERGTextureAccess finalAccess = currentIt != currentAccessMap.end()
+            ? currentIt->second
+            : rgTex->_desc.access;
+
+        ERHITextureState before = ToRHITextureState(finalAccess);
+        ERHITextureState after = ToRHITextureState(rgTex->_desc.access);
+        if (before == after)
+        {
+            continue;
+        }
+
+        RHITextureBarrierDesc barrier{};
+        barrier.texture = rgTex->_rhiTexture;
+        barrier.before = before;
+        barrier.after = after;
+        _texturePostBarriers[_executablePasses[lt.lastPassIdx]].push_back(barrier);
+    }
 }
 
 void RenderGraphBuilder::Execute()
 {
     for (auto* pass : _executablePasses)
     {
-        // 리소스 배리어 삽입: 필요한 접근 상태로 전환합니다.
-        // NOTE: 현재 RHI TextureBarrier()는 텍스처 인수만 받습니다.
-        //       레이아웃/스테이지 정보를 갖춘 확장이 필요하나,
-        //       v1에서는 상태가 달라질 때 full barrier를 삽입합니다.
-        auto depIt = _resourceDependencyMap.find(pass);
-        if (depIt != _resourceDependencyMap.end())
+        // 리소스 배리어 삽입: Compile()에서 계산한 정확한 before/after 상태로 전환합니다.
+        auto barrierIt = _textureBarriers.find(pass);
+        if (barrierIt != _textureBarriers.end() && !barrierIt->second.empty())
         {
-            for (auto& access : depIt->second)
-            {
-                if (access.resource->_type != RGResource::EType::Texture)
-                {
-                    continue;
-                }
-                RGTexture* rgTex = static_cast<RGTexture*>(access.resource);
-                if (rgTex->_rhiTexture == nullptr)
-                {
-                    continue;
-                }
-
-                auto stateIt = _resourceCurrentAccess.find(access.resource);
-                ERGTextureAccess currentAccess = (stateIt != _resourceCurrentAccess.end())
-                    ? stateIt->second
-                    : ERGTextureAccess::ReadOnly;
-
-                if (currentAccess != access.textureAccess)
-                {
-                    _currentCmdBuffer->TextureBarrier(rgTex->_rhiTexture);
-                    _resourceCurrentAccess[access.resource] = access.textureAccess;
-                }
-            }
+            _currentCmdBuffer->TextureBarrier(barrierIt->second.data(), static_cast<uint32>(barrierIt->second.size()));
         }
 
         pass->Execute(*_currentCmdBuffer);
+
+        auto postBarrierIt = _texturePostBarriers.find(pass);
+        if (postBarrierIt != _texturePostBarriers.end() && !postBarrierIt->second.empty())
+        {
+            _currentCmdBuffer->TextureBarrier(postBarrierIt->second.data(), static_cast<uint32>(postBarrierIt->second.size()));
+        }
+
         pass->_isExecuted = true;
     }
 }
@@ -504,6 +646,8 @@ void RenderGraphBuilder::Reset()
     _allResources.clear();
     _executablePasses.clear();
     _resourceDependencyMap.clear();
+    _textureBarriers.clear();
+    _texturePostBarriers.clear();
     _externalRHIHandleMap.clear();
     _resourceCurrentAccess.clear();
     _allocator.Reset(_frameIndex);

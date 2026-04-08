@@ -432,9 +432,11 @@ void MetalCommandBuffer::EndComputePass()
     _isComputeBegan = false;
 }
 
-void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+void MetalCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+    (void)barriers;
+    (void)count;
 
     // For Metal, we need to use a blit encoder to synchronize texture access
     // between compute and render passes. This is handled automatically by
@@ -447,6 +449,15 @@ void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
         // Use memory barrier for compute shader synchronization
         [curComputeEncoder memoryBarrierWithScope:MTLBarrierScopeTextures];
     }
+}
+
+void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+{
+    RHITextureBarrierDesc barrier{};
+    barrier.texture = texture;
+    barrier.before = ERHITextureState::StorageReadWrite;
+    barrier.after = ERHITextureState::ShaderRead;
+    TextureBarrier(&barrier, 1);
 }
 
 void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
