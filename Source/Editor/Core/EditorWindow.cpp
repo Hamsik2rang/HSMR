@@ -237,6 +237,8 @@ void EditorWindow::setupPanels()
 
     _sceneStatusPanel = MakeScoped<SceneStatusPanel>(this);
     _sceneStatusPanel->Setup();
+    static_cast<SceneStatusPanel*>(_sceneStatusPanel.get())->SetScenePanel(
+        static_cast<ScenePanel*>(_scenePanel.get()));
     _basePanel->InsertPanel(_sceneStatusPanel.get());
 
     _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
@@ -266,10 +268,12 @@ void EditorWindow::setupDefaultScene()
     auto& camera = cameraEntity.AddComponent<CameraComponent>();
     camera.isPrimary = true;
 
-    // Test mesh entity
-    Entity entity = _scene->CreateEntity("Damaged Helmet");
-    entity.GetComponent<TransformComponent>().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    entity.AddComponent<MeshRendererComponent>();
+    Entity lightEntity = _scene->CreateEntity("Directional Light");
+    auto& light = lightEntity.AddComponent<LightComponent>();
+    light.type = ELightType::Directional;
+    auto& lightTransform = lightEntity.GetComponent<TransformComponent>();
+    lightTransform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+    lightTransform.SetEulerAngles(glm::vec3(45.0f, -45.0f, 0.0f));
 
     _scene->Update(0.0f);
 }
@@ -302,11 +306,6 @@ void EditorWindow::updateSceneCamera(float deltaTime)
     if (_scenePanel)
     {
         _scenePanel->Update(deltaTime);
-        ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
-        SceneStatusPanel* sceneStatusPanel = static_cast<SceneStatusPanel*>(_sceneStatusPanel.get());
-
-        sceneStatusPanel->SetSceneCamera(scenePanel->GetEditorCamera());
-        sceneStatusPanel->SetSceneBounds(scenePanel->GetViewportMin(), scenePanel->GetViewportMax());
     }
 }
 

@@ -14,6 +14,7 @@
 #include "Resource/Mesh.h"
 #include "Resource/Shader.h"
 #include "Resource/Image.h"
+#include "Resource/ObjectManager.h"
 
 #include "Renderer/CameraUtils.h"
 
@@ -28,6 +29,8 @@ HS_NS_BEGIN
 
 namespace
 {
+constexpr uint64 s_defaultLightResourceKey = static_cast<uint64>(-1);
+
 struct CameraRenderEntry
 {
     entt::entity entity = entt::null;
@@ -49,6 +52,22 @@ uint32 getCameraRenderPriority(const CameraComponent& camera)
     }
 
     return 2;
+}
+
+Image* getFallbackWhiteImage()
+{
+    return const_cast<Image*>(ObjectManager::GetFallbackImage2DWhite());
+}
+
+LightUBO createDefaultLight()
+{
+    LightUBO light{};
+    light.position  = glm::vec4(0.0f, 10.0f, 0.0f, 0.0f);
+    light.color     = glm::vec3(1.0f);
+    light.intensity = 1.0f;
+    light.direction = glm::vec3(0.0f, -1.0f, 0.0f);
+    light.type      = static_cast<int>(ELightType::Directional);
+    return light;
 }
 
 template <typename Func>
@@ -253,10 +272,22 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
         LightResource* lightRes = GetOrCreateLightResource(static_cast<uint64>(entt::to_integral(entity)), lightUBO);
 
-        sceneResource.lightResources.push_back(lightRes);
+        if (lightRes)
+        {
+            sceneResource.lightResources.push_back(lightRes);
+        }
     }
 
     // 3. MeshRenderer entities → RenderModel
+    if (sceneResource.lightResources.empty())
+    {
+        LightResource* lightRes = GetOrCreateLightResource(s_defaultLightResourceKey, createDefaultLight());
+        if (lightRes)
+        {
+            sceneResource.lightResources.push_back(lightRes);
+        }
+    }
+
     auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
     for (auto [entity, transform, meshRenderer] : meshView.each())
     {
@@ -346,6 +377,13 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
         lightSnapshot.light.intensity = light.intensity;
         lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
         lightSnapshot.light.type      = static_cast<int>(light.type);
+        snapshot.lights.push_back(lightSnapshot);
+    }
+    if (snapshot.lights.empty())
+    {
+        RenderLightSnapshot lightSnapshot{};
+        lightSnapshot.lightId = s_defaultLightResourceKey;
+        lightSnapshot.light   = createDefaultLight();
         snapshot.lights.push_back(lightSnapshot);
     }
 
@@ -998,58 +1036,63 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         appendBufferBinding(buf, targetBuffer);
     }
 
-    // 2. Texture bindings (combined image sampler)
-    if (material)
+    // 2. Texture bindings
+    //
+    // Shader reflection describes the pipeline layout contract, not only the resources a material currently has.
+    // If a material does not have a texture yet, the descriptor still has to exist in the layout. Bind the engine's
+    // 1x1 white image so newly dropped mesh-only models can render until the user assigns a real texture in Inspector.
+    for (const auto& tex : reflection.textureBindings)
     {
-        for (const auto& tex : reflection.textureBindings)
+        EMaterialTextureType texType = mapTextureNameToType(tex.name);
+        Image* image = material ? material->GetTexture(texType) : nullptr;
+        if (!image)
         {
-            // Map shader texture name to material texture type
-            EMaterialTextureType texType = mapTextureNameToType(tex.name);
-            Image* image                 = material->GetTexture(texType);
-
-            if (!image)
-            {
-                HS_LOG(debug, "[RenderResourceManager] No texture for '%s' (type %d)", tex.name.c_str(), static_cast<int>(texType));
-                continue;
-            }
-
-            ImageResource* imgRes = GetOrCreateImageResource(image);
-            if (!imgRes || !imgRes->isValid)
-            {
-                HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'", tex.name.c_str());
-                continue;
-            }
-            const ShaderSamplerBindingInfo* matchedSampler = nullptr;
-            for (const auto& samp : reflection.samplerBindings)
-            {
-                if (samp.nameHash == tex.nameHash && samp.stages == tex.stages)
-                {
-                    matchedSampler = &samp;
-                    break;
-                }
-                if (!matchedSampler && samp.nameHash == tex.nameHash)
-                {
-                    matchedSampler = &samp;
-                }
-            }
-
-            if (!matchedSampler && !reflection.samplerBindings.empty())
-            {
-                matchedSampler = &reflection.samplerBindings.front();
-            }
-
-            if (matchedSampler)
-            {
-                appendTextureBinding(tex, imgRes->texture);
-                appendSamplerBinding(*matchedSampler, imgRes->sampler);
-            }
-            else
-            {
-                appendCombinedBinding(tex, imgRes->texture, imgRes->sampler);
-            }
-
-            HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
+            image = getFallbackWhiteImage();
         }
+
+        if (!image)
+        {
+            HS_LOG(warning, "[RenderResourceManager] No texture or fallback image for '%s' (type %d)",
+                tex.name.c_str(), static_cast<int>(texType));
+            continue;
+        }
+
+        ImageResource* imgRes = GetOrCreateImageResource(image);
+        if (!imgRes || !imgRes->isValid)
+        {
+            HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'", tex.name.c_str());
+            continue;
+        }
+        const ShaderSamplerBindingInfo* matchedSampler = nullptr;
+        for (const auto& samp : reflection.samplerBindings)
+        {
+            if (samp.nameHash == tex.nameHash && samp.stages == tex.stages)
+            {
+                matchedSampler = &samp;
+                break;
+            }
+            if (!matchedSampler && samp.nameHash == tex.nameHash)
+            {
+                matchedSampler = &samp;
+            }
+        }
+
+        if (!matchedSampler && !reflection.samplerBindings.empty())
+        {
+            matchedSampler = &reflection.samplerBindings.front();
+        }
+
+        if (matchedSampler)
+        {
+            appendTextureBinding(tex, imgRes->texture);
+            appendSamplerBinding(*matchedSampler, imgRes->sampler);
+        }
+        else
+        {
+            appendCombinedBinding(tex, imgRes->texture, imgRes->sampler);
+        }
+
+        HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
     }
 
     if (bindings.empty())

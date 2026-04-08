@@ -7,6 +7,7 @@
 
 #include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Panel/ScenePanel.h"
 
 #include "Core/HAL/Timer.h"
 #include "Core/Profiler/Profiler.h"
@@ -46,6 +47,13 @@ void SceneStatusPanel::Draw()
         return;
     }
 
+    if (_scenePanel)
+    {
+        _sceneCamera = _scenePanel->GetEditorCamera();
+        _sceneBoundsMin = _scenePanel->GetViewportMin();
+        _sceneBoundsMax = _scenePanel->GetViewportMax();
+    }
+
     // Calculate frame time
     double currentTime = Timer::GetElapsedMilliseconds();
     float deltaMs = static_cast<float>(currentTime - _lastFrameTime);
@@ -82,18 +90,22 @@ void SceneStatusPanel::Draw()
 
     const float padding = 10.0f;
 
-    // Clamp position to scene bounds BEFORE Begin() to avoid conflicting with drag input
+    // ImGui window positions are screen-space coordinates. The scene viewport is also reported in screen space,
+    // so store the overlay as an offset from the current scene viewport origin and rebuild its absolute position
+    // every frame. This keeps the overlay visually attached to the scene panel when the native app window moves.
     bool hasBounds = (_sceneBoundsMax.x > _sceneBoundsMin.x) &&
                      (_sceneBoundsMax.y > _sceneBoundsMin.y);
 
-    if (hasBounds && _prevWindowSize.x > 0.0f)
+    if (hasBounds)
     {
-        float clampedX = std::max(_sceneBoundsMin.x,
-                         std::min(_prevWindowPos.x, _sceneBoundsMax.x - _prevWindowSize.x));
-        float clampedY = std::max(_sceneBoundsMin.y,
-                         std::min(_prevWindowPos.y, _sceneBoundsMax.y - _prevWindowSize.y));
+        const float maxOffsetX = std::max(0.0f, _sceneBoundsMax.x - _sceneBoundsMin.x - _prevWindowSize.x);
+        const float maxOffsetY = std::max(0.0f, _sceneBoundsMax.y - _sceneBoundsMin.y - _prevWindowSize.y);
 
-        ImGui::SetNextWindowPos(ImVec2(clampedX, clampedY));
+        _windowOffset.x = std::max(0.0f, std::min(_windowOffset.x, maxOffsetX));
+        _windowOffset.y = std::max(0.0f, std::min(_windowOffset.y, maxOffsetY));
+
+        ImGui::SetNextWindowPos(ImVec2(_sceneBoundsMin.x + _windowOffset.x,
+                                       _sceneBoundsMin.y + _windowOffset.y));
     }
     else
     {
@@ -104,8 +116,13 @@ void SceneStatusPanel::Draw()
 
     if (ImGui::Begin("Scene Status", nullptr, windowFlags))
     {
-        _prevWindowPos = ImGui::GetWindowPos();
         _prevWindowSize = ImGui::GetWindowSize();
+        if (hasBounds)
+        {
+            const ImVec2 windowPos = ImGui::GetWindowPos();
+            _windowOffset = ImVec2(windowPos.x - _sceneBoundsMin.x,
+                                   windowPos.y - _sceneBoundsMin.y);
+        }
 
         // Quick Stats
         _drawQuickStatsSection();

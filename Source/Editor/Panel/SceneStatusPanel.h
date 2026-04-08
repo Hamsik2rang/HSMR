@@ -16,6 +16,8 @@
 
 HS_NS_EDITOR_BEGIN
 
+class ScenePanel;
+
 class HS_EDITOR_API SceneStatusPanel : public Panel
 {
 public:
@@ -28,6 +30,7 @@ public:
 
     void SetSceneCamera(const EditorCamera* camera) { _sceneCamera = camera; }
     void SetSceneBounds(ImVec2 boundsMin, ImVec2 boundsMax) { _sceneBoundsMin = boundsMin; _sceneBoundsMax = boundsMax; }
+    void SetScenePanel(const ScenePanel* scenePanel) { _scenePanel = scenePanel; }
 
 private:
     // UI sections
@@ -53,12 +56,16 @@ private:
     bool _showCamera = true;
     float _targetFPS = 60.0f;
 
+    const ScenePanel* _scenePanel = nullptr;
     const EditorCamera* _sceneCamera = nullptr;
 
-    // Scene bounds for position clamping
+    // Scene bounds for position clamping.
+    // The overlay position is stored as an offset from _sceneBoundsMin instead of an absolute ImGui screen
+    // coordinate. ImGui window positions live in screen space, so keeping only the absolute position makes the
+    // overlay stay behind when the native application window moves.
     ImVec2 _sceneBoundsMin = ImVec2(0, 0);
     ImVec2 _sceneBoundsMax = ImVec2(0, 0);
-    ImVec2 _prevWindowPos = ImVec2(0, 0);
+    ImVec2 _windowOffset = ImVec2(10, 10);
     ImVec2 _prevWindowSize = ImVec2(0, 0);
 };
 
