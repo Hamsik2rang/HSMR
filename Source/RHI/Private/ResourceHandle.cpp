@@ -13,6 +13,16 @@ RHITexture::~RHITexture()
 {
 }
 
+RHIHeap::RHIHeap(const char* name, const RHIHeapInfo& info)
+    : RHIHandle(EType::Heap, name)
+    , info(info)
+{
+}
+
+RHIHeap::~RHIHeap()
+{
+}
+
 RHISampler::RHISampler(const char* name, const SamplerInfo& info)
     : RHIHandle(EType::Sampler, name)
     , info(info)

@@ -71,10 +71,10 @@ void GUIContext::SetColorTheme(bool useWhite)
 {
     auto& styles = ImGui::GetStyle();
 
-    styles.WindowRounding   = 5.0f;
+    styles.WindowRounding   = 0.0f;
     styles.TabRounding      = 0.0f;
-    styles.FrameRounding    = 5.0f;
-    styles.PopupRounding    = 5.0f;
+    styles.FrameRounding    = 0.0f;
+    styles.PopupRounding    = 0.0f;
     styles.WindowBorderSize = 0.0f;
 
     auto& colors = styles.Colors;

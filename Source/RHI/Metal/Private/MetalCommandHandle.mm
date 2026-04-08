@@ -47,8 +47,6 @@ MetalCommandBuffer::MetalCommandBuffer(const char* name, id<MTLDevice> device, i
     , curRenderEncoder(nil)
     , curComputeEncoder(nil)
     , curRenderPassDesc(nil)
-    , curBindRenderPass(nullptr)
-    , curBindFramebuffer(nullptr)
     , curBindPipeline(nullptr)
     , curBindComputePipeline(nullptr)
     , curBindIndexBuffer(nullptr)
@@ -66,8 +64,6 @@ void MetalCommandBuffer::Begin()
     curRenderEncoder      = nil;
     curComputeEncoder     = nil;
     curRenderPassDesc     = nil;
-    curBindRenderPass     = nullptr;
-    curBindFramebuffer    = nullptr;
     curBindPipeline       = nullptr;
     curBindComputePipeline = nullptr;
     curBindIndexBuffer    = nullptr;
@@ -102,57 +98,6 @@ void MetalCommandBuffer::Reset()
     _isBegan = false;
 }
 
-void MetalCommandBuffer::BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea)
-{
-    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
-    HS_CHECK(renderPass, "RenderPass is null");
-
-    if (renderPass->info.isSwapchainRenderPass)
-    {
-        //        HS_ASSERT(framebuffer->info.isSwapchainFramebuffer, "Swapchain RenderPass, but Framebuffer isn't");
-        curRenderPassDesc = static_cast<MetalRenderPass*>(renderPass)->handle;
-    }
-    else
-    {
-        HS_CHECK(framebuffer, "Framebuffer is null");
-        HS_CHECK(renderPass == framebuffer->info.renderPass, "RenderPass is not same with Framebuffer's RenderPass");
-        curRenderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
-
-        bool useDepthStencil = renderPass->info.useDepthStencilAttachment;
-
-        size_t i = 0;
-        for (; i < renderPass->info.colorAttachmentCount; i++)
-        {
-            const Attachment& curAttachment = renderPass->info.colorAttachments[i];
-
-            curRenderPassDesc.colorAttachments[i].texture     = static_cast<MetalTexture*>(framebuffer->info.colorBuffers[i])->handle;
-            curRenderPassDesc.colorAttachments[i].loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
-            curRenderPassDesc.colorAttachments[i].storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
-            curRenderPassDesc.colorAttachments[i].clearColor  = MetalUtility::ToClearColor(curAttachment.clearValue.color);
-        }
-
-        if (useDepthStencil)
-        {
-            const Attachment curAttachment                = renderPass->info.depthStencilAttachment;
-            curRenderPassDesc.depthAttachment.texture     = static_cast<MetalTexture*>(framebuffer->info.depthStencilBuffer)->handle;
-            curRenderPassDesc.depthAttachment.loadAction  = MetalUtility::ToLoadAction(curAttachment.loadAction);
-            curRenderPassDesc.depthAttachment.storeAction = MetalUtility::ToStoreAction(curAttachment.storeAction);
-            curRenderPassDesc.depthAttachment.clearDepth  = static_cast<double>(curAttachment.clearValue.depthStencil.depth);
-        }
-    }
-
-    if (nil != curRenderEncoder)
-    {
-        [curRenderEncoder endEncoding];
-    }
-
-    curRenderEncoder          = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
-    curBindRenderPass         = static_cast<MetalRenderPass*>(renderPass);
-    curBindRenderPass->handle = curRenderPassDesc;
-    curBindFramebuffer        = static_cast<MetalFramebuffer*>(framebuffer);
-    _isRenderPassBegan        = true;
-}
-
 void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
@@ -161,7 +106,7 @@ void MetalCommandBuffer::BindPipeline(RHIGraphicsPipeline* pipeline)
     curBindPipeline = static_cast<MetalGraphicsPipeline*>(pipeline);
 
     [curRenderEncoder setRenderPipelineState:curBindPipeline->pipelineState];
-    if (curBindRenderPass->info.useDepthStencilAttachment)
+    if (pipeline->info.renderTargetLayout.useDepthStencilAttachment)
     {
         [curRenderEncoder setDepthStencilState:curBindPipeline->depthStencilState];
     }
@@ -263,24 +208,52 @@ void MetalCommandBuffer::DrawIndexed(const uint32 firstIndex, const uint32 index
                                baseInstance:0];
 }
 
-void MetalCommandBuffer::EndRenderPass()
+void MetalCommandBuffer::EndRendering()
 {
+    if (nil != curRenderEncoder)
+    {
+        [curRenderEncoder endEncoding];
+        curRenderEncoder = nil;
+    }
+
     curRenderPassDesc  = nil;
-    curBindRenderPass  = nullptr;
-    curBindFramebuffer = nullptr;
     curBindPipeline    = nullptr;
 
     _isRenderPassBegan = false;
 }
 
-void MetalCommandBuffer::BeginRendering(const RenderPassInfo &renderPassInfo, const Area &renderArea)
+void MetalCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
 {
-    
-}
+    HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
 
-void MetalCommandBuffer::EndRendering()
-{
-    
+    curRenderPassDesc = [MTLRenderPassDescriptor renderPassDescriptor];
+    for (uint32 i = 0; i < renderingInfo.colorAttachmentCount; i++)
+    {
+        const RenderingAttachmentInfo& attachmentInfo = renderingInfo.colorAttachments[i];
+        MetalTexture* texture = static_cast<MetalTexture*>(attachmentInfo.texture);
+        curRenderPassDesc.colorAttachments[i].texture = texture->handle;
+        curRenderPassDesc.colorAttachments[i].loadAction = MetalUtility::ToLoadAction(attachmentInfo.attachment.loadAction);
+        curRenderPassDesc.colorAttachments[i].storeAction = MetalUtility::ToStoreAction(attachmentInfo.attachment.storeAction);
+        curRenderPassDesc.colorAttachments[i].clearColor = MetalUtility::ToClearColor(attachmentInfo.attachment.clearValue.color);
+    }
+
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        const RenderingAttachmentInfo& attachmentInfo = renderingInfo.depthStencilAttachment;
+        MetalTexture* texture = static_cast<MetalTexture*>(attachmentInfo.texture);
+        curRenderPassDesc.depthAttachment.texture = texture->handle;
+        curRenderPassDesc.depthAttachment.loadAction = MetalUtility::ToLoadAction(attachmentInfo.attachment.loadAction);
+        curRenderPassDesc.depthAttachment.storeAction = MetalUtility::ToStoreAction(attachmentInfo.attachment.storeAction);
+        curRenderPassDesc.depthAttachment.clearDepth = static_cast<double>(attachmentInfo.attachment.clearValue.depthStencil.depth);
+    }
+
+    if (nil != curRenderEncoder)
+    {
+        [curRenderEncoder endEncoding];
+    }
+
+    curRenderEncoder = [handle renderCommandEncoderWithDescriptor:curRenderPassDesc];
+    _isRenderPassBegan = true;
 }
 
 void MetalCommandBuffer::BindComputePipeline(RHIComputePipeline* pipeline)
@@ -397,9 +370,11 @@ void MetalCommandBuffer::EndComputePass()
     _isComputeBegan = false;
 }
 
-void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+void MetalCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count)
 {
     HS_CHECK(_isBegan, "CommandBuffer isn't began yet");
+    (void)barriers;
+    (void)count;
 
     // For Metal, we need to use a blit encoder to synchronize texture access
     // between compute and render passes. This is handled automatically by
@@ -412,6 +387,15 @@ void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
         // Use memory barrier for compute shader synchronization
         [curComputeEncoder memoryBarrierWithScope:MTLBarrierScopeTextures];
     }
+}
+
+void MetalCommandBuffer::TextureBarrier(RHITexture* texture)
+{
+    RHITextureBarrierDesc barrier{};
+    barrier.texture = texture;
+    barrier.before = ERHITextureState::StorageReadWrite;
+    barrier.after = ERHITextureState::ShaderRead;
+    TextureBarrier(&barrier, 1);
 }
 
 void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)

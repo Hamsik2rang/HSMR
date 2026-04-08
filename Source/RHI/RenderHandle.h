@@ -14,29 +14,6 @@
 
 HS_NS_BEGIN
 
-class HS_RHI_API RHIRenderPass : public RHIHandle
-{
-public:
-
-    ~RHIRenderPass() override;
-
-    const RenderPassInfo info;
-
-protected:
-    RHIRenderPass(const char* name, const RenderPassInfo& info);
-};
-
-class HS_RHI_API RHIFramebuffer : public RHIHandle
-{
-public:
-    ~RHIFramebuffer() override;
-
-    const FramebufferInfo info;
-    
-protected:
-    RHIFramebuffer(const char* name, const FramebufferInfo& info);
-};
-
 class HS_RHI_API RHIGraphicsPipeline : public RHIHandle
 {
 public:
@@ -58,17 +35,5 @@ protected:
 };
 
 HS_NS_END
-
-namespace std
-{
-    template<>
-    struct hash<hs::RHIRenderPass>
-    {
-        size_t operator()(const hs::RHIRenderPass& key) const
-        {
-            return std::hash<hs::RenderPassInfo>{}(key.info);
-        }
-    };
-}
 
 #endif /* __HS_RENDER_PASS_H__ */

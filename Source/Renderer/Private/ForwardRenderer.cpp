@@ -29,33 +29,53 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
     _currentRenderTarget = renderTarget;
     const RenderTargetInfo& rtInfo = _currentRenderTarget->GetInfo();
 
-    // RHIRenderPass 생성을 위한 RenderPassInfo 구성 (해시 캐시 키로 사용됨)
-    RenderPassInfo renderPassInfo = {};
-    renderPassInfo.colorAttachmentCount = 1;
+    // Dynamic rendering info is the single pass description for modern and legacy RHI paths.
+    auto makeRenderingInfo = [&](const Attachment& colorAttachment,
+                                 bool useDepthStencilAttachment,
+                                 const Attachment& depthStencilAttachment) -> RenderingInfo
+    {
+        RenderingInfo renderingInfo{};
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.useDepthStencilAttachment = useDepthStencilAttachment;
+        renderingInfo.isSwapchainRendering = false;
+        renderingInfo.renderArea = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+        renderingInfo.enableAutomaticTransitions = false;
+
+        RenderingAttachmentInfo colorAttachmentInfo{};
+        colorAttachmentInfo.texture = _currentRenderTarget->GetColorTexture(0);
+        colorAttachmentInfo.attachment = colorAttachment;
+        renderingInfo.colorAttachments.push_back(colorAttachmentInfo);
+
+        if (useDepthStencilAttachment)
+        {
+            renderingInfo.depthStencilAttachment.texture = _currentRenderTarget->GetDepthStencilTexture();
+            renderingInfo.depthStencilAttachment.attachment = depthStencilAttachment;
+        }
+
+        return renderingInfo;
+    };
     Attachment ca{};
     ca.format         = rtInfo.colorTextureInfos[0].format;
     ca.clearValue     = ClearValue(0.33f, 0.33f, 0.33f, 1.0f);
     ca.isDepthStencil = false;
     ca.loadAction     = ELoadAction::Clear;
     ca.storeAction    = EStoreAction::Store;
-    renderPassInfo.colorAttachments.push_back(ca);
-
+    Attachment dsa{};
+    bool useDepthStencilAttachment = false;
     if (rtInfo.useDepthStencilTexture)
     {
-        Attachment dsa{};
         dsa.format                               = rtInfo.depthStencilInfo.format;
         dsa.clearValue                           = ClearValue(1.0f, 0.0f);
         dsa.isDepthStencil                       = true;
         dsa.loadAction                           = ELoadAction::Clear;
         dsa.storeAction                          = EStoreAction::Store;
-        renderPassInfo.depthStencilAttachment    = dsa;
-        renderPassInfo.useDepthStencilAttachment = true;
+        useDepthStencilAttachment                = true;
     }
-    renderPassInfo.isSwapchainRenderPass = false;
 
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
-    RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(renderPassInfo);
+    RenderingInfo opaqueRenderingInfo = makeRenderingInfo(ca, useDepthStencilAttachment, dsa);
+    PipelineRenderTargetLayout opaqueRenderTargetLayout = opaqueRenderingInfo.ToRenderTargetLayout();
 
     // ------------------------------------------------------------------
     // Grid Pass lazy init
@@ -69,31 +89,27 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
         }
     }
 
-    // Grid Pass용 RenderPassInfo — Opaque 결과를 이어받으므로 loadAction=Load
-    RenderPassInfo gridPassInfo{};
-    gridPassInfo.colorAttachmentCount = 1;
+    // Grid pass loads the opaque result.
     Attachment gca{};
     gca.format         = rtInfo.colorTextureInfos[0].format;
     gca.clearValue     = ClearValue(0.0f, 0.0f, 0.0f, 0.0f);
     gca.isDepthStencil = false;
     gca.loadAction     = ELoadAction::Load;
     gca.storeAction    = EStoreAction::Store;
-    gridPassInfo.colorAttachments.push_back(gca);
-
+    Attachment gdsa{};
+    bool useGridDepthStencilAttachment = false;
     if (rtInfo.useDepthStencilTexture)
     {
-        Attachment gdsa{};
         gdsa.format                            = rtInfo.depthStencilInfo.format;
         gdsa.clearValue                        = ClearValue(1.0f, 0.0f);
         gdsa.isDepthStencil                    = true;
         gdsa.loadAction                        = ELoadAction::Load;
         gdsa.storeAction                       = EStoreAction::Store;
-        gridPassInfo.depthStencilAttachment    = gdsa;
-        gridPassInfo.useDepthStencilAttachment = true;
+        useGridDepthStencilAttachment          = true;
     }
-    gridPassInfo.isSwapchainRenderPass = false;
 
-    RHIRenderPass* gridRenderPass = GetHandleCache()->GetRenderPass(gridPassInfo);
+    RenderingInfo gridRenderingInfo = makeRenderingInfo(gca, useGridDepthStencilAttachment, gdsa);
+    PipelineRenderTargetLayout gridRenderTargetLayout = gridRenderingInfo.ToRenderTargetLayout();
 
     // ------------------------------------------------------------------
     // RenderGraph 프레임 시작
@@ -126,24 +142,21 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
         [&](RHICommandBuffer& commandBuffer) -> void
         {
             RenderResourceManager* resMgr = GetResourceManager();
-            RHIFramebuffer* framebuffer   = GetHandleCache()->GetFramebuffer(renderPass, _currentRenderTarget);
 
             float debugColor[4]{0.2f, 0.5f, 0.8f, 1.0f};
+
+            commandBuffer.BeginRendering(opaqueRenderingInfo);
             commandBuffer.PushDebugMark("Opaque Pass", debugColor);
-
-            Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-
-            commandBuffer.BeginRenderPass(renderPass, framebuffer, area);
             commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
-                static_cast<float>(framebuffer->info.width),
-                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-            commandBuffer.SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+                static_cast<float>(_currentRenderTarget->GetWidth()),
+                static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+            commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
 
             for (const auto& renderModel : sceneResource.renderModels)
             {
                 Material* mat = renderModel.material;
                 if (!mat) continue;
-                RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, renderPass);
+                RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, opaqueRenderTargetLayout);
                 if (!pipeline) continue;
 
                 commandBuffer.BindPipeline(pipeline);
@@ -156,8 +169,8 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 commandBuffer.DrawIndexed(0, renderModel.meshResource->indexCount, 1, 0);
             }
 
-            commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();
+            commandBuffer.EndRendering();
         });
 
     struct GridPassParameters
@@ -190,29 +203,24 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 ? nullptr : sceneResource.cameraResources[0]->perViewBuffer;
 
             RHIGraphicsPipeline* pipeline = _gridPass->GetOrCreatePipeline(
-                gridRenderPass, gridPassInfo, perViewBuffer);
+                gridRenderTargetLayout, perViewBuffer);
             if (!pipeline) return;
 
-            RHIFramebuffer* framebuffer = GetHandleCache()->GetFramebuffer(
-                gridRenderPass, _currentRenderTarget);
-            if (!framebuffer) return;
-
             float debugColor[4]{0.4f, 0.8f, 0.4f, 1.0f};
-            commandBuffer.PushDebugMark("Grid Pass", debugColor);
 
-            Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-            commandBuffer.BeginRenderPass(gridRenderPass, framebuffer, area);
+            commandBuffer.BeginRendering(gridRenderingInfo);
+            commandBuffer.PushDebugMark("Grid Pass", debugColor);
             commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
-                static_cast<float>(framebuffer->info.width),
-                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-            commandBuffer.SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+                static_cast<float>(_currentRenderTarget->GetWidth()),
+                static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+            commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
 
             commandBuffer.BindPipeline(pipeline);
             commandBuffer.BindResourceSet(_gridPass->GetResourceSet());
             commandBuffer.DrawArrays(0, 6, 1); // fullscreen triangle, 버텍스 버퍼 없음
 
-            commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();
+            commandBuffer.EndRendering();
         });
 
     _graphBuilder.Compile();

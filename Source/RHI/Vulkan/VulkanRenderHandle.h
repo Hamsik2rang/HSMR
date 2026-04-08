@@ -14,28 +14,6 @@
 
 HS_NS_BEGIN
 
-struct HS_RHI_API VulkanRenderPass : public RHIRenderPass
-{
-    VulkanRenderPass(const char* name, const RenderPassInfo& info)
-        : RHIRenderPass(name, info)
-    {}
-    ~VulkanRenderPass() override = default;
-
-public:
-    VkRenderPass handle = VK_NULL_HANDLE;
-};
-
-struct HS_RHI_API VulkanFramebuffer : public RHIFramebuffer
-{
-    VulkanFramebuffer(const char* name, const FramebufferInfo& info)
-        : RHIFramebuffer(name, info)
-    {}
-    ~VulkanFramebuffer() override = default;
-
-public:
-    VkFramebuffer handle = VK_NULL_HANDLE;
-};
-
 struct HS_RHI_API VulkanPipelineBase
 {
     VkPipeline handle       = VK_NULL_HANDLE;

@@ -26,8 +26,9 @@ public:
     bool Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios);
     void Finalize();
 
-    VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next);
-    void FreeDescriptorSet(VkDescriptorSet set);
+    VkDescriptorSet AllocateDescriptorSet(const VkDescriptorSetLayout& layout, void* next,
+                                           VkDescriptorPool& outPool);
+    void FreeDescriptorSet(VkDescriptorSet set, VkDescriptorPool pool);
 
 private:
     VkDescriptorPool acquirePool();

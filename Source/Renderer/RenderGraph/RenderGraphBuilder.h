@@ -6,6 +6,7 @@
 #include "RHI/CommandHandle.h"
 #include "RHI/RHIContext.h"
 #include "Renderer/RenderDefinition.h"
+#include "Renderer/RenderGraph/RenderGraphTransientAllocator.h"
 #include "Renderer/RenderGraph/RenderGraphResource.h"
 
 #include "Core/Memory/MemoryPool.h"
@@ -104,8 +105,16 @@ public:
     void Reset();
 
 private:
+    void allocTexture(RGTexture* rgTexture);
+    void freeTexture(RGTexture* rgTexture);
+    void allocBuffer(RGBuffer* rgBufer);
+    void freeBuffer(RGBuffer* rgBuffer);
+    bool isExternalResource(RGResource* rgResource) const;
+
+
     RHIContext*       _rhiContext       = nullptr;
     RHICommandBuffer* _currentCmdBuffer = nullptr;
+    RenderGraphTransientAllocator _transientAllocator;
 
     uint8 _frameIndex = static_cast<uint8>(-1);
     constexpr static uint8 s_maxFramesInFlight = 2;
@@ -120,6 +129,10 @@ private:
 
     // Pass → 해당 패스가 사용하는 리소스 접근 목록
     std::unordered_map<RGPass*, std::vector<RGResourceAccess>> _resourceDependencyMap;
+    std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _textureBarriers;
+    std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _texturePostBarriers;
+
+    // TODO: BufferBarrierDesc도 필요할 수 있습니다(ex. Compute UAV Write -> Read 의존성)
 
     // 외부에서 등록된 RHIHandle → RGResource 역방향 매핑
     std::unordered_map<RHIHandle*, RGResource*> _externalRHIHandleMap;

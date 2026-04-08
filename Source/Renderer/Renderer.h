@@ -18,12 +18,10 @@
 #include "Renderer/RenderGraph.h"
 
 #include <vector>
-#include <unordered_map>
 
 namespace hs
 {
 /*#include "Renderer/RenderPass/RenderPass.h"*/ class RenderPass;
-/*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
 /*#include "RHI/Swapchain.h"*/ class Swapchain;
 /*#include "Platform/NativeWindow.h"*/ struct NativeWindow;
 /*#include "Renderer/ShaderLibrary.h"*/ class ShaderLibrary;
@@ -34,26 +32,6 @@ HS_NS_BEGIN
 class HS_RENDERER_API Renderer
 {
 public:
-    class RHIHandleCache
-    {
-        friend Renderer;
-
-    public:
-        RHIHandleCache(Renderer* renderer);
-        ~RHIHandleCache();
-
-        RHIRenderPass* GetRenderPass(const RenderPassInfo& info);
-        RHIFramebuffer* GetFramebuffer(RHIRenderPass* renderPass, RenderTarget* renderTarget);
-        RHIGraphicsPipeline* GetGraphicsPipeline(const GraphicsPipelineInfo& info);
-
-    private:
-        Renderer* _renderer;
-
-        std::unordered_map<size_t, RHIRenderPass*> _renderPassCache;
-        std::unordered_map<size_t, RHIFramebuffer*> _framebufferCache;
-        std::unordered_map<size_t, RHIGraphicsPipeline*> _gPipelineCache;
-    };
-
     Renderer(RHIContext* rhiContext);
     virtual ~Renderer();
 
@@ -78,15 +56,12 @@ public:
 
     HS_FORCEINLINE uint32 GetCurrentFrameIndex() { return frameIndex; }
 
-    HS_FORCEINLINE RHIHandleCache* GetHandleCache() const { return _rhiHandleCache; }
-
     HS_FORCEINLINE RenderResourceManager* GetResourceManager() const { return _resourceManager; }
 
     HS_FORCEINLINE ShaderLibrary* GetShaderLibrary() const { return _shaderLibrary; }
 
 protected:
     RHIContext* _rhiContext;
-    RHIHandleCache* _rhiHandleCache;
     RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
     RenderResourceManager* _resourceManager = nullptr;
     ShaderLibrary* _shaderLibrary = nullptr;

@@ -33,6 +33,7 @@ list(APPEND TOTAL_FILES ${RENDERER_SOURCES})
 set(RENDERER_RENDER_GRAPH_HEADERS
     RenderGraph/RenderGraphBuilder.h
     RenderGraph/RenderGraphResource.h
+    RenderGraph/RenderGraphTransientAllocator.h
 )
 
 source_group("RenderGraph\\Public" FILES ${RENDERER_RENDER_GRAPH_HEADERS})
@@ -41,6 +42,7 @@ list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_HEADERS})
 set(RENDERER_RENDER_GRAPH_SOURCES
     RenderGraph/Private/RenderGraphBuilder.cpp
     RenderGraph/Private/RenderGraphResource.cpp
+    RenderGraph/Private/RenderGraphTransientAllocator.cpp
 )
 
 source_group("RenderGraph\\Private" FILES ${RENDERER_RENDER_GRAPH_SOURCES})

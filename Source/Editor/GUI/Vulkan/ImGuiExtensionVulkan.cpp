@@ -6,9 +6,9 @@
 #include "RHI/ResourceHandle.h"
 #include "RHI/Vulkan/VulkanSwapchain.h"
 #include "RHI/Vulkan/VulkanContext.h"
-#include "RHI/Vulkan/VulkanRenderHandle.h"
 #include "RHI/Vulkan/VulkanCommandHandle.h"
 #include "RHI/Vulkan/VulkanResourceHandle.h"
+#include "RHI/Vulkan/VulkanUtility.h"
 
 #ifdef __SDL__
 #include "ImGui/imgui_impl_sdl3.h"
@@ -31,6 +31,7 @@ HS_NS_EDITOR_BEGIN
 static VkPipelineCache s_pipelineCacheVk = VK_NULL_HANDLE;
 static VkDescriptorPool s_descriptorPool = VK_NULL_HANDLE;
 static VulkanSampler* s_samplerVK;
+static VkFormat s_swapchainColorFormat = VK_FORMAT_UNDEFINED;
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
 uint8 ImGuiExtension::s_currentImageIndex     = 0;
@@ -99,7 +100,7 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 
     VulkanContext* rhiContextVK     = static_cast<VulkanContext*>(RHIContext::Get());
     const VulkanDevice* rhiDeviceVK = rhiContextVK->GetDevice();
-    VulkanRenderPass* renderPassVK  = static_cast<VulkanRenderPass*>(swapchainVK->GetRenderPass());
+    s_swapchainColorFormat = swapchainVK->surfaceFormat.format;
     hs::SamplerInfo samplerInfo{};
     samplerInfo.addressU          = hs::EAddressMode::ClampToBorder;
     samplerInfo.addressV          = hs::EAddressMode::ClampToBorder;
@@ -117,12 +118,33 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
     initInfo.PhysicalDevice  = rhiDeviceVK->physicalDevice;
     initInfo.Queue           = rhiDeviceVK->graphicsQueue;
     initInfo.QueueFamily     = rhiDeviceVK->queueFamilyIndices.graphics;
-    initInfo.RenderPass      = renderPassVK->handle;
+    initInfo.RenderPass      = VK_NULL_HANDLE;
     initInfo.PipelineCache   = s_pipelineCacheVk;
     initInfo.CheckVkResultFn = check_vk_result;
     initInfo.ImageCount      = static_cast<uint32>(swapchainVK->GetMaxFrameCount());
     initInfo.MinImageCount   = 2;
     initInfo.MSAASamples     = VK_SAMPLE_COUNT_1_BIT; // No MSAA for now
+
+    PipelineRenderTargetLayout swapchainLayout{};
+    swapchainLayout.colorAttachmentCount = 1;
+    swapchainLayout.colorFormats.push_back(RHIUtilityVulkan::FromPixelFormat(s_swapchainColorFormat));
+    swapchainLayout.sampleCount = 1;
+    swapchainLayout.isSwapchainRenderPass = true;
+
+    if (rhiDeviceVK->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering)
+    {
+        initInfo.UseDynamicRendering = true;
+#ifdef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+        initInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+        initInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &s_swapchainColorFormat;
+#endif
+    }
+    else
+    {
+        initInfo.RenderPass = rhiContextVK->GetCompatibleRenderPass(swapchainLayout);
+    }
+
     {
         VkDescriptorPoolSize pool_sizes[] =
             {
@@ -204,19 +226,28 @@ void ImGuiExtension::EndRender()
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
 
-    // Begin render pass for swapchain
     VulkanSwapchain* swapchainVK     = static_cast<VulkanSwapchain*>(s_currentSwapchain);
     VulkanCommandBuffer* cmdBufferVK = static_cast<VulkanCommandBuffer*>(s_currentSwapchain->GetCommandBufferForCurrentFrame());
-    RHIRenderPass* renderPass        = swapchainVK->GetRenderPass();
-    RHIFramebuffer* framebuffer      = swapchainVK->GetFramebufferForCurrentFrame();
 
-    Area area{0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight()};
+    RenderingInfo renderingInfo{};
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.isSwapchainRendering = true;
+    renderingInfo.renderArea = Area(0, 0, s_currentSwapchain->GetWidth(), s_currentSwapchain->GetHeight());
 
-    cmdBufferVK->BeginRenderPass(renderPass, framebuffer, area);
+    RenderingAttachmentInfo colorAttachment{};
+    colorAttachment.texture = swapchainVK->GetCurrentColorTexture();
+    colorAttachment.attachment.format = RHIUtilityVulkan::FromPixelFormat(s_swapchainColorFormat);
+    colorAttachment.attachment.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+    colorAttachment.attachment.loadAction = ELoadAction::Load;
+    colorAttachment.attachment.storeAction = EStoreAction::Store;
+    colorAttachment.attachment.sampleCount = 1;
+    renderingInfo.colorAttachments.push_back(colorAttachment);
+
+    cmdBufferVK->BeginRendering(renderingInfo);
 
     ImGui_ImplVulkan_RenderDrawData(draw_data, cmdBufferVK->handle);
 
-    cmdBufferVK->EndRenderPass();
+    cmdBufferVK->EndRendering();
 
     // Update and render additional platform windows (multi-viewport)
     ImGuiIO& io = ImGui::GetIO();

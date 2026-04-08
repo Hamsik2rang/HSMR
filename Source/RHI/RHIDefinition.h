@@ -39,13 +39,12 @@ public:
         ResourceLayout,
         ResourceSet,
         ResourceSetPool,
-        RenderPass,
-        Framebuffer,
         GraphicsPipeline,
         ComputePipeline,
         CommandQueue,
         CommandPool,
         CommandBuffer,
+        Heap,
     };
 
     RHIHandle() = delete;
@@ -143,6 +142,56 @@ enum class ERHIPlatform
     // OPENGL_ES,
     // WEBGPU,
     Virtual,
+};
+
+enum class ERHIRenderingPath
+{
+    Invalid = 0,
+    DynamicRendering,
+    LegacyRenderPass,
+};
+
+enum class ERHIResourceBindingTier
+{
+    Invalid = 0,
+    Bindless,
+    DescriptorArray,
+    LegacyDescriptorSet,
+};
+
+enum class ERHITextureState
+{
+    Undefined = 0,
+    ShaderRead,
+    ColorAttachmentWrite,
+    DepthAttachmentRead,
+    DepthAttachmentWrite,
+    StorageReadWrite,
+    TransferRead,
+    TransferWrite,
+    Present,
+};
+
+struct RHICapabilities
+{
+    ERHIPlatform platform                      = ERHIPlatform::Invalid;
+    ERHIRenderingPath renderingPath            = ERHIRenderingPath::Invalid;
+    ERHIResourceBindingTier resourceBindingTier = ERHIResourceBindingTier::Invalid;
+
+    uint32 apiVersionMajor = 0;
+    uint32 apiVersionMinor = 0;
+    uint32 apiVersionPatch = 0;
+
+    const char* deviceName = nullptr;
+
+    bool supportsDynamicRendering    = false;
+    bool supportsBindless            = false;
+    bool supportsArgumentBufferTier2 = false;
+
+    uint32 maxBindlessSampledImages  = 0;
+    uint32 maxBindlessSamplers       = 0;
+    uint32 maxBindlessStorageImages  = 0;
+    uint32 maxBindlessStorageBuffers = 0;
 };
 
 enum class EVertexFormat
@@ -364,7 +413,6 @@ struct BufferInfo
 };
 
 struct RHITexture;
-struct RHIRenderPass;
 struct RHIResourceLayout;
 
 struct RenderTexture
@@ -456,30 +504,93 @@ struct Attachment
     bool isDepthStencil = false;
 };
 
-struct RenderPassInfo
+struct PipelineRenderTargetLayout
 {
-    std::vector<Attachment> colorAttachments;
-    // std::vector<Attachment> resolveColorAttachments; // TODO: Resolve Color Attachments
-    Attachment depthStencilAttachment;
-    uint8 colorAttachmentCount;
+    std::vector<EPixelFormat> colorFormats;
+    EPixelFormat depthStencilFormat = EPixelFormat::Invalid;
+    uint8 colorAttachmentCount      = 0;
+    uint8 sampleCount               = 1;
+    bool useDepthStencilAttachment  = false;
+    bool isSwapchainRenderPass      = false;
 
-    bool useDepthStencilAttachment = false;
-    bool isSwapchainRenderPass     = false;
+    bool operator==(const PipelineRenderTargetLayout& other) const
+    {
+        return colorFormats == other.colorFormats &&
+               depthStencilFormat == other.depthStencilFormat &&
+               colorAttachmentCount == other.colorAttachmentCount &&
+               sampleCount == other.sampleCount &&
+               useDepthStencilAttachment == other.useDepthStencilAttachment &&
+               isSwapchainRenderPass == other.isSwapchainRenderPass;
+    }
 };
 
-class RHIRenderPass;
-
-struct FramebufferInfo
+struct RenderingAttachmentInfo
 {
-    RHIRenderPass* renderPass;
-    std::vector<RHITexture*> colorBuffers;
-    RHITexture* depthStencilBuffer;
-    RHITexture* resolveBuffer;
+    RHITexture* texture        = nullptr;
+    RHITexture* resolveTexture = nullptr;
+    Attachment attachment{};
+    uint32 mipLevel   = 0;
+    uint32 arrayLayer = 0;
+};
 
-    uint32 width  = 1;
-    uint32 height = 1;
+struct RenderingInfo
+{
+    std::vector<RenderingAttachmentInfo> colorAttachments;
+    RenderingAttachmentInfo depthStencilAttachment{};
+    Area renderArea{};
+    uint8 colorAttachmentCount     = 0;
+    bool useDepthStencilAttachment = false;
+    bool isSwapchainRendering       = false;
+    bool enableAutomaticTransitions = true;
 
-    bool isSwapchainFramebuffer = false;
+    PipelineRenderTargetLayout ToRenderTargetLayout() const
+    {
+        PipelineRenderTargetLayout layout{};
+        layout.colorAttachmentCount = colorAttachmentCount;
+        layout.useDepthStencilAttachment = useDepthStencilAttachment;
+        layout.isSwapchainRenderPass = isSwapchainRendering;
+        layout.colorFormats.reserve(colorAttachments.size());
+        for (const RenderingAttachmentInfo& attachmentInfo : colorAttachments)
+        {
+            const Attachment& attachment = attachmentInfo.attachment;
+            layout.colorFormats.push_back(attachment.format);
+            if (layout.sampleCount == 1 && attachment.sampleCount != 0)
+            {
+                layout.sampleCount = attachment.sampleCount;
+            }
+        }
+        if (useDepthStencilAttachment)
+        {
+            layout.depthStencilFormat = depthStencilAttachment.attachment.format;
+            if (layout.sampleCount == 1 && depthStencilAttachment.attachment.sampleCount != 0)
+            {
+                layout.sampleCount = depthStencilAttachment.attachment.sampleCount;
+            }
+        }
+        return layout;
+    }
+};
+
+struct RHITextureMemoryRequirements
+{
+    uint64 size            = 0;
+    uint64 alignment       = 0;
+    uint32 memoryTypeBits  = 0;
+    uint32 memoryTypeIndex = 0;
+    bool isValid           = false;
+};
+
+struct RHIHeapInfo
+{
+    uint64 size            = 0;
+    uint32 memoryTypeIndex = 0;
+};
+
+struct RHITextureBarrierDesc
+{
+    RHITexture* texture       = nullptr;
+    ERHITextureState before   = ERHITextureState::Undefined;
+    ERHITextureState after    = ERHITextureState::Undefined;
 };
 
 enum class EShaderParameterType
@@ -925,7 +1036,7 @@ struct GraphicsPipelineInfo
     ColorBlendStateDescriptor colorBlendDesc;
 
     RHIResourceLayout* resourceLayout;
-    RHIRenderPass* renderPass;
+    PipelineRenderTargetLayout renderTargetLayout;
 };
 
 struct ComputePipelineInfo
@@ -953,24 +1064,21 @@ struct hash<hs::Attachment>
 };
 
 template <>
-struct hash<hs::RenderPassInfo>
+struct hash<hs::PipelineRenderTargetLayout>
 {
-    size_t operator()(const hs::RenderPassInfo& key) const
+    size_t operator()(const hs::PipelineRenderTargetLayout& key) const
     {
         size_t h = hs::HashCombine(
             static_cast<uint32>(key.colorAttachmentCount),
             static_cast<uint32>(key.useDepthStencilAttachment),
             static_cast<uint32>(key.isSwapchainRenderPass));
 
-        std::hash<hs::Attachment> attachmentHash;
-        for (size_t i = 0; i + 1 < key.colorAttachmentCount; i += 2)
+        for (hs::EPixelFormat format : key.colorFormats)
         {
-            h = hs::HashCombine64(h, attachmentHash(key.colorAttachments[i]), attachmentHash(key.colorAttachments[i + 1]));
+            h = hs::HashCombine64(h, static_cast<uint32>(format));
         }
 
-        size_t b = (key.colorAttachmentCount % 2 != 0) ? attachmentHash(key.colorAttachments.back()) : 0;
-        size_t c = (key.useDepthStencilAttachment) ? attachmentHash(key.depthStencilAttachment) : 0;
-        h        = hs::HashCombine64(h, b, c);
+        h = hs::HashCombine64(h, static_cast<uint32>(key.depthStencilFormat), key.sampleCount);
         return h;
     }
 };

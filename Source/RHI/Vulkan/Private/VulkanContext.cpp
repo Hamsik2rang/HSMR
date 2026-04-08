@@ -103,6 +103,8 @@ bool VulkanContext::Initialize()
         return false;
     }
 
+    _renderingCache.Initialize(this, &_device);
+
     createDefaultCommandPool();
 
     std::vector<VulkanDescriptorPoolAllocator::PoolSizeRatio> ratios =
@@ -130,6 +132,8 @@ void VulkanContext::Finalize()
     }
 
     // Cleanup Vulkan resources
+    _renderingCache.Finalize();
+
     if (_defaultCommandPool != VK_NULL_HANDLE)
     {
         vkDestroyCommandPool(_device, _defaultCommandPool, nullptr);
@@ -167,11 +171,11 @@ void VulkanContext::Restore(Swapchain* swapchain)
         return;
     }
 
-    const RHIFramebuffer* swFramebuffer = swapchainVK->_framebuffers[0];
+    const RHITexture* colorTexture = swapchainVK->_colorTextures[0];
 
     // Resize 혹은 Maximize된 상황
-    if (swFramebuffer->info.width != swapchainVK->_info.nativeWindow->surfaceWidth ||
-        swFramebuffer->info.height != swapchainVK->_info.nativeWindow->surfaceHeight)
+    if (colorTexture->info.extent.width != swapchainVK->_info.nativeWindow->surfaceWidth ||
+        colorTexture->info.extent.height != swapchainVK->_info.nativeWindow->surfaceHeight)
     {
         swapchainVK->destroySwapchainVK();
         swapchainVK->initSwapchainVK(this, _instanceVk, &_device);
@@ -232,91 +236,6 @@ void VulkanContext::DestroySwapchain(Swapchain* swapchain)
     swapchainVK->destroySwapchainVK(); // 소멸자에서 호출되지만 컨벤션 통일을 위해 명시적 호출함.
 
     delete swapchainVK;
-}
-
-RHIRenderPass* VulkanContext::CreateRenderPass(const char* name, const RenderPassInfo& info)
-{
-    VulkanRenderPass* renderPassVK = new VulkanRenderPass(name, info);
-
-    renderPassVK->handle = createRenderPass(info);
-    if (renderPassVK->handle == VK_NULL_HANDLE)
-    {
-        HS_LOG(crash, "Failed to create Vulkan render pass.");
-    }
-
-    setDebugObjectName(VK_OBJECT_TYPE_RENDER_PASS, reinterpret_cast<uint64>(renderPassVK->handle), name);
-
-    return renderPassVK;
-}
-
-void VulkanContext::DestroyRenderPass(RHIRenderPass* renderPass)
-{
-    VulkanRenderPass* renderPassVK = static_cast<VulkanRenderPass*>(renderPass);
-    if (renderPassVK->handle != VK_NULL_HANDLE)
-    {
-        vkDestroyRenderPass(_device, renderPassVK->handle, nullptr);
-        renderPassVK->handle = VK_NULL_HANDLE;
-    }
-    delete renderPassVK; // Delete the RenderPassVulkan object
-}
-
-RHIFramebuffer* VulkanContext::CreateFramebuffer(const char* name, const FramebufferInfo& info)
-{
-    HS_ASSERT(info.renderPass->info.colorAttachmentCount == info.colorBuffers.size(), "Framebuffer Info is not matched with RenderPass Info");
-
-    VulkanFramebuffer* framebufferVK = new VulkanFramebuffer(name, info);
-
-    size_t attachmentSize = static_cast<uint32>(info.colorBuffers.size());
-    std::vector<VkImageView> attachments(attachmentSize);
-    for (size_t i = 0; i < attachmentSize; i++)
-    {
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(info.colorBuffers[i]);
-        if (textureVK && textureVK->imageViewVk)
-        {
-            attachments[i] = textureVK->imageViewVk;
-        }
-        else
-        {
-            HS_LOG(crash, "Invalid color buffer at index %d", i);
-            attachments[i] = VK_NULL_HANDLE;
-        }
-    }
-    if (info.renderPass->info.useDepthStencilAttachment && info.depthStencilBuffer != nullptr)
-    {
-        attachmentSize++;
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(info.depthStencilBuffer);
-        attachments.push_back(textureVK->imageViewVk);
-    }
-
-    VkFramebufferCreateInfo createInfo{};
-    createInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    createInfo.flags           = 0;
-    createInfo.renderPass      = static_cast<VulkanRenderPass*>(info.renderPass)->handle;
-    createInfo.attachmentCount = static_cast<uint32>(attachmentSize);
-    createInfo.pAttachments    = attachments.data();
-    createInfo.width           = info.width;
-    createInfo.height          = info.height;
-    createInfo.layers          = 1;
-
-    VkFramebuffer framebufferVk;
-    vkCreateFramebuffer(_device, &createInfo, nullptr, &framebufferVk);
-    framebufferVK->handle = framebufferVk;
-
-    setDebugObjectName(VK_OBJECT_TYPE_FRAMEBUFFER, reinterpret_cast<uint64>(framebufferVk), name);
-
-    return static_cast<RHIFramebuffer*>(framebufferVK);
-}
-
-void VulkanContext::DestroyFramebuffer(RHIFramebuffer* framebuffer)
-{
-    // Destroy the Vulkan framebuffer
-    VulkanFramebuffer* framebufferVK = static_cast<VulkanFramebuffer*>(framebuffer);
-    if (framebufferVK->handle != VK_NULL_HANDLE)
-    {
-        vkDestroyFramebuffer(_device, framebufferVK->handle, nullptr);
-        framebufferVK->handle = VK_NULL_HANDLE;
-    }
-    delete framebufferVK;
 }
 
 RHIGraphicsPipeline* VulkanContext::CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info)
@@ -646,7 +565,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(info.swapchain);
         for (uint8 i = 0; i < swapchainVK->imageVks.size(); i++)
         {
-            if (swapchainVK->_framebuffers[i] == nullptr)
+            if (swapchainVK->_colorTextures[i] == nullptr)
             {
                 VulkanTexture* textureVK = new VulkanTexture(name, info);
                 textureVK->handle        = swapchainVK->imageVks[i];
@@ -680,25 +599,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 
     VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    VkImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageCreateInfo.imageType     = RHIUtilityVulkan::ToImageType(info.type);
-    imageCreateInfo.format        = RHIUtilityVulkan::ToPixelFormat(info.format);
-    imageCreateInfo.usage         = RHIUtilityVulkan::ToTextureUsage(info.usage);
-    imageCreateInfo.extent.width  = info.extent.width;
-    imageCreateInfo.extent.height = info.extent.height;
-    imageCreateInfo.extent.depth  = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
-    imageCreateInfo.arrayLayers   = info.type == ETextureType::TexCube ? 6 : 1; // Assuming single layer
-    imageCreateInfo.mipLevels     = 1;                                           // TODO: Support mipmaps
-    imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;                       // TODO: Support MSAA
-    imageCreateInfo.tiling        = (imageCreateInfo.imageType == VK_IMAGE_TYPE_1D) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
-    imageCreateInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-    imageCreateInfo.initialLayout = initialLayout; // Will be transitioned later
-    imageCreateInfo.flags         = 0;             // No special flags for now
-    if (info.type == ETextureType::TexCube)
-    {
-        imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-    }
+    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, false);
 
     VkImage imageVk;
     VK_CHECK_RESULT(vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk));
@@ -894,11 +795,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
-    VkImageAspectFlagBits aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    if (info.isDepthStencilBuffer)
-    {
-        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    }
+    VkImageAspectFlags aspectMask = getImageAspectMask(info);
 
     VkImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -926,10 +823,151 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     return static_cast<RHITexture*>(textureVK);
 }
 
+RHITextureMemoryRequirements VulkanContext::GetTextureMemoryRequirements(const TextureInfo& info)
+{
+    if (info.isSwapchainTexture)
+    {
+        return {};
+    }
+
+    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, true);
+    VkImage imageVk                   = VK_NULL_HANDLE;
+    VkResult result                   = vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk);
+    if (result != VK_SUCCESS)
+    {
+        return {};
+    }
+
+    VkMemoryRequirements memoryRequirements{};
+    vkGetImageMemoryRequirements(_device, imageVk, &memoryRequirements);
+    vkDestroyImage(_device, imageVk, nullptr);
+
+    RHITextureMemoryRequirements resultRequirements{};
+    resultRequirements.size           = memoryRequirements.size;
+    resultRequirements.alignment      = memoryRequirements.alignment;
+    resultRequirements.memoryTypeBits = memoryRequirements.memoryTypeBits;
+    resultRequirements.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    resultRequirements.isValid        = true;
+    return resultRequirements;
+}
+
+RHIHeap* VulkanContext::CreateHeap(const RHIHeapInfo& info)
+{
+    if (info.size == 0)
+    {
+        return nullptr;
+    }
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize  = static_cast<VkDeviceSize>(info.size);
+    allocInfo.memoryTypeIndex = info.memoryTypeIndex;
+
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    if (vkAllocateMemory(_device, &allocInfo, nullptr, &memory) != VK_SUCCESS)
+    {
+        return nullptr;
+    }
+
+    VulkanHeap* heapVK     = new VulkanHeap("RHI Heap", info);
+    heapVK->memory         = memory;
+    heapVK->size           = static_cast<VkDeviceSize>(info.size);
+    heapVK->memoryTypeIndex = info.memoryTypeIndex;
+    return heapVK;
+}
+
+void VulkanContext::DestroyHeap(RHIHeap* heap)
+{
+    VulkanHeap* heapVK = static_cast<VulkanHeap*>(heap);
+    if (heapVK == nullptr)
+    {
+        return;
+    }
+
+    if (heapVK->memory != VK_NULL_HANDLE)
+    {
+        vkFreeMemory(_device, heapVK->memory, nullptr);
+        heapVK->memory = VK_NULL_HANDLE;
+    }
+    delete heapVK;
+}
+
+RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& info, RHIHeap* heap, uint64 offset)
+{
+    if (heap == nullptr || info.isSwapchainTexture)
+    {
+        return nullptr;
+    }
+
+    VulkanHeap* heapVK = static_cast<VulkanHeap*>(heap);
+    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, true);
+
+    VkImage imageVk = VK_NULL_HANDLE;
+    if (vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk) != VK_SUCCESS)
+    {
+        return nullptr;
+    }
+
+    VkMemoryRequirements memoryRequirements{};
+    vkGetImageMemoryRequirements(_device, imageVk, &memoryRequirements);
+    if (((memoryRequirements.memoryTypeBits & (1u << heapVK->memoryTypeIndex)) == 0) ||
+        (static_cast<VkDeviceSize>(offset) + memoryRequirements.size > heapVK->size))
+    {
+        vkDestroyImage(_device, imageVk, nullptr);
+        return nullptr;
+    }
+
+    if (vkBindImageMemory(_device, imageVk, heapVK->memory, static_cast<VkDeviceSize>(offset)) != VK_SUCCESS)
+    {
+        vkDestroyImage(_device, imageVk, nullptr);
+        return nullptr;
+    }
+
+    VkImageViewCreateInfo viewCreateInfo{};
+    viewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCreateInfo.image                           = imageVk;
+    viewCreateInfo.viewType                        = RHIUtilityVulkan::ToImageViewType(info.type);
+    viewCreateInfo.format                          = imageCreateInfo.format;
+    viewCreateInfo.subresourceRange.aspectMask     = getImageAspectMask(info);
+    viewCreateInfo.subresourceRange.baseMipLevel   = 0;
+    viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+    viewCreateInfo.subresourceRange.layerCount     = imageCreateInfo.arrayLayers;
+    viewCreateInfo.subresourceRange.levelCount     = imageCreateInfo.mipLevels;
+
+    VkImageView imageViewVk = VK_NULL_HANDLE;
+    if (vkCreateImageView(_device, &viewCreateInfo, nullptr, &imageViewVk) != VK_SUCCESS)
+    {
+        vkDestroyImage(_device, imageVk, nullptr);
+        return nullptr;
+    }
+
+    VulkanTexture* textureVK = new VulkanTexture(name, info);
+    textureVK->handle        = imageVk;
+    textureVK->imageViewVk   = imageViewVk;
+    textureVK->memoryVk      = heapVK->memory;
+    textureVK->layoutVk      = VK_IMAGE_LAYOUT_UNDEFINED;
+    textureVK->memoryOffset  = static_cast<VkDeviceSize>(offset);
+    textureVK->memorySize    = memoryRequirements.size;
+    textureVK->ownsMemory    = false;
+
+    setDebugObjectName(VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
+    setDebugObjectName(VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
+
+    return textureVK;
+}
+
 void VulkanContext::DestroyTexture(RHITexture* texture)
 {
     // Destroy the Vulkan texture
     VulkanTexture* textureVK = static_cast<VulkanTexture*>(texture);
+
+    _renderingCache.Reset();
+
+    if (textureVK->info.isSwapchainTexture)
+    {
+        delete textureVK;
+        return;
+    }
 
     if (textureVK->imageViewVk != VK_NULL_HANDLE)
     {
@@ -941,7 +979,7 @@ void VulkanContext::DestroyTexture(RHITexture* texture)
         vkDestroyImage(_device, textureVK->handle, nullptr);
         textureVK->handle = VK_NULL_HANDLE;
     }
-    if (textureVK->memoryVk != VK_NULL_HANDLE)
+    if (textureVK->ownsMemory && textureVK->memoryVk != VK_NULL_HANDLE)
     {
         vkFreeMemory(_device, textureVK->memoryVk, nullptr);
         textureVK->memoryVk = VK_NULL_HANDLE;
@@ -1069,7 +1107,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
     VulkanResourceLayout* layoutVK = static_cast<VulkanResourceLayout*>(resourceLayouts);
 
     // Create a Vulkan resource set
-    VkDescriptorSet rSetVk = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr);
+    VkDescriptorPool usedPool  = VK_NULL_HANDLE;
+    VkDescriptorSet  rSetVk    = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr, usedPool);
 
     if (rSetVk == VK_NULL_HANDLE)
     {
@@ -1201,6 +1240,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
 
     VulkanResourceSet* resourceSetVK = new VulkanResourceSet(name);
     resourceSetVK->handle            = rSetVk;
+    resourceSetVK->pool              = usedPool;
     resourceSetVK->layouts.push_back(resourceLayouts);
 
     setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
@@ -1214,8 +1254,9 @@ void VulkanContext::DestroyResourceSet(RHIResourceSet* resourceSet)
     VulkanResourceSet* resourceSetVK = static_cast<VulkanResourceSet*>(resourceSet);
     if (resourceSetVK->handle != VK_NULL_HANDLE)
     {
-        _descriptorPoolAllocator.FreeDescriptorSet(resourceSetVK->handle);
+        _descriptorPoolAllocator.FreeDescriptorSet(resourceSetVK->handle, resourceSetVK->pool);
         resourceSetVK->handle = VK_NULL_HANDLE;
+        resourceSetVK->pool   = VK_NULL_HANDLE;
     }
     delete resourceSetVK;
 }
@@ -1308,7 +1349,7 @@ RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
     VkCommandBuffer cmdBufferVk;
     vkAllocateCommandBuffers(_device, &allocInfo, &cmdBufferVk);
 
-    VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name);
+    VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name, this);
     commandBufferVK->handle              = cmdBufferVk;
 
     setDebugObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
@@ -1393,6 +1434,261 @@ void VulkanContext::WaitForIdle() const
 {
     // Wait for the Vulkan device to be idle
     vkDeviceWaitIdle(_device.logicalDevice);
+}
+
+VkRenderPass VulkanContext::GetCompatibleRenderPass(const PipelineRenderTargetLayout& layout)
+{
+    return _renderingCache.GetCompatibleRenderPass(layout);
+}
+
+void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
+{
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
+    {
+        VulkanRenderingCache::LegacyRenderingHandles handles = _renderingCache.GetLegacyRenderingHandles(renderingInfo);
+
+        static std::vector<VkClearValue> clearValues;
+        uint32 attachmentCount = renderingInfo.colorAttachmentCount + static_cast<uint32>(renderingInfo.useDepthStencilAttachment);
+        if (clearValues.size() < attachmentCount)
+        {
+            clearValues.resize(attachmentCount);
+        }
+
+        uint32 attachmentIndex = 0;
+        for (; attachmentIndex < renderingInfo.colorAttachmentCount; attachmentIndex++)
+        {
+            ::memcpy(clearValues[attachmentIndex].color.float32, renderingInfo.colorAttachments[attachmentIndex].attachment.clearValue.color, sizeof(float[4]));
+        }
+
+        if (renderingInfo.useDepthStencilAttachment)
+        {
+            clearValues[attachmentIndex].depthStencil.depth = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.depth;
+            clearValues[attachmentIndex].depthStencil.stencil = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.stencil;
+        }
+
+        VkRect2D area{};
+        area.offset.x = renderingInfo.renderArea.x;
+        area.offset.y = renderingInfo.renderArea.y;
+        area.extent.width = renderingInfo.renderArea.width;
+        area.extent.height = renderingInfo.renderArea.height;
+
+        VkRenderPassBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.renderPass = handles.renderPass;
+        beginInfo.framebuffer = handles.framebuffer;
+        beginInfo.renderArea = area;
+        beginInfo.clearValueCount = attachmentCount;
+        beginInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        return;
+    }
+
+    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
+                                   VulkanTexture* textureVK,
+                                   VkImageLayout newLayout,
+                                   VkPipelineStageFlags dstStage,
+                                   VkAccessFlags dstAccess,
+                                   VkImageAspectFlags aspectMask)
+    {
+        if (textureVK == nullptr || textureVK->layoutVk == newLayout)
+        {
+            return;
+        }
+
+        VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        VkAccessFlags srcAccess = 0;
+        if (textureVK->layoutVk == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            srcAccess = VK_ACCESS_SHADER_READ_BIT;
+        }
+        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            srcAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        }
+        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            srcAccess = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask = srcAccess;
+        barrier.dstAccessMask = dstAccess;
+        barrier.oldLayout = textureVK->layoutVk;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textureVK->handle;
+        barrier.subresourceRange.aspectMask = aspectMask;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+        vkCmdPipelineBarrier(cmdBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        textureVK->layoutVk = newLayout;
+    };
+
+    std::vector<VkRenderingAttachmentInfo> colorAttachments(renderingInfo.colorAttachmentCount);
+    for (uint32 i = 0; i < renderingInfo.colorAttachmentCount; i++)
+    {
+        const RenderingAttachmentInfo& attachmentInfo = renderingInfo.colorAttachments[i];
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
+
+        if (renderingInfo.enableAutomaticTransitions)
+        {
+            transitionAttachment(
+                commandBuffer,
+                textureVK,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT);
+        }
+
+        colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachments[i].imageView = textureVK->imageViewVk;
+        colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachments[i].loadOp = RHIUtilityVulkan::ToLoadOp(attachmentInfo.attachment.loadAction);
+        colorAttachments[i].storeOp = RHIUtilityVulkan::ToStoreOp(attachmentInfo.attachment.storeAction);
+        ::memcpy(colorAttachments[i].clearValue.color.float32, attachmentInfo.attachment.clearValue.color, sizeof(float[4]));
+    }
+
+    VkRenderingAttachmentInfo depthAttachment{};
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
+        if (renderingInfo.enableAutomaticTransitions)
+        {
+            transitionAttachment(
+                commandBuffer,
+                textureVK,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
+
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depthAttachment.imageView = textureVK->imageViewVk;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = RHIUtilityVulkan::ToLoadOp(renderingInfo.depthStencilAttachment.attachment.loadAction);
+        depthAttachment.storeOp = RHIUtilityVulkan::ToStoreOp(renderingInfo.depthStencilAttachment.attachment.storeAction);
+        depthAttachment.clearValue.depthStencil.depth = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.depth;
+        depthAttachment.clearValue.depthStencil.stencil = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.stencil;
+    }
+
+    VkRenderingInfo vkRenderingInfo{};
+    vkRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    vkRenderingInfo.renderArea.offset.x = renderingInfo.renderArea.x;
+    vkRenderingInfo.renderArea.offset.y = renderingInfo.renderArea.y;
+    vkRenderingInfo.renderArea.extent.width = renderingInfo.renderArea.width;
+    vkRenderingInfo.renderArea.extent.height = renderingInfo.renderArea.height;
+    vkRenderingInfo.layerCount = 1;
+    vkRenderingInfo.colorAttachmentCount = renderingInfo.colorAttachmentCount;
+    vkRenderingInfo.pColorAttachments = colorAttachments.data();
+    vkRenderingInfo.pDepthAttachment = renderingInfo.useDepthStencilAttachment ? &depthAttachment : nullptr;
+    vkRenderingInfo.pStencilAttachment = nullptr;
+
+    PFN_vkCmdBeginRendering beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdBeginRendering"));
+    if (beginRendering == nullptr)
+    {
+        beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdBeginRenderingKHR"));
+    }
+    HS_ASSERT(beginRendering != nullptr, "Dynamic rendering function is not available");
+    beginRendering(commandBuffer, &vkRenderingInfo);
+}
+
+void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
+{
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
+    {
+        vkCmdEndRenderPass(commandBuffer);
+        return;
+    }
+
+    PFN_vkCmdEndRendering endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRendering"));
+    if (endRendering == nullptr)
+    {
+        endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRenderingKHR"));
+    }
+    HS_ASSERT(endRendering != nullptr, "Dynamic rendering function is not available");
+    endRendering(commandBuffer);
+
+    if (!renderingInfo.enableAutomaticTransitions)
+    {
+        return;
+    }
+
+    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
+                                   VulkanTexture* textureVK,
+                                   VkImageLayout oldLayout,
+                                   VkImageLayout newLayout,
+                                   VkPipelineStageFlags srcStage,
+                                   VkAccessFlags srcAccess,
+                                   VkImageAspectFlags aspectMask)
+    {
+        if (textureVK == nullptr || textureVK->layoutVk != oldLayout)
+        {
+            return;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask = srcAccess;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textureVK->handle;
+        barrier.subresourceRange.aspectMask = aspectMask;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+        vkCmdPipelineBarrier(
+            cmdBuffer,
+            srcStage,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier);
+        textureVK->layoutVk = newLayout;
+    };
+
+    VkImageLayout colorFinalLayout = renderingInfo.isSwapchainRendering ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    for (const RenderingAttachmentInfo& attachmentInfo : renderingInfo.colorAttachments)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            colorFinalLayout,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
 }
 
 void VulkanContext::cleanup()
@@ -1539,122 +1835,6 @@ VkSurfaceKHR VulkanContext::createSurface(const NativeWindow& nativeWindow)
 #endif
 
     return surface;
-}
-
-VkRenderPass VulkanContext::createRenderPass(const RenderPassInfo& info)
-{
-    auto attachmentCount = info.colorAttachmentCount + static_cast<uint8>(info.useDepthStencilAttachment);
-
-    VkImageLayout colorFinalLayout        = info.isSwapchainRenderPass ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    VkImageLayout depthStencilFinalLayout = info.isSwapchainRenderPass ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
-    std::vector<VkAttachmentDescription> attachments(attachmentCount);
-    int index = 0;
-    for (; index < info.colorAttachmentCount; index++)
-    {
-        VkAttachmentLoadOp loadOp         = RHIUtilityVulkan::ToLoadOp(info.colorAttachments[index].loadAction);
-        VkAttachmentStoreOp storeOp       = RHIUtilityVulkan::ToStoreOp(info.colorAttachments[index].storeAction);
-        VkSampleCountFlagBits sampleCount = static_cast<VkSampleCountFlagBits>(info.colorAttachments[index].sampleCount);
-
-        attachments[index].flags          = 0;
-        attachments[index].format         = RHIUtilityVulkan::ToPixelFormat(info.colorAttachments[index].format);
-        attachments[index].loadOp         = loadOp;
-        attachments[index].storeOp        = storeOp;
-        attachments[index].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;  // No stencil attachment
-        attachments[index].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // No stencil attachment
-        attachments[index].initialLayout  = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[index].finalLayout    = colorFinalLayout;      // Final layout for color attachments
-        attachments[index].samples        = VK_SAMPLE_COUNT_1_BIT; // TOOD: Multisampling
-    }
-
-    // TODO: ResolveColorAttachments
-
-    if (info.useDepthStencilAttachment)
-    {
-        VkAttachmentLoadOp depthLoadOp    = RHIUtilityVulkan::ToLoadOp(info.depthStencilAttachment.loadAction);
-        VkAttachmentStoreOp depthStoreOp  = RHIUtilityVulkan::ToStoreOp(info.depthStencilAttachment.storeAction);
-        VkSampleCountFlagBits sampleCount = static_cast<VkSampleCountFlagBits>(info.depthStencilAttachment.sampleCount);
-        attachments[index].flags          = 0;
-        attachments[index].format         = RHIUtilityVulkan::ToPixelFormat(info.depthStencilAttachment.format);
-        attachments[index].loadOp         = depthLoadOp;
-        attachments[index].storeOp        = depthStoreOp;
-        attachments[index].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;  // No stencil attachment
-        attachments[index].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // No stencil attachment
-        attachments[index].initialLayout  = (depthLoadOp == VK_ATTACHMENT_LOAD_OP_LOAD) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[index].finalLayout    = depthStencilFinalLayout; // Final layout for depth/stencil attachments
-        attachments[index].samples        = VK_SAMPLE_COUNT_1_BIT;   // TODO: Multisampling
-        index++;
-    }
-
-    VkSubpassDescription subPass{};
-    subPass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subPass.colorAttachmentCount = info.colorAttachmentCount;
-    std::vector<VkAttachmentReference> colorAttachments(info.colorAttachmentCount);
-    for (uint32 i = 0; i < info.colorAttachmentCount; i++)
-    {
-        colorAttachments[i].attachment = i;
-        colorAttachments[i].layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    }
-    subPass.pColorAttachments = colorAttachments.data();
-
-    VkAttachmentReference depthStencilAttachmentRef{};
-    if (info.useDepthStencilAttachment)
-    {
-        depthStencilAttachmentRef.attachment = index - 1; // Last attachment is depth/stencil
-        depthStencilAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        subPass.pDepthStencilAttachment      = &depthStencilAttachmentRef;
-    }
-
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = attachmentCount;
-    renderPassInfo.pAttachments    = attachments.data();
-    renderPassInfo.pNext           = nullptr;
-    renderPassInfo.subpassCount    = 1;
-    renderPassInfo.pSubpasses      = &subPass;
-    renderPassInfo.dependencyCount = 0;
-    renderPassInfo.pDependencies   = nullptr;
-
-    VkRenderPass renderPassVk;
-    vkCreateRenderPass(_device, &renderPassInfo, nullptr, &renderPassVk);
-
-    return renderPassVk;
-}
-
-VkFramebuffer VulkanContext::createFramebuffer(const FramebufferInfo& info)
-{
-    VulkanRenderPass* renderPassVK = static_cast<VulkanRenderPass*>(info.renderPass);
-
-    std::vector<VkImageView> attachments;
-    attachments.reserve(info.colorBuffers.size() + (info.depthStencilBuffer ? 1 : 0));
-    for (const auto& colorBuffer : info.colorBuffers)
-    {
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(colorBuffer);
-        attachments.push_back(textureVK->imageViewVk);
-    }
-
-    if (info.depthStencilBuffer)
-    {
-        VulkanTexture* depthTextureVK = static_cast<VulkanTexture*>(info.depthStencilBuffer);
-        if (depthTextureVK && depthTextureVK->imageViewVk)
-        {
-            attachments.push_back(depthTextureVK->imageViewVk);
-        }
-    }
-
-    VkFramebufferCreateInfo framebufferInfo{};
-    framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass      = renderPassVK->handle;
-    framebufferInfo.attachmentCount = static_cast<uint32>(attachments.size());
-    framebufferInfo.pAttachments    = attachments.data();
-    framebufferInfo.width           = info.width;
-    framebufferInfo.height          = info.height;
-    framebufferInfo.layers          = 1;
-
-    VkFramebuffer framebufferVk;
-    VK_CHECK_RESULT(vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &framebufferVk));
-
-    return framebufferVk;
 }
 
 VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout)
@@ -1857,7 +2037,32 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
 
     pipelineCreateInfo.pDynamicState = &dynamicState;
 
-    pipelineCreateInfo.renderPass = static_cast<VulkanRenderPass*>(info.renderPass)->handle;
+    PipelineRenderTargetLayout renderTargetLayout = info.renderTargetLayout;
+    HS_ASSERT(renderTargetLayout.colorAttachmentCount > 0, "GraphicsPipelineInfo must provide renderTargetLayout.");
+
+    std::vector<VkFormat> colorFormats(renderTargetLayout.colorAttachmentCount);
+    for (uint32 i = 0; i < renderTargetLayout.colorAttachmentCount; i++)
+    {
+        colorFormats[i] = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.colorFormats[i]);
+    }
+
+    VkPipelineRenderingCreateInfo renderingCreateInfo{};
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering)
+    {
+        renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        renderingCreateInfo.colorAttachmentCount = renderTargetLayout.colorAttachmentCount;
+        renderingCreateInfo.pColorAttachmentFormats = colorFormats.data();
+        if (renderTargetLayout.useDepthStencilAttachment)
+        {
+            renderingCreateInfo.depthAttachmentFormat = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.depthStencilFormat);
+        }
+        pipelineCreateInfo.pNext = &renderingCreateInfo;
+        pipelineCreateInfo.renderPass = VK_NULL_HANDLE;
+    }
+    else
+    {
+        pipelineCreateInfo.renderPass = _renderingCache.GetCompatibleRenderPass(renderTargetLayout);
+    }
 
     VkPipeline pipelineVk;
     vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineVk);
@@ -1939,6 +2144,45 @@ uint32 VulkanContext::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags 
         typeBits >>= 1;
     }
     return 0;
+}
+
+VkImageCreateInfo VulkanContext::makeTextureCreateInfo(const TextureInfo& info, bool useAlias) const
+{
+    VkImageCreateInfo imageCreateInfo{};
+    imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCreateInfo.imageType     = RHIUtilityVulkan::ToImageType(info.type);
+    imageCreateInfo.format        = RHIUtilityVulkan::ToPixelFormat(info.format);
+    imageCreateInfo.usage         = RHIUtilityVulkan::ToTextureUsage(info.usage);
+    imageCreateInfo.extent.width  = info.extent.width;
+    imageCreateInfo.extent.height = info.extent.height;
+    imageCreateInfo.extent.depth  = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
+    imageCreateInfo.arrayLayers   = info.type == ETextureType::TexCube ? 6 : 1;
+    imageCreateInfo.mipLevels     = 1;
+    imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.tiling        = (imageCreateInfo.imageType == VK_IMAGE_TYPE_1D) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
+    imageCreateInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+    imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageCreateInfo.flags         = useAlias ? VK_IMAGE_CREATE_ALIAS_BIT : 0;
+    if (info.type == ETextureType::TexCube)
+    {
+        imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    }
+    return imageCreateInfo;
+}
+
+VkImageAspectFlags VulkanContext::getImageAspectMask(const TextureInfo& info) const
+{
+    if (!info.isDepthStencilBuffer)
+    {
+        return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
+    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    if (info.format == EPixelFormat::Depth24Stencil8 || info.format == EPixelFormat::Depth32Stencil8)
+    {
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    return aspectMask;
 }
 
 #pragma endregion

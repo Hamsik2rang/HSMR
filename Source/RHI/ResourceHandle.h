@@ -24,6 +24,17 @@ protected:
     RHITexture(const char* name, const TextureInfo& info);
 };
 
+class HS_RHI_API RHIHeap : public RHIHandle
+{
+public:
+    ~RHIHeap() override;
+
+    const RHIHeapInfo info;
+
+protected:
+    RHIHeap(const char* name, const RHIHeapInfo& info);
+};
+
 class HS_RHI_API RHISampler : public RHIHandle
 {
 public:

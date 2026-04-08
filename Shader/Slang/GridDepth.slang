@@ -7,8 +7,8 @@ ConstantBuffer<PerViewUBO> perView : register(b0);
 // Grid 파라미터. GPU 외부에서 동적으로 전달할 필요가 없어서 코드 안에 const로 세팅합니다.
 static const float g_GridSize = 100.0f;
 static const float g_GridCellSize = 1.0f;
-static const float4 g_GridColorThin = float4(0.5f, 0.5f, 0.5f, 1.0f);
-static const float4 g_GridColorThick = float4(0.0f, 0.0f, 0.0f, 1.0f);
+static const float4 g_GridColorThin = float4(0.5f, 0.5f, 0.5f, 0.5f);
+static const float4 g_GridColorThick = float4(0.6f, 0.6f, 0.6f, 1.0f);
 static const float g_GridMinPixelsBetweenCells = 2.0f;
 
 struct FSInput
@@ -33,7 +33,8 @@ float2 mod(float2 v, float b)
     return float2(mod(v.x, b), mod(v.y, b));
 }
 
-float4 gridColor(float2 uv, float2 camPos) {
+float4 gridColor(float2 uv, float2 camPos) 
+{
     float2 originUV = uv;
 
     float2 dudv = float2(

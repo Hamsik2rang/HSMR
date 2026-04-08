@@ -148,9 +148,8 @@ void ForwardGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     _perViewBuffer = perViewBuffer;
 }
 
-RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(RHIRenderPass* renderPass,
-                                                           const RenderPassInfo& renderPassInfo,
-                                                           RHIBuffer* perViewBuffer)
+RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
+                                                          RHIBuffer* perViewBuffer)
 {
     if (!_isInitialized) return nullptr;
 
@@ -171,7 +170,7 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(RHIRenderPass* renderP
 
     if (!_resourceLayout || !_resourceSet) return nullptr;
 
-    size_t pipelineKey = PointerHash(renderPass);
+    size_t pipelineKey = std::hash<PipelineRenderTargetLayout>{}(renderTargetLayout);
 
     auto it = _pipelineCache.find(pipelineKey);
     if (it != _pipelineCache.end())
@@ -204,7 +203,7 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(RHIRenderPass* renderP
 
     ColorBlendStateDescriptor cbDesc{};
     cbDesc.logicOpEnable   = false;
-    cbDesc.attachmentCount = renderPassInfo.colorAttachmentCount;
+    cbDesc.attachmentCount = renderTargetLayout.colorAttachmentCount;
     cbDesc.attachments.resize(cbDesc.attachmentCount);
     for (size_t i = 0; i < cbDesc.attachmentCount; ++i)
     {
@@ -229,7 +228,7 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(RHIRenderPass* renderP
     gpInfo.rasterizerDesc    = rsDesc;
     gpInfo.depthStencilDesc  = dsDesc;
     gpInfo.colorBlendDesc    = cbDesc;
-    gpInfo.renderPass        = renderPass;
+    gpInfo.renderTargetLayout = renderTargetLayout;
     gpInfo.resourceLayout    = _resourceLayout;
 
     RHIGraphicsPipeline* pipeline = _rhiContext->CreateGraphicsPipeline("GridPipeline", gpInfo);

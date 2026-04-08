@@ -34,6 +34,7 @@ if(WIN32)
         Vulkan/VulkanDescriptorPoolAllocator.h
         Vulkan/VulkanDevice.h
         Vulkan/VulkanRenderHandle.h
+        Vulkan/VulkanRenderingCache.h
         Vulkan/VulkanResourceHandle.h
         Vulkan/VulkanStagingBuffer.h
         Vulkan/VulkanSwapchain.h
@@ -50,6 +51,7 @@ if(WIN32)
         Vulkan/Private/VulkanDescriptorPoolAllocator.cpp
         Vulkan/Private/VulkanDevice.cpp
         Vulkan/Private/VulkanRenderHandle.cpp
+        Vulkan/Private/VulkanRenderingCache.cpp
         Vulkan/Private/VulkanResourceHandle.cpp
         Vulkan/Private/VulkanStagingBuffer.cpp
         Vulkan/Private/VulkanSwapchain.cpp

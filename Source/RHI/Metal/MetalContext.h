@@ -31,12 +31,6 @@ public:
     Swapchain* CreateSwapchain(SwapchainInfo info) override;
     void       DestroySwapchain(Swapchain* swapchain) override;
 
-    RHIRenderPass* CreateRenderPass(const char* name, const RenderPassInfo& info) override;
-    void        DestroyRenderPass(RHIRenderPass* renderPass) override;
-
-    RHIFramebuffer* CreateFramebuffer(const char* name, const FramebufferInfo& info) override;
-    void         DestroyFramebuffer(RHIFramebuffer* framebuffer) override;
-
     RHIGraphicsPipeline* CreateGraphicsPipeline(const char* name, const GraphicsPipelineInfo& info) override;
     void              DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline) override;
 
@@ -55,6 +49,10 @@ public:
 
     RHITexture* CreateTexture(const char* name, void* image, const TextureInfo& info) override;
     RHITexture* CreateTexture(const char* name, void* image, uint32 width, uint32 height, EPixelFormat format, ETextureType type, ETextureUsage usage) override;
+    RHITextureMemoryRequirements GetTextureMemoryRequirements(const TextureInfo& info) override;
+    RHIHeap* CreateHeap(const RHIHeapInfo& info) override;
+    void DestroyHeap(RHIHeap* heap) override;
+    RHITexture* CreateTexture(const char* name, const TextureInfo& info, RHIHeap* heap, uint64 offset) override;
     void     DestroyTexture(RHITexture* texture) override;
 
     RHISampler* CreateSampler(const char* name, const SamplerInfo& info) override;
@@ -84,9 +82,11 @@ public:
     HS_FORCEINLINE void* GetDevice() const { return _device; }
     
     HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const final { return ERHIPlatform::Metal; }
+    HS_FORCEINLINE const RHICapabilities& GetCapabilities() const override { return _capabilities; }
 
 private:
     void* _device = nullptr;
+    RHICapabilities _capabilities;
 };
 
 HS_NS_END

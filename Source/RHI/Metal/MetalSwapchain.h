@@ -38,7 +38,7 @@ public:
         HS_ASSERT(index < _maxFrameCount, "Count of commandbuffer is less than index");
         return _commandBuffers[index];
     }
-    HS_FORCEINLINE RHIFramebuffer* GetFramebufferForCurrentFrame() const override { return _framebuffers[_frameIndex]; }
+    HS_FORCEINLINE RHITexture* GetCurrentColorTexture() const override { return _colorTextures[_frameIndex]; }
 
 private:
     uint8 _frameIndex;
@@ -46,12 +46,11 @@ private:
     uint8 _maxFrameCount = 3;
 
     void setRenderTargets();
-    void setRenderPass();
-    void setFramebuffers();
+    void setRenderTargets();
 
     id<CAMetalDrawable> _drawable;
     RHICommandBuffer** _commandBuffers;
-    RHIFramebuffer** _framebuffers;
+    RHITexture** _colorTextures;
 
     bool _isSuspended;
     bool _isInitialized;

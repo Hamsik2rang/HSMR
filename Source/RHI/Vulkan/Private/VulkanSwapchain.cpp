@@ -13,7 +13,7 @@ VulkanSwapchain::VulkanSwapchain(const SwapchainInfo& info, VkSurfaceKHR surface
     , _deviceVulkan(nullptr)
     , surface(surface)
     , handle(VK_NULL_HANDLE)
-    , _framebuffers(nullptr)
+    , _colorTextures(nullptr)
     , _frameIndex(static_cast<uint8>(-1))
     , _maxFrameCount(2)
     , _isSuspended(true)
@@ -26,35 +26,11 @@ VulkanSwapchain::~VulkanSwapchain()
     destroySwapchainVK();
 }
 
-void VulkanSwapchain::setRenderPass()
+void VulkanSwapchain::setRenderTargets()
 {
-    Attachment colorAttachment{};
-    colorAttachment.format         = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
-    colorAttachment.clearValue     = ClearValue(0.3, 0.3, 0.3, 1.0);
-    colorAttachment.loadAction     = ELoadAction::Clear;
-    colorAttachment.storeAction    = EStoreAction::Store;
-    colorAttachment.isDepthStencil = false;
+    HS_ASSERT(_colorTextures == nullptr, "Swapchain render targets already exist. Destroy them before creating new ones.");
 
-    Area renderArea{};
-    renderArea.x      = 0;
-    renderArea.y      = 0;
-    renderArea.width  = _info.nativeWindow->surfaceWidth;
-    renderArea.height = _info.nativeWindow->surfaceHeight;
-
-    RenderPassInfo info{};
-    info.isSwapchainRenderPass     = true;
-    info.colorAttachments          = {colorAttachment};
-    info.colorAttachmentCount      = 1;
-    info.useDepthStencilAttachment = false;
-
-    _renderPass = RHIContext::Get()->CreateRenderPass("Swapchain RenderPass", info);
-}
-
-void VulkanSwapchain::setFramebuffers()
-{
-    HS_ASSERT(_framebuffers == nullptr, "Framebuffer is already exists. you should destroy it before creating new one.");
-
-    _framebuffers = new RHIFramebuffer*[imageVks.size()]{nullptr};
+    _colorTextures = new RHITexture*[imageVks.size()]{nullptr};
 
     RHIContext* rhiContext = RHIContext::Get();
 
@@ -79,17 +55,7 @@ void VulkanSwapchain::setFramebuffers()
 
         RHITexture* texture = rhiContext->CreateTexture("Swapchain Framebffer Texture", nullptr, tInfo);
 
-        FramebufferInfo fbInfo{};
-        fbInfo.depthStencilBuffer     = nullptr;
-        fbInfo.resolveBuffer          = nullptr;
-        fbInfo.isSwapchainFramebuffer = true;
-        fbInfo.width                  = tInfo.extent.width;
-        fbInfo.height                 = tInfo.extent.height;
-        fbInfo.renderPass             = _renderPass;
-        fbInfo.colorBuffers.push_back(texture);
-
-        RHIFramebuffer* framebuffer = rhiContext->CreateFramebuffer("Swapchain Framebuffer", fbInfo);
-        _framebuffers[i]            = framebuffer;
+        _colorTextures[i] = texture;
     }
 }
 
@@ -261,8 +227,7 @@ bool VulkanSwapchain::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
         VK_CHECK_RESULT(vkCreateFence(_deviceVulkan->logicalDevice, &fenceInfo, nullptr, &(syncObjects.inFlightFences[i])));
     }
 
-    setRenderPass();
-    setFramebuffers();
+    setRenderTargets();
 
     _isInitialized = true;
     return true;
@@ -293,23 +258,18 @@ void VulkanSwapchain::destroySwapchainVK()
         handle = VK_NULL_HANDLE;
     }
 
-    if (_renderPass)
-    {
-        rhiContext->DestroyRenderPass(_renderPass);
-        _renderPass = nullptr;
-    }
-    if (_framebuffers)
+    if (_colorTextures)
     {
         for (size_t i = 0; i < _maxFrameCount; i++)
         {
-            if (_framebuffers[i])
+            if (_colorTextures[i])
             {
-                delete _framebuffers[i];
-                _framebuffers[i] = nullptr;
+                rhiContext->DestroyTexture(_colorTextures[i]);
+                _colorTextures[i] = nullptr;
             }
         }
-        delete[] _framebuffers;
-        _framebuffers = nullptr;
+        delete[] _colorTextures;
+        _colorTextures = nullptr;
     }
 
     _isInitialized = false;

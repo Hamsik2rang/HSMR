@@ -12,8 +12,6 @@
 
 namespace hs
 {
-/*#include "RHI/RenderHandle.h"*/ class RHIRenderPass;
-/*#include "RHI/RenderHandle.h"*/ class RHIFramebuffer;
 } // namespace hs
 
 HS_NS_BEGIN
@@ -28,7 +26,7 @@ public:
 
     void Configure(RenderTarget* renderTarget) override;
 
-    void Execute(RHICommandBuffer* commandBuffer, RHIRenderPass* renderPass, const SceneResource& sceneResource) override;
+    void Execute(RHICommandBuffer* commandBuffer, const SceneResource& sceneResource) override;
 
     void OnAfterRendering() override;
 

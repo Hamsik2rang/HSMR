@@ -13,8 +13,6 @@
 
 HS_NS_BEGIN
 
-class RHIRenderPass;
-class RHIFramebuffer;
 class RHIGraphicsPipeline;
 class RHIComputePipeline;
 class RHIResourceSet;
@@ -46,7 +44,6 @@ public:
     virtual void End() = 0;
     virtual void Reset() = 0;
     
-    virtual void BeginRenderPass(RHIRenderPass* renderPass, RHIFramebuffer* framebuffer, const Area& renderArea) = 0;
     virtual void BindPipeline(RHIGraphicsPipeline* pipeline) = 0;
     virtual void BindResourceSet(RHIResourceSet* rSet) = 0;
     virtual void SetViewport(const Viewport& viewport) = 0;
@@ -55,10 +52,7 @@ public:
     virtual void BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount) = 0;
     virtual void DrawArrays(const uint32 firstVertex, const uint32 vertexCount, const uint32 instanceCount) = 0;
     virtual void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) = 0;
-    virtual void EndRenderPass() = 0;
-
-    // TODO: Bindless Rendering & Dynamic Rendering
-    virtual void BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea) = 0;
+    virtual void BeginRendering(const RenderingInfo& renderingInfo) = 0;
     virtual void EndRendering() = 0;
 
     // Compute commands
@@ -68,7 +62,8 @@ public:
     virtual void EndComputePass() = 0;  // End compute encoder and synchronize
 
     // Memory barriers
-    virtual void TextureBarrier(RHITexture* texture) = 0;  // Synchronize texture access
+    virtual void TextureBarrier(const RHITextureBarrierDesc* barriers, uint32 count) = 0;
+    virtual void TextureBarrier(RHITexture* texture) = 0;  // Compatibility wrapper for coarse texture synchronization
 
     virtual void CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture) = 0;
     virtual void UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize) = 0;

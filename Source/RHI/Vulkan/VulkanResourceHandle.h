@@ -21,10 +21,25 @@ struct HS_RHI_API VulkanTexture : public RHITexture
     {}
     ~VulkanTexture() final = default;
 
-    VkImage handle          = VK_NULL_HANDLE;
-    VkImageView imageViewVk = VK_NULL_HANDLE;
-    VkDeviceMemory memoryVk = VK_NULL_HANDLE;
-    VkImageLayout layoutVk  = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkImage handle             = VK_NULL_HANDLE;
+    VkImageView imageViewVk    = VK_NULL_HANDLE;
+    VkDeviceMemory memoryVk    = VK_NULL_HANDLE;
+    VkImageLayout layoutVk     = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkDeviceSize memoryOffset = 0;
+    VkDeviceSize memorySize   = 0;
+    bool ownsMemory            = true;
+};
+
+struct HS_RHI_API VulkanHeap : public RHIHeap
+{
+    VulkanHeap(const char* name, const RHIHeapInfo& info) noexcept
+        : RHIHeap(name, info)
+    {}
+    ~VulkanHeap() final = default;
+
+    VkDeviceMemory memory  = VK_NULL_HANDLE;
+    VkDeviceSize size      = 0;
+    uint32 memoryTypeIndex = 0;
 };
 
 struct HS_RHI_API VulkanSampler : public RHISampler
@@ -80,7 +95,8 @@ struct HS_RHI_API VulkanResourceSet : public RHIResourceSet
     {}
     ~VulkanResourceSet() final = default;
 
-    VkDescriptorSet handle = VK_NULL_HANDLE;
+    VkDescriptorSet       handle   = VK_NULL_HANDLE;
+    VkDescriptorPool      pool     = VK_NULL_HANDLE;
 };
 
 struct HS_RHI_API VulkanResourceSetPool : public RHIResourceSetPool

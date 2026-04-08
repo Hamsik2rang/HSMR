@@ -29,7 +29,6 @@ class RHISampler;
 class RHIResourceLayout;
 class RHIResourceSet;
 class RHIGraphicsPipeline;
-class RHIRenderPass;
 class Material;
 class Mesh;
 class Shader;
@@ -108,7 +107,7 @@ public:
 
     // Material resources (cached)
     MaterialResource* GetOrCreateMaterialResources(Material* material);
-    RHIGraphicsPipeline* GetOrCreatePipeline(Material* material, RHIRenderPass* renderPass);
+    RHIGraphicsPipeline* GetOrCreatePipeline(Material* material, const PipelineRenderTargetLayout& renderTargetLayout);
 
     // Mesh resources (cached)
     MeshResource* GetOrCreateMeshResources(Mesh* mesh, const ShaderReflectionDataEx& reflection);
