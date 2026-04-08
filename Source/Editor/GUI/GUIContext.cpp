@@ -12,10 +12,34 @@
 
 HS_NS_EDITOR_BEGIN
 
+namespace
+{
+constexpr float s_editorIndentSpacingRatio = 0.25f;
+constexpr float s_fallbackEditorFontSize = 16.0f;
+
+void applyEditorStyleMetrics()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // ImGui's default IndentSpacing is intentionally wide: roughly one full text line plus frame padding.
+    // That works for generic debug UI, but editor panels such as Hierarchy, Inspector, and Assets read more
+    // like Unity/Unreal when tree depth advances by only one or two spaces. Keep the policy centralized here
+    // so individual panels do not need to push the same style override around every TreeNode.
+    float fontSize = ImGui::GetFontSize();
+    if (fontSize <= 0.0f)
+    {
+        fontSize = s_fallbackEditorFontSize;
+    }
+
+    style.IndentSpacing = fontSize * s_editorIndentSpacingRatio;
+}
+} // namespace
+
 GUIContext::GUIContext()
     : _assetDirectory(SystemContext::Get()->assetDirectory)
     , _font{nullptr}
     , _context(nullptr)
+    , _scaleFactor(1.0f)
 {
     Initialize();
 }
@@ -158,6 +182,8 @@ void GUIContext::SetColorTheme(bool useWhite)
         colors[ImGuiCol_TitleBgActive]    = ImVec4{0.15f, 0.1505f, 0.151f, 1.0f};
         colors[ImGuiCol_TitleBgCollapsed] = ImVec4{0.15f, 0.1505f, 0.151f, 1.0f};
     }
+
+    applyEditorStyleMetrics();
 }
 
 void GUIContext::SetScaleFactor(float scaleFactor)
@@ -168,6 +194,8 @@ void GUIContext::SetScaleFactor(float scaleFactor)
 
     ImGuiIO& io        = ImGui::GetIO();
     io.FontGlobalScale = scaleFactor;
+
+    applyEditorStyleMetrics();
 }
 
 void GUIContext::ApplyDPIScale(float dpiScale)
@@ -194,6 +222,8 @@ void GUIContext::ApplyDPIScale(float dpiScale)
 
     io.Fonts->Build();
 
+    applyEditorStyleMetrics();
+
     HS_LOG(info, "[GUI] Applied DPI scale: %.2f (font size: %.1f)", dpiScale, scaledFontSize);
 }
 
@@ -204,6 +234,8 @@ void GUIContext::SetFont(const std::string& fontPath, float defaultFontSize)
     _font       = io.Fonts->AddFontFromFileTTF((_assetDirectory + fontPath).c_str(), defaultFontSize);
 
     io.Fonts->Build();
+
+    applyEditorStyleMetrics();
 }
 
 void GUIContext::LoadLayout(const std::string& layoutPath)
