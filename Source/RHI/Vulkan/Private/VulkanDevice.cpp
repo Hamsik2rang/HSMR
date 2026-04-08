@@ -86,32 +86,75 @@ void VulkanDevice::createLogicalDevice()
     queueFamilyProperties.resize(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
-    bool isQueueFamilyFound = false;
-    for (size_t i = 0; i < queueFamilyProperties.size(); i++)
+    queueFamilyIndices = QueueFamilyIndices{};
+    for (uint32 i = 0; i < static_cast<uint32>(queueFamilyProperties.size()); i++)
     {
         const auto& queueFamily = queueFamilyProperties[i];
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        const bool supportsGraphics = (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
+        const bool supportsCompute = (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) != 0;
+        const bool supportsTransfer = (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) != 0;
+
+        if (supportsGraphics && queueFamilyIndices.graphics == InvalidQueueFamily)
         {
             queueFamilyIndices.graphics = i;
-            queueFamilyIndices.compute  = i;
         }
-        else if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
+
+        if (supportsCompute &&
+            (queueFamilyIndices.compute == InvalidQueueFamily || !supportsGraphics))
         {
             queueFamilyIndices.compute = i;
         }
 
-        if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
+        if (supportsTransfer)
         {
-            queueFamilyIndices.transfer = i;
+            const bool isDedicatedTransfer = !supportsGraphics && !supportsCompute;
+            if (queueFamilyIndices.transfer == InvalidQueueFamily || isDedicatedTransfer)
+            {
+                queueFamilyIndices.transfer = i;
+            }
         }
     }
 
-    VkDeviceQueueCreateInfo queueInfo{};
-    queueInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueInfo.queueFamilyIndex = queueFamilyIndices.graphics;
-    queueInfo.queueCount       = 1;
-    float queuePriority        = 0.0f;
-    queueInfo.pQueuePriorities = &queuePriority;
+    if (queueFamilyIndices.graphics == InvalidQueueFamily)
+    {
+        HS_THROW("Vulkan device does not have a graphics queue family.");
+    }
+
+    if (queueFamilyIndices.compute == InvalidQueueFamily)
+    {
+        queueFamilyIndices.compute = queueFamilyIndices.graphics;
+    }
+
+    if (queueFamilyIndices.transfer == InvalidQueueFamily)
+    {
+        queueFamilyIndices.transfer = queueFamilyIndices.graphics;
+    }
+
+    std::vector<uint32> uniqueQueueFamilyIndices;
+    auto appendUniqueQueueFamily = [&uniqueQueueFamilyIndices](uint32 queueFamilyIndex)
+    {
+        if (std::find(uniqueQueueFamilyIndices.begin(), uniqueQueueFamilyIndices.end(), queueFamilyIndex) ==
+            uniqueQueueFamilyIndices.end())
+        {
+            uniqueQueueFamilyIndices.push_back(queueFamilyIndex);
+        }
+    };
+    appendUniqueQueueFamily(queueFamilyIndices.graphics);
+    appendUniqueQueueFamily(queueFamilyIndices.compute);
+    appendUniqueQueueFamily(queueFamilyIndices.transfer);
+
+    float queuePriority = 1.0f;
+    std::vector<VkDeviceQueueCreateInfo> queueInfos;
+    queueInfos.reserve(uniqueQueueFamilyIndices.size());
+    for (uint32 queueFamilyIndex : uniqueQueueFamilyIndices)
+    {
+        VkDeviceQueueCreateInfo queueInfo{};
+        queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueInfo.queueFamilyIndex = queueFamilyIndex;
+        queueInfo.queueCount = 1;
+        queueInfo.pQueuePriorities = &queuePriority;
+        queueInfos.push_back(queueInfo);
+    }
 
     std::vector<const char*> enabledExtensions = s_requiredDeviceExtensions;
     uint32 apiMajor = (properties.apiVersion >> 22) & 0x3FF;
@@ -173,8 +216,8 @@ void VulkanDevice::createLogicalDevice()
 
     VkDeviceCreateInfo deviceInfo{};
     deviceInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceInfo.queueCreateInfoCount    = 1;
-    deviceInfo.pQueueCreateInfos       = &queueInfo;
+    deviceInfo.queueCreateInfoCount    = static_cast<uint32>(queueInfos.size());
+    deviceInfo.pQueueCreateInfos       = queueInfos.data();
     deviceInfo.pEnabledFeatures        = &features;
     deviceInfo.enabledExtensionCount   = static_cast<uint32>(enabledExtensions.size());
     deviceInfo.ppEnabledExtensionNames = enabledExtensions.data();

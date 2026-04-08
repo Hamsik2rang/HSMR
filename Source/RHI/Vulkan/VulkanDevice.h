@@ -14,8 +14,10 @@ HS_NS_BEGIN
 class HS_RHI_API VulkanDevice final
 {
 public:
-	VulkanDevice() = default;
-	~VulkanDevice();
+    static constexpr uint32 InvalidQueueFamily = HS_UINT32_MAX;
+
+    VulkanDevice() = default;
+    ~VulkanDevice();
 
     struct OptionalDeviceExtensions
     {
@@ -72,15 +74,15 @@ public:
         };
     };
 	
-	bool Create(VkInstance instance);
-	void Destroy();
-	
-	struct QueueFamilyIndices
-	{
-		uint32 graphics;
-		uint32 compute;
-		uint32 transfer;
-	} queueFamilyIndices;
+    bool Create(VkInstance instance);
+    void Destroy();
+
+    struct QueueFamilyIndices
+    {
+        uint32 graphics = InvalidQueueFamily;
+        uint32 compute = InvalidQueueFamily;
+        uint32 transfer = InvalidQueueFamily;
+    } queueFamilyIndices;
 
 	VkDevice logicalDevice = VK_NULL_HANDLE;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
