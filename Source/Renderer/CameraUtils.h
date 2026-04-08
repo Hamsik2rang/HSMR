@@ -21,9 +21,10 @@ struct CameraUtils
     // Compute view matrix from TransformComponent (LH convention)
     static glm::mat4 ComputeViewMatrixLH(const TransformComponent& transform)
     {
-        glm::vec3 front = glm::normalize(transform.rotation * glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::vec3 up = glm::normalize(transform.rotation * glm::vec3(0.0f, 1.0f, 0.0f));
-        return glm::lookAtLH(transform.position, transform.position + front, up);
+        glm::vec3 position = glm::vec3(transform.worldMatrix[3]);
+        glm::vec3 front = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::vec3 up = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 1.0f, 0.0f));
+        return glm::lookAtLH(position, position + front, up);
     }
 
     // Compute projection matrix from CameraComponent (LH convention, with Vulkan Y-flip)
@@ -67,7 +68,7 @@ struct CameraUtils
         perView.inverseViewMatrix = glm::inverse(viewMatrix);
         perView.inverseProjectionMatrix = glm::inverse(projectionMatrix);
         perView.inverseViewProjectionMatrix = glm::inverse(viewProjectionMatrix);
-        perView.cameraPosition = transform.position;
+        perView.cameraPosition = glm::vec3(transform.worldMatrix[3]);
 
         return perView;
     }

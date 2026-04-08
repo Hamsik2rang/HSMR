@@ -36,26 +36,36 @@ struct HS_SCENE_API TransformComponent
     std::vector<entt::entity> children;
 
     // Dirty flag (변경 감지용)
-    bool isDirty = true;
+    bool isDirty    = true;
+    bool worldDirty = true;
+    uint32 localVersion = 1;
+    uint32 worldVersion = 0;
+
+    void MarkDirty()
+    {
+        isDirty = true;
+        worldDirty = true;
+        localVersion++;
+    }
 
     // ===== Local Transform 조작 =====
 
     void SetPosition(const glm::vec3& pos)
     {
         position = pos;
-        isDirty = true;
+        MarkDirty();
     }
 
     void SetRotation(const glm::quat& rot)
     {
         rotation = rot;
-        isDirty = true;
+        MarkDirty();
     }
 
     void SetScale(const glm::vec3& scl)
     {
         scale = scl;
-        isDirty = true;
+        MarkDirty();
     }
 
     glm::vec3 GetEulerAngles() const
@@ -66,19 +76,19 @@ struct HS_SCENE_API TransformComponent
     void SetEulerAngles(const glm::vec3& eulerDegrees)
     {
         rotation = glm::quat(glm::radians(eulerDegrees));
-        isDirty = true;
+        MarkDirty();
     }
 
     void Translate(const glm::vec3& delta)
     {
         position += delta;
-        isDirty = true;
+        MarkDirty();
     }
 
     void Rotate(const glm::quat& deltaRot)
     {
         rotation = deltaRot * rotation;
-        isDirty = true;
+        MarkDirty();
     }
 
     void RotateEuler(const glm::vec3& eulerDegrees)
@@ -160,7 +170,7 @@ struct HS_SCENE_API TransformComponent
         {
             position = worldPos;
         }
-        isDirty = true;
+        MarkDirty();
     }
 
     void SetWorldRotation(const glm::quat& worldRot)
@@ -174,7 +184,7 @@ struct HS_SCENE_API TransformComponent
         {
             rotation = worldRot;
         }
-        isDirty = true;
+        MarkDirty();
     }
 
     void SetWorldEulerAngles(const glm::vec3& worldEulerDegrees)

@@ -34,24 +34,28 @@ RenderResourceManager::~RenderResourceManager()
     ReleaseAll();
 }
 
-CameraResource* RenderResourceManager::GetOrCreateCameraResource(CameraComponent* cameraComponent)
+CameraResource* RenderResourceManager::GetOrCreateCameraResource(uint64 resourceKey, const PerView& perView)
 {
-    auto it = _cameraResources.find(cameraComponent);
+    auto it = _cameraResources.find(resourceKey);
     if (it != _cameraResources.end() && it->second.isValid)
     {
         auto* resource = &it->second;
 
         // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
         // TODO: cameraComponent이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: CameraComponent에 dirty flag 추가)
-        _rhiContext->UpdateBuffer(resource->perViewBuffer, 0, &resource->perViewData, sizeof(PerView));
+        if (memcmp(&resource->perViewData, &perView, sizeof(PerView)) != 0)
+        {
+            resource->perViewData = perView;
+            _rhiContext->UpdateBuffer(resource->perViewBuffer, 0, &resource->perViewData, sizeof(PerView));
+        }
     }
     else
     {
         CameraResource resource{};
 
-        PerView perViewZero{};
+        resource.perViewData = perView;
         resource.perViewBuffer = _rhiContext->CreateBuffer(
-            "PerView UBO", &perViewZero, sizeof(PerView),
+            "PerView UBO", &resource.perViewData, sizeof(PerView),
             EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
         );
 
@@ -61,79 +65,90 @@ CameraResource* RenderResourceManager::GetOrCreateCameraResource(CameraComponent
             return nullptr;
         }
 
-        resource.isValid                  = true;
-        _cameraResources[cameraComponent] = std::move(resource);
+        resource.isValid             = true;
+        _cameraResources[resourceKey] = std::move(resource);
 
         HS_LOG(info, "[RenderResourceManager] CameraResource created");
     }
-    return &_cameraResources[cameraComponent];
+    return &_cameraResources[resourceKey];
 }
 
-void RenderResourceManager::SetActiveCameraResource(CameraResource* resource)
-{
-    _activeCameraResource = resource;
-}
-
-LightResource* RenderResourceManager::GetOrCreateLightResource(LightComponent* light, TransformComponent* transform)
+LightResource* RenderResourceManager::GetOrCreateLightResource(uint64 resourceKey, const LightUBO& lightData)
 {
     bool created = false;
 
-    auto it = _lightResources.find(light);
+    auto it = _lightResources.find(resourceKey);
 
     if (it == _lightResources.end())
     {
         LightResource resource{};
-        _lightResources[light] = resource;
-        created                = true;
+        _lightResources[resourceKey] = resource;
+        created                      = true;
     }
-    LightResource* resource = &_lightResources[light];
-
-    LightUBO lightBuffer{};
-    lightBuffer.position  = glm::vec4(transform->GetWorldPosition(), 0.0f);
-    lightBuffer.color     = light->color;
-    lightBuffer.intensity = light->intensity;
-    lightBuffer.direction = transform->GetForward();
-    lightBuffer.type      = static_cast<int>(light->type);
+    LightResource* resource = &_lightResources[resourceKey];
 
     if (created)
     {
-        resource->lightBuffer = _rhiContext->CreateBuffer("Light Buffer", &lightBuffer, sizeof(LightUBO), EBufferUsage::Uniform, EBufferMemoryOption::Dynamic);
+        resource->lightData = lightData;
+        resource->lightBuffer = _rhiContext->CreateBuffer(
+            "Light Buffer",
+            &resource->lightData,
+            sizeof(LightUBO),
+            EBufferUsage::Uniform,
+            EBufferMemoryOption::Dynamic
+        );
+        resource->isValid = resource->lightBuffer != nullptr;
     }
     else
     {
         // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
         // TODO: light이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: LightComponent에 dirty flag 추가)
-        _rhiContext->UpdateBuffer(resource->lightBuffer, 0, &lightBuffer, sizeof(LightUBO));
+        if (memcmp(&resource->lightData, &lightData, sizeof(LightUBO)) != 0)
+        {
+            resource->lightData = lightData;
+            _rhiContext->UpdateBuffer(resource->lightBuffer, 0, &resource->lightData, sizeof(LightUBO));
+        }
     }
 
-    return &_lightResources[light];
+    if (!resource->isValid)
+    {
+        HS_LOG(error, "[RenderResourceManager] Failed to create Light buffer");
+        return nullptr;
+    }
+
+    return &_lightResources[resourceKey];
 }
 
-RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(TransformComponent* transform)
+RHIBuffer* RenderResourceManager::getOrCreatePerDrawBuffer(uint64 resourceKey, const glm::mat4& worldMatrix, uint32 worldVersion)
 {
     RHIBuffer* buffer = nullptr;
 
     PerDraw perDraw{
-        .modelMatrix        = transform->GetLocalMatrix(),
-        .inverseModelMatrix = glm::inverse(transform->GetLocalMatrix())
+        .modelMatrix        = worldMatrix,
+        .inverseModelMatrix = glm::inverse(worldMatrix)
     };
 
-    auto it = _perDrawBuffers.find(transform);
+    auto it = _perDrawBuffers.find(resourceKey);
     if (it == _perDrawBuffers.end())
     {
         buffer = _rhiContext->CreateBuffer(
             "PerDraw UBO", &perDraw, sizeof(PerDraw),
             EBufferUsage::Uniform, EBufferMemoryOption::Dynamic
         );
-        _perDrawBuffers[transform] = buffer;
+        _perDrawBuffers[resourceKey]        = buffer;
+        _perDrawBufferVersions[resourceKey] = worldVersion;
     }
     else
     {
         // TODO: UpdateBuffer는 CPU-GPU 동기화 이슈가 있을 수 있으니, 실제로는 더 효율적인 업데이트 전략이 필요할 수 있다 (예: Persistent Mapped Buffer + Ring Buffer)
         // TODO: transform이 자주 변경되지 않는다면, 매 프레임 업데이트하는 대신 변경된 경우에만 업데이트하도록 최적화할 수 있다 (예: TransformComponent에 dirty flag 추가)
         // 현재는 간단히 매 호출마다 업데이트하도록 구현
-        buffer = _perDrawBuffers[transform];
-        _rhiContext->UpdateBuffer(buffer, 0, &perDraw, sizeof(PerDraw));
+        buffer = _perDrawBuffers[resourceKey];
+        if (_perDrawBufferVersions[resourceKey] != worldVersion)
+        {
+            _rhiContext->UpdateBuffer(buffer, 0, &perDraw, sizeof(PerDraw));
+            _perDrawBufferVersions[resourceKey] = worldVersion;
+        }
     }
 
     if (!buffer)
@@ -163,10 +178,9 @@ SceneResource RenderResourceManager::BuildSceneResource(
     for (auto [entity, transform, camera] : cameraView.each())
     {
         PerView perView        = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
-        CameraResource* camRes = GetOrCreateCameraResource(&camera);
+        CameraResource* camRes = GetOrCreateCameraResource(static_cast<uint64>(entt::to_integral(entity)), perView);
         if (camRes)
         {
-            camRes->perViewData = perView;
             sceneResource.cameraResources.push_back(camRes);
         }
         ++cameraIndex;
@@ -176,8 +190,14 @@ SceneResource RenderResourceManager::BuildSceneResource(
     auto lightView = registry.view<TransformComponent, LightComponent>();
     for (auto [entity, transform, light] : lightView.each())
     {
-        LightUBO lightUBO       = {};
-        LightResource* lightRes = GetOrCreateLightResource(&light, &transform);
+        LightUBO lightUBO{};
+        lightUBO.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
+        lightUBO.color     = light.color;
+        lightUBO.intensity = light.intensity;
+        lightUBO.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
+        lightUBO.type      = static_cast<int>(light.type);
+
+        LightResource* lightRes = GetOrCreateLightResource(static_cast<uint64>(entt::to_integral(entity)), lightUBO);
 
         sceneResource.lightResources.push_back(lightRes);
     }
@@ -208,17 +228,25 @@ SceneResource RenderResourceManager::BuildSceneResource(
 
         const ShaderReflectionDataEx& reflection = shader->GetReflection();
 
-        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(&transform);
-        if (!perDrawBuffer) continue;
-
-        // Set active resources for layout creation
-        SetActiveCameraResource(
-            sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0]
+        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(
+            static_cast<uint64>(entt::to_integral(entity)),
+            transform.worldMatrix,
+            transform.worldVersion
         );
-        _activePerDrawBuffer = perDrawBuffer;
+        if (!perDrawBuffer) continue;
 
         MaterialResource* matRes = GetOrCreateMaterialResources(mat);
         if (!matRes) continue;
+
+        DrawResource* drawRes = getOrCreateDrawResource(
+            static_cast<uint64>(entt::to_integral(entity)),
+            mat,
+            matRes,
+            sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0],
+            perDrawBuffer,
+            sceneResource.lightResources.empty() ? nullptr : sceneResource.lightResources[0]
+        );
+        if (!drawRes) continue;
 
         MeshResource* meshRes = GetOrCreateMeshResources(mesh, reflection);
         if (!meshRes) continue;
@@ -230,10 +258,216 @@ SceneResource RenderResourceManager::BuildSceneResource(
         renderModel.perDrawBuffer      = perDrawBuffer;
         renderModel.meshResource       = meshRes;
         renderModel.materialResource   = matRes;
+        renderModel.drawResource       = drawRes;
         sceneResource.renderModels.push_back(renderModel);
     }
 
     return sceneResource;
+}
+
+RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene, ShaderLibrary* shaderLibrary)
+{
+    RenderSceneSnapshot snapshot;
+
+    if (!scene) return snapshot;
+
+    auto& registry = scene->GetRegistry();
+    bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
+
+    auto cameraView = registry.view<TransformComponent, CameraComponent>();
+    for (auto [entity, transform, camera] : cameraView.each())
+    {
+        RenderViewSnapshot viewSnapshot{};
+        viewSnapshot.viewId  = static_cast<uint64>(entt::to_integral(entity));
+        viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+        snapshot.views.push_back(viewSnapshot);
+    }
+
+    auto lightView = registry.view<TransformComponent, LightComponent>();
+    for (auto [entity, transform, light] : lightView.each())
+    {
+        RenderLightSnapshot lightSnapshot{};
+        lightSnapshot.lightId = static_cast<uint64>(entt::to_integral(entity));
+        lightSnapshot.light.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
+        lightSnapshot.light.color     = light.color;
+        lightSnapshot.light.intensity = light.intensity;
+        lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
+        lightSnapshot.light.type      = static_cast<int>(light.type);
+        snapshot.lights.push_back(lightSnapshot);
+    }
+
+    auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
+    for (auto [entity, transform, meshRenderer] : meshView.each())
+    {
+        if (!meshRenderer.IsValidForRendering()) continue;
+
+        Mesh* mesh = meshRenderer.mesh;
+        Material* mat = meshRenderer.GetMaterial(0);
+        if (!mesh || !mat) continue;
+
+        Shader* shader = mat->GetShader();
+        if ((!shader || !shader->IsCompiledEx()) && shaderLibrary)
+        {
+            Shader* defaultShader = shaderLibrary->GetOrCompile("BlinnPhong");
+            if (defaultShader)
+            {
+                mat->SetShader(defaultShader);
+                shader = defaultShader;
+            }
+        }
+
+        if (!shader || !shader->IsCompiledEx()) continue;
+
+        RenderPrimitiveSnapshot primitiveSnapshot{};
+        primitiveSnapshot.primitiveId  = static_cast<uint64>(entt::to_integral(entity));
+        primitiveSnapshot.worldVersion = transform.worldVersion;
+        primitiveSnapshot.worldMatrix  = transform.worldMatrix;
+        primitiveSnapshot.mesh         = mesh;
+        primitiveSnapshot.material     = mat;
+        snapshot.primitives.push_back(primitiveSnapshot);
+    }
+
+    return snapshot;
+}
+
+SceneResource RenderResourceManager::BuildSceneResource(const RenderSceneSnapshot& snapshot)
+{
+    SceneResource sceneResource;
+
+    for (const RenderViewSnapshot& viewSnapshot : snapshot.views)
+    {
+        CameraResource* camRes = GetOrCreateCameraResource(viewSnapshot.viewId, viewSnapshot.perView);
+        if (camRes)
+        {
+            sceneResource.cameraResources.push_back(camRes);
+        }
+    }
+
+    for (const RenderLightSnapshot& lightSnapshot : snapshot.lights)
+    {
+        LightResource* lightRes = GetOrCreateLightResource(lightSnapshot.lightId, lightSnapshot.light);
+        if (lightRes)
+        {
+            sceneResource.lightResources.push_back(lightRes);
+        }
+    }
+
+    CameraResource* cameraResource = sceneResource.cameraResources.empty() ? nullptr : sceneResource.cameraResources[0];
+    LightResource* lightResource = sceneResource.lightResources.empty() ? nullptr : sceneResource.lightResources[0];
+
+    for (const RenderPrimitiveSnapshot& primitive : snapshot.primitives)
+    {
+        Mesh* mesh = primitive.mesh;
+        Material* mat = primitive.material;
+        if (!mesh || !mat) continue;
+
+        Shader* shader = mat->GetShader();
+        if (!shader || !shader->IsCompiledEx()) continue;
+
+        const ShaderReflectionDataEx& reflection = shader->GetReflection();
+
+        RHIBuffer* perDrawBuffer = getOrCreatePerDrawBuffer(
+            primitive.primitiveId,
+            primitive.worldMatrix,
+            primitive.worldVersion
+        );
+        if (!perDrawBuffer) continue;
+
+        MaterialResource* matRes = GetOrCreateMaterialResources(mat);
+        if (!matRes) continue;
+
+        DrawResource* drawRes = getOrCreateDrawResource(
+            primitive.primitiveId,
+            mat,
+            matRes,
+            cameraResource,
+            perDrawBuffer,
+            lightResource
+        );
+        if (!drawRes) continue;
+
+        MeshResource* meshRes = GetOrCreateMeshResources(mesh, reflection);
+        if (!meshRes) continue;
+
+        RenderModel renderModel;
+        renderModel.worldMatrix        = primitive.worldMatrix;
+        renderModel.inverseWorldMatrix = glm::inverse(renderModel.worldMatrix);
+        renderModel.material           = mat;
+        renderModel.perDrawBuffer      = perDrawBuffer;
+        renderModel.meshResource       = meshRes;
+        renderModel.materialResource   = matRes;
+        renderModel.drawResource       = drawRes;
+        sceneResource.renderModels.push_back(renderModel);
+    }
+
+    return sceneResource;
+}
+
+size_t RenderResourceManager::buildDrawResourceKey(
+    uint64 primitiveId,
+    Material* material,
+    CameraResource* cameraResource,
+    RHIBuffer* perDrawBuffer,
+    LightResource* lightResource
+) const
+{
+    uint64 key = HashCombine64(primitiveId, reinterpret_cast<uint64>(material));
+    key = HashCombine64(key, reinterpret_cast<uint64>(cameraResource ? cameraResource->perViewBuffer : nullptr));
+    key = HashCombine64(key, reinterpret_cast<uint64>(perDrawBuffer));
+    key = HashCombine64(key, reinterpret_cast<uint64>(lightResource ? lightResource->lightBuffer : nullptr));
+    return static_cast<size_t>(key);
+}
+
+DrawResource* RenderResourceManager::getOrCreateDrawResource(
+    uint64 primitiveId,
+    Material* material,
+    MaterialResource* materialResource,
+    CameraResource* cameraResource,
+    RHIBuffer* perDrawBuffer,
+    LightResource* lightResource
+)
+{
+    if (!material || !materialResource || !perDrawBuffer)
+    {
+        return nullptr;
+    }
+
+    size_t resourceKey = buildDrawResourceKey(primitiveId, material, cameraResource, perDrawBuffer, lightResource);
+    auto it = _drawResources.find(resourceKey);
+    if (it != _drawResources.end() && it->second.isValid)
+    {
+        return &it->second;
+    }
+
+    Shader* shader = material->GetShader();
+    if (!shader || !shader->IsCompiledEx())
+    {
+        return nullptr;
+    }
+
+    DrawResource resource{};
+    resource.resourceLayout = createResourceLayoutFromReflection(
+        shader->GetReflection(),
+        material,
+        cameraResource,
+        perDrawBuffer,
+        lightResource
+    );
+    if (!resource.resourceLayout)
+    {
+        return nullptr;
+    }
+
+    resource.resourceSet = _rhiContext->CreateResourceSet("DrawResourceSet", resource.resourceLayout);
+    if (!resource.resourceSet)
+    {
+        _rhiContext->DestroyResourceLayout(resource.resourceLayout);
+        return nullptr;
+    }
+
+    resource.isValid = true;
+    _drawResources[resourceKey] = std::move(resource);
+    return &_drawResources[resourceKey];
 }
 
 MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* material)
@@ -552,17 +786,13 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
         return resources;
     }
 
-    // Create resource layout from reflection (uses active camera/model resources)
-    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material);
+    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material, nullptr, nullptr, nullptr);
 
     if (!resources.resourceLayout)
     {
         HS_LOG(error, "[RenderResourceManager] Failed to create resource layout");
         return resources;
     }
-
-    // Create resource set
-    resources.resourceSet = _rhiContext->CreateResourceSet("AutoResourceSet", resources.resourceLayout);
 
     resources.isValid = true;
     HS_LOG(info, "[RenderResourceManager] Material resources created for shader '%s'", shader->GetShaderName().c_str());
@@ -623,7 +853,11 @@ static EMaterialTextureType mapTextureNameToType(const std::string& name)
 }
 
 RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
-    const ShaderReflectionDataEx& reflection, Material* material
+    const ShaderReflectionDataEx& reflection,
+    Material* material,
+    CameraResource* cameraResource,
+    RHIBuffer* perDrawBuffer,
+    LightResource* lightResource
 )
 {
     std::vector<ResourceBinding> bindings;
@@ -692,15 +926,15 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         RHIBuffer* targetBuffer = nullptr;
         if (buf.name == "perView" || buf.name == "PerView")
         {
-            targetBuffer = _activeCameraResource ? _activeCameraResource->perViewBuffer : nullptr;
+            targetBuffer = cameraResource ? cameraResource->perViewBuffer : nullptr;
         }
         else if (buf.name == "perDraw" || buf.name == "PerDraw")
         {
-            targetBuffer = _activePerDrawBuffer;
+            targetBuffer = perDrawBuffer;
         }
         else if (buf.name == "lightUBO" || buf.name == "LightUBO")
         {
-            targetBuffer = _lightResources.begin()->second.lightBuffer; // TODO: 고쳐야함!! Additional Lights를 지원해야 됨
+            targetBuffer = lightResource ? lightResource->lightBuffer : nullptr;
         }
         else
         {
@@ -708,7 +942,6 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
             continue;
         }
 
-        if (!targetBuffer) continue;
         appendBufferBinding(buf, targetBuffer);
     }
 
@@ -856,6 +1089,13 @@ void RenderResourceManager::ReleaseAll()
 {
     if (!_rhiContext) return;
 
+    for (auto& [key, res] : _drawResources)
+    {
+        if (res.resourceSet) _rhiContext->DestroyResourceSet(res.resourceSet);
+        if (res.resourceLayout) _rhiContext->DestroyResourceLayout(res.resourceLayout);
+    }
+    _drawResources.clear();
+
     for (auto& [mat, res] : _materialResources)
     {
         for (auto& [key, pipeline] : res.pipelineCache)
@@ -886,11 +1126,18 @@ void RenderResourceManager::ReleaseAll()
     }
     _cameraResources.clear();
 
+    for (auto& [light, res] : _lightResources)
+    {
+        if (res.lightBuffer) _rhiContext->DestroyBuffer(res.lightBuffer);
+    }
+    _lightResources.clear();
+
     for (auto& [model, buffer] : _perDrawBuffers)
     {
         if (buffer) _rhiContext->DestroyBuffer(buffer);
     }
     _perDrawBuffers.clear();
+    _perDrawBufferVersions.clear();
 
     for (auto& [image, res] : _imageResources)
     {
@@ -899,8 +1146,6 @@ void RenderResourceManager::ReleaseAll()
     }
     _imageResources.clear();
 
-    _activeCameraResource = nullptr;
-    _activePerDrawBuffer  = nullptr;
 }
 
 HS_NS_END

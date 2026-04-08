@@ -54,11 +54,18 @@ struct HS_RENDERER_API MaterialResource
     RHIShader* vertexShader           = nullptr;
     RHIShader* fragmentShader         = nullptr;
     RHIResourceLayout* resourceLayout = nullptr;
-    RHIResourceSet* resourceSet       = nullptr;
+    RHIResourceSet* resourceSet       = nullptr; // Compatibility only; draw sets own concrete bindings.
     std::vector<RHIBuffer*> materialBuffers;
     std::unordered_map<size_t, RHIGraphicsPipeline*> pipelineCache;
     std::vector<ImageResource*> textureResources; // Referenced textures
     bool isValid = false;
+};
+
+struct HS_RENDERER_API DrawResource
+{
+    RHIResourceLayout* resourceLayout = nullptr;
+    RHIResourceSet* resourceSet       = nullptr;
+    bool isValid                      = false;
 };
 
 // Cached RHI resources per mesh
@@ -80,11 +87,14 @@ struct HS_RENDERER_API CameraResource
 
 struct HS_RENDERER_API LightResource
 {
+    LightUBO lightData{};
     RHIBuffer* lightBuffer = nullptr;
+    bool isValid           = false;
 };
 
 // Forward declarations
 struct SceneResource;
+struct RenderSceneSnapshot;
 class ShaderLibrary;
 class Scene;
 
@@ -96,14 +106,15 @@ public:
 
     // CPU 데이터로부터 GPU-resolved SceneResource 구축
     SceneResource BuildSceneResource(Scene* scene, ShaderLibrary* shaderLibrary);
+    RenderSceneSnapshot BuildRenderSceneSnapshot(Scene* scene, ShaderLibrary* shaderLibrary);
+    SceneResource BuildSceneResource(const RenderSceneSnapshot& snapshot);
 
     // TODO: 지금은 프레임 구분 없이 (프록시)리소스를 생성하는데, 이거 프레임인덱스 받아서 만들어야 한다. 
 
     // Camera resources (PerView UBO)
-    CameraResource* GetOrCreateCameraResource(CameraComponent* camera);
-    void SetActiveCameraResource(CameraResource* resource);
+    CameraResource* GetOrCreateCameraResource(uint64 resourceKey, const PerView& perView);
     
-    LightResource* GetOrCreateLightResource(LightComponent* light, TransformComponent* trnasform);
+    LightResource* GetOrCreateLightResource(uint64 resourceKey, const LightUBO& lightData);
 
     // Material resources (cached)
     MaterialResource* GetOrCreateMaterialResources(Material* material);
@@ -118,22 +129,42 @@ public:
     void ReleaseAll();
 
 private:
-    RHIBuffer* getOrCreatePerDrawBuffer(TransformComponent* transform);
+    RHIBuffer* getOrCreatePerDrawBuffer(uint64 resourceKey, const glm::mat4& worldMatrix, uint32 worldVersion);
+    DrawResource* getOrCreateDrawResource(
+        uint64 primitiveId,
+        Material* material,
+        MaterialResource* materialResource,
+        CameraResource* cameraResource,
+        RHIBuffer* perDrawBuffer,
+        LightResource* lightResource
+    );
 
     MaterialResource createMaterialResources(Material* material);
     ImageResource createImageResource(Image* image);
-    RHIResourceLayout* createResourceLayoutFromReflection(const ShaderReflectionDataEx& reflection, Material* material);
+    RHIResourceLayout* createResourceLayoutFromReflection(
+        const ShaderReflectionDataEx& reflection,
+        Material* material,
+        CameraResource* cameraResource,
+        RHIBuffer* perDrawBuffer,
+        LightResource* lightResource
+    );
     std::vector<float> buildInterleavedVertexData(Mesh* mesh, const ShaderVertexInputLayout& vertexLayout);
+    size_t buildDrawResourceKey(
+        uint64 primitiveId,
+        Material* material,
+        CameraResource* cameraResource,
+        RHIBuffer* perDrawBuffer,
+        LightResource* lightResource
+    ) const;
 
     RHIContext* _rhiContext;
 
-    CameraResource* _activeCameraResource = nullptr;
-    RHIBuffer* _activePerDrawBuffer       = nullptr;
-
-    std::unordered_map<CameraComponent*, CameraResource> _cameraResources;
-    std::unordered_map<LightComponent*, LightResource> _lightResources;
-    std::unordered_map<TransformComponent*, RHIBuffer*> _perDrawBuffers;
+    std::unordered_map<uint64, CameraResource> _cameraResources;
+    std::unordered_map<uint64, LightResource> _lightResources;
+    std::unordered_map<uint64, RHIBuffer*> _perDrawBuffers;
+    std::unordered_map<uint64, uint32> _perDrawBufferVersions;
     std::unordered_map<Material*, MaterialResource> _materialResources;
+    std::unordered_map<size_t, DrawResource> _drawResources;
     std::unordered_map<Mesh*, MeshResource> _meshResources;
     std::unordered_map<Image*, ImageResource> _imageResources;
 };

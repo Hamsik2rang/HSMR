@@ -21,14 +21,15 @@ void TransformSystem::Update(entt::registry& registry, float deltaTime)
     {
         if (registry.valid(root) && registry.all_of<TransformComponent>(root))
         {
-            updateWorldTransformRecursive(registry, root, glm::mat4(1.0f));
+            updateWorldTransformRecursive(registry, root, glm::mat4(1.0f), false);
         }
     }
 }
 
 void TransformSystem::updateWorldTransformRecursive(entt::registry& registry,
                                                      entt::entity entity,
-                                                     const glm::mat4& parentWorld)
+                                                     const glm::mat4& parentWorld,
+                                                     bool parentDirty)
 {
     if (!registry.valid(entity) || !registry.all_of<TransformComponent>(entity))
     {
@@ -37,13 +38,19 @@ void TransformSystem::updateWorldTransformRecursive(entt::registry& registry,
 
     auto& transform = registry.get<TransformComponent>(entity);
 
-    glm::mat4 localMatrix = transform.GetLocalMatrix();
-    transform.worldMatrix = parentWorld * localMatrix;
-    transform.isDirty = false;
+    bool shouldUpdate = parentDirty || transform.isDirty || transform.worldDirty;
+    if (shouldUpdate)
+    {
+        glm::mat4 localMatrix = transform.GetLocalMatrix();
+        transform.worldMatrix = parentWorld * localMatrix;
+        transform.isDirty = false;
+        transform.worldDirty = false;
+        transform.worldVersion++;
+    }
 
     for (auto child : transform.children)
     {
-        updateWorldTransformRecursive(registry, child, transform.worldMatrix);
+        updateWorldTransformRecursive(registry, child, transform.worldMatrix, shouldUpdate);
     }
 }
 

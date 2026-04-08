@@ -25,21 +25,23 @@ void Mesh::CalculateBounds()
 		return;
 	}
 
-    float minX, minY, minZ;
-    float maxX, maxY, maxZ;
-    minX = minY = minZ = HS_FLT_MIN;
-    maxX = maxY = maxZ = HS_FLT_MAX;
+    float minX = HS_FLT_MAX;
+    float minY = HS_FLT_MAX;
+    float minZ = HS_FLT_MAX;
+    float maxX = -HS_FLT_MAX;
+    float maxY = -HS_FLT_MAX;
+    float maxZ = -HS_FLT_MAX;
 
     int stride = 3; // TEMP
 
-    for (int i = 0; i < _position.size(); i += stride)
+    for (size_t i = 0; i < _position.size(); i += stride)
     {
         minX = std::min(minX, _position[i + 0]);
-        minY = std::min(minX, _position[i + 1]);
-        minZ = std::min(minX, _position[i + 2]);
-        maxX = std::max(minX, _position[i + 0]);
-        maxY = std::max(minX, _position[i + 1]);
-        maxZ = std::max(minX, _position[i + 2]);
+        minY = std::min(minY, _position[i + 1]);
+        minZ = std::min(minZ, _position[i + 2]);
+        maxX = std::max(maxX, _position[i + 0]);
+        maxY = std::max(maxY, _position[i + 1]);
+        maxZ = std::max(maxZ, _position[i + 2]);
     }
 
     _bound.min = {minX, minY, minZ, 1.0f};

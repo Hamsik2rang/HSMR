@@ -145,6 +145,8 @@ struct HS_SCENE_API MeshRendererComponent
     // Bounds for culling and picking
     AABB localBounds;
     AABB worldBounds;  // Updated by SceneGraph or manually
+    uint32 boundsWorldVersion = 0;
+    bool boundsDirty = true;
 
     // Render layer mask for selective rendering
     uint32 renderLayerMask = 0xFFFFFFFF;
@@ -231,6 +233,7 @@ struct HS_SCENE_API MeshRendererComponent
         {
             worldBounds = localBounds.Transform(worldMatrix);
         }
+        boundsDirty = false;
     }
 
     /**

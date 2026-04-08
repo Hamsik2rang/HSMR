@@ -25,7 +25,8 @@ public:
 private:
     void updateWorldTransformRecursive(entt::registry& registry,
                                        entt::entity entity,
-                                       const glm::mat4& parentWorld);
+                                       const glm::mat4& parentWorld,
+                                       bool parentDirty);
     SceneGraph& _sceneGraph;
 };
 
