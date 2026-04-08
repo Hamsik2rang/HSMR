@@ -341,6 +341,55 @@ ETextureType RHIUtilityVulkan::FromImageViewType(VkImageViewType type)
 	return ETextureType::Invalid;
 }
 
+uint32 RHIUtilityVulkan::GetTextureMipLevelCount(const TextureInfo& info)
+{
+    return info.mipLevel == 0 ? 1 : info.mipLevel;
+}
+
+uint32 RHIUtilityVulkan::GetTextureLayerCount(const TextureInfo& info)
+{
+    HS_ASSERT(info.arrayLength > 0, "TextureInfo.arrayLength must be greater than 0");
+    return info.type == ETextureType::TexCube ? 6 : info.arrayLength;
+}
+
+VkImageAspectFlags RHIUtilityVulkan::GetImageAspectMask(const TextureInfo& info)
+{
+    if (!info.isDepthStencilBuffer)
+    {
+        return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
+    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    if (info.format == EPixelFormat::Depth24Stencil8 || info.format == EPixelFormat::Depth32Stencil8)
+    {
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    return aspectMask;
+}
+
+VkImageCreateInfo RHIUtilityVulkan::MakeTextureCreateInfo(const TextureInfo& info, bool useAlias)
+{
+    VkImageCreateInfo imageCreateInfo{};
+    imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCreateInfo.imageType     = ToImageType(info.type);
+    imageCreateInfo.format        = ToPixelFormat(info.format);
+    imageCreateInfo.usage         = ToTextureUsage(info.usage);
+    imageCreateInfo.extent.width  = info.extent.width;
+    imageCreateInfo.extent.height = info.extent.height;
+    imageCreateInfo.extent.depth  = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
+    imageCreateInfo.arrayLayers   = GetTextureLayerCount(info);
+    imageCreateInfo.mipLevels     = GetTextureMipLevelCount(info);
+    imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.tiling        = (imageCreateInfo.imageType == VK_IMAGE_TYPE_1D) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
+    imageCreateInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+    imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageCreateInfo.flags         = useAlias ? VK_IMAGE_CREATE_ALIAS_BIT : 0;
+    if (info.type == ETextureType::TexCube)
+    {
+        imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    }
+    return imageCreateInfo;
+}
 
 VkBlendFactor RHIUtilityVulkan::ToBlendFactor(EBlendFactor factor)
 {

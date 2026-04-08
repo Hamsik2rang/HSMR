@@ -38,7 +38,7 @@ void VulkanSwapchain::setRenderTargets()
     for (uint8 i = 0; i < imageVks.size(); i++)
     {
         TextureInfo tInfo{};
-        tInfo.arrayLength          = 0;
+        tInfo.arrayLength          = 1;
         tInfo.extent.width         = _info.nativeWindow->surfaceWidth;
         tInfo.extent.height        = _info.nativeWindow->surfaceHeight;
         tInfo.extent.depth         = 1;

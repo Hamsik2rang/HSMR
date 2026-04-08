@@ -14,6 +14,7 @@
 #include "Scene/Components/Components.h"
 
 #include "Resource/Model.h"
+#include "Resource/Mesh.h"
 
 #include <algorithm>
 #include <cstring>
@@ -146,6 +147,12 @@ void HierarchyPanel::Draw()
                     Entity entity = scene->CreateEntity(entityName);
                     auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
                     meshRenderer.mesh = model->GetMesh();
+                    if (meshRenderer.mesh)
+                    {
+                        const auto& bound = meshRenderer.mesh->GetBound();
+                        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                        meshRenderer.boundsDirty = true;
+                    }
                     if (model->GetMaterial())
                     {
                         meshRenderer.materials.push_back(model->GetMaterial());
@@ -199,6 +206,11 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
+    bool shouldOpenNode = _searchBuffer[0] != '\0' || hasSelectedDescendant(entity);
+    if (shouldOpenNode)
+    {
+        flags |= ImGuiTreeNodeFlags_DefaultOpen;
+    }
 
     // Check if entity has children
     bool hasChildren = false;
@@ -238,6 +250,11 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
 
         ImGui::PopID();
         return;
+    }
+
+    if (shouldOpenNode)
+    {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
     }
 
     // Draw tree node
@@ -414,6 +431,25 @@ bool HierarchyPanel::matchesSearch(Entity entity) const
     }
 
     return false;
+}
+
+bool HierarchyPanel::hasSelectedDescendant(Entity entity) const
+{
+    Entity selectedEntity = EditorContext::Get().GetSelectedEntity();
+    if (!entity.IsValid() || !selectedEntity.IsValid())
+    {
+        return false;
+    }
+    if (entity.GetScene() != selectedEntity.GetScene())
+    {
+        return false;
+    }
+    if (entity == selectedEntity)
+    {
+        return false;
+    }
+
+    return entity.GetScene()->GetSceneGraph().IsAncestorOf(entity.GetHandle(), selectedEntity.GetHandle());
 }
 
 void HierarchyPanel::handleDragDrop(Entity entity)

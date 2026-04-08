@@ -15,6 +15,7 @@ public:
     ~ForwardRenderer() override;
 
     void Render(Scene* scene, RenderTarget* renderTarget) override;
+    void Render(const RenderSceneSnapshot& snapshot, RenderTarget* renderTarget) override;
     void Shutdown() override;
 
     //...

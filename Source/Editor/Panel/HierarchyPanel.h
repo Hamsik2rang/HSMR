@@ -39,6 +39,7 @@ private:
 
     // Search/filter
     bool matchesSearch(Entity entity) const;
+    bool hasSelectedDescendant(Entity entity) const;
 
     // Drag & drop for reparenting
     void handleDragDrop(Entity entity);

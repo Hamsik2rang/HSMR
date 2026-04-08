@@ -617,7 +617,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 
     VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, false);
+    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, false);
 
     VkImage imageVk;
     VK_CHECK_RESULT(vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk));
@@ -813,7 +813,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
-    VkImageAspectFlags aspectMask = getImageAspectMask(info);
+    VkImageAspectFlags aspectMask = RHIUtilityVulkan::GetImageAspectMask(info);
 
     VkImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -848,7 +848,7 @@ RHITextureMemoryRequirements VulkanContext::GetTextureMemoryRequirements(const T
         return {};
     }
 
-    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, true);
+    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, true);
     VkImage imageVk                   = VK_NULL_HANDLE;
     VkResult result                   = vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk);
     if (result != VK_SUCCESS)
@@ -918,7 +918,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& in
     }
 
     VulkanHeap* heapVK = static_cast<VulkanHeap*>(heap);
-    VkImageCreateInfo imageCreateInfo = makeTextureCreateInfo(info, true);
+    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, true);
 
     VkImage imageVk = VK_NULL_HANDLE;
     if (vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk) != VK_SUCCESS)
@@ -946,7 +946,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& in
     viewCreateInfo.image                           = imageVk;
     viewCreateInfo.viewType                        = RHIUtilityVulkan::ToImageViewType(info.type);
     viewCreateInfo.format                          = imageCreateInfo.format;
-    viewCreateInfo.subresourceRange.aspectMask     = getImageAspectMask(info);
+    viewCreateInfo.subresourceRange.aspectMask     = RHIUtilityVulkan::GetImageAspectMask(info);
     viewCreateInfo.subresourceRange.baseMipLevel   = 0;
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
     viewCreateInfo.subresourceRange.layerCount     = imageCreateInfo.arrayLayers;
@@ -1502,12 +1502,12 @@ void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const Rende
         return;
     }
 
-    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
-                                   VulkanTexture* textureVK,
-                                   VkImageLayout newLayout,
-                                   VkPipelineStageFlags dstStage,
-                                   VkAccessFlags dstAccess,
-                                   VkImageAspectFlags aspectMask)
+    auto transitionAttachment = [this](VkCommandBuffer cmdBuffer,
+                                       VulkanTexture* textureVK,
+                                       VkImageLayout newLayout,
+                                       VkPipelineStageFlags dstStage,
+                                       VkAccessFlags dstAccess,
+                                       VkImageAspectFlags aspectMask)
     {
         if (textureVK == nullptr || textureVK->layoutVk == newLayout)
         {
@@ -1543,9 +1543,9 @@ void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const Rende
         barrier.image = textureVK->handle;
         barrier.subresourceRange.aspectMask = aspectMask;
         barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.levelCount = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+        barrier.subresourceRange.layerCount = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
 
         vkCmdPipelineBarrier(cmdBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         textureVK->layoutVk = newLayout;
@@ -1642,13 +1642,13 @@ void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const Renderi
         return;
     }
 
-    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
-                                   VulkanTexture* textureVK,
-                                   VkImageLayout oldLayout,
-                                   VkImageLayout newLayout,
-                                   VkPipelineStageFlags srcStage,
-                                   VkAccessFlags srcAccess,
-                                   VkImageAspectFlags aspectMask)
+    auto transitionAttachment = [this](VkCommandBuffer cmdBuffer,
+                                       VulkanTexture* textureVK,
+                                       VkImageLayout oldLayout,
+                                       VkImageLayout newLayout,
+                                       VkPipelineStageFlags srcStage,
+                                       VkAccessFlags srcAccess,
+                                       VkImageAspectFlags aspectMask)
     {
         if (textureVK == nullptr || textureVK->layoutVk != oldLayout)
         {
@@ -1666,9 +1666,9 @@ void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const Renderi
         barrier.image = textureVK->handle;
         barrier.subresourceRange.aspectMask = aspectMask;
         barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.levelCount = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+        barrier.subresourceRange.layerCount = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
 
         vkCmdPipelineBarrier(
             cmdBuffer,
@@ -2164,45 +2164,6 @@ uint32 VulkanContext::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags 
     return 0;
 }
 
-VkImageCreateInfo VulkanContext::makeTextureCreateInfo(const TextureInfo& info, bool useAlias) const
-{
-    VkImageCreateInfo imageCreateInfo{};
-    imageCreateInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageCreateInfo.imageType     = RHIUtilityVulkan::ToImageType(info.type);
-    imageCreateInfo.format        = RHIUtilityVulkan::ToPixelFormat(info.format);
-    imageCreateInfo.usage         = RHIUtilityVulkan::ToTextureUsage(info.usage);
-    imageCreateInfo.extent.width  = info.extent.width;
-    imageCreateInfo.extent.height = info.extent.height;
-    imageCreateInfo.extent.depth  = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
-    imageCreateInfo.arrayLayers   = info.type == ETextureType::TexCube ? 6 : 1;
-    imageCreateInfo.mipLevels     = 1;
-    imageCreateInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-    imageCreateInfo.tiling        = (imageCreateInfo.imageType == VK_IMAGE_TYPE_1D) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
-    imageCreateInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-    imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageCreateInfo.flags         = useAlias ? VK_IMAGE_CREATE_ALIAS_BIT : 0;
-    if (info.type == ETextureType::TexCube)
-    {
-        imageCreateInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-    }
-    return imageCreateInfo;
-}
-
-VkImageAspectFlags VulkanContext::getImageAspectMask(const TextureInfo& info) const
-{
-    if (!info.isDepthStencilBuffer)
-    {
-        return VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-
-    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    if (info.format == EPixelFormat::Depth24Stencil8 || info.format == EPixelFormat::Depth32Stencil8)
-    {
-        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-    }
-    return aspectMask;
-}
-
 #pragma endregion
 
 #pragma region>>> Command Utility Functions
@@ -2236,8 +2197,8 @@ void VulkanContext::endSingleTimeCommands(VkCommandBuffer commandBuffer)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers    = &commandBuffer;
 
-    VK_CHECK_RESULT(vkQueueSubmit(_device.transferQueue, 1, &submitInfo, VK_NULL_HANDLE));
-    vkQueueWaitIdle(_device.transferQueue);
+    VK_CHECK_RESULT(vkQueueSubmit(_device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE));
+    vkQueueWaitIdle(_device.graphicsQueue);
 
     vkFreeCommandBuffers(_device, _defaultCommandPool, 1, &commandBuffer);
 }

@@ -48,21 +48,6 @@ VulkanTextureStateInfo getTextureStateInfo(ERHITextureState state)
     }
 }
 
-VkImageAspectFlags getAspectMask(const TextureInfo& info)
-{
-    switch (info.format)
-    {
-    case EPixelFormat::Depth32:
-        return VK_IMAGE_ASPECT_DEPTH_BIT;
-    case EPixelFormat::Stencil8:
-        return VK_IMAGE_ASPECT_STENCIL_BIT;
-    case EPixelFormat::Depth24Stencil8:
-    case EPixelFormat::Depth32Stencil8:
-        return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    default:
-        return VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-}
 }
 
 VulkanCommandQueue::VulkanCommandQueue(const char* name)
@@ -318,10 +303,15 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
         VulkanTexture* textureVK = static_cast<VulkanTexture*>(desc.texture);
         VulkanTextureStateInfo beforeInfo = getTextureStateInfo(desc.before);
         VulkanTextureStateInfo afterInfo = getTextureStateInfo(desc.after);
-        VkImageLayout oldLayout = textureVK->layoutVk != VK_IMAGE_LAYOUT_UNDEFINED ? textureVK->layoutVk : beforeInfo.layout;
+        VkImageLayout oldLayout = textureVK->layoutVk;
         if (oldLayout == afterInfo.layout)
         {
             continue;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            beforeInfo.stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            beforeInfo.access = 0;
         }
 
         VkImageMemoryBarrier barrier{};
@@ -333,11 +323,11 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.image = textureVK->handle;
-        barrier.subresourceRange.aspectMask = getAspectMask(textureVK->info);
+        barrier.subresourceRange.aspectMask = RHIUtilityVulkan::GetImageAspectMask(textureVK->info);
         barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.levelCount = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+        barrier.subresourceRange.layerCount = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
 
         imageBarriers.push_back(barrier);
         srcStages |= beforeInfo.stage;

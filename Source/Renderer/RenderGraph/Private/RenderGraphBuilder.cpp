@@ -13,7 +13,18 @@ struct ResourceLifetime
     int lastPassIdx  = -1;
 };
 
-ERHITextureState ToRHITextureState(ERGTextureAccess access)
+bool IsDepthStencilTexture(const TextureInfo& info)
+{
+    return info.isDepthStencilBuffer || (info.usage & ETextureUsage::DepthStencilAttachment) != 0;
+}
+
+bool CanUseShaderReadLayout(const TextureInfo& info)
+{
+    return (info.usage & ETextureUsage::Sampled) != 0 ||
+           (info.usage & ETextureUsage::InputAttachment) != 0;
+}
+
+ERHITextureState ToRHITextureState(ERGTextureAccess access, const TextureInfo& textureInfo)
 {
     switch (access)
     {
@@ -38,6 +49,11 @@ ERHITextureState ToRHITextureState(ERGTextureAccess access)
     case ERGTextureAccess::ComputeShaderRead:
     case ERGTextureAccess::FragmentShaderReadSampledImageOrUniformTexelBuffer:
     case ERGTextureAccess::ReadOnly:
+        if (IsDepthStencilTexture(textureInfo) && !CanUseShaderReadLayout(textureInfo))
+        {
+            return ERHITextureState::DepthAttachmentRead;
+        }
+        return ERHITextureState::ShaderRead;
     default:
         return ERHITextureState::ShaderRead;
     }
@@ -476,8 +492,11 @@ void RenderGraphBuilder::Compile()
             {
                 RHITextureBarrierDesc barrier{};
                 barrier.texture = rgTex->_rhiTexture;
-                barrier.before  = ToRHITextureState(currentAccess);
-                barrier.after   = ToRHITextureState(access.textureAccess);
+                const TextureInfo& textureInfo = rgTex->_rhiTexture != nullptr
+                    ? rgTex->_rhiTexture->info
+                    : rgTex->_desc.info;
+                barrier.before = ToRHITextureState(currentAccess, textureInfo);
+                barrier.after = ToRHITextureState(access.textureAccess, textureInfo);
                 if (barrier.before != barrier.after)
                 {
                     _textureBarriers[pass].push_back(barrier);
@@ -510,8 +529,11 @@ void RenderGraphBuilder::Compile()
                                            ? currentIt->second
                                            : rgTex->_desc.access;
 
-        ERHITextureState before = ToRHITextureState(finalAccess);
-        ERHITextureState after  = ToRHITextureState(rgTex->_desc.access);
+        const TextureInfo& textureInfo = rgTex->_rhiTexture != nullptr
+            ? rgTex->_rhiTexture->info
+            : rgTex->_desc.info;
+        ERHITextureState before = ToRHITextureState(finalAccess, textureInfo);
+        ERHITextureState after = ToRHITextureState(rgTex->_desc.access, textureInfo);
         if (before == after)
         {
             continue;

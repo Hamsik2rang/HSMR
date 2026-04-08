@@ -106,8 +106,6 @@ private:
     VkPipeline createComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout);
 
     uint32 getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties);
-    VkImageCreateInfo makeTextureCreateInfo(const TextureInfo& info, bool useAlias) const;
-    VkImageAspectFlags getImageAspectMask(const TextureInfo& info) const;
 
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);

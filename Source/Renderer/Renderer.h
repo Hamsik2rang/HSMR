@@ -44,6 +44,11 @@ public:
         RenderTarget* renderTarget
     );
 
+    virtual void Render(
+        const RenderSceneSnapshot& snapshot,
+        RenderTarget* renderTarget
+    );
+
     virtual void AddPass(RenderPass* pass)
     {
         _rendererPasses.push_back(pass);

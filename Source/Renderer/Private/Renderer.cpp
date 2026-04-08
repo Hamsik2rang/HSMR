@@ -82,6 +82,30 @@ void Renderer::Render(
     }
 }
 
+void Renderer::Render(
+    const RenderSceneSnapshot& snapshot,
+    RenderTarget* renderTarget)
+{
+    SceneResource sceneResource = _resourceManager->BuildSceneResource(snapshot);
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->OnBeforeRendering(frameIndex);
+    }
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->Configure(renderTarget);
+
+        pass->Execute(_curCommandBuffer, sceneResource);
+    }
+
+    for (auto* pass : _rendererPasses)
+    {
+        pass->OnAfterRendering();
+    }
+}
+
 void Renderer::Shutdown()
 {
     for (size_t i = 0; i < _rendererPasses.size(); i++)

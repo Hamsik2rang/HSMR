@@ -77,6 +77,11 @@ public:
 	static VkImageViewType ToImageViewType(ETextureType type);
 	static ETextureType FromImageViewType(VkImageViewType type);
 
+    static uint32 GetTextureMipLevelCount(const TextureInfo& info);
+    static uint32 GetTextureLayerCount(const TextureInfo& info);
+    static VkImageAspectFlags GetImageAspectMask(const TextureInfo& info);
+    static VkImageCreateInfo MakeTextureCreateInfo(const TextureInfo& info, bool useAlias);
+
 	static VkBlendFactor ToBlendFactor(EBlendFactor factor);
 	static EBlendFactor FromBlendFactor(VkBlendFactor factor);
 

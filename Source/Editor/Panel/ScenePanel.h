@@ -64,7 +64,9 @@ private:
     ImVec2 _viewportMax;
     bool _viewportHovered = false;
     bool _viewportFocused = false;
+    float _deltaTime = 0.0f;
 
+    void updateCameraControls(float deltaTime);
     void drawViewGizmo();
     void drawTransformGizmo();
     void handlePicking();

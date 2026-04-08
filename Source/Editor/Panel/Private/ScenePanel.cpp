@@ -16,6 +16,7 @@
 #include "Scene/Components/Components.h"
 
 #include "Resource/Model.h"
+#include "Resource/Mesh.h"
 
 // For matrix decomposition
 #define GLM_ENABLE_EXPERIMENTAL
@@ -24,6 +25,44 @@
 #include <ImGuizmo.h>
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+glm::mat4 makeImGuizmoViewMatrix(const EditorCamera& editorCamera)
+{
+    glm::mat4 viewMatrix = editorCamera.GetViewMatrix();
+    viewMatrix[0][2] = -viewMatrix[0][2];
+    viewMatrix[1][2] = -viewMatrix[1][2];
+    viewMatrix[2][2] = -viewMatrix[2][2];
+    viewMatrix[3][2] = -viewMatrix[3][2];
+    return viewMatrix;
+}
+
+glm::mat4 makeImGuizmoProjectionMatrix(const EditorCamera& editorCamera)
+{
+    const CameraComponent& camera = editorCamera.GetCameraComponent();
+    if (camera.projectionType == CameraComponent::EProjectionType::Perspective)
+    {
+        return glm::perspectiveRH(
+            editorCamera.GetFov(),
+            editorCamera.GetAspectRatio(),
+            editorCamera.GetNearZ(),
+            editorCamera.GetFarZ());
+    }
+
+    float halfWidth = camera.orthoSize * camera.aspectRatio;
+    float halfHeight = camera.orthoSize;
+    return glm::orthoRH(
+        -halfWidth, halfWidth,
+        -halfHeight, halfHeight,
+        camera.nearPlane, camera.farPlane);
+}
+
+ImVec2 getViewportSize(const ImVec2& viewportMin, const ImVec2& viewportMax)
+{
+    return ImVec2(viewportMax.x - viewportMin.x, viewportMax.y - viewportMin.y);
+}
+}
 
 bool ScenePanel::Setup()
 {
@@ -39,9 +78,16 @@ void ScenePanel::Cleanup()
 
 void ScenePanel::Update(float deltaTime)
 {
+    _deltaTime = deltaTime;
+}
+
+void ScenePanel::updateCameraControls(float deltaTime)
+{
     static constexpr float moveSpeedDecelFactor = 0.5f; // Deceleration factor when no input is given
     static float currentCameraSpeed           = 0.0f;
     static glm::vec3 moveDir                  = glm::vec3(0.0f);
+
+    ImGuiIO& io = ImGui::GetIO();
 
     // Only process camera input when viewport is hovered and gizmo is not being used
     if (ImGuizmo::IsUsing())
@@ -55,7 +101,12 @@ void ScenePanel::Update(float deltaTime)
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         // Only start camera control if click started in this viewport
-        _rightClickStartedInViewport = _viewportHovered;
+        const bool hasViewportBounds = _viewportMax.x > _viewportMin.x && _viewportMax.y > _viewportMin.y;
+        const bool mouseInsideViewport =
+            hasViewportBounds &&
+            io.MousePos.x >= _viewportMin.x && io.MousePos.x <= _viewportMax.x &&
+            io.MousePos.y >= _viewportMin.y && io.MousePos.y <= _viewportMax.y;
+        _rightClickStartedInViewport = _viewportHovered || mouseInsideViewport;
     }
     if (!_rightClickStartedInViewport)
     {
@@ -63,38 +114,37 @@ void ScenePanel::Update(float deltaTime)
     }
 
     bool isMoveDirectionUpdated = false;
-    if (Input::IsPressed(Input::Button::MouseRight))
+    bool cameraDirty = false;
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
     {
 
         // --- Mouse look ---
-        uint16 mouseX, mouseY;
-        Input::GetMousePosition(mouseX, mouseY);
-
         if (_isMouseTracking)
         {
-            float dx = static_cast<float>(mouseX) - static_cast<float>(_lastMouseX);
-            float dy = static_cast<float>(mouseY) - static_cast<float>(_lastMouseY);
+            float dx = io.MouseDelta.x;
+            float dy = io.MouseDelta.y;
 
             if (dx != 0.0f || dy != 0.0f)
             {
                 float rotateSpeed = _editorCamera->GetRotateSpeed();
                 // Rotate(yawDelta, pitchDelta)
                 _editorCamera->Rotate(dx * rotateSpeed, -dy * rotateSpeed);
+                cameraDirty = true;
             }
         }
 
-        _lastMouseX      = mouseX;
-        _lastMouseY      = mouseY;
+        _lastMouseX      = static_cast<uint16>(io.MousePos.x);
+        _lastMouseY      = static_cast<uint16>(io.MousePos.y);
         _isMouseTracking = true;
 
         // --- Keyboard movement ---
         int front = 0, right = 0, up = 0;
-        if (Input::IsPressed(Input::Button::W)) front++;
-        if (Input::IsPressed(Input::Button::S)) front--;
-        if (Input::IsPressed(Input::Button::D)) right++;
-        if (Input::IsPressed(Input::Button::A)) right--;
-        if (Input::IsPressed(Input::Button::E)) up++;
-        if (Input::IsPressed(Input::Button::Q)) up--;
+        if (Input::IsPressed(Input::Button::W) || ImGui::IsKeyDown(ImGuiKey_W)) front++;
+        if (Input::IsPressed(Input::Button::S) || ImGui::IsKeyDown(ImGuiKey_S)) front--;
+        if (Input::IsPressed(Input::Button::D) || ImGui::IsKeyDown(ImGuiKey_D)) right++;
+        if (Input::IsPressed(Input::Button::A) || ImGui::IsKeyDown(ImGuiKey_A)) right--;
+        if (Input::IsPressed(Input::Button::E) || ImGui::IsKeyDown(ImGuiKey_E)) up++;
+        if (Input::IsPressed(Input::Button::Q) || ImGui::IsKeyDown(ImGuiKey_Q)) up--;
 
         if (front != 0 || right != 0 || up != 0)
         {
@@ -110,7 +160,11 @@ void ScenePanel::Update(float deltaTime)
     }
     else
     {
-        _isMouseTracking   = false;
+        _isMouseTracking = false;
+        _rightClickStartedInViewport = false;
+        currentCameraSpeed = 0.0f;
+        moveDir = glm::vec3(0.0f);
+        return;
     }
 
     if (isMoveDirectionUpdated)
@@ -124,11 +178,19 @@ void ScenePanel::Update(float deltaTime)
 
     if (Math::EpsilonEqual(currentCameraSpeed, 0.0f))
     {
+        if (cameraDirty)
+        {
+            _editorCamera->Update();
+        }
         return;
     }
     _editorCamera->Move(moveDir * deltaTime * currentCameraSpeed);
+    cameraDirty = true;
 
-    _editorCamera->Update();
+    if (cameraDirty)
+    {
+        _editorCamera->Update();
+    }
 }
 
 void ScenePanel::Draw()
@@ -164,12 +226,13 @@ void ScenePanel::Draw()
     _resolution.width   = static_cast<uint32>(curPanelSize.x);
     _resolution.height  = static_cast<uint32>(curPanelSize.y);
 
-    _viewportMax = ImVec2(_viewportMin.x + static_cast<float>(_resolution.width), _viewportMin.y + static_cast<float>(_resolution.height));
+    _viewportMax = ImVec2(_viewportMin.x + viewportSize.x, _viewportMin.y + viewportSize.y);
 
-    if (_editorCamera && _resolution.height > 0)
+    if (_editorCamera && viewportSize.y > 0.0f)
     {
-        _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
+        _editorCamera->SetAspectRatio(viewportSize.x / viewportSize.y);
     }
+    updateCameraControls(_deltaTime);
 
     // Accept ASSET_MODEL drag & drop onto viewport
     if (ImGui::BeginDragDropTarget())
@@ -197,6 +260,12 @@ void ScenePanel::Draw()
                     Entity entity      = scene->CreateEntity(entityName);
                     auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
                     meshRenderer.mesh  = model->GetMesh();
+                    if (meshRenderer.mesh)
+                    {
+                        const auto& bound = meshRenderer.mesh->GetBound();
+                        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                        meshRenderer.boundsDirty = true;
+                    }
                     if (model->GetMaterial())
                     {
                         meshRenderer.materials.push_back(model->GetMaterial());
@@ -261,11 +330,12 @@ void ScenePanel::drawTransformGizmo()
     ImGuizmo::SetDrawlist();
 
     // Set the gizmo rect to match our viewport
-    ImGuizmo::SetRect(_viewportMin.x, _viewportMin.y, static_cast<float>(_resolution.width), static_cast<float>(_resolution.height));
+    ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
+    ImGuizmo::SetRect(_viewportMin.x, _viewportMin.y, viewportSize.x, viewportSize.y);
 
     // Get matrices
-    glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
-    glm::mat4 projMatrix = _editorCamera->GetProjectionMatrix();
+    glm::mat4 viewMatrix = makeImGuizmoViewMatrix(*_editorCamera);
+    glm::mat4 projMatrix = makeImGuizmoProjectionMatrix(*_editorCamera);
 
     // Get entity transform
     auto& transform        = selectedEntity.GetComponent<TransformComponent>();
@@ -357,9 +427,13 @@ void ScenePanel::handlePicking()
         mouseY < _viewportMin.y || mouseY > _viewportMax.y)
         return;
 
+    ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
+    if (viewportSize.x <= 0.0f || viewportSize.y <= 0.0f)
+        return;
+
     // Convert to viewport-local coordinates (0-1 range)
-    float viewportX = (mouseX - _viewportMin.x) / static_cast<float>(_resolution.width);
-    float viewportY = (mouseY - _viewportMin.y) / static_cast<float>(_resolution.height);
+    float viewportX = (mouseX - _viewportMin.x) / viewportSize.x;
+    float viewportY = (mouseY - _viewportMin.y) / viewportSize.y;
 
     // Generate ray
     glm::vec3 rayDir    = screenToWorldRay(viewportX, viewportY);
@@ -419,6 +493,10 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
             continue;
+        if (!meshRenderer.isVisible)
+            continue;
+        if (entity.HasComponent<TagComponent>() && !entity.GetComponent<TagComponent>().isActive)
+            continue;
 
         // Use worldBounds if valid, otherwise create default bounds from transform
         AABB bounds = meshRenderer.worldBounds;
@@ -449,6 +527,8 @@ Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDi
     {
         Entity entity = scene->GetEntity(entityHandle);
         if (!entity.IsValid())
+            continue;
+        if (!tag.isActive)
             continue;
 
         // Skip if already has MeshRendererComponent (handled above)

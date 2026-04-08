@@ -35,7 +35,7 @@ private:
     void drawPathBar();
     void drawFolderTree();
     void drawFolderTreeNode(const FolderEntry& folder);
-    void drawAssetGrid();
+    void drawAssetList();
     void drawAssetItem(const AssetEntry* asset);
     void drawContextMenu();
 
