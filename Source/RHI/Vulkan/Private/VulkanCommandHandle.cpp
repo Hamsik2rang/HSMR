@@ -385,10 +385,15 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
         VulkanTexture* textureVK = static_cast<VulkanTexture*>(desc.texture);
         VulkanTextureStateInfo beforeInfo = getTextureStateInfo(desc.before);
         VulkanTextureStateInfo afterInfo = getTextureStateInfo(desc.after);
-        VkImageLayout oldLayout = textureVK->layoutVk != VK_IMAGE_LAYOUT_UNDEFINED ? textureVK->layoutVk : beforeInfo.layout;
+        VkImageLayout oldLayout = textureVK->layoutVk;
         if (oldLayout == afterInfo.layout)
         {
             continue;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            beforeInfo.stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            beforeInfo.access = 0;
         }
 
         VkImageMemoryBarrier barrier{};
