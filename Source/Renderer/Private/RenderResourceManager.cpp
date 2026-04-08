@@ -70,6 +70,40 @@ LightUBO createDefaultLight()
     return light;
 }
 
+bool isEntityActive(entt::registry& registry, entt::entity entity)
+{
+    TagComponent* tag = registry.try_get<TagComponent>(entity);
+    return !tag || tag->isActive;
+}
+
+EDebugCameraProjectionType toDebugCameraProjectionType(CameraComponent::EProjectionType projectionType)
+{
+    switch (projectionType)
+    {
+    case CameraComponent::EProjectionType::Perspective:
+        return EDebugCameraProjectionType::Perspective;
+    case CameraComponent::EProjectionType::Orthographic:
+        return EDebugCameraProjectionType::Orthographic;
+    }
+
+    return EDebugCameraProjectionType::Perspective;
+}
+
+EDebugLightType toDebugLightType(ELightType lightType)
+{
+    switch (lightType)
+    {
+    case ELightType::Directional:
+        return EDebugLightType::Directional;
+    case ELightType::Point:
+        return EDebugLightType::Point;
+    case ELightType::Spot:
+        return EDebugLightType::Spot;
+    }
+
+    return EDebugLightType::Directional;
+}
+
 template <typename Func>
 void forEachCameraInRenderOrder(Scene* scene, Func&& func)
 {
@@ -365,6 +399,20 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
         viewSnapshot.viewId  = static_cast<uint64>(entt::to_integral(entity));
         viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
         snapshot.views.push_back(viewSnapshot);
+
+        if (isEntityActive(registry, entity))
+        {
+            DebugCameraSnapshot debugCamera{};
+            debugCamera.entityId       = static_cast<uint64>(entt::to_integral(entity));
+            debugCamera.worldMatrix    = transform.worldMatrix;
+            debugCamera.projectionType = toDebugCameraProjectionType(camera.projectionType);
+            debugCamera.fov            = camera.fov;
+            debugCamera.aspectRatio    = camera.aspectRatio;
+            debugCamera.orthoSize      = camera.orthoSize;
+            debugCamera.nearPlane      = camera.nearPlane;
+            debugCamera.farPlane       = camera.farPlane;
+            snapshot.debugCameras.push_back(debugCamera);
+        }
     });
 
     auto lightView = registry.view<TransformComponent, LightComponent>();
@@ -378,6 +426,21 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
         lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
         lightSnapshot.light.type      = static_cast<int>(light.type);
         snapshot.lights.push_back(lightSnapshot);
+
+        if (isEntityActive(registry, entity) && light.isEnabled)
+        {
+            DebugLightSnapshot debugLight{};
+            debugLight.entityId       = static_cast<uint64>(entt::to_integral(entity));
+            debugLight.worldMatrix    = transform.worldMatrix;
+            debugLight.type           = toDebugLightType(light.type);
+            debugLight.color          = light.color;
+            debugLight.intensity      = light.intensity;
+            debugLight.range          = light.range;
+            debugLight.innerConeAngle = light.innerConeAngle;
+            debugLight.outerConeAngle = light.outerConeAngle;
+            debugLight.isEnabled      = light.isEnabled;
+            snapshot.debugLights.push_back(debugLight);
+        }
     }
     if (snapshot.lights.empty())
     {

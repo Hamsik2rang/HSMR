@@ -26,6 +26,11 @@ struct PanelVisibility
     bool profiler    = false;
 };
 
+struct DebugDrawSettings
+{
+    bool showDebugPass = true;
+};
+
 /**
  * @brief Editor context singleton
  *
@@ -96,6 +101,8 @@ public:
 
     PanelVisibility& GetPanelVisibility() { return _panelVisibility; }
 
+    DebugDrawSettings& GetDebugDrawSettings() { return _debugDrawSettings; }
+
 private:
     EditorContext() = default;
     ~EditorContext() = default;
@@ -117,6 +124,7 @@ private:
 
     // Panel visibility
     PanelVisibility _panelVisibility;
+    DebugDrawSettings _debugDrawSettings;
 
     // Listeners
     std::vector<SelectionCallback> _selectionListeners;

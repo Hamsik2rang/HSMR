@@ -9,6 +9,7 @@
 
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
+#include "Editor/GUI/EditorIcons.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
 #include "Scene/Scene.h"
@@ -203,7 +204,44 @@ void ScenePanel::Draw()
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
+                                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+
+    if (ImGui::BeginMenuBar())
+    {
+        DebugDrawSettings& settings = EditorContext::Get().GetDebugDrawSettings();
+        ImVec2 buttonSize = EditorWidgets::MeasureIconButton();
+        float buttonWidth = buttonSize.x;
+        float cursorX = ImGui::GetWindowContentRegionMax().x - buttonWidth;
+        if (cursorX > ImGui::GetCursorPosX())
+        {
+            ImGui::SetCursorPosX(cursorX);
+        }
+
+        ImGui::PushStyleColor(
+            ImGuiCol_Button,
+            settings.showDebugPass ? IM_COL32(110, 95, 35, 190) : IM_COL32(30, 30, 30, 160));
+        ImGui::PushStyleColor(
+            ImGuiCol_ButtonHovered,
+            settings.showDebugPass ? IM_COL32(135, 115, 45, 220) : IM_COL32(70, 70, 70, 200));
+        ImGui::PushStyleColor(
+            ImGuiCol_ButtonActive,
+            settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220));
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(235, 235, 235, 255));
+
+        if (ImGui::Button(EditorIcons::Visibility, buttonSize))
+        {
+            settings.showDebugPass = !settings.showDebugPass;
+        }
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip(settings.showDebugPass ? "Debug Draw: On" : "Debug Draw: Off");
+        }
+
+        ImGui::PopStyleColor(4);
+        ImGui::EndMenuBar();
+    }
 
     // Store viewport state
     _viewportFocused = ImGui::IsWindowFocused();

@@ -4,6 +4,7 @@
 #include "Precompile.h"
 
 #include "Renderer/Renderer.h"
+#include "Renderer/RenderPass/ForwardDebugPass.h"
 #include "Renderer/RenderPass/ForwardGridPass.h"
 
 HS_NS_BEGIN
@@ -22,6 +23,7 @@ public:
 
 private:
     Scoped<ForwardGridPass> _gridPass;
+    Scoped<ForwardDebugPass> _debugPass;
 };
 
 HS_NS_END

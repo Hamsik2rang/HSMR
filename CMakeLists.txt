@@ -207,6 +207,8 @@ add_subdirectory(${HS_EDITOR_DIR})
 add_subdirectory(${HS_CLIENT_DIR})
 add_subdirectory(${HS_SHADER_DIR})
 
+add_dependencies(Client Shader)
+
 add_custom_target(
     RegenerateCMake
     COMMAND ${CMAKE_COMMAND} -S ${CMAKE_SOURCE_DIR} -B ${CMAKE_BINARY_DIR}

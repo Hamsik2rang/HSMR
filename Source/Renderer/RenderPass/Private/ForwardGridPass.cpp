@@ -196,7 +196,7 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTa
 
     DepthStencilStateDescriptor dsDesc{};
     dsDesc.depthTestEnable      = true;
-    dsDesc.depthWriteEnable     = true; // 격자가 Y=0 실제 평면처럼 깊이 경쟁
+    dsDesc.depthWriteEnable     = false;
     dsDesc.depthCompareOp       = ECompareOp::Less;
     dsDesc.depthBoundTestEnable = false;
     dsDesc.stencilTestEnable    = false;

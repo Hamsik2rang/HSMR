@@ -169,6 +169,7 @@ void EditorWindow::onRender()
             sceneSnapshot.views[0] = editorViewSnapshot;
         }
 
+        _renderer->SetDebugPassEnabled(EditorContext::Get().GetDebugDrawSettings().showDebugPass);
         _renderer->Render(sceneSnapshot, curRT);
     }
 

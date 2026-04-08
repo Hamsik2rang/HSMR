@@ -17,6 +17,7 @@ ForwardRenderer::~ForwardRenderer()
 
 void ForwardRenderer::Shutdown()
 {
+    _debugPass.reset();
     // GridPass를 _resourceManager보다 먼저 해제합니다.
     // Renderer::Shutdown()이 _resourceManager를 삭제하면 머티리얼 ResourceSet 해제 시
     // vkResetDescriptorPool이 호출되어 같은 풀의 GridSet까지 무효화됩니다.
@@ -95,6 +96,15 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
         }
     }
 
+    if (_debugPassEnabled && !_debugPass)
+    {
+        _debugPass = MakeScoped<ForwardDebugPass>();
+        if (!_debugPass->Initialize(_shaderLibrary, _rhiContext))
+        {
+            HS_LOG(warning, "[ForwardRenderer] DebugPass initialization failed. Check DebugLine.slang.");
+        }
+    }
+
     // Grid pass loads the opaque result.
     Attachment gca{};
     gca.format         = rtInfo.colorTextureInfos[0].format;
@@ -116,6 +126,13 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
 
     RenderingInfo gridRenderingInfo = makeRenderingInfo(gca, useGridDepthStencilAttachment, gdsa);
     PipelineRenderTargetLayout gridRenderTargetLayout = gridRenderingInfo.ToRenderTargetLayout();
+    RenderingInfo debugRenderingInfo = gridRenderingInfo;
+    PipelineRenderTargetLayout debugRenderTargetLayout = debugRenderingInfo.ToRenderTargetLayout();
+    bool hasDebugDrawData = false;
+    if (_debugPassEnabled && _debugPass && _debugPass->IsInitialized())
+    {
+        hasDebugDrawData = _debugPass->Prepare(snapshot) && _debugPass->HasDrawData();
+    }
 
     // ------------------------------------------------------------------
     // RenderGraph 프레임 시작
@@ -229,6 +246,59 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
             commandBuffer.PopDebugMark();
             commandBuffer.EndRendering();
         });
+
+    if (_debugPassEnabled && hasDebugDrawData)
+    {
+        struct DebugPassParameters
+        {
+        } debugParams;
+
+        _graphBuilder.AddPass("Debug", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &debugParams,
+
+            [&](RenderGraphBuilder& builder, RGPass* pass, DebugPassParameters*) -> void
+            {
+                RGTexture* colorTex = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0));
+                builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+
+                if (rtInfo.useDepthStencilTexture)
+                {
+                    RGTexture* depthTex = builder.RegisterExternalTexture(renderTarget->GetDepthStencilTexture());
+                    builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
+                }
+            },
+
+            [&](RHICommandBuffer& commandBuffer) -> void
+            {
+                if (!_debugPassEnabled || !_debugPass || !_debugPass->IsInitialized() || !hasDebugDrawData) return;
+
+                RHIBuffer* perViewBuffer = sceneResource.cameraResources.empty()
+                    ? nullptr : sceneResource.cameraResources[0]->perViewBuffer;
+
+                RHIGraphicsPipeline* pipeline = _debugPass->GetOrCreatePipeline(
+                    debugRenderTargetLayout, perViewBuffer);
+                if (!pipeline || !_debugPass->GetResourceSet() || !_debugPass->GetVertexBuffer()) return;
+
+                float debugColor[4]{1.0f, 0.8f, 0.2f, 1.0f};
+
+                commandBuffer.BeginRendering(debugRenderingInfo);
+                commandBuffer.PushDebugMark("Debug Pass", debugColor);
+                commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
+                    static_cast<float>(_currentRenderTarget->GetWidth()),
+                    static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+                commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+
+                commandBuffer.BindPipeline(pipeline);
+                commandBuffer.BindResourceSet(_debugPass->GetResourceSet());
+
+                uint32 vbOffset = 0;
+                const RHIBuffer* vertexBuffer = _debugPass->GetVertexBuffer();
+                commandBuffer.BindVertexBuffers(&vertexBuffer, &vbOffset, 1);
+                commandBuffer.DrawArrays(0, _debugPass->GetVertexCount(), 1);
+
+                commandBuffer.PopDebugMark();
+                commandBuffer.EndRendering();
+            });
+    }
 
     _graphBuilder.Compile();
     _graphBuilder.Execute();

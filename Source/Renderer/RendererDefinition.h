@@ -77,6 +77,44 @@ struct HS_RENDERER_API RenderLightSnapshot
     LightUBO light{};
 };
 
+enum class EDebugCameraProjectionType : uint8
+{
+    Perspective,
+    Orthographic
+};
+
+struct HS_RENDERER_API DebugCameraSnapshot
+{
+    uint64 entityId = 0;
+    glm::mat4 worldMatrix{1.0f};
+    EDebugCameraProjectionType projectionType = EDebugCameraProjectionType::Perspective;
+    float fov = 60.0f;
+    float aspectRatio = 16.0f / 9.0f;
+    float orthoSize = 10.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 1000.0f;
+};
+
+enum class EDebugLightType : uint8
+{
+    Directional,
+    Point,
+    Spot
+};
+
+struct HS_RENDERER_API DebugLightSnapshot
+{
+    uint64 entityId = 0;
+    glm::mat4 worldMatrix{1.0f};
+    EDebugLightType type = EDebugLightType::Directional;
+    glm::vec3 color{1.0f};
+    float intensity = 1.0f;
+    float range = 10.0f;
+    float innerConeAngle = 30.0f;
+    float outerConeAngle = 45.0f;
+    bool isEnabled = true;
+};
+
 struct HS_RENDERER_API RenderPrimitiveSnapshot
 {
     uint64 primitiveId = 0;
@@ -91,6 +129,8 @@ struct HS_RENDERER_API RenderSceneSnapshot
     std::vector<RenderViewSnapshot> views;
     std::vector<RenderLightSnapshot> lights;
     std::vector<RenderPrimitiveSnapshot> primitives;
+    std::vector<DebugCameraSnapshot> debugCameras;
+    std::vector<DebugLightSnapshot> debugLights;
 };
 
 // 씬 전체의 렌더링용 GPU 리소스 집합
