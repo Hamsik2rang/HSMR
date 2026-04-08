@@ -31,9 +31,12 @@ public:
 
     // perViewBuffer가 바뀌면 ResourceLayout/Set을 재생성합니다.
     // 첫 호출 시에도 생성됩니다.
+    RHIGraphicsPipeline* GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
+                                             RHIBuffer* perViewBuffer);
+
     RHIGraphicsPipeline* GetOrCreatePipeline(RHIRenderPass* renderPass,
-                                              const RenderPassInfo& renderPassInfo,
-                                              RHIBuffer* perViewBuffer);
+                                             const RenderPassInfo& renderPassInfo,
+                                             RHIBuffer* perViewBuffer);
 
     RHIResourceSet* GetResourceSet() const { return _resourceSet; }
     bool IsInitialized() const { return _isInitialized; }

@@ -57,8 +57,7 @@ public:
     virtual void DrawIndexed(const uint32 firstIndex, const uint32 indexCount, const uint32 instanceCount, const uint32 vertexOffset) = 0;
     virtual void EndRenderPass() = 0;
 
-    // TODO: Bindless Rendering & Dynamic Rendering
-    virtual void BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea) = 0;
+    virtual void BeginRendering(const RenderingInfo& renderingInfo) = 0;
     virtual void EndRendering() = 0;
 
     // Compute commands

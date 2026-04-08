@@ -103,6 +103,8 @@ bool VulkanContext::Initialize()
         return false;
     }
 
+    _renderingCache.Initialize(this, &_device);
+
     createDefaultCommandPool();
 
     std::vector<VulkanDescriptorPoolAllocator::PoolSizeRatio> ratios =
@@ -130,6 +132,8 @@ void VulkanContext::Finalize()
     }
 
     // Cleanup Vulkan resources
+    _renderingCache.Finalize();
+
     if (_defaultCommandPool != VK_NULL_HANDLE)
     {
         vkDestroyCommandPool(_device, _defaultCommandPool, nullptr);
@@ -931,6 +935,8 @@ void VulkanContext::DestroyTexture(RHITexture* texture)
     // Destroy the Vulkan texture
     VulkanTexture* textureVK = static_cast<VulkanTexture*>(texture);
 
+    _renderingCache.Reset();
+
     if (textureVK->imageViewVk != VK_NULL_HANDLE)
     {
         vkDestroyImageView(_device, textureVK->imageViewVk, nullptr);
@@ -1311,7 +1317,7 @@ RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
     VkCommandBuffer cmdBufferVk;
     vkAllocateCommandBuffers(_device, &allocInfo, &cmdBufferVk);
 
-    VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name);
+    VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name, this);
     commandBufferVK->handle              = cmdBufferVk;
 
     setDebugObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
@@ -1396,6 +1402,250 @@ void VulkanContext::WaitForIdle() const
 {
     // Wait for the Vulkan device to be idle
     vkDeviceWaitIdle(_device.logicalDevice);
+}
+
+VkRenderPass VulkanContext::GetCompatibleRenderPass(const PipelineRenderTargetLayout& layout)
+{
+    return _renderingCache.GetCompatibleRenderPass(layout);
+}
+
+void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
+{
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
+    {
+        VulkanRenderingCache::LegacyRenderingHandles handles = _renderingCache.GetLegacyRenderingHandles(renderingInfo);
+
+        static std::vector<VkClearValue> clearValues;
+        uint32 attachmentCount = renderingInfo.colorAttachmentCount + static_cast<uint32>(renderingInfo.useDepthStencilAttachment);
+        if (clearValues.size() < attachmentCount)
+        {
+            clearValues.resize(attachmentCount);
+        }
+
+        uint32 attachmentIndex = 0;
+        for (; attachmentIndex < renderingInfo.colorAttachmentCount; attachmentIndex++)
+        {
+            ::memcpy(clearValues[attachmentIndex].color.float32, renderingInfo.colorAttachments[attachmentIndex].attachment.clearValue.color, sizeof(float[4]));
+        }
+
+        if (renderingInfo.useDepthStencilAttachment)
+        {
+            clearValues[attachmentIndex].depthStencil.depth = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.depth;
+            clearValues[attachmentIndex].depthStencil.stencil = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.stencil;
+        }
+
+        VkRect2D area{};
+        area.offset.x = renderingInfo.renderArea.x;
+        area.offset.y = renderingInfo.renderArea.y;
+        area.extent.width = renderingInfo.renderArea.width;
+        area.extent.height = renderingInfo.renderArea.height;
+
+        VkRenderPassBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.renderPass = handles.renderPass;
+        beginInfo.framebuffer = handles.framebuffer;
+        beginInfo.renderArea = area;
+        beginInfo.clearValueCount = attachmentCount;
+        beginInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        return;
+    }
+
+    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
+                                   VulkanTexture* textureVK,
+                                   VkImageLayout newLayout,
+                                   VkPipelineStageFlags dstStage,
+                                   VkAccessFlags dstAccess,
+                                   VkImageAspectFlags aspectMask)
+    {
+        if (textureVK == nullptr || textureVK->layoutVk == newLayout)
+        {
+            return;
+        }
+
+        VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        VkAccessFlags srcAccess = 0;
+        if (textureVK->layoutVk == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            srcAccess = VK_ACCESS_SHADER_READ_BIT;
+        }
+        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            srcAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        }
+        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            srcStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            srcAccess = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask = srcAccess;
+        barrier.dstAccessMask = dstAccess;
+        barrier.oldLayout = textureVK->layoutVk;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textureVK->handle;
+        barrier.subresourceRange.aspectMask = aspectMask;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+        vkCmdPipelineBarrier(cmdBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        textureVK->layoutVk = newLayout;
+    };
+
+    std::vector<VkRenderingAttachmentInfo> colorAttachments(renderingInfo.colorAttachmentCount);
+    for (uint32 i = 0; i < renderingInfo.colorAttachmentCount; i++)
+    {
+        const RenderingAttachmentInfo& attachmentInfo = renderingInfo.colorAttachments[i];
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
+
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_COLOR_BIT);
+
+        colorAttachments[i].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachments[i].imageView = textureVK->imageViewVk;
+        colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachments[i].loadOp = RHIUtilityVulkan::ToLoadOp(attachmentInfo.attachment.loadAction);
+        colorAttachments[i].storeOp = RHIUtilityVulkan::ToStoreOp(attachmentInfo.attachment.storeAction);
+        ::memcpy(colorAttachments[i].clearValue.color.float32, attachmentInfo.attachment.clearValue.color, sizeof(float[4]));
+    }
+
+    VkRenderingAttachmentInfo depthAttachment{};
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        depthAttachment.imageView = textureVK->imageViewVk;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = RHIUtilityVulkan::ToLoadOp(renderingInfo.depthStencilAttachment.attachment.loadAction);
+        depthAttachment.storeOp = RHIUtilityVulkan::ToStoreOp(renderingInfo.depthStencilAttachment.attachment.storeAction);
+        depthAttachment.clearValue.depthStencil.depth = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.depth;
+        depthAttachment.clearValue.depthStencil.stencil = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.stencil;
+    }
+
+    VkRenderingInfo vkRenderingInfo{};
+    vkRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    vkRenderingInfo.renderArea.offset.x = renderingInfo.renderArea.x;
+    vkRenderingInfo.renderArea.offset.y = renderingInfo.renderArea.y;
+    vkRenderingInfo.renderArea.extent.width = renderingInfo.renderArea.width;
+    vkRenderingInfo.renderArea.extent.height = renderingInfo.renderArea.height;
+    vkRenderingInfo.layerCount = 1;
+    vkRenderingInfo.colorAttachmentCount = renderingInfo.colorAttachmentCount;
+    vkRenderingInfo.pColorAttachments = colorAttachments.data();
+    vkRenderingInfo.pDepthAttachment = renderingInfo.useDepthStencilAttachment ? &depthAttachment : nullptr;
+    vkRenderingInfo.pStencilAttachment = nullptr;
+
+    PFN_vkCmdBeginRendering beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdBeginRendering"));
+    if (beginRendering == nullptr)
+    {
+        beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdBeginRenderingKHR"));
+    }
+    HS_ASSERT(beginRendering != nullptr, "Dynamic rendering function is not available");
+    beginRendering(commandBuffer, &vkRenderingInfo);
+}
+
+void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
+{
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
+    {
+        vkCmdEndRenderPass(commandBuffer);
+        return;
+    }
+
+    PFN_vkCmdEndRendering endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRendering"));
+    if (endRendering == nullptr)
+    {
+        endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRenderingKHR"));
+    }
+    HS_ASSERT(endRendering != nullptr, "Dynamic rendering function is not available");
+    endRendering(commandBuffer);
+
+    auto transitionAttachment = [](VkCommandBuffer cmdBuffer,
+                                   VulkanTexture* textureVK,
+                                   VkImageLayout oldLayout,
+                                   VkImageLayout newLayout,
+                                   VkPipelineStageFlags srcStage,
+                                   VkAccessFlags srcAccess,
+                                   VkImageAspectFlags aspectMask)
+    {
+        if (textureVK == nullptr || textureVK->layoutVk != oldLayout)
+        {
+            return;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask = srcAccess;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textureVK->handle;
+        barrier.subresourceRange.aspectMask = aspectMask;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = textureVK->info.mipLevel;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = textureVK->info.arrayLength;
+
+        vkCmdPipelineBarrier(
+            cmdBuffer,
+            srcStage,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier);
+        textureVK->layoutVk = newLayout;
+    };
+
+    VkImageLayout colorFinalLayout = renderingInfo.isSwapchainRendering ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    for (const RenderingAttachmentInfo& attachmentInfo : renderingInfo.colorAttachments)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            colorFinalLayout,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
+    if (renderingInfo.useDepthStencilAttachment)
+    {
+        VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
+        transitionAttachment(
+            commandBuffer,
+            textureVK,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
 }
 
 void VulkanContext::cleanup()
@@ -1860,7 +2110,49 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
 
     pipelineCreateInfo.pDynamicState = &dynamicState;
 
-    pipelineCreateInfo.renderPass = static_cast<VulkanRenderPass*>(info.renderPass)->handle;
+    PipelineRenderTargetLayout renderTargetLayout = info.renderTargetLayout;
+    if (renderTargetLayout.colorAttachmentCount == 0 && info.renderPass != nullptr)
+    {
+        renderTargetLayout.colorAttachmentCount = info.renderPass->info.colorAttachmentCount;
+        renderTargetLayout.useDepthStencilAttachment = info.renderPass->info.useDepthStencilAttachment;
+        renderTargetLayout.isSwapchainRenderPass = info.renderPass->info.isSwapchainRenderPass;
+        for (const Attachment& attachment : info.renderPass->info.colorAttachments)
+        {
+            renderTargetLayout.colorFormats.push_back(attachment.format);
+            if (renderTargetLayout.sampleCount == 1 && attachment.sampleCount != 0)
+            {
+                renderTargetLayout.sampleCount = attachment.sampleCount;
+            }
+        }
+        if (info.renderPass->info.useDepthStencilAttachment)
+        {
+            renderTargetLayout.depthStencilFormat = info.renderPass->info.depthStencilAttachment.format;
+        }
+    }
+
+    std::vector<VkFormat> colorFormats(renderTargetLayout.colorAttachmentCount);
+    for (uint32 i = 0; i < renderTargetLayout.colorAttachmentCount; i++)
+    {
+        colorFormats[i] = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.colorFormats[i]);
+    }
+
+    VkPipelineRenderingCreateInfo renderingCreateInfo{};
+    if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering)
+    {
+        renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        renderingCreateInfo.colorAttachmentCount = renderTargetLayout.colorAttachmentCount;
+        renderingCreateInfo.pColorAttachmentFormats = colorFormats.data();
+        if (renderTargetLayout.useDepthStencilAttachment)
+        {
+            renderingCreateInfo.depthAttachmentFormat = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.depthStencilFormat);
+        }
+        pipelineCreateInfo.pNext = &renderingCreateInfo;
+        pipelineCreateInfo.renderPass = VK_NULL_HANDLE;
+    }
+    else
+    {
+        pipelineCreateInfo.renderPass = _renderingCache.GetCompatibleRenderPass(renderTargetLayout);
+    }
 
     VkPipeline pipelineVk;
     vkCreateGraphicsPipelines(_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineVk);

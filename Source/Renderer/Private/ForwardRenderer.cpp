@@ -55,7 +55,34 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
 
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
-    RHIRenderPass* renderPass = GetHandleCache()->GetRenderPass(renderPassInfo);
+    auto makeRenderingInfo = [&](const RenderPassInfo& sourceInfo) -> RenderingInfo
+    {
+        RenderingInfo renderingInfo{};
+        renderingInfo.colorAttachmentCount = sourceInfo.colorAttachmentCount;
+        renderingInfo.useDepthStencilAttachment = sourceInfo.useDepthStencilAttachment;
+        renderingInfo.isSwapchainRendering = sourceInfo.isSwapchainRenderPass;
+        renderingInfo.renderArea = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+
+        renderingInfo.colorAttachments.reserve(sourceInfo.colorAttachments.size());
+        for (uint32 i = 0; i < sourceInfo.colorAttachmentCount; i++)
+        {
+            RenderingAttachmentInfo attachmentInfo{};
+            attachmentInfo.texture = _currentRenderTarget->GetColorTexture(i);
+            attachmentInfo.attachment = sourceInfo.colorAttachments[i];
+            renderingInfo.colorAttachments.push_back(attachmentInfo);
+        }
+
+        if (sourceInfo.useDepthStencilAttachment)
+        {
+            renderingInfo.depthStencilAttachment.texture = _currentRenderTarget->GetDepthStencilTexture();
+            renderingInfo.depthStencilAttachment.attachment = sourceInfo.depthStencilAttachment;
+        }
+
+        return renderingInfo;
+    };
+
+    RenderingInfo opaqueRenderingInfo = makeRenderingInfo(renderPassInfo);
+    PipelineRenderTargetLayout opaqueRenderTargetLayout = opaqueRenderingInfo.ToRenderTargetLayout();
 
     // ------------------------------------------------------------------
     // Grid Pass lazy init
@@ -93,7 +120,8 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
     }
     gridPassInfo.isSwapchainRenderPass = false;
 
-    RHIRenderPass* gridRenderPass = GetHandleCache()->GetRenderPass(gridPassInfo);
+    RenderingInfo gridRenderingInfo = makeRenderingInfo(gridPassInfo);
+    PipelineRenderTargetLayout gridRenderTargetLayout = gridRenderingInfo.ToRenderTargetLayout();
 
     // ------------------------------------------------------------------
     // RenderGraph 프레임 시작
@@ -126,24 +154,21 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
         [&](RHICommandBuffer& commandBuffer) -> void
         {
             RenderResourceManager* resMgr = GetResourceManager();
-            RHIFramebuffer* framebuffer   = GetHandleCache()->GetFramebuffer(renderPass, _currentRenderTarget);
 
             float debugColor[4]{0.2f, 0.5f, 0.8f, 1.0f};
+
+            commandBuffer.BeginRendering(opaqueRenderingInfo);
             commandBuffer.PushDebugMark("Opaque Pass", debugColor);
-
-            Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-
-            commandBuffer.BeginRenderPass(renderPass, framebuffer, area);
             commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
-                static_cast<float>(framebuffer->info.width),
-                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-            commandBuffer.SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+                static_cast<float>(_currentRenderTarget->GetWidth()),
+                static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+            commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
 
             for (const auto& renderModel : sceneResource.renderModels)
             {
                 Material* mat = renderModel.material;
                 if (!mat) continue;
-                RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, renderPass);
+                RHIGraphicsPipeline* pipeline = resMgr->GetOrCreatePipeline(mat, opaqueRenderTargetLayout);
                 if (!pipeline) continue;
 
                 commandBuffer.BindPipeline(pipeline);
@@ -156,8 +181,8 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 commandBuffer.DrawIndexed(0, renderModel.meshResource->indexCount, 1, 0);
             }
 
-            commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();
+            commandBuffer.EndRendering();
         });
 
     struct GridPassParameters
@@ -190,29 +215,24 @@ void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
                 ? nullptr : sceneResource.cameraResources[0]->perViewBuffer;
 
             RHIGraphicsPipeline* pipeline = _gridPass->GetOrCreatePipeline(
-                gridRenderPass, gridPassInfo, perViewBuffer);
+                gridRenderTargetLayout, perViewBuffer);
             if (!pipeline) return;
 
-            RHIFramebuffer* framebuffer = GetHandleCache()->GetFramebuffer(
-                gridRenderPass, _currentRenderTarget);
-            if (!framebuffer) return;
-
             float debugColor[4]{0.4f, 0.8f, 0.4f, 1.0f};
-            commandBuffer.PushDebugMark("Grid Pass", debugColor);
 
-            Area area = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-            commandBuffer.BeginRenderPass(gridRenderPass, framebuffer, area);
+            commandBuffer.BeginRendering(gridRenderingInfo);
+            commandBuffer.PushDebugMark("Grid Pass", debugColor);
             commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
-                static_cast<float>(framebuffer->info.width),
-                static_cast<float>(framebuffer->info.height), 0.0f, 1.0f});
-            commandBuffer.SetScissor(0, 0, framebuffer->info.width, framebuffer->info.height);
+                static_cast<float>(_currentRenderTarget->GetWidth()),
+                static_cast<float>(_currentRenderTarget->GetHeight()), 0.0f, 1.0f});
+            commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
 
             commandBuffer.BindPipeline(pipeline);
             commandBuffer.BindResourceSet(_gridPass->GetResourceSet());
             commandBuffer.DrawArrays(0, 6, 1); // fullscreen triangle, 버텍스 버퍼 없음
 
-            commandBuffer.EndRenderPass();
             commandBuffer.PopDebugMark();
+            commandBuffer.EndRendering();
         });
 
     _graphBuilder.Compile();

@@ -256,11 +256,21 @@ MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* 
 
 RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* material, RHIRenderPass* renderPass)
 {
+    if (!renderPass)
+    {
+        return nullptr;
+    }
+
+    return GetOrCreatePipeline(material, MakePipelineRenderTargetLayout(renderPass->info));
+}
+
+RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* material, const PipelineRenderTargetLayout& renderTargetLayout)
+{
     MaterialResource* matRes = GetOrCreateMaterialResources(material);
     if (!matRes) return nullptr;
 
-    // Use renderPass pointer as key for pipeline cache
-    size_t pipelineKey = PointerHash(renderPass);
+    size_t pipelineKey = std::hash<PipelineRenderTargetLayout>{}(renderTargetLayout);
+    pipelineKey = HashCombine64(pipelineKey, static_cast<uint32>(_rhiContext->GetCapabilities().resourceBindingTier));
 
     auto it = matRes->pipelineCache.find(pipelineKey);
     if (it != matRes->pipelineCache.end())
@@ -299,7 +309,7 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     dsDesc.depthCompareOp   = ECompareOp::Less;
 
     ColorBlendStateDescriptor cbDesc{};
-    cbDesc.attachmentCount = renderPass->info.colorAttachmentCount;
+    cbDesc.attachmentCount = renderTargetLayout.colorAttachmentCount;
     cbDesc.attachments.resize(cbDesc.attachmentCount);
     for (size_t i = 0; i < cbDesc.attachmentCount; ++i)
     {
@@ -329,7 +339,8 @@ RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* materi
     gpInfo.rasterizerDesc    = rsDesc;
     gpInfo.depthStencilDesc  = dsDesc;
     gpInfo.colorBlendDesc    = cbDesc;
-    gpInfo.renderPass        = renderPass;
+    gpInfo.renderPass        = nullptr;
+    gpInfo.renderTargetLayout = renderTargetLayout;
     gpInfo.resourceLayout    = matRes->resourceLayout;
 
     RHIGraphicsPipeline* pipeline = _rhiContext->CreateGraphicsPipeline("AutoPipeline", gpInfo);

@@ -8,7 +8,7 @@
 
 HS_NS_BEGIN
 
-std::vector<const char*> s_requiredDeviceExtensions = {
+static std::vector<const char*> s_requiredDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -42,7 +42,6 @@ void VulkanDevice::getPhysicalDevice()
     for (uint32 i = 0; i < physicalDeviceCount; i++)
     {
         uint32 score                   = getPhysicalDeviceScore(physicalDevices[i]);
-        bool isExtensionSupported      = false;
         uint32 availableExtensionCount = 0;
         vkEnumerateDeviceExtensionProperties(physicalDevices[i], nullptr, &availableExtensionCount, nullptr);
         std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
@@ -72,9 +71,7 @@ void VulkanDevice::getPhysicalDevice()
     {
         HS_THROW("you don't have a physical device.");
     }
-    vkGetPhysicalDeviceFeatures(physicalDevice, &features);
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
-    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    queryDeviceCapabilities(physicalDevice);
     HS_LOG(info, "Driver Version: %u", properties.driverVersion);
     HS_LOG(info, "Device Name:    %s", properties.deviceName);
     HS_LOG(info, "Device Type:    %d", properties.deviceType);
@@ -86,6 +83,7 @@ void VulkanDevice::createLogicalDevice()
     // Set queue family indices
     uint32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+    queueFamilyProperties.resize(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
     bool isQueueFamilyFound = false;
@@ -115,21 +113,62 @@ void VulkanDevice::createLogicalDevice()
     float queuePriority        = 0.0f;
     queueInfo.pQueuePriorities = &queuePriority;
 
-    features11.sType                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    features11.shaderDrawParameters = VK_TRUE;
-    features11.pNext                = nullptr;
+    std::vector<const char*> enabledExtensions = s_requiredDeviceExtensions;
+    uint32 apiMajor = (properties.apiVersion >> 22) & 0x3FF;
+    uint32 apiMinor = (properties.apiVersion >> 12) & 0x3FF;
+    if (capabilities.renderingPath == ERHIRenderingPath::DynamicRendering &&
+        !(apiMajor > 1 || apiMinor >= 3) &&
+        optionalExtensions.dynamicRendering)
+    {
+        enabledExtensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+    }
+    if (optionalExtensions.descriptorIndexing)
+    {
+        enabledExtensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+    }
 
-    features12.sType                                    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-    features12.descriptorIndexing                       = VK_TRUE;
-    features12.descriptorBindingVariableDescriptorCount = VK_TRUE;
-    features12.runtimeDescriptorArray                   = VK_TRUE;
-    features12.bufferDeviceAddress                      = VK_TRUE;
-    features12.pNext                                    = &features11;
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures{};
+    dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+    dynamicRenderingFeatures.dynamicRendering = capabilities.renderingPath == ERHIRenderingPath::DynamicRendering ? VK_TRUE : VK_FALSE;
+
+    features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    features11.shaderDrawParameters = VK_TRUE;
+    features11.pNext = nullptr;
+
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.descriptorIndexing = optionalFeatures.descriptorIndexing ? VK_TRUE : VK_FALSE;
+    features12.descriptorBindingVariableDescriptorCount = optionalFeatures.descriptorBindingVariableDescriptorCount ? VK_TRUE : VK_FALSE;
+    features12.runtimeDescriptorArray = optionalFeatures.runtimeDescriptorArray ? VK_TRUE : VK_FALSE;
+    features12.descriptorBindingPartiallyBound = optionalFeatures.descriptorBindingPartiallyBound ? VK_TRUE : VK_FALSE;
+    features12.descriptorBindingSampledImageUpdateAfterBind = optionalFeatures.descriptorBindingSampledImageUpdateAfterBind ? VK_TRUE : VK_FALSE;
+    features12.shaderSampledImageArrayNonUniformIndexing = optionalFeatures.shaderSampledImageArrayNonUniformIndexing ? VK_TRUE : VK_FALSE;
+    features12.bufferDeviceAddress = optionalFeatures.bufferDeviceAddress ? VK_TRUE : VK_FALSE;
+    features12.pNext = &features11;
 
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    features13.synchronization2 = VK_TRUE;
-    features13.dynamicRendering = VK_TRUE;
-    features13.pNext            = &features12;
+    features13.synchronization2 = optionalFeatures.synchronization2 ? VK_TRUE : VK_FALSE;
+    features13.dynamicRendering = optionalFeatures.dynamicRendering ? VK_TRUE : VK_FALSE;
+    features13.pNext = &features12;
+
+    void* featureChain = nullptr;
+    if (apiMajor > 1 || apiMinor >= 3)
+    {
+        featureChain = &features13;
+    }
+    else if (apiMajor > 1 || apiMinor >= 2)
+    {
+        features12.pNext = &features11;
+        featureChain = &features12;
+    }
+    else if (optionalExtensions.dynamicRendering && capabilities.renderingPath == ERHIRenderingPath::DynamicRendering)
+    {
+        dynamicRenderingFeatures.pNext = &features11;
+        featureChain = &dynamicRenderingFeatures;
+    }
+    else
+    {
+        featureChain = &features11;
+    }
     
 
     VkDeviceCreateInfo deviceInfo{};
@@ -137,9 +176,9 @@ void VulkanDevice::createLogicalDevice()
     deviceInfo.queueCreateInfoCount    = 1;
     deviceInfo.pQueueCreateInfos       = &queueInfo;
     deviceInfo.pEnabledFeatures        = &features;
-    deviceInfo.enabledExtensionCount   = s_requiredDeviceExtensions.size();
-    deviceInfo.ppEnabledExtensionNames = s_requiredDeviceExtensions.data();
-    deviceInfo.pNext                   = &features13;
+    deviceInfo.enabledExtensionCount   = static_cast<uint32>(enabledExtensions.size());
+    deviceInfo.ppEnabledExtensionNames = enabledExtensions.data();
+    deviceInfo.pNext                   = featureChain;
 
     VK_CHECK_RESULT(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice));
 
@@ -194,6 +233,132 @@ uint32 VulkanDevice::getPhysicalDeviceScore(VkPhysicalDevice physicalDevice)
 
 void VulkanDevice::createSurface()
 {
+}
+
+void VulkanDevice::queryDeviceCapabilities(VkPhysicalDevice device)
+{
+    uint32 availableExtensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &availableExtensionCount, nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &availableExtensionCount, availableExtensions.data());
+
+    availableDeviceExtensions.clear();
+    optionalExtensions.mask = 0;
+    for (const auto& extension : availableExtensions)
+    {
+        availableDeviceExtensions.push_back(extension.extensionName);
+        if (strcmp(extension.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+        {
+            optionalExtensions.swapchain = 1;
+        }
+        else if (strcmp(extension.extensionName, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME) == 0)
+        {
+            optionalExtensions.dynamicRendering = 1;
+        }
+        else if (strcmp(extension.extensionName, VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) == 0)
+        {
+            optionalExtensions.descriptorIndexing = 1;
+        }
+        else if (strcmp(extension.extensionName, VK_KHR_MAINTENANCE3_EXTENSION_NAME) == 0)
+        {
+            optionalExtensions.maintenance3 = 1;
+        }
+        else if (strcmp(extension.extensionName, VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME) == 0)
+        {
+            optionalExtensions.synchronization2 = 1;
+        }
+    }
+
+    vkGetPhysicalDeviceFeatures(device, &features);
+    vkGetPhysicalDeviceMemoryProperties(device, &memoryProperties);
+    vkGetPhysicalDeviceProperties(device, &properties);
+
+    optionalFeatures.core10 = 0;
+    optionalFeatures.core12 = 0;
+    optionalFeatures.core13 = 0;
+    optionalFeatures.samplerAnisotropy = features.samplerAnisotropy == VK_TRUE;
+    optionalFeatures.fillModeNonSolid = features.fillModeNonSolid == VK_TRUE;
+
+    uint32 apiMajor = (properties.apiVersion >> 22) & 0x3FF;
+    uint32 apiMinor = (properties.apiVersion >> 12) & 0x3FF;
+
+    if (apiMajor > 1 || apiMinor >= 2)
+    {
+        VkPhysicalDeviceVulkan12Features queryFeatures12{};
+        VkPhysicalDeviceVulkan13Features queryFeatures13{};
+        queryFeatures12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        queryFeatures13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+        queryFeatures13.pNext = &queryFeatures12;
+
+        VkPhysicalDeviceFeatures2 features2{};
+        features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        features2.pNext = (apiMajor > 1 || apiMinor >= 3) ? static_cast<void*>(&queryFeatures13) : static_cast<void*>(&queryFeatures12);
+        vkGetPhysicalDeviceFeatures2(device, &features2);
+
+        optionalFeatures.descriptorIndexing = queryFeatures12.descriptorIndexing == VK_TRUE;
+        optionalFeatures.descriptorBindingVariableDescriptorCount = queryFeatures12.descriptorBindingVariableDescriptorCount == VK_TRUE;
+        optionalFeatures.runtimeDescriptorArray = queryFeatures12.runtimeDescriptorArray == VK_TRUE;
+        optionalFeatures.descriptorBindingPartiallyBound = queryFeatures12.descriptorBindingPartiallyBound == VK_TRUE;
+        optionalFeatures.descriptorBindingSampledImageUpdateAfterBind = queryFeatures12.descriptorBindingSampledImageUpdateAfterBind == VK_TRUE;
+        optionalFeatures.shaderSampledImageArrayNonUniformIndexing = queryFeatures12.shaderSampledImageArrayNonUniformIndexing == VK_TRUE;
+        optionalFeatures.bufferDeviceAddress = queryFeatures12.bufferDeviceAddress == VK_TRUE;
+
+        optionalFeatures.dynamicRendering = queryFeatures13.dynamicRendering == VK_TRUE;
+        optionalFeatures.synchronization2 = queryFeatures13.synchronization2 == VK_TRUE;
+    }
+    else if (optionalExtensions.dynamicRendering)
+    {
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures{};
+        dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+
+        VkPhysicalDeviceFeatures2 features2{};
+        features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        features2.pNext = &dynamicRenderingFeatures;
+
+        auto getPhysicalDeviceFeatures2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2KHR>(
+            vkGetInstanceProcAddr(_instanceVk, "vkGetPhysicalDeviceFeatures2KHR"));
+        if (getPhysicalDeviceFeatures2KHR != nullptr)
+        {
+            getPhysicalDeviceFeatures2KHR(device, &features2);
+            optionalFeatures.dynamicRendering = dynamicRenderingFeatures.dynamicRendering == VK_TRUE;
+        }
+    }
+
+    bool supportsBindless =
+        optionalFeatures.descriptorIndexing &&
+        optionalFeatures.descriptorBindingVariableDescriptorCount &&
+        optionalFeatures.runtimeDescriptorArray &&
+        optionalFeatures.descriptorBindingPartiallyBound &&
+        optionalFeatures.descriptorBindingSampledImageUpdateAfterBind &&
+        optionalFeatures.shaderSampledImageArrayNonUniformIndexing;
+
+    bool supportsDynamicRendering = optionalFeatures.dynamicRendering || (apiMajor > 1 || apiMinor >= 3);
+
+    capabilities.platform = ERHIPlatform::Vulkan;
+    capabilities.apiVersionMajor = apiMajor;
+    capabilities.apiVersionMinor = apiMinor;
+    capabilities.apiVersionPatch = properties.apiVersion & 0xFFF;
+    capabilities.deviceName = properties.deviceName;
+    capabilities.supportsDynamicRendering = supportsDynamicRendering;
+    capabilities.renderingPath = supportsDynamicRendering ? ERHIRenderingPath::DynamicRendering : ERHIRenderingPath::LegacyRenderPass;
+    capabilities.supportsBindless = supportsBindless;
+    capabilities.resourceBindingTier = supportsBindless ? ERHIResourceBindingTier::Bindless : ERHIResourceBindingTier::LegacyDescriptorSet;
+    capabilities.maxBindlessSampledImages = properties.limits.maxPerStageDescriptorSampledImages;
+    capabilities.maxBindlessSamplers = properties.limits.maxPerStageDescriptorSamplers;
+    capabilities.maxBindlessStorageImages = properties.limits.maxPerStageDescriptorStorageImages;
+    capabilities.maxBindlessStorageBuffers = properties.limits.maxPerStageDescriptorStorageBuffers;
+}
+
+bool VulkanDevice::hasDeviceExtension(const char* extensionName) const
+{
+    for (const std::string& extension : availableDeviceExtensions)
+    {
+        if (extension == extensionName)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 HS_NS_END

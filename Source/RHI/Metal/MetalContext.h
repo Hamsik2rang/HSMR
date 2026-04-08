@@ -84,9 +84,11 @@ public:
     HS_FORCEINLINE void* GetDevice() const { return _device; }
     
     HS_FORCEINLINE virtual ERHIPlatform GetCurrentPlatform() const final { return ERHIPlatform::Metal; }
+    HS_FORCEINLINE const RHICapabilities& GetCapabilities() const override { return _capabilities; }
 
 private:
     void* _device = nullptr;
+    RHICapabilities _capabilities;
 };
 
 HS_NS_END

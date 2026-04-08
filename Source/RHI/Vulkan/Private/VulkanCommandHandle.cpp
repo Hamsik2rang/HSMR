@@ -1,6 +1,7 @@
 ﻿#include "RHI/Vulkan/VulkanCommandHandle.h"
 
 #include "RHI/Vulkan/VulkanUtility.h"
+#include "RHI/Vulkan/VulkanContext.h"
 #include "RHI/Vulkan/VulkanRenderHandle.h"
 #include "RHI/Vulkan/VulkanResourceHandle.h"
 
@@ -24,8 +25,9 @@ VulkanCommandPool::~VulkanCommandPool()
 {
 }
 
-VulkanCommandBuffer::VulkanCommandBuffer(const char* name)
+VulkanCommandBuffer::VulkanCommandBuffer(const char* name, VulkanContext* context)
     : RHICommandBuffer(name)
+    , _context(context)
 {
 }
 
@@ -206,12 +208,30 @@ void VulkanCommandBuffer::EndRenderPass()
     _isGraphicsBegan = false;
 }
 
-void VulkanCommandBuffer::BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea)
+void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
 {
+    HS_ASSERT(_isBegan, "CommandBuffer has not began");
+    HS_ASSERT(_isGraphicsBegan == false, "Graphics Pass is already began");
+    HS_ASSERT(_isComputeBegan == false, "Compute Pass is aready began");
+    HS_ASSERT(_isBlitBegan == false, "Blit Pass is already began");
+    HS_ASSERT(_context, "VulkanContext is nullptr");
+
+    _useDynamicRendering = _context->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering;
+    _currentRenderingInfo = renderingInfo;
+    _context->CmdBeginRendering(handle, renderingInfo);
+
+    _isGraphicsBegan = true;
+    _isComputeBegan  = false;
+    _isBlitBegan     = false;
 }
 
 void VulkanCommandBuffer::EndRendering()
 {
+    HS_ASSERT(_isGraphicsBegan && _isBegan, "Rendering has not begun");
+    HS_ASSERT(_context, "VulkanContext is nullptr");
+    _context->CmdEndRendering(handle, _currentRenderingInfo);
+    _currentRenderingInfo = RenderingInfo{};
+    _isGraphicsBegan = false;
 }
 
 void VulkanCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)

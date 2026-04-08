@@ -87,6 +87,7 @@ public:
 	virtual void WaitForIdle() const = 0;
     
     virtual ERHIPlatform GetCurrentPlatform() const = 0;
+    virtual const RHICapabilities& GetCapabilities() const = 0;
 
 	static RHIContext* Create(ERHIPlatform platform);
 	static RHIContext* Get();

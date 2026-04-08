@@ -16,6 +16,8 @@
 
 HS_NS_BEGIN
 
+class VulkanContext;
+
 struct HS_RHI_API VulkanCommandQueue : public RHICommandQueue
 {
     VulkanCommandQueue(const char* name);
@@ -34,7 +36,7 @@ struct HS_RHI_API VulkanCommandPool : public RHICommandPool
 
 struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 {
-    VulkanCommandBuffer(const char* name);
+    VulkanCommandBuffer(const char* name, VulkanContext* context);
     ~VulkanCommandBuffer() override;
     void Begin() override;
     void End() override;
@@ -53,7 +55,7 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 
     void EndRenderPass() override;
 
-    void BeginRendering(const RenderPassInfo& renderPassInfo, const Area& renderArea) override;
+    void BeginRendering(const RenderingInfo& renderingInfo) override;
     void EndRendering() override;
 
     // Compute commands
@@ -76,6 +78,11 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
     VkPipelineLayout curGraphicsPipelineLayout = VK_NULL_HANDLE;
     VkPipeline curComputePipeline              = VK_NULL_HANDLE;
     VkPipelineLayout curComputePipelineLayout  = VK_NULL_HANDLE;
+
+private:
+    VulkanContext* _context = nullptr;
+    bool _useDynamicRendering = false;
+    RenderingInfo _currentRenderingInfo{};
 };
 
 HS_NS_END

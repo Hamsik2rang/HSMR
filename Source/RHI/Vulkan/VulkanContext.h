@@ -13,6 +13,7 @@
 #include "RHI/Vulkan/VulkanUtility.h"
 #include "RHI/Vulkan/VulkanDevice.h"
 #include "RHI/Vulkan/VulkanDescriptorPoolAllocator.h"
+#include "RHI/Vulkan/VulkanRenderingCache.h"
 
 HS_NS_BEGIN
 
@@ -87,10 +88,17 @@ public:
     void WaitForIdle() const final;
 
     HS_FORCEINLINE ERHIPlatform GetCurrentPlatform() const override { return ERHIPlatform::Vulkan; }
+    HS_FORCEINLINE const RHICapabilities& GetCapabilities() const override { return _device.GetCapabilities(); }
 
     // TODO: ImGui 백엔드 변경되면 없애야합니다.
     HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }
     HS_FORCEINLINE const VulkanDevice* GetDevice() const { return &(_device); }
+    HS_FORCEINLINE VulkanRenderingCache* GetRenderingCache() { return &_renderingCache; }
+    HS_FORCEINLINE VkDevice GetVkDevice() const { return _device.logicalDevice; }
+
+    VkRenderPass GetCompatibleRenderPass(const PipelineRenderTargetLayout& layout);
+    void CmdBeginRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo);
+    void CmdEndRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo);
 
 private:
     bool createInstance();
@@ -119,6 +127,7 @@ private:
     VulkanDevice _device;
     VkCommandPool _defaultCommandPool = VK_NULL_HANDLE;
     VulkanDescriptorPoolAllocator _descriptorPoolAllocator;
+    VulkanRenderingCache _renderingCache;
 
     VkDebugUtilsMessengerEXT _debugMessenger = VK_NULL_HANDLE;
     bool _isInitialized                      = false;

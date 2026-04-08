@@ -28,6 +28,25 @@ bool MetalContext::Initialize()
     s_cmdQueue = [s_device newCommandQueue];
 
     _device = (__bridge void*)s_device;
+
+    _capabilities.platform = ERHIPlatform::Metal;
+    _capabilities.renderingPath = ERHIRenderingPath::DynamicRendering;
+    _capabilities.resourceBindingTier = ERHIResourceBindingTier::LegacyDescriptorSet;
+    _capabilities.deviceName = [[s_device name] UTF8String];
+    _capabilities.supportsDynamicRendering = true;
+#if defined(__MAC_11_0) || defined(__IPHONE_14_0)
+    if ([s_device respondsToSelector:@selector(argumentBuffersSupport)])
+    {
+        MTLArgumentBuffersTier tier = [s_device argumentBuffersSupport];
+        _capabilities.supportsArgumentBufferTier2 = (tier == MTLArgumentBuffersTier2);
+        _capabilities.supportsBindless = _capabilities.supportsArgumentBufferTier2;
+        _capabilities.resourceBindingTier = _capabilities.supportsArgumentBufferTier2
+            ? ERHIResourceBindingTier::Bindless
+            : ERHIResourceBindingTier::LegacyDescriptorSet;
+    }
+#endif
+
+    return true;
 }
 
 void MetalContext::Finalize()
@@ -163,13 +182,17 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
 
     pipelineDesc.vertexDescriptor = vertexDesc;
 
-    for (size_t i = 0; i < info.renderPass->info.colorAttachmentCount; i++)
+    PipelineRenderTargetLayout renderTargetLayout = info.renderTargetLayout;
+    if (renderTargetLayout.colorAttachmentCount == 0 && info.renderPass != nullptr)
     {
-        const Attachment& attachment = info.renderPass->info.colorAttachments[i];
+        renderTargetLayout = MakePipelineRenderTargetLayout(info.renderPass->info);
+    }
 
+    for (size_t i = 0; i < renderTargetLayout.colorAttachmentCount; i++)
+    {
         MTLRenderPipelineColorAttachmentDescriptor* colorDesc = pipelineDesc.colorAttachments[i];
 
-        colorDesc.pixelFormat                 = MetalUtility::ToPixelFormat(attachment.format);
+        colorDesc.pixelFormat                 = MetalUtility::ToPixelFormat(renderTargetLayout.colorFormats[i]);
         colorDesc.blendingEnabled             = info.colorBlendDesc.attachments[i].blendEnable;
         colorDesc.sourceRGBBlendFactor        = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].srcColorFactor);
         colorDesc.destinationRGBBlendFactor   = MetalUtility::ToBlendFactor(info.colorBlendDesc.attachments[i].dstColorFactor);
@@ -181,8 +204,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
 
     if (info.depthStencilDesc.depthTestEnable)
     {
-        const Attachment& depthStencilAttachment = info.renderPass->info.depthStencilAttachment;
-        MTLPixelFormat depthStencilFormat        = MetalUtility::ToPixelFormat(depthStencilAttachment.format);
+        MTLPixelFormat depthStencilFormat        = MetalUtility::ToPixelFormat(renderTargetLayout.depthStencilFormat);
         pipelineDesc.depthAttachmentPixelFormat  = depthStencilFormat;
         // TODO: 스텐실 처리 추가
     }
@@ -195,7 +217,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         HS_LOG(crash, "Failed to create Graphics Pipeline");
     }
 
-    if (info.renderPass->info.useDepthStencilAttachment)
+    if (renderTargetLayout.useDepthStencilAttachment)
     {
         MTLDepthStencilDescriptor* depthStencilDesc = [MTLDepthStencilDescriptor new];
         bool stencilTest                            = info.depthStencilDesc.stencilTestEnable;
