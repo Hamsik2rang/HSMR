@@ -462,16 +462,17 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
     ImGui::Text("%s", label);
     ImGui::NextColumn();
 
-    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-
     float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
     ImVec2 buttonSize = { lineHeight * 0.75f, lineHeight };
+
+    ImGui::PushMultiItemsWidths(3, ImGui::GetContentRegionAvail().x - 3.0f * buttonSize.x + 2.0f * GImGui->Style.ItemInnerSpacing.x);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
     // X (Red)
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
+    
     if (ImGui::Button("X", buttonSize))
     {
         values.x = resetValue;

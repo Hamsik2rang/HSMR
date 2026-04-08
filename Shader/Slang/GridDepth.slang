@@ -33,7 +33,8 @@ float2 mod(float2 v, float b)
     return float2(mod(v.x, b), mod(v.y, b));
 }
 
-float4 gridColor(float2 uv, float2 camPos) {
+float4 gridColor(float2 uv, float2 camPos) 
+{
     float2 originUV = uv;
 
     float2 dudv = float2(
