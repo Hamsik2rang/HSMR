@@ -10,6 +10,8 @@
 
 #include "Precompile.h"
 
+#include "Editor/GUI/MaterialSymbolsIcons.h"
+
 #include "ImGui/imgui.h"
 
 #include <string>
@@ -18,31 +20,34 @@ HS_NS_EDITOR_BEGIN
 
 namespace EditorIcons
 {
-static constexpr const char* Close           = "\xEE\x97\x8D"; // close, U+E5CD
-static constexpr const char* Add             = "\xEE\x85\x85"; // add, U+E145
-static constexpr const char* Back            = "\xEE\x97\x84"; // arrow_back, U+E5C4
-static constexpr const char* Forward         = "\xEE\x97\x88"; // arrow_forward, U+E5C8
-static constexpr const char* Home            = "\xEE\xA6\xB2"; // home, U+E9B2
-static constexpr const char* Refresh         = "\xEE\x97\x95"; // refresh, U+E5D5
-static constexpr const char* Folder          = "\xEE\x8B\x87"; // folder, U+E2C7
-static constexpr const char* FolderOpen      = "\xEE\x8B\x88"; // folder_open, U+E2C8
-static constexpr const char* Description     = "\xEE\xA1\xB3"; // description, U+E873
-static constexpr const char* Image           = "\xEE\x8F\xB4"; // image, U+E3F4
-static constexpr const char* ViewInAr        = "\xEE\xBF\x89"; // view_in_ar, U+EFC9
-static constexpr const char* Camera          = "\xEE\x8E\xAF"; // camera, U+E3AF
-static constexpr const char* PhotoCamera     = "\xEE\x90\x92"; // photo_camera, U+E412
-static constexpr const char* LightMode       = "\xEE\x94\x98"; // light_mode, U+E518
-static constexpr const char* Settings        = "\xEE\xA2\xB8"; // settings, U+E8B8
-static constexpr const char* Check           = "\xEE\x97\x8A"; // check, U+E5CA
-static constexpr const char* Visibility      = "\xEE\xA3\xB4"; // visibility, U+E8F4
-static constexpr const char* Draft           = "\xEE\x99\xAD"; // draft, U+E66D
-static constexpr const char* Article         = "\xEE\xBD\x82"; // article, U+EF42
-static constexpr const char* Palette         = "\xEE\x90\x8A"; // palette, U+E40A
-static constexpr const char* Texture         = "\xEE\x90\xA1"; // texture, U+E421
-static constexpr const char* DataObject      = "\xEE\xAB\x93"; // data_object, U+EAD3
-static constexpr const char* Code            = "\xEE\xA1\xAF"; // code, U+E86F
-static constexpr const char* DeployedCode    = "\xEF\x9C\xA0"; // deployed_code, U+F720
-static constexpr const char* Category        = "\xEE\x95\xB4"; // category, U+E574
+// Keep semantic aliases here so editor code can stay readable even if we ever swap icon sets.
+// For direct icon lookup, use MaterialSymbolsIcons::Icon* from MaterialSymbolsIcons.h.
+static constexpr const char* Close           = MaterialSymbolsIcons::IconClose;
+static constexpr const char* Add             = MaterialSymbolsIcons::IconAdd;
+static constexpr const char* Back            = MaterialSymbolsIcons::IconArrowBack;
+static constexpr const char* Forward         = MaterialSymbolsIcons::IconArrowForward;
+static constexpr const char* Home            = MaterialSymbolsIcons::IconHome;
+static constexpr const char* Refresh         = MaterialSymbolsIcons::IconRefresh;
+static constexpr const char* Folder          = MaterialSymbolsIcons::IconFolder;
+static constexpr const char* FolderOpen      = MaterialSymbolsIcons::IconFolderOpen;
+static constexpr const char* Description     = MaterialSymbolsIcons::IconDescription;
+static constexpr const char* Image           = MaterialSymbolsIcons::IconImage;
+static constexpr const char* ViewInAr        = MaterialSymbolsIcons::IconViewInAr;
+static constexpr const char* Camera          = MaterialSymbolsIcons::IconCamera;
+static constexpr const char* PhotoCamera     = MaterialSymbolsIcons::IconPhotoCamera;
+static constexpr const char* LightMode       = MaterialSymbolsIcons::IconLightMode;
+static constexpr const char* Settings        = MaterialSymbolsIcons::IconSettings;
+static constexpr const char* Check           = MaterialSymbolsIcons::IconCheck;
+static constexpr const char* Visibility      = MaterialSymbolsIcons::IconVisibility;
+static constexpr const char* VisibilityOff   = MaterialSymbolsIcons::IconVisibilityOff;
+static constexpr const char* Draft           = MaterialSymbolsIcons::IconDraft;
+static constexpr const char* Article         = MaterialSymbolsIcons::IconArticle;
+static constexpr const char* Palette         = MaterialSymbolsIcons::IconPalette;
+static constexpr const char* Texture         = MaterialSymbolsIcons::IconTexture;
+static constexpr const char* DataObject      = MaterialSymbolsIcons::IconDataObject;
+static constexpr const char* Code            = MaterialSymbolsIcons::IconCode;
+static constexpr const char* DeployedCode    = MaterialSymbolsIcons::IconDeployedCode;
+static constexpr const char* Category        = MaterialSymbolsIcons::IconCategory;
 } // namespace EditorIcons
 
 namespace EditorWidgets

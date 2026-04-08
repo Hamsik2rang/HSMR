@@ -58,6 +58,7 @@ set(EDITOR_GUI_HEADERS
     GUI/EditorIcons.h
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
+    GUI/MaterialSymbolsIcons.h
     GUI/GUIRenderer.h
     GUI/GUIRendererPass.h
 )
