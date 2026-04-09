@@ -48,7 +48,8 @@ FSInput VertexMain(VSInput input)
 float4 FragmentMain(FSInput input) : SV_Target
 {
     float3 N = normalize(input.normalWS);
-    float3 L = normalize(lightUBO.direction.xyz); // Directional Light
+    // lightUBO.direction is authored as the direction light travels in world space.
+    float3 L = normalize(-lightUBO.direction.xyz);
     float3 V = normalize(perView.cameraPos.xyz - input.positionWS);
     float3 H = normalize(L + V);
 

@@ -18,10 +18,12 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
+#include "Scene/SceneSerializer.h"
 
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorApplication.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
@@ -124,6 +126,26 @@ void setSingleViewSnapshot(RenderSceneSnapshot& snapshot, const RenderViewSnapsh
         snapshot.views.push_back(viewSnapshot);
     }
 }
+
+void populateStarterScene(Scene& scene)
+{
+    scene.SetName("Main");
+
+    Entity cameraEntity = scene.CreateEntity("Main Camera");
+    auto& camera = cameraEntity.AddComponent<CameraComponent>();
+    camera.isPrimary = true;
+    camera.isActive = true;
+    camera.priority = 100;
+
+    Entity lightEntity = scene.CreateEntity("Directional Light");
+    auto& light = lightEntity.AddComponent<LightComponent>();
+    light.type = ELightType::Directional;
+    auto& lightTransform = lightEntity.GetComponent<TransformComponent>();
+    lightTransform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+    lightTransform.SetEulerAngles(glm::vec3(-90.0f, 0.0f, 45.0f));
+
+    scene.Update(0.0f);
+}
 }
 
 EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
@@ -156,8 +178,13 @@ bool EditorWindow::onInitialize()
     _renderer->AddPass(std::move(opaquePass));
 
     setupResources();
-    setupDefaultScene();
+    loadInitialScene();
     setupPanels();
+
+    if (_menuPanel && !_currentScenePath.empty())
+    {
+        static_cast<MenuPanel*>(_menuPanel.get())->SetCurrentScenePath(_currentScenePath);
+    }
 
     _gameRenderTargets.resize(_swapchain->GetMaxFrameCount());
     if (!_renderTargets.empty())
@@ -394,22 +421,55 @@ void EditorWindow::setupDefaultScene()
 {
     _scene = MakeScoped<Scene>("Default Scene");
     EditorContext::Get().SetActiveScene(_scene.get());
+    populateStarterScene(*_scene);
+}
 
-    // Editor camera entity
-    Entity cameraEntity = _scene->CreateEntity("Main Camera");
-    auto& camera = cameraEntity.AddComponent<CameraComponent>();
-    camera.isPrimary = true;
-    camera.isActive = true;
-    camera.priority = 100;
+bool EditorWindow::loadInitialScene()
+{
+    ProjectContext& projectContext = ProjectContext::Get();
+    const std::string defaultScenePath = projectContext.GetResolvedDefaultScenePath();
 
-    Entity lightEntity = _scene->CreateEntity("Directional Light");
-    auto& light = lightEntity.AddComponent<LightComponent>();
-    light.type = ELightType::Directional;
-    auto& lightTransform = lightEntity.GetComponent<TransformComponent>();
-    lightTransform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
-    lightTransform.SetEulerAngles(glm::vec3(45.0f, -45.0f, 0.0f));
+    if (projectContext.IsProjectOpen() && !defaultScenePath.empty() && FileSystem::Exist(defaultScenePath))
+    {
+        _scene = MakeScoped<Scene>("Main");
+        SceneSerializer serializer(_scene.get());
+        if (serializer.LoadFromFile(defaultScenePath))
+        {
+            EditorContext::Get().SetActiveScene(_scene.get());
+            _currentScenePath = defaultScenePath;
+            return true;
+        }
 
-    _scene->Update(0.0f);
+        HS_LOG(error, "[EditorWindow] Failed to load startup scene: {}", defaultScenePath.c_str());
+        _scene.reset();
+    }
+
+    setupDefaultScene();
+    persistDefaultSceneAsset();
+    return true;
+}
+
+void EditorWindow::persistDefaultSceneAsset()
+{
+    ProjectContext& projectContext = ProjectContext::Get();
+    if (!projectContext.IsProjectOpen() || !_scene)
+    {
+        return;
+    }
+
+    const std::string defaultScenePath = projectContext.GetResolvedDefaultScenePath().empty()
+        ? projectContext.GetScenePath() + "Main.scene"
+        : projectContext.GetResolvedDefaultScenePath();
+
+    SceneSerializer serializer(_scene.get());
+    if (!serializer.SaveToFile(defaultScenePath))
+    {
+        HS_LOG(error, "[EditorWindow] Failed to persist fallback startup scene: {}", defaultScenePath.c_str());
+        return;
+    }
+
+    projectContext.SetDefaultScene(defaultScenePath);
+    _currentScenePath = defaultScenePath;
 }
 
 void EditorWindow::syncEditorCameraToScene()

@@ -35,6 +35,8 @@ public:
 private:
     void setupPanels();
     void setupDefaultScene();
+    bool loadInitialScene();
+    void persistDefaultSceneAsset();
 
     bool onInitialize() override;
     void onNextFrame() override;
@@ -66,6 +68,7 @@ private:
 
     Scoped<Scene> _scene;
     std::vector<RenderTarget> _gameRenderTargets;
+    std::string _currentScenePath;
 };
 
 HS_NS_EDITOR_END

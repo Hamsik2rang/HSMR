@@ -12,8 +12,12 @@
 
 #include "Editor/Panel/Panel.h"
 #include "Scene/Entity.h"
+#include "Scene/Components/MeshRendererComponent.h"
+#include "Resource/Mesh.h"
+#include "Resource/Material.h"
 
 #include <string>
+#include <vector>
 
 HS_NS_EDITOR_BEGIN
 
@@ -28,11 +32,25 @@ public:
     void Draw() override;
 
 private:
+    enum class PrimitiveType : uint8
+    {
+        Cube,
+        Sphere,
+        Plane,
+        Camera,
+        DirectionalLight,
+    };
+
     // Entity tree node rendering
     void drawEntityNode(Entity entity, int depth = 0);
 
     // Context menu for entity operations
     void drawContextMenu();
+    bool drawCreateEntityMenu(Scene* scene, Entity parent = Entity());
+    Entity createEmptyEntity(Scene* scene, Entity parent);
+    Entity createPrimitiveEntity(Scene* scene, PrimitiveType primitiveType, Entity parent);
+    void initializeMeshRenderer(MeshRendererComponent& meshRenderer, Mesh* mesh, Material* material) const;
+    Material* createPrimitiveMaterial();
 
     // Get icon for entity based on components
     const char* getEntityIcon(Entity entity) const;
@@ -46,8 +64,7 @@ private:
 
     // State
     char _searchBuffer[256] = "";
-    Entity _contextMenuEntity;
-    bool _openContextMenu = false;
+    std::vector<Scoped<Material>> _runtimeMaterials;
 
     // Rename state
     Entity _renamingEntity;

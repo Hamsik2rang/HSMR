@@ -1,5 +1,6 @@
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Engine/Window.h"
 #include "Editor/Core/EditorWindow.h"
@@ -177,7 +178,15 @@ void MenuPanel::openScene()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::OpenFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::OpenFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;
@@ -222,7 +231,15 @@ void MenuPanel::saveSceneAs()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::SaveFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::SaveFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;

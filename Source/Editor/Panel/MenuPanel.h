@@ -26,6 +26,7 @@ public:
     void Cleanup() override;
 
     void Draw() override;
+    void SetCurrentScenePath(const std::string& scenePath) { _currentScenePath = scenePath; }
 
 private:
     void drawFileMenu();
