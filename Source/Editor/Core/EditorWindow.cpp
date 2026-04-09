@@ -396,7 +396,7 @@ void EditorWindow::setupDefaultScene()
     EditorContext::Get().SetActiveScene(_scene.get());
 
     // Editor camera entity
-    Entity cameraEntity = _scene->CreateEntity("Editor Camera");
+    Entity cameraEntity = _scene->CreateEntity("Main Camera");
     auto& camera = cameraEntity.AddComponent<CameraComponent>();
     camera.isPrimary = true;
     camera.isActive = true;

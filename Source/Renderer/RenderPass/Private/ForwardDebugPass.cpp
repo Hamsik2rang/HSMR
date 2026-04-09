@@ -277,7 +277,7 @@ RHIGraphicsPipeline* ForwardDebugPass::GetOrCreatePipeline(const PipelineRenderT
     VertexInputLayoutDescriptor layout{};
     layout.binding        = 0;
     layout.stride         = sizeof(DebugLineVertex);
-    layout.stepRate       = 0;
+    layout.stepRate       = 1;
     layout.useInstancing  = false;
     viDesc.layouts.push_back(layout);
 
