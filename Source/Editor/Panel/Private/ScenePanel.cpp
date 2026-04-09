@@ -202,21 +202,24 @@ void ScenePanel::Draw()
         return;
     }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
     ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
                                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
 
     if (ImGui::BeginMenuBar())
     {
         DebugDrawSettings& settings = EditorContext::Get().GetDebugDrawSettings();
-        ImVec2 buttonSize = EditorWidgets::MeasureIconButton();
+        const float menuBarHeight = ImGui::GetFrameHeight();
+        const float buttonEdge = (menuBarHeight - 8.0f) > 13.0f ? (menuBarHeight - 8.0f) : 13.0f;
+        ImVec2 buttonSize(buttonEdge, buttonEdge);
         float buttonWidth = buttonSize.x;
         float cursorX = ImGui::GetWindowContentRegionMax().x - buttonWidth;
         if (cursorX > ImGui::GetCursorPosX())
         {
             ImGui::SetCursorPosX(cursorX);
         }
+
+        float buttonPosY = ImGui::GetCursorPosY() + (menuBarHeight - buttonSize.y) * 0.5f + 2.0f;
+        ImGui::SetCursorPosY(buttonPosY);
 
         ImGui::PushStyleColor(
             ImGuiCol_Button,
@@ -228,6 +231,7 @@ void ScenePanel::Draw()
             ImGuiCol_ButtonActive,
             settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220));
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(235, 235, 235, 255));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 
         if (ImGui::Button(EditorIcons::Visibility, buttonSize))
         {
@@ -239,6 +243,7 @@ void ScenePanel::Draw()
             ImGui::SetTooltip(settings.showDebugPass ? "Debug Draw: On" : "Debug Draw: Off");
         }
 
+        ImGui::PopStyleVar();
         ImGui::PopStyleColor(4);
         ImGui::EndMenuBar();
     }
@@ -246,6 +251,13 @@ void ScenePanel::Draw()
     // Store viewport state
     _viewportFocused = ImGui::IsWindowFocused();
     _viewportHovered = ImGui::IsWindowHovered();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::BeginChild(
+        "SceneViewport",
+        ImVec2(0, 0),
+        false,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
     ImGui::SetScrollY(0.0f);
     uint32 width  = _currentRenderTarget->GetWidth();
@@ -260,9 +272,9 @@ void ScenePanel::Draw()
 
     ImGuiExtension::ImageOffscreen(texture, viewportSize);
 
-    ImVec2 curPanelSize = ImGui::GetWindowSize();
-    _resolution.width   = static_cast<uint32>(curPanelSize.x);
-    _resolution.height  = static_cast<uint32>(curPanelSize.y);
+    ImVec2 viewportWindowSize = ImGui::GetWindowSize();
+    _resolution.width         = static_cast<uint32>(viewportWindowSize.x);
+    _resolution.height        = static_cast<uint32>(viewportWindowSize.y);
 
     _viewportMax = ImVec2(_viewportMin.x + viewportSize.x, _viewportMin.y + viewportSize.y);
 
@@ -325,9 +337,9 @@ void ScenePanel::Draw()
     // Draw view orientation gizmo
     drawViewGizmo();
 
-    ImGui::End();
-
+    ImGui::EndChild();
     ImGui::PopStyleVar();
+    ImGui::End();
 }
 
 void ScenePanel::drawTransformGizmo()

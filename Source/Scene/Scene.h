@@ -160,6 +160,7 @@ public:
      * @brief Primary 카메라 Entity 반환
      */
     Entity GetPrimaryCamera();
+    Entity GetBestGameCamera();
 
     /**
      * @brief Primary 카메라 설정

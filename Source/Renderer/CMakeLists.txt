@@ -9,6 +9,7 @@ set(RENDERER_HEADERS
     RenderTarget.h
     Renderer.h
     ForwardRenderer.h
+    ForwardOverlayRenderer.h
     DeferredRenderer.h
     RenderResourceManager.h
     ShaderLibrary.h
@@ -21,6 +22,7 @@ list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 set(RENDERER_SOURCES
     Private/Renderer.cpp
     Private/ForwardRenderer.cpp
+    Private/ForwardOverlayRenderer.cpp
     Private/DeferredRenderer.cpp
     Private/RenderTarget.cpp
     Private/RenderResourceManager.cpp

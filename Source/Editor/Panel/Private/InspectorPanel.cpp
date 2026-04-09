@@ -23,6 +23,44 @@
 
 HS_NS_EDITOR_BEGIN
 
+namespace
+{
+bool drawRemovableComponentHeader(const char* label, const char* removeId, bool& outRemove)
+{
+    const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
+    const bool open = ImGui::CollapsingHeader(label, flags);
+
+    const ImVec2 headerMin = ImGui::GetItemRectMin();
+    const ImVec2 headerMax = ImGui::GetItemRectMax();
+    const ImVec2 restoreCursor = ImGui::GetCursorScreenPos();
+
+    const float headerHeight = headerMax.y - headerMin.y;
+    const float buttonEdge = ImMax(14.0f, headerHeight - 6.0f);
+    const ImVec2 buttonSize(buttonEdge, buttonEdge);
+    const float buttonPaddingX = ImGui::GetStyle().FramePadding.x;
+    const float buttonPosX = headerMax.x - buttonSize.x - buttonPaddingX;
+    const float buttonPosY = headerMin.y + (headerHeight - buttonSize.y) * 0.5f;
+
+    ImGui::SetCursorScreenPos(ImVec2(buttonPosX, buttonPosY));
+    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 255, 255, 32));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(255, 255, 255, 64));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+
+    std::string labelWithId = std::string(EditorIcons::Close) + "##" + removeId;
+    if (ImGui::Button(labelWithId.c_str(), buttonSize))
+    {
+        outRemove = true;
+    }
+
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor(3);
+
+    ImGui::SetCursorScreenPos(restoreCursor);
+    return open;
+}
+}
+
 InspectorPanel::InspectorPanel(Window* window)
     : Panel(window)
 {
@@ -173,16 +211,7 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open                = ImGui::CollapsingHeader("Mesh Renderer", flags);
-
-    // Remove button on same line
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveMeshRenderer"))
-    {
-        removeComponent = true;
-    }
+    bool open = drawRemovableComponentHeader("Mesh Renderer", "RemoveMeshRenderer", removeComponent);
 
     if (open && !removeComponent)
     {
@@ -329,16 +358,7 @@ void InspectorPanel::drawCameraComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open                = ImGui::CollapsingHeader("Camera", flags);
-
-    // Remove button on same line
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveCamera"))
-    {
-        removeComponent = true;
-    }
+    bool open = drawRemovableComponentHeader("Camera", "RemoveCamera", removeComponent);
 
     if (open && !removeComponent)
     {
@@ -367,6 +387,7 @@ void InspectorPanel::drawCameraComponent(Entity entity)
         // Common settings
         ImGui::DragFloat("Near", &camera.nearPlane, 0.01f, 0.001f, camera.farPlane - 0.01f, "%.3f");
         ImGui::DragFloat("Far", &camera.farPlane, 1.0f, camera.nearPlane + 0.01f, 100000.0f, "%.1f");
+        ImGui::InputInt("Priority", &camera.priority);
 
         // Flags
         ImGui::Checkbox("Primary", &camera.isPrimary);
@@ -390,16 +411,7 @@ void InspectorPanel::drawLightComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    bool open                = ImGui::CollapsingHeader("Light", flags);
-
-    // Remove button on same line
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    if (EditorWidgets::IconButton(EditorIcons::Close, "RemoveLight"))
-    {
-        removeComponent = true;
-    }
+    bool open = drawRemovableComponentHeader("Light", "RemoveLight", removeComponent);
 
     if (open && !removeComponent)
     {

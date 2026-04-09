@@ -10,6 +10,8 @@
 #include "RHI/CommandHandle.h"
 
 #include "Renderer/ForwardRenderer.h"
+#include "Renderer/ForwardOverlayRenderer.h"
+#include "Renderer/CameraUtils.h"
 #include "Renderer/RenderPass/ForwardOpaquePass.h"
 #include "Resource/ObjectManager.h"
 
@@ -25,6 +27,7 @@
 #include "Editor/Panel/DockspacePanel.h"
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
+#include "Editor/Panel/GamePanel.h"
 #include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
@@ -40,6 +43,34 @@ HS_NS_EDITOR_BEGIN
 
 namespace
 {
+constexpr uint64 s_invalidGameViewId = std::numeric_limits<uint64>::max() - 1;
+
+RenderTargetInfo buildPanelRenderTargetInfo(const RenderTargetInfo& baseInfo, uint32 width, uint32 height)
+{
+    RenderTargetInfo info = baseInfo;
+    info.width = width;
+    info.height = height;
+
+    for (TextureInfo& colorInfo : info.colorTextureInfos)
+    {
+        colorInfo.arrayLength = 1;
+        colorInfo.extent.width = width;
+        colorInfo.extent.height = height;
+        colorInfo.extent.depth = 1;
+        colorInfo.byteSize = 4 * width * height;
+    }
+
+    if (info.useDepthStencilTexture)
+    {
+        info.depthStencilInfo.arrayLength = 1;
+        info.depthStencilInfo.extent.width = width;
+        info.depthStencilInfo.extent.height = height;
+        info.depthStencilInfo.extent.depth = 1;
+    }
+
+    return info;
+}
+
 RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
 {
     RenderViewSnapshot viewSnapshot{};
@@ -64,6 +95,35 @@ RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
     viewSnapshot.perView = perView;
     return viewSnapshot;
 }
+
+RenderViewSnapshot buildSceneCameraViewSnapshot(Entity cameraEntity, bool vulkanYFlip, uint32 width, uint32 height)
+{
+    RenderViewSnapshot viewSnapshot{};
+    viewSnapshot.viewId = s_invalidGameViewId;
+    if (!cameraEntity.IsValid() ||
+        !cameraEntity.HasComponent<TransformComponent>() ||
+        !cameraEntity.HasComponent<CameraComponent>())
+    {
+        return viewSnapshot;
+    }
+
+    TransformComponent transform = cameraEntity.GetComponent<TransformComponent>();
+    CameraComponent camera = cameraEntity.GetComponent<CameraComponent>();
+    camera.SetAspectRatio(static_cast<float>(width), static_cast<float>(height));
+
+    viewSnapshot.viewId = static_cast<uint64>(entt::to_integral(cameraEntity.GetHandle()));
+    viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+    return viewSnapshot;
+}
+
+void setSingleViewSnapshot(RenderSceneSnapshot& snapshot, const RenderViewSnapshot& viewSnapshot)
+{
+    snapshot.views.clear();
+    if (viewSnapshot.viewId != s_invalidGameViewId)
+    {
+        snapshot.views.push_back(viewSnapshot);
+    }
+}
 }
 
 EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags)
@@ -79,6 +139,8 @@ bool EditorWindow::onInitialize()
 {
     _renderer = MakeScoped<ForwardRenderer>(_rhiContext);
     _renderer->Initialize();
+    _overlayRenderer = MakeScoped<ForwardOverlayRenderer>(_rhiContext);
+    _overlayRenderer->Initialize(_renderer->GetShaderLibrary());
 
     ImGuiExtension::InitializeBackend(_swapchain);
 
@@ -96,6 +158,20 @@ bool EditorWindow::onInitialize()
     setupResources();
     setupDefaultScene();
     setupPanels();
+
+    _gameRenderTargets.resize(_swapchain->GetMaxFrameCount());
+    if (!_renderTargets.empty())
+    {
+        RenderTargetInfo gameInfo = buildPanelRenderTargetInfo(
+            _renderTargets[0].GetInfo(),
+            _nativeWindow.width,
+            _nativeWindow.height);
+
+        for (RenderTarget& renderTarget : _gameRenderTargets)
+        {
+            renderTarget.Create(gameInfo);
+        }
+    }
 
     void* handler = nullptr;
     ImGuiExtension::SetProcessEventHandler(&handler);
@@ -122,6 +198,15 @@ void EditorWindow::onNextFrame()
     for (auto& renderTarget : _renderTargets)
     {
         renderTarget.Update(resolution.width, resolution.height);
+    }
+
+    if (_gamePanel && !_gameRenderTargets.empty())
+    {
+        Resolution gameResolution = static_cast<GamePanel*>(_gamePanel.get())->GetResolution();
+        for (auto& renderTarget : _gameRenderTargets)
+        {
+            renderTarget.Update(gameResolution.width, gameResolution.height);
+        }
     }
 }
 
@@ -150,30 +235,60 @@ void EditorWindow::onRender()
     cmdBuffer->Begin();
 
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
-    RenderTarget* curRT = &_renderTargets[imageIndex];
+    RenderTarget* sceneRT = &_renderTargets[imageIndex];
+    RenderTarget* gameRT = _gameRenderTargets.empty() ? nullptr : &_gameRenderTargets[imageIndex];
+    const bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 
     // 1. Render Scene to Scene Panel
     {
         HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
         ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
-        RenderSceneSnapshot sceneSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
+        RenderSceneSnapshot baseSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
             _scene.get(), _renderer->GetShaderLibrary());
         RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(scenePanel->GetEditorCamera());
+        RenderSceneSnapshot sceneSnapshot = baseSnapshot;
+        setSingleViewSnapshot(sceneSnapshot, editorViewSnapshot);
 
-        if (sceneSnapshot.views.empty())
+        RenderOptions sceneOptions{};
+        sceneOptions.enableGrid = true;
+        sceneOptions.enableDebug = EditorContext::Get().GetDebugDrawSettings().showDebugPass;
+        _renderer->Render(sceneSnapshot, sceneRT, RenderOptions{});
+        if (_overlayRenderer)
         {
-            sceneSnapshot.views.push_back(editorViewSnapshot);
-        }
-        else
-        {
-            sceneSnapshot.views[0] = editorViewSnapshot;
+            _overlayRenderer->Render(
+                *cmdBuffer,
+                *_renderer->GetResourceManager(),
+                baseSnapshot,
+                editorViewSnapshot,
+                sceneRT,
+                sceneOptions);
         }
 
-        _renderer->SetDebugPassEnabled(EditorContext::Get().GetDebugDrawSettings().showDebugPass);
-        _renderer->Render(sceneSnapshot, curRT);
+        if (_gamePanel && gameRT)
+        {
+            GamePanel* gamePanel = static_cast<GamePanel*>(_gamePanel.get());
+            Entity gameCamera = gamePanel->ResolveCamera(_scene.get());
+            RenderViewSnapshot gameViewSnapshot = buildSceneCameraViewSnapshot(
+                gameCamera,
+                vulkanYFlip,
+                gameRT->GetWidth(),
+                gameRT->GetHeight());
+
+            if (gameViewSnapshot.viewId != s_invalidGameViewId)
+            {
+                RenderSceneSnapshot gameSnapshot = baseSnapshot;
+                setSingleViewSnapshot(gameSnapshot, gameViewSnapshot);
+                _renderer->Render(gameSnapshot, gameRT, RenderOptions{});
+                gamePanel->SetGameRenderTarget(gameRT);
+            }
+            else
+            {
+                gamePanel->SetGameRenderTarget(nullptr);
+            }
+        }
     }
 
-    static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(&_renderTargets[imageIndex]);
+    static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(sceneRT);
 
     // 2. Render GUI
     {
@@ -203,11 +318,23 @@ void EditorWindow::onShutdown()
     EditorContext::Get().SetActiveScene(nullptr);
     EditorContext::Get().RemoveAllSelectionListeners();
 
+    if (_overlayRenderer)
+    {
+        _overlayRenderer->Shutdown();
+        _overlayRenderer.reset();
+    }
+
     if (_renderer)
     {
         _renderer->Shutdown();
         _renderer.reset();
     }
+
+    for (RenderTarget& renderTarget : _gameRenderTargets)
+    {
+        renderTarget.Clear();
+    }
+    _gameRenderTargets.clear();
 
     _scene.reset();
 }
@@ -235,6 +362,10 @@ void EditorWindow::setupPanels()
     _scenePanel = MakeScoped<ScenePanel>(this);
     _scenePanel->Setup();
     _basePanel->InsertPanel(_scenePanel.get());
+
+    _gamePanel = MakeScoped<GamePanel>(this);
+    _gamePanel->Setup();
+    _basePanel->InsertPanel(_gamePanel.get());
 
     _sceneStatusPanel = MakeScoped<SceneStatusPanel>(this);
     _sceneStatusPanel->Setup();
@@ -268,6 +399,8 @@ void EditorWindow::setupDefaultScene()
     Entity cameraEntity = _scene->CreateEntity("Editor Camera");
     auto& camera = cameraEntity.AddComponent<CameraComponent>();
     camera.isPrimary = true;
+    camera.isActive = true;
+    camera.priority = 100;
 
     Entity lightEntity = _scene->CreateEntity("Directional Light");
     auto& light = lightEntity.AddComponent<LightComponent>();

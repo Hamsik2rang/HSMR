@@ -45,8 +45,20 @@ public:
     );
 
     virtual void Render(
+        Scene* scene,
+        RenderTarget* renderTarget,
+        const RenderOptions& options
+    );
+
+    virtual void Render(
         const RenderSceneSnapshot& snapshot,
         RenderTarget* renderTarget
+    );
+
+    virtual void Render(
+        const RenderSceneSnapshot& snapshot,
+        RenderTarget* renderTarget,
+        const RenderOptions& options
     );
 
     virtual void AddPass(RenderPass* pass)
@@ -65,10 +77,6 @@ public:
 
     HS_FORCEINLINE ShaderLibrary* GetShaderLibrary() const { return _shaderLibrary; }
 
-    HS_FORCEINLINE void SetDebugPassEnabled(bool enabled) { _debugPassEnabled = enabled; }
-
-    HS_FORCEINLINE bool IsDebugPassEnabled() const { return _debugPassEnabled; }
-
 protected:
     RHIContext* _rhiContext;
     RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
@@ -79,8 +87,6 @@ protected:
     uint32 frameIndex      = 0;
     bool _isInitialized    = false;
     bool _isPassListSorted = true;
-    bool _debugPassEnabled = false;
-
     RenderTarget* _currentRenderTarget;
 
     RenderGraphBuilder _graphBuilder;

@@ -62,6 +62,15 @@ void Renderer::Render(
     Scene* scene,
     RenderTarget* renderTarget)
 {
+    Render(scene, renderTarget, RenderOptions{});
+}
+
+void Renderer::Render(
+    Scene* scene,
+    RenderTarget* renderTarget,
+    const RenderOptions& options)
+{
+    (void)options;
     SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
 
     for (auto* pass : _rendererPasses)
@@ -86,6 +95,15 @@ void Renderer::Render(
     const RenderSceneSnapshot& snapshot,
     RenderTarget* renderTarget)
 {
+    Render(snapshot, renderTarget, RenderOptions{});
+}
+
+void Renderer::Render(
+    const RenderSceneSnapshot& snapshot,
+    RenderTarget* renderTarget,
+    const RenderOptions& options)
+{
+    (void)options;
     SceneResource sceneResource = _resourceManager->BuildSceneResource(snapshot);
 
     for (auto* pass : _rendererPasses)

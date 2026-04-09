@@ -36,23 +36,7 @@ struct CameraRenderEntry
     entt::entity entity = entt::null;
     TransformComponent* transform = nullptr;
     CameraComponent* camera = nullptr;
-    uint32 priority = 0;
 };
-
-uint32 getCameraRenderPriority(const CameraComponent& camera)
-{
-    if (camera.isPrimary)
-    {
-        return 0;
-    }
-
-    if (camera.isActive)
-    {
-        return 1;
-    }
-
-    return 2;
-}
 
 Image* getFallbackWhiteImage()
 {
@@ -116,7 +100,6 @@ void forEachCameraInRenderOrder(Scene* scene, Func&& func)
         entry.entity = entity;
         entry.transform = &transform;
         entry.camera = &camera;
-        entry.priority = getCameraRenderPriority(camera);
         cameras.push_back(entry);
     }
 
@@ -124,7 +107,22 @@ void forEachCameraInRenderOrder(Scene* scene, Func&& func)
         cameras.begin(), cameras.end(),
         [](const CameraRenderEntry& lhs, const CameraRenderEntry& rhs) -> bool
         {
-            return lhs.priority < rhs.priority;
+            if (lhs.camera->isActive != rhs.camera->isActive)
+            {
+                return lhs.camera->isActive && !rhs.camera->isActive;
+            }
+
+            if (lhs.camera->priority != rhs.camera->priority)
+            {
+                return lhs.camera->priority > rhs.camera->priority;
+            }
+
+            if (lhs.camera->isPrimary != rhs.camera->isPrimary)
+            {
+                return lhs.camera->isPrimary && !rhs.camera->isPrimary;
+            }
+
+            return entt::to_integral(lhs.entity) < entt::to_integral(rhs.entity);
         });
 
     for (const CameraRenderEntry& camera : cameras)

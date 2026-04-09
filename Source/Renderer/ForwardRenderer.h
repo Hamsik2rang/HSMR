@@ -4,8 +4,6 @@
 #include "Precompile.h"
 
 #include "Renderer/Renderer.h"
-#include "Renderer/RenderPass/ForwardDebugPass.h"
-#include "Renderer/RenderPass/ForwardGridPass.h"
 
 HS_NS_BEGIN
 
@@ -16,14 +14,13 @@ public:
     ~ForwardRenderer() override;
 
     void Render(Scene* scene, RenderTarget* renderTarget) override;
+    void Render(Scene* scene, RenderTarget* renderTarget, const RenderOptions& options) override;
     void Render(const RenderSceneSnapshot& snapshot, RenderTarget* renderTarget) override;
+    void Render(const RenderSceneSnapshot& snapshot, RenderTarget* renderTarget, const RenderOptions& options) override;
     void Shutdown() override;
 
     //...
 
-private:
-    Scoped<ForwardGridPass> _gridPass;
-    Scoped<ForwardDebugPass> _debugPass;
 };
 
 HS_NS_END

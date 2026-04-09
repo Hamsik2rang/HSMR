@@ -133,6 +133,12 @@ struct HS_RENDERER_API RenderSceneSnapshot
     std::vector<DebugLightSnapshot> debugLights;
 };
 
+struct HS_RENDERER_API RenderOptions
+{
+    bool enableGrid = false;
+    bool enableDebug = false;
+};
+
 // 씬 전체의 렌더링용 GPU 리소스 집합
 struct HS_RENDERER_API SceneResource
 {

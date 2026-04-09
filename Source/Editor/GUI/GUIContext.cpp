@@ -17,6 +17,7 @@ namespace
 constexpr float s_editorIndentSpacingRatio = 0.25f;
 constexpr float s_editorFramePaddingYRatio = 0.12f;
 constexpr float s_editorItemSpacingYRatio = 0.20f;
+constexpr float s_editorWindowPadding = 4.0f;
 constexpr float s_fallbackEditorFontSize = 16.0f;
 constexpr float s_materialSymbolFontScale = 1.25f;
 constexpr const char* s_materialSymbolsFontPath = "Fonts/MaterialSymbolsRounded.ttf";
@@ -44,6 +45,7 @@ void applyEditorStyleMetrics()
     style.IndentSpacing = fontSize * s_editorIndentSpacingRatio;
     style.FramePadding.y = std::max(2.0f, fontSize * s_editorFramePaddingYRatio);
     style.ItemSpacing.y = std::max(3.0f, fontSize * s_editorItemSpacingYRatio);
+    style.WindowPadding = ImVec2(s_editorWindowPadding, s_editorWindowPadding);
     style.TabCloseButtonMinWidthSelected = 0.0f;
     style.TabCloseButtonMinWidthUnselected = 0.0f;
 }

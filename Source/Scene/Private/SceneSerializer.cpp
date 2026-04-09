@@ -128,6 +128,7 @@ namespace
         j["farPlane"] = cam.farPlane;
         j["isActive"] = cam.isActive;
         j["isPrimary"] = cam.isPrimary;
+        j["priority"] = cam.priority;
         j["viewport"] = serializeVec4(cam.viewport);
         return j;
     }
@@ -221,6 +222,7 @@ namespace
         if (j.contains("farPlane")) cam.farPlane = j["farPlane"].get<float>();
         if (j.contains("isActive")) cam.isActive = j["isActive"].get<bool>();
         if (j.contains("isPrimary")) cam.isPrimary = j["isPrimary"].get<bool>();
+        if (j.contains("priority")) cam.priority = j["priority"].get<int>();
         if (j.contains("viewport")) cam.viewport = deserializeVec4(j["viewport"]);
     }
 

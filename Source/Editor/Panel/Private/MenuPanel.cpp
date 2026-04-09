@@ -138,6 +138,7 @@ void MenuPanel::drawWindowMenu()
         auto& vis = EditorContext::Get().GetPanelVisibility();
 
         ImGui::MenuItem("Scene", nullptr, &vis.scene);
+        ImGui::MenuItem("Game", nullptr, &vis.game);
         ImGui::MenuItem("Hierarchy", nullptr, &vis.hierarchy);
         ImGui::MenuItem("Inspector", nullptr, &vis.inspector);
         ImGui::MenuItem("Assets", nullptr, &vis.resources);

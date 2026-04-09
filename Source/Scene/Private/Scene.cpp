@@ -11,6 +11,33 @@
 
 HS_NS_BEGIN
 
+namespace
+{
+bool isCameraPreferredForGameView(
+    entt::entity lhsEntity,
+    const CameraComponent& lhs,
+    entt::entity rhsEntity,
+    const CameraComponent& rhs)
+{
+    if (lhs.isActive != rhs.isActive)
+    {
+        return lhs.isActive && !rhs.isActive;
+    }
+
+    if (lhs.priority != rhs.priority)
+    {
+        return lhs.priority > rhs.priority;
+    }
+
+    if (lhs.isPrimary != rhs.isPrimary)
+    {
+        return lhs.isPrimary && !rhs.isPrimary;
+    }
+
+    return entt::to_integral(lhsEntity) < entt::to_integral(rhsEntity);
+}
+}
+
 Scene::Scene(const std::string& name)
     : _name(name)
     , _sceneGraph(_registry)
@@ -204,6 +231,33 @@ Entity Scene::GetPrimaryCamera()
         }
     }
     return Entity();
+}
+
+Entity Scene::GetBestGameCamera()
+{
+    Entity bestCamera;
+    auto view = _registry.view<CameraComponent>();
+    for (auto [entity, camera] : view.each())
+    {
+        if (!bestCamera.IsValid())
+        {
+            bestCamera = Entity(entity, this);
+            continue;
+        }
+
+        const CameraComponent& currentBest = bestCamera.GetComponent<CameraComponent>();
+        if (isCameraPreferredForGameView(entity, camera, bestCamera.GetHandle(), currentBest))
+        {
+            bestCamera = Entity(entity, this);
+        }
+    }
+
+    if (bestCamera.IsValid() && !bestCamera.GetComponent<CameraComponent>().isActive)
+    {
+        return Entity();
+    }
+
+    return bestCamera;
 }
 
 void Scene::SetPrimaryCamera(Entity camera)

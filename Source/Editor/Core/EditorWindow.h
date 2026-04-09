@@ -16,6 +16,7 @@
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
+/*#include "Renderer/ForwardOverlayRenderer.h"*/ namespace hs { class ForwardOverlayRenderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
@@ -51,10 +52,12 @@ private:
     void setupResources();
 
     Scoped<Renderer> _renderer;
+    Scoped<ForwardOverlayRenderer> _overlayRenderer;
 
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;
+    Scoped<Panel> _gamePanel;
     Scoped<Panel> _sceneStatusPanel;
     Scoped<Panel> _hierarchyPanel;
     Scoped<Panel> _inspectorPanel;
@@ -62,6 +65,7 @@ private:
     Scoped<Panel> _profilerPanel;
 
     Scoped<Scene> _scene;
+    std::vector<RenderTarget> _gameRenderTargets;
 };
 
 HS_NS_EDITOR_END

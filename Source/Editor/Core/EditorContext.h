@@ -19,6 +19,7 @@ HS_NS_EDITOR_BEGIN
 struct PanelVisibility
 {
     bool scene       = true;
+    bool game        = true;
     bool hierarchy   = true;
     bool inspector   = true;
     bool resources   = true;
