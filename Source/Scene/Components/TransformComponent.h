@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Precompile.h"
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/TypeId.h"
 #include "Core/Math/Common.h"
 #include <entt/entt.hpp>
@@ -110,7 +111,8 @@ struct HS_SCENE_API TransformComponent
 
     glm::vec3 GetForward() const
     {
-        return glm::normalize(rotation * glm::vec3(0.0f, 0.0f, -1.0f));
+        // Legacy object forward remains -Z. Camera/view code uses CoordinateConvention::CameraForward.
+        return glm::normalize(rotation * CoordinateConvention::LegacyObjectForward);
     }
 
     glm::vec3 GetRight() const
@@ -120,7 +122,7 @@ struct HS_SCENE_API TransformComponent
 
     glm::vec3 GetUp() const
     {
-        return glm::normalize(rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+        return glm::normalize(rotation * CoordinateConvention::WorldUp);
     }
 
     // ===== World Position (from cached worldMatrix) =====

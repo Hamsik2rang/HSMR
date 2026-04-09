@@ -9,6 +9,7 @@
 #include "Core/Log.h"
 #include "Core/SystemContext.h"
 
+#include "Renderer/CoordinateConventionValidation.h"
 #include "RHI/Swapchain.h"
 #include "Renderer/RenderDefinition.h"
 #include "Renderer/RenderPass/RenderPass.h"
@@ -31,6 +32,8 @@ Renderer::~Renderer()
 
 bool Renderer::Initialize()
 {
+    CoordinateConventionValidation::RunOnce();
+
     _resourceManager = new RenderResourceManager(_rhiContext);
 
     _shaderLibrary = new ShaderLibrary();

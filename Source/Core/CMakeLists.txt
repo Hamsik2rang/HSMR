@@ -68,6 +68,7 @@ list(APPEND TOTAL_FILES ${CORE_HAL_SOURCES})
 
 set(CORE_MATH_HEADERS
     Math/Common.h
+    Math/CoordinateConvention.h
 )
 
 source_group("Math\\Public" FILES ${CORE_MATH_HEADERS})

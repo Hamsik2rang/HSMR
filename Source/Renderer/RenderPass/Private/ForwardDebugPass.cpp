@@ -1,5 +1,6 @@
 #include "Renderer/RenderPass/ForwardDebugPass.h"
 
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/Hash.h"
 #include "Core/Log.h"
 
@@ -374,28 +375,28 @@ void ForwardDebugPass::addCamera(const DebugCameraSnapshot& camera)
         float farHeight  = glm::tan(glm::radians(camera.fov) * 0.5f) * camera.farPlane;
         float farWidth   = farHeight * camera.aspectRatio;
 
-        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth, -nearHeight, -camera.nearPlane));
-        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth, -nearHeight, -camera.nearPlane));
-        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth,  nearHeight, -camera.nearPlane));
-        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth,  nearHeight, -camera.nearPlane));
-        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth, -farHeight, -camera.farPlane));
-        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( farWidth, -farHeight, -camera.farPlane));
-        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( farWidth,  farHeight, -camera.farPlane));
-        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth,  farHeight, -camera.farPlane));
+        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth, -nearHeight, camera.nearPlane));
+        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth, -nearHeight, camera.nearPlane));
+        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth,  nearHeight, camera.nearPlane));
+        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth,  nearHeight, camera.nearPlane));
+        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth, -farHeight, camera.farPlane));
+        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( farWidth, -farHeight, camera.farPlane));
+        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( farWidth,  farHeight, camera.farPlane));
+        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth,  farHeight, camera.farPlane));
     }
     else
     {
         float halfHeight = camera.orthoSize;
         float halfWidth  = camera.orthoSize * camera.aspectRatio;
 
-        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, -camera.nearPlane));
-        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, -camera.nearPlane));
-        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, -camera.nearPlane));
-        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, -camera.nearPlane));
-        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, -camera.farPlane));
-        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, -camera.farPlane));
-        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, -camera.farPlane));
-        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, -camera.farPlane));
+        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, camera.nearPlane));
+        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, camera.nearPlane));
+        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, camera.nearPlane));
+        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, camera.nearPlane));
+        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, camera.farPlane));
+        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, camera.farPlane));
+        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, camera.farPlane));
+        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, camera.farPlane));
     }
 
     for (uint32 i = 0; i < 4; ++i)
@@ -411,9 +412,9 @@ void ForwardDebugPass::addLight(const DebugLightSnapshot& light)
     if (!light.isEnabled) return;
 
     glm::vec3 center  = transformPoint(light.worldMatrix, glm::vec3(0.0f));
-    glm::vec3 forward = transformDirection(light.worldMatrix, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    glm::vec3 right   = transformDirection(light.worldMatrix, glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::vec3 up      = transformDirection(light.worldMatrix, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 forward = transformDirection(light.worldMatrix, CoordinateConvention::LegacyObjectForward, CoordinateConvention::LegacyObjectForward);
+    glm::vec3 right   = transformDirection(light.worldMatrix, CoordinateConvention::WorldRight, CoordinateConvention::WorldRight);
+    glm::vec3 up      = transformDirection(light.worldMatrix, CoordinateConvention::WorldUp, CoordinateConvention::WorldUp);
 
     glm::vec4 color(glm::clamp(light.color * std::max(light.intensity, 0.25f), glm::vec3(0.0f), glm::vec3(1.0f)), 0.9f);
     float range = std::max(light.range, 0.1f);

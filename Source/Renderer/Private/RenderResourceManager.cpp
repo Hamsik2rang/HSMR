@@ -4,6 +4,7 @@
 #include "Renderer/ShaderLibrary.h"
 
 #include "Core/Log.h"
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/Hash.h"
 
 #include "RHI/RHIContext.h"
@@ -299,7 +300,7 @@ SceneResource RenderResourceManager::BuildSceneResource(
         lightUBO.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
         lightUBO.color     = light.color;
         lightUBO.intensity = light.intensity;
-        lightUBO.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
+        lightUBO.direction = glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
         lightUBO.type      = static_cast<int>(light.type);
 
         LightResource* lightRes = GetOrCreateLightResource(static_cast<uint64>(entt::to_integral(entity)), lightUBO);
@@ -421,7 +422,7 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
         lightSnapshot.light.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
         lightSnapshot.light.color     = light.color;
         lightSnapshot.light.intensity = light.intensity;
-        lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, -1.0f));
+        lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
         lightSnapshot.light.type      = static_cast<int>(light.type);
         snapshot.lights.push_back(lightSnapshot);
 

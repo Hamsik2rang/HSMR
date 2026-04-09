@@ -7,6 +7,7 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
 
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
 #include "Editor/GUI/EditorIcons.h"
@@ -37,6 +38,11 @@ glm::mat4 makeImGuizmoViewMatrix(const EditorCamera& editorCamera)
     viewMatrix[2][2] = -viewMatrix[2][2];
     viewMatrix[3][2] = -viewMatrix[3][2];
     return viewMatrix;
+}
+
+glm::mat3 makeDisplayViewRotation(const EditorCamera& editorCamera)
+{
+    return glm::mat3(makeImGuizmoViewMatrix(editorCamera));
 }
 
 glm::mat4 makeImGuizmoProjectionMatrix(const EditorCamera& editorCamera)
@@ -506,7 +512,7 @@ void ScenePanel::handlePicking()
 glm::vec3 ScenePanel::screenToWorldRay(float viewportX, float viewportY)
 {
     if (!_editorCamera)
-        return glm::vec3(0.0f, 0.0f, -1.0f);
+        return CoordinateConvention::CameraForward;
 
     // Convert from [0,1] to NDC [-1,1]
     float ndcX = viewportX * 2.0f - 1.0f;
@@ -635,8 +641,9 @@ void ScenePanel::drawViewGizmo()
     drawList->AddCircleFilled(center, halfSize, IM_COL32(20, 20, 20, 140), 32);
     drawList->AddCircle(center, halfSize, IM_COL32(80, 80, 80, 180), 32, 1.0f);
 
-    // View rotation (world -> view upper 3x3)
-    glm::mat3 viewRot(_editorCamera->GetViewMatrix());
+    // Use the same display-space camera basis as ImGuizmo so the world gizmo
+    // matches the object gizmo's axis orientation on screen.
+    glm::mat3 viewRot = makeDisplayViewRotation(*_editorCamera);
 
     struct Axis
     {
@@ -646,9 +653,9 @@ void ScenePanel::drawViewGizmo()
     };
 
     Axis axes[3] = {
-        {{1, 0, 0}, IM_COL32(250, 60, 60, 255), 0, 0, 0},
-        {{0, 1, 0}, IM_COL32(60, 210, 60, 255), 0, 0, 0},
-        {{0, 0, 1}, IM_COL32(80, 130, 250, 255), 0, 0, 0},
+        {CoordinateConvention::WorldRight, IM_COL32(250, 60, 60, 255), 0, 0, 0},
+        {CoordinateConvention::WorldUp, IM_COL32(60, 210, 60, 255), 0, 0, 0},
+        {CoordinateConvention::CameraForward, IM_COL32(80, 130, 250, 255), 0, 0, 0},
     };
 
     // Project each axis through view rotation
