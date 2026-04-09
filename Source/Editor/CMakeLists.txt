@@ -143,6 +143,7 @@ source_group("Project\\Private" FILES ${EDITOR_PROJECT_SOURCES})
 
 set(PANEL_HEADERS
     Panel/Panel.h
+    Panel/EditorPanelFrame.h
     Panel/DockspacePanel.h
     Panel/ScenePanel.h
     Panel/GamePanel.h
@@ -162,6 +163,7 @@ list(APPEND TOTAL_FILES ${PANEL_HEADERS})
 
 set(PANEL_SOURCES
     Panel/Private/Panel.cpp
+    Panel/Private/EditorPanelFrame.cpp
     Panel/Private/DockspacePanel.cpp
     Panel/Private/ScenePanel.cpp
     Panel/Private/GamePanel.cpp

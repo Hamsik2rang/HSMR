@@ -1,4 +1,5 @@
 #include "Editor/Panel/SimpleInspectorPanel.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "ThirdParty/ImGui/imgui.h"
 #include "ImGui/imgui_internal.h"
@@ -23,7 +24,7 @@ void SimpleInspectorPanel::Cleanup()
 
 void SimpleInspectorPanel::Draw()
 {
-    ImGui::Begin("Control Panel");
+    EditorPanelFrame::BeginStandardPanel("Control Panel");
 
     if (_mainCameraEntity.IsValid())
     {
@@ -234,7 +235,7 @@ void SimpleInspectorPanel::Draw()
         ImGui::TextDisabled("Entity is not selected");
     }
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 HS_NS_EDITOR_END

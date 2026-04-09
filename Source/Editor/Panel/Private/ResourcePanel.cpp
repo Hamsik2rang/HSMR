@@ -9,6 +9,7 @@
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 #include "Core/SystemContext.h"
 
 #include "Scene/Scene.h"
@@ -75,7 +76,9 @@ void ResourcePanel::Draw()
     // 주의: BeginChild(), PushStyleVar(), PushID()처럼 stack을 쓰는 API는 반드시 대응되는 End/Pop이 있어야 합니다.
     // 예외적으로 ImGui::Begin()이 false를 반환하는 경우에도 End()는 호출해야 하지만, 이 패널은 반환값을 쓰지 않고
     // 항상 내용을 그리는 단순한 패턴을 사용합니다.
-    ImGui::Begin("Assets", &vis.resources);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = &vis.resources;
+    EditorPanelFrame::BeginStandardPanel("Assets", panelOptions);
 
     // Path bar at top
     drawPathBar();
@@ -124,16 +127,12 @@ void ResourcePanel::Draw()
         // Button 자체는 "##Splitter"라는 ID-only label을 씁니다. "##" 뒤 문자열은 ImGui ID로만 쓰이고 화면에는 보이지 않습니다.
         // 드래그 중이면 MouseDelta.x를 누적해서 좌측 트리 폭을 조절합니다.
         ImGui::SameLine();
-        ImGui::Button("##Splitter", ImVec2(splitterWidth, -1));
-        if (ImGui::IsItemActive())
-        {
-            _folderTreeWidth += ImGui::GetIO().MouseDelta.x;
-            _folderTreeWidth = glm::clamp(_folderTreeWidth, minFolderTreeWidth, maxFolderTreeWidth);
-        }
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-        }
+        _folderTreeWidth = EditorWidgets::DrawVerticalSplitter(
+            "##Splitter",
+            _folderTreeWidth,
+            minFolderTreeWidth,
+            maxFolderTreeWidth,
+            splitterWidth);
 
         ImGui::SameLine();
     }
@@ -153,7 +152,7 @@ void ResourcePanel::Draw()
     // Context menu
     drawContextMenu();
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void ResourcePanel::drawPathBar()
@@ -239,19 +238,7 @@ void ResourcePanel::drawPathBar()
     }
 
     // Search box
-    const float searchWidth = 200.0f;
-    const float searchAvailWidth = ImGui::GetContentRegionAvail().x;
-    if (searchAvailWidth > searchWidth + ImGui::GetStyle().ItemSpacing.x)
-    {
-        ImGui::SameLine();
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + searchAvailWidth - searchWidth);
-        ImGui::SetNextItemWidth(searchWidth);
-    }
-    else
-    {
-        ImGui::SetNextItemWidth(-1.0f);
-    }
-    ImGui::InputTextWithHint("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer));
+    EditorWidgets::SearchFieldRightAligned("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer));
 }
 
 void ResourcePanel::drawFolderTree()

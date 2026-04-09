@@ -3,6 +3,7 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Editor/GUI/ImGuiExtension.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -116,7 +117,7 @@ std::string GamePanel::getCameraLabel(Entity camera) const
 
 void GamePanel::drawMenuBar(Scene* scene)
 {
-    if (!ImGui::BeginMenuBar())
+    if (!EditorPanelFrame::BeginPanelMenuBar())
     {
         return;
     }
@@ -173,7 +174,7 @@ void GamePanel::drawMenuBar(Scene* scene)
         ImGui::EndCombo();
     }
 
-    ImGui::EndMenuBar();
+    EditorPanelFrame::EndPanelMenuBar();
 }
 
 void GamePanel::Draw()
@@ -184,17 +185,22 @@ void GamePanel::Draw()
         return;
     }
 
-    ImGui::Begin(
-        "Game",
-        &vis.game,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar |
-            ImGuiWindowFlags_MenuBar);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = &vis.game;
+    panelOptions.useMenuBar = true;
+    panelOptions.noTitleBar = true;
+    panelOptions.noScrollbar = true;
+    panelOptions.noScrollWithMouse = true;
+    EditorPanelFrame::BeginStandardPanel("Game", panelOptions);
 
     Scene* scene = EditorContext::Get().GetActiveScene();
     drawMenuBar(scene);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::BeginChild("GameViewport", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    EditorPanelContentOptions contentOptions{};
+    contentOptions.id = "GameViewport";
+    contentOptions.padding = ImVec2(0.0f, 0.0f);
+    contentOptions.extraFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    EditorPanelFrame::BeginPanelContent(contentOptions);
 
     ImVec2 availableSize = ImGui::GetContentRegionAvail();
     _resolution.width = static_cast<uint32>(availableSize.x > 1.0f ? availableSize.x : 1.0f);
@@ -221,9 +227,8 @@ void GamePanel::Draw()
         ImGui::TextDisabled("%s No active scene camera", EditorIcons::Camera);
     }
 
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::End();
+    EditorPanelFrame::EndPanelContent();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 HS_NS_EDITOR_END

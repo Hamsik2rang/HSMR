@@ -7,6 +7,7 @@
 
 #include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 #include "Editor/Panel/ScenePanel.h"
 
 #include "Core/HAL/Timer.h"
@@ -79,15 +80,6 @@ void SceneStatusPanel::Draw()
     // Plot the frame time to Tracy
     HS_PROFILE_PLOT("Frame Time (ms)", deltaMs);
 
-    // Draw overlay window
-    ImGuiWindowFlags windowFlags =
-        ImGuiWindowFlags_NoDocking |
-        ImGuiWindowFlags_AlwaysAutoResize |
-        ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoFocusOnAppearing |
-        ImGuiWindowFlags_NoNav |
-        ImGuiWindowFlags_NoTitleBar;
-
     const float padding = 10.0f;
 
     // ImGui window positions are screen-space coordinates. The scene viewport is also reported in screen space,
@@ -114,7 +106,7 @@ void SceneStatusPanel::Draw()
 
     ImGui::SetNextWindowBgAlpha(0.20f);
 
-    if (ImGui::Begin("Scene Status", nullptr, windowFlags))
+    if (EditorPanelFrame::BeginOverlayPanel("Scene Status"))
     {
         _prevWindowSize = ImGui::GetWindowSize();
         if (hasBounds)

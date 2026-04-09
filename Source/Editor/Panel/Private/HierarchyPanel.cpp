@@ -9,6 +9,7 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -44,13 +45,15 @@ void HierarchyPanel::Draw()
         return;
     }
 
-    ImGui::Begin("Hierarchy", &vis.hierarchy);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = &vis.hierarchy;
+    EditorPanelFrame::BeginStandardPanel("Hierarchy", panelOptions);
 
     Scene* scene = EditorContext::Get().GetActiveScene();
     if (!scene)
     {
         ImGui::TextDisabled("No active scene");
-        ImGui::End();
+        EditorPanelFrame::EndStandardPanel();
         return;
     }
 
@@ -158,7 +161,7 @@ void HierarchyPanel::Draw()
         EditorContext::Get().ClearSelection();
     }
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void HierarchyPanel::drawEntityNode(Entity entity, int depth)

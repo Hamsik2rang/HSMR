@@ -9,6 +9,7 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Components/Components.h"
@@ -22,44 +23,6 @@
 #include <cstring>
 
 HS_NS_EDITOR_BEGIN
-
-namespace
-{
-bool drawRemovableComponentHeader(const char* label, const char* removeId, bool& outRemove)
-{
-    const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;
-    const bool open = ImGui::CollapsingHeader(label, flags);
-
-    const ImVec2 headerMin = ImGui::GetItemRectMin();
-    const ImVec2 headerMax = ImGui::GetItemRectMax();
-    const ImVec2 restoreCursor = ImGui::GetCursorScreenPos();
-
-    const float headerHeight = headerMax.y - headerMin.y;
-    const float buttonEdge = ImMax(14.0f, headerHeight - 6.0f);
-    const ImVec2 buttonSize(buttonEdge, buttonEdge);
-    const float buttonPaddingX = ImGui::GetStyle().FramePadding.x;
-    const float buttonPosX = headerMax.x - buttonSize.x - buttonPaddingX;
-    const float buttonPosY = headerMin.y + (headerHeight - buttonSize.y) * 0.5f;
-
-    ImGui::SetCursorScreenPos(ImVec2(buttonPosX, buttonPosY));
-    ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(0, 0, 0, 0));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(255, 255, 255, 32));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(255, 255, 255, 64));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-
-    std::string labelWithId = std::string(EditorIcons::Close) + "##" + removeId;
-    if (ImGui::Button(labelWithId.c_str(), buttonSize))
-    {
-        outRemove = true;
-    }
-
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor(3);
-
-    ImGui::SetCursorScreenPos(restoreCursor);
-    return open;
-}
-}
 
 InspectorPanel::InspectorPanel(Window* window)
     : Panel(window)
@@ -87,7 +50,9 @@ void InspectorPanel::Draw()
         return;
     }
 
-    ImGui::Begin("Inspector", &vis.inspector);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = &vis.inspector;
+    EditorPanelFrame::BeginStandardPanel("Inspector", panelOptions);
 
     Entity selectedEntity = EditorContext::Get().GetSelectedEntity();
 
@@ -95,7 +60,7 @@ void InspectorPanel::Draw()
     {
         EditorContext::Get().ClearSelection();
         ImGui::TextDisabled("No entity selected");
-        ImGui::End();
+        EditorPanelFrame::EndStandardPanel();
         return;
     }
 
@@ -111,7 +76,7 @@ void InspectorPanel::Draw()
     // Add component button
     drawAddComponentButton(selectedEntity);
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void InspectorPanel::drawTagComponent(Entity entity)
@@ -211,7 +176,7 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-    bool open = drawRemovableComponentHeader("Mesh Renderer", "RemoveMeshRenderer", removeComponent);
+    bool open = EditorWidgets::BeginRemovableSectionHeader("Mesh Renderer", "RemoveMeshRenderer", removeComponent);
 
     if (open && !removeComponent)
     {
@@ -358,7 +323,7 @@ void InspectorPanel::drawCameraComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-    bool open = drawRemovableComponentHeader("Camera", "RemoveCamera", removeComponent);
+    bool open = EditorWidgets::BeginRemovableSectionHeader("Camera", "RemoveCamera", removeComponent);
 
     if (open && !removeComponent)
     {
@@ -411,7 +376,7 @@ void InspectorPanel::drawLightComponent(Entity entity)
         return;
 
     bool removeComponent = false;
-    bool open = drawRemovableComponentHeader("Light", "RemoveLight", removeComponent);
+    bool open = EditorWidgets::BeginRemovableSectionHeader("Light", "RemoveLight", removeComponent);
 
     if (open && !removeComponent)
     {

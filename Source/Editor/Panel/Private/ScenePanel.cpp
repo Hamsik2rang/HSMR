@@ -6,6 +6,7 @@
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
@@ -202,38 +203,23 @@ void ScenePanel::Draw()
         return;
     }
 
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
-                                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.useMenuBar = true;
+    panelOptions.noTitleBar = true;
+    panelOptions.noScrollbar = true;
+    panelOptions.noScrollWithMouse = true;
+    EditorPanelFrame::BeginStandardPanel("Scene", panelOptions);
 
-    if (ImGui::BeginMenuBar())
+    if (EditorPanelFrame::BeginPanelMenuBar())
     {
         DebugDrawSettings& settings = EditorContext::Get().GetDebugDrawSettings();
-        const float menuBarHeight = ImGui::GetFrameHeight();
-        const float buttonEdge = (menuBarHeight - 8.0f) > 13.0f ? (menuBarHeight - 8.0f) : 13.0f;
-        ImVec2 buttonSize(buttonEdge, buttonEdge);
-        float buttonWidth = buttonSize.x;
-        float cursorX = ImGui::GetWindowContentRegionMax().x - buttonWidth;
-        if (cursorX > ImGui::GetCursorPosX())
-        {
-            ImGui::SetCursorPosX(cursorX);
-        }
-
-        float buttonPosY = ImGui::GetCursorPosY() + (menuBarHeight - buttonSize.y) * 0.5f + 2.0f;
-        ImGui::SetCursorPosY(buttonPosY);
-
-        ImGui::PushStyleColor(
-            ImGuiCol_Button,
-            settings.showDebugPass ? IM_COL32(110, 95, 35, 190) : IM_COL32(30, 30, 30, 160));
-        ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered,
-            settings.showDebugPass ? IM_COL32(135, 115, 45, 220) : IM_COL32(70, 70, 70, 200));
-        ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive,
-            settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220));
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(235, 235, 235, 255));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-
-        if (ImGui::Button(EditorIcons::Visibility, buttonSize))
+        EditorWidgets::RightAlignNextItem(EditorWidgets::MeasureIconButtonMenuBar().x);
+        if (EditorWidgets::IconButtonMenuBar(
+                EditorIcons::Visibility,
+                "SceneDebugPass",
+                settings.showDebugPass ? IM_COL32(110, 95, 35, 190) : IM_COL32(30, 30, 30, 160),
+                settings.showDebugPass ? IM_COL32(135, 115, 45, 220) : IM_COL32(70, 70, 70, 200),
+                settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220)))
         {
             settings.showDebugPass = !settings.showDebugPass;
         }
@@ -243,21 +229,18 @@ void ScenePanel::Draw()
             ImGui::SetTooltip(settings.showDebugPass ? "Debug Draw: On" : "Debug Draw: Off");
         }
 
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(4);
-        ImGui::EndMenuBar();
+        EditorPanelFrame::EndPanelMenuBar();
     }
 
     // Store viewport state
     _viewportFocused = ImGui::IsWindowFocused();
     _viewportHovered = ImGui::IsWindowHovered();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::BeginChild(
-        "SceneViewport",
-        ImVec2(0, 0),
-        false,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    EditorPanelContentOptions contentOptions{};
+    contentOptions.id = "SceneViewport";
+    contentOptions.padding = ImVec2(0.0f, 0.0f);
+    contentOptions.extraFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    EditorPanelFrame::BeginPanelContent(contentOptions);
 
     ImGui::SetScrollY(0.0f);
     uint32 width  = _currentRenderTarget->GetWidth();
@@ -337,9 +320,8 @@ void ScenePanel::Draw()
     // Draw view orientation gizmo
     drawViewGizmo();
 
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::End();
+    EditorPanelFrame::EndPanelContent();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void ScenePanel::drawTransformGizmo()

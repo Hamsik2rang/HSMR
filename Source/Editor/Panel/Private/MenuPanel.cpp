@@ -5,6 +5,7 @@
 #include "Editor/Core/EditorWindow.h"
 
 #include "Editor/GUI/GUIContext.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Editor/Core/EditorApplication.h"
 
@@ -30,12 +31,12 @@ void MenuPanel::Draw()
 {
     static bool showDemo = false;
 
-    if (ImGui::BeginMenuBar())
+    if (EditorPanelFrame::BeginPanelMenuBar())
     {
         drawFileMenu();
         drawEditMenu();
         drawWindowMenu();
-        ImGui::EndMenuBar();
+        EditorPanelFrame::EndPanelMenuBar();
     }
 
     if (showDemo)

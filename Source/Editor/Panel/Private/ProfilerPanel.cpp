@@ -7,6 +7,8 @@
 
 #include "Editor/Panel/ProfilerPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Panel/EditorPanelFrame.h"
+#include "Editor/GUI/EditorIcons.h"
 
 #include "Core/Profiler/ProfileDataCollector.h"
 #include "Core/Profiler/Profiler.h"
@@ -41,7 +43,9 @@ void ProfilerPanel::Draw()
         return;
     }
 
-    ImGui::Begin("Profiler", &vis.profiler);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = &vis.profiler;
+    EditorPanelFrame::BeginStandardPanel("Profiler", panelOptions);
 
     if (ImGui::BeginTabBar("ProfilerTabs"))
     {
@@ -75,7 +79,7 @@ void ProfilerPanel::Draw()
     ImGui::TextDisabled("Tracy: Disabled");
 #endif
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void ProfilerPanel::_drawCPUTab()
@@ -149,9 +153,9 @@ void ProfilerPanel::_drawCPUTab()
         bool nodeOpen = ImGui::TreeNodeEx(zone.name, flags);
 
         // Duration and percentage on the same line
-        ImGui::SameLine(ImGui::GetWindowWidth() - 200);
+        EditorWidgets::RightAlignNextItem(160.0f);
         ImGui::Text("%.2f ms", zone.durationMs);
-        ImGui::SameLine(ImGui::GetWindowWidth() - 120);
+        ImGui::SameLine();
 
         // Draw mini bar
         _drawZoneBar(fraction, zone.color, 60.0f, ImGui::GetTextLineHeight());
