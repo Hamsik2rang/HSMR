@@ -121,7 +121,7 @@ void GUIContext::Initialize()
     // 글로벌 레이아웃 로드
     ImGui::LoadIniSettingsFromDisk(_layoutPath.c_str());
     // Setup style
-    SetColorTheme(false);
+    SetColorTheme(true);
 
     ImGuiStyle& style = ImGui::GetStyle();
 
