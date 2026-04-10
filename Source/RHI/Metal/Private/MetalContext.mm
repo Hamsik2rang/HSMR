@@ -167,7 +167,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         pipelineDesc.depthAttachmentPixelFormat  = depthStencilFormat;
         // TODO: 스텐실 처리 추가
     }
-
+    
     NSError* error               = nil;
     pipelineMetal->pipelineState = [s_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
 
@@ -360,8 +360,18 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
 {
     MetalBuffer* mtlBuffer = new struct MetalBuffer(name, info);
 
-    id<MTLBuffer> handle = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
+    HS_ASSERT(dataSize > 0, "Buffer size must be greater than 0");
 
+    id<MTLBuffer> handle = nil;
+    if (data != nullptr)
+    {
+        handle = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
+    }
+    else
+    {
+        handle = [s_device newBufferWithLength:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
+    }
+ 
     if (nil == handle)
     {
         HS_LOG(crash, "Fail to create buffer");
@@ -383,7 +393,11 @@ void MetalContext::DestroyBuffer(RHIBuffer* buffer)
 
 void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
-    HS_ASSERT(dataSize == buffer->byteSize, "Buffer Size isn't same");
+    HS_ASSERT(buffer, "Buffer is nullptr");
+    HS_ASSERT(srcData, "Source data is nullptr");
+    HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+    HS_ASSERT(dstOffset + dataSize <= buffer->byteSize, "Buffer update range is out of bounds");
+
     MetalBuffer* mtlBuffer = static_cast<struct MetalBuffer*>(buffer);
     id<MTLBuffer> handle   = mtlBuffer->handle;
     switch (buffer->info.memoryOption)
@@ -399,7 +413,7 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
         [blitEncoder copyFromBuffer:stagingBuffer
                        sourceOffset:0
                            toBuffer:handle
-                  destinationOffset:0
+                  destinationOffset:dstOffset
                                size:dataSize];
         
         [blitEncoder endEncoding];
@@ -414,12 +428,12 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
     case EBufferMemoryOption::Dynamic:
     case EBufferMemoryOption::Mapped:
     {
-        void* rawPtr = [handle contents];
+        void* rawPtr = static_cast<uint8_t*>([handle contents]) + dstOffset;
         memcpy(rawPtr, srcData, dataSize);
 
         if (buffer->info.memoryOption == EBufferMemoryOption::Mapped)
         {
-            [handle didModifyRange:NSMakeRange(0, dataSize)];
+            [handle didModifyRange:NSMakeRange(dstOffset, dataSize)];
         }
 
         break;

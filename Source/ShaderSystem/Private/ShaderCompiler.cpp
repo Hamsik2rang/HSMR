@@ -47,6 +47,68 @@ static const char* getStageFileName(EShaderStage stage)
     }
 }
 
+static ShaderBufferMember::BaseType getShaderMemberBaseType(slang::TypeReflection::ScalarType scalarType)
+{
+    switch (scalarType)
+    {
+    case slang::TypeReflection::ScalarType::Float16:
+    case slang::TypeReflection::ScalarType::Float32:
+    case slang::TypeReflection::ScalarType::Float64:
+        return ShaderBufferMember::BaseType::Float;
+    case slang::TypeReflection::ScalarType::Int8:
+    case slang::TypeReflection::ScalarType::Int16:
+    case slang::TypeReflection::ScalarType::Int32:
+    case slang::TypeReflection::ScalarType::Int64:
+        return ShaderBufferMember::BaseType::Int;
+    case slang::TypeReflection::ScalarType::UInt8:
+    case slang::TypeReflection::ScalarType::UInt16:
+    case slang::TypeReflection::ScalarType::UInt32:
+    case slang::TypeReflection::ScalarType::UInt64:
+        return ShaderBufferMember::BaseType::UInt;
+    case slang::TypeReflection::ScalarType::Bool:
+        return ShaderBufferMember::BaseType::Bool;
+    default:
+        return ShaderBufferMember::BaseType::Unknown;
+    }
+}
+
+static void populateShaderMemberTypeMetadata(ShaderBufferMember& member, slang::TypeLayoutReflection* typeLayout)
+{
+    if (!typeLayout)
+    {
+        return;
+    }
+
+    slang::TypeReflection* type = typeLayout->getType();
+    if (!type)
+    {
+        return;
+    }
+
+    member.rowCount = type->getRowCount();
+    member.columnCount = type->getColumnCount();
+    member.baseType = getShaderMemberBaseType(type->getScalarType());
+
+    if (type->getKind() == slang::TypeReflection::Kind::Struct)
+    {
+        member.category = ShaderBufferMember::Category::Struct;
+        return;
+    }
+
+    if (member.columnCount > 1)
+    {
+        member.category = ShaderBufferMember::Category::Matrix;
+    }
+    else if (member.rowCount > 1)
+    {
+        member.category = ShaderBufferMember::Category::Vector;
+    }
+    else
+    {
+        member.category = ShaderBufferMember::Category::Scalar;
+    }
+}
+
 #if defined(HSMR_SHADER_TRANSPILE_DEBUG) && defined(HSMR_SHADER_TRANSPILE_DEBUG_ROOT)
 static bool dumpTranspiledShaderBlob(const ShaderCompileRequest& request,
                                      EShaderStage stage,
@@ -640,6 +702,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                     member.offset   = static_cast<uint32>(field->getOffset(slang::ParameterCategory::Uniform));
                     member.size     = static_cast<uint32>(field->getTypeLayout()->getSize(slang::ParameterCategory::Uniform));
                     member.nameHash = StringHash(member.name);
+                    populateShaderMemberTypeMetadata(member, field->getTypeLayout());
                     bufInfo.members.push_back(std::move(member));
                 }
             }
@@ -797,6 +860,7 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                         member.offset   = static_cast<uint32>(field->getOffset(slang::ParameterCategory::Uniform));
                         member.size     = static_cast<uint32>(field->getTypeLayout()->getSize(slang::ParameterCategory::Uniform));
                         member.nameHash = StringHash(member.name);
+                        populateShaderMemberTypeMetadata(member, field->getTypeLayout());
                         bufInfo.members.push_back(std::move(member));
                     }
                 }

@@ -28,6 +28,19 @@
 
 HS_NS_EDITOR_BEGIN
 
+namespace
+{
+ImVec4 lerpColor(const ImVec4& lhs, const ImVec4& rhs, float t)
+{
+    return ImVec4(
+        lhs.x + (rhs.x - lhs.x) * t,
+        lhs.y + (rhs.y - lhs.y) * t,
+        lhs.z + (rhs.z - lhs.z) * t,
+        lhs.w + (rhs.w - lhs.w) * t
+    );
+}
+}
+
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
     : Window(ownerApp, "HSMR", 1024, 600,
 #if defined(__APPLE__)
@@ -151,7 +164,7 @@ void ProjectLauncherWindow::drawLauncherUI()
         ImGui::PushFont(nullptr); // Use default font for now
         ImGui::SetCursorPosY(20);
         ImGui::SetCursorPosX(20);
-        ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), titleText.c_str());
+        ImGui::TextColored(ImVec4(0.12f, 0.36f, 0.72f, 1.0f), titleText.c_str());
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(50);
@@ -214,6 +227,12 @@ void ProjectLauncherWindow::drawLauncherUI()
 void ProjectLauncherWindow::drawProjectList()
 {
     auto& recentProjects = RecentProjects::Get().GetProjects();
+    const ImVec4 buttonColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
+    const ImVec4 buttonHoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+    const ImVec4 textColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+    const ImVec4 textDisabledColor = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+    const ImVec4 warningColor = lerpColor(buttonColor, ImVec4(0.85f, 0.25f, 0.25f, 1.0f), 0.35f);
+    const ImVec4 warningHoveredColor = lerpColor(buttonHoveredColor, ImVec4(0.9f, 0.3f, 0.3f, 1.0f), 0.4f);
 
     if (recentProjects.empty())
     {
@@ -241,16 +260,16 @@ void ProjectLauncherWindow::drawProjectList()
         bool isHovered   = mousePos.x >= cardStart.x && mousePos.x <= cardStart.x + cardSize.x &&
                            mousePos.y >= cardStart.y && mousePos.y <= cardStart.y + cardSize.y;
 
-        ImU32 bgColor = isHovered ? IM_COL32(60, 60, 70, 255) : IM_COL32(45, 45, 55, 255);
+        ImVec4 bgColor = isHovered ? buttonHoveredColor : buttonColor;
         if (!project.exists)
         {
-            bgColor = IM_COL32(70, 40, 40, 255);
+            bgColor = isHovered ? warningHoveredColor : warningColor;
         }
 
         ImGui::GetWindowDrawList()->AddRectFilled(
             cardStart,
             ImVec2(cardStart.x + cardSize.x, cardStart.y + cardSize.y),
-            bgColor,
+            ImGui::ColorConvertFloat4ToU32(bgColor),
             5.0f
         );
 
@@ -283,7 +302,7 @@ void ProjectLauncherWindow::drawProjectList()
         ImGui::SetCursorScreenPos(ImVec2(cardStart.x + 15, cardStart.y + 12));
 
         // Project name
-        ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%s", project.name.c_str());
+        ImGui::TextColored(textColor, "%s", project.name.c_str());
 
         // Project path
         ImGui::SetCursorScreenPos(ImVec2(cardStart.x + 15, cardStart.y + 32));
@@ -293,7 +312,7 @@ void ProjectLauncherWindow::drawProjectList()
         }
         else
         {
-            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "(Project not found)");
+            ImGui::TextColored(lerpColor(textDisabledColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), 0.65f), "(Project not found)");
         }
 
         // Last opened time

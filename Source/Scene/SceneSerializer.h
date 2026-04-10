@@ -8,12 +8,15 @@
 #pragma once
 
 #include "Precompile.h"
+#include <functional>
 #include <string>
 
 HS_NS_BEGIN
 
 class Scene;
 class Entity;
+class Mesh;
+class Material;
 
 /**
  * @brief Scene serializer for saving/loading scenes to JSON format
@@ -21,6 +24,22 @@ class Entity;
 class HS_SCENE_API SceneSerializer
 {
 public:
+    using MeshPathResolver = std::function<std::string(const Mesh*)>;
+    using MaterialPathResolver = std::function<std::string(Material*, const std::string&, uint32)>;
+    using MeshResolver = std::function<Mesh*(const std::string&)>;
+    using MaterialResolver = std::function<Material*(const std::string&)>;
+
+    static void SetAssetResolvers(
+        MeshPathResolver meshPathResolver,
+        MaterialPathResolver materialPathResolver,
+        MeshResolver meshResolver,
+        MaterialResolver materialResolver);
+
+    static MeshPathResolver s_meshPathResolver;
+    static MaterialPathResolver s_materialPathResolver;
+    static MeshResolver s_meshResolver;
+    static MaterialResolver s_materialResolver;
+
     /**
      * @brief Construct serializer for a scene
      * @param scene Scene to serialize/deserialize

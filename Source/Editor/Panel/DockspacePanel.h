@@ -17,7 +17,7 @@ class HS_EDITOR_API DockspacePanel : public Panel
 {
 public:
     DockspacePanel(Window* window)
-        : Panel(window)
+        : Panel(window, "Dockspace")
     {}
     ~DockspacePanel() override;
 

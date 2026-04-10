@@ -18,7 +18,7 @@
 HS_NS_EDITOR_BEGIN
 
 ProfilerPanel::ProfilerPanel(Window* window)
-    : Panel(window)
+    : Panel(window, "Profiler")
 {
 }
 
@@ -37,14 +37,13 @@ void ProfilerPanel::Cleanup()
 
 void ProfilerPanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.profiler)
+    if (!IsVisible())
     {
         return;
     }
 
     EditorPanelWindowOptions panelOptions{};
-    panelOptions.pOpen = &vis.profiler;
+    panelOptions.pOpen = GetVisibilityBinding();
     EditorPanelFrame::BeginStandardPanel("Profiler", panelOptions);
 
     if (ImGui::BeginTabBar("ProfilerTabs"))

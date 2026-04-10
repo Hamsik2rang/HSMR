@@ -19,13 +19,19 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API MenuPanel : public Panel
 {
 public:
-    MenuPanel(Window* window) : Panel(window) {}
+    MenuPanel(Window* window) : Panel(window, "Menu") {}
     ~MenuPanel() override = default;
 
     bool Setup() override;
     void Cleanup() override;
 
     void Draw() override;
+    void SetCurrentScenePath(const std::string& scenePath) { _currentScenePath = scenePath; }
+    void ExecuteNewScene() { newScene(); }
+    void ExecuteOpenScene() { openScene(); }
+    void ExecuteSaveScene() { saveScene(); }
+    void ExecuteSaveSceneAs() { saveSceneAs(); }
+    void ExecuteSaveLayout();
 
 private:
     void drawFileMenu();

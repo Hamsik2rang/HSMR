@@ -4,6 +4,7 @@ set(TOTAL_FILES)
 
 set(RENDERER_HEADERS
     CameraUtils.h
+    CoordinateConventionValidation.h
     RenderDefinition.h
     RendererDefinition.h
     RenderTarget.h
@@ -20,6 +21,7 @@ source_group("Public" FILES ${RENDERER_HEADERS})
 list(APPEND TOTAL_FILES ${RENDERER_HEADERS})
 
 set(RENDERER_SOURCES
+    Private/CoordinateConventionValidation.cpp
     Private/Renderer.cpp
     Private/ForwardRenderer.cpp
     Private/ForwardOverlayRenderer.cpp

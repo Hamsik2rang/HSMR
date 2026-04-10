@@ -33,8 +33,12 @@ public:
     GUIContext* GetGUIContext();
 
 private:
+    void registerPanel(Panel* panel, bool* visibilityBinding = nullptr, Panel* parent = nullptr);
+    void cleanupPanels();
     void setupPanels();
     void setupDefaultScene();
+    bool loadInitialScene();
+    void persistDefaultSceneAsset();
 
     bool onInitialize() override;
     void onNextFrame() override;
@@ -63,9 +67,11 @@ private:
     Scoped<Panel> _inspectorPanel;
     Scoped<Panel> _resourcePanel;
     Scoped<Panel> _profilerPanel;
+    std::vector<Panel*> _registeredPanels;
 
     Scoped<Scene> _scene;
     std::vector<RenderTarget> _gameRenderTargets;
+    std::string _currentScenePath;
 };
 
 HS_NS_EDITOR_END

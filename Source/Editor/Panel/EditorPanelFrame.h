@@ -28,16 +28,83 @@ struct HS_EDITOR_API EditorPanelContentOptions
 class HS_EDITOR_API EditorPanelFrame
 {
 public:
-    static bool BeginStandardPanel(const char* title, const EditorPanelWindowOptions& options = {});
-    static void EndStandardPanel();
+    static bool BeginStandardPanel(const char* title, const EditorPanelWindowOptions& options = {})
+    {
+        ImGuiWindowFlags flags = options.extraFlags;
+        if (options.useMenuBar)
+        {
+            flags |= ImGuiWindowFlags_MenuBar;
+        }
+        if (options.noTitleBar)
+        {
+            flags |= ImGuiWindowFlags_NoTitleBar;
+        }
+        if (options.noScrollbar)
+        {
+            flags |= ImGuiWindowFlags_NoScrollbar;
+        }
+        if (options.noScrollWithMouse)
+        {
+            flags |= ImGuiWindowFlags_NoScrollWithMouse;
+        }
 
-    static bool BeginOverlayPanel(const char* title, ImGuiWindowFlags extraFlags = 0);
+        return ImGui::Begin(title, options.pOpen, flags);
+    }
 
-    static bool BeginPanelMenuBar();
-    static void EndPanelMenuBar();
+    static void EndStandardPanel()
+    {
+        ImGui::End();
+    }
 
-    static void BeginPanelContent(const EditorPanelContentOptions& options = {});
-    static void EndPanelContent();
+    static bool BeginOverlayPanel(const char* title, ImGuiWindowFlags extraFlags = 0)
+    {
+        ImGuiWindowFlags flags =
+            ImGuiWindowFlags_NoDocking |
+            ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoFocusOnAppearing |
+            ImGuiWindowFlags_NoNav |
+            ImGuiWindowFlags_NoTitleBar |
+            extraFlags;
+
+        return ImGui::Begin(title, nullptr, flags);
+    }
+
+    static bool BeginPanelMenuBar()
+    {
+        return ImGui::BeginMenuBar();
+    }
+
+    static void EndPanelMenuBar()
+    {
+        ImGui::EndMenuBar();
+    }
+
+    static void BeginPanelContent(const EditorPanelContentOptions& options = {})
+    {
+        bool pushedPadding = false;
+        if (options.padding.x >= 0.0f || options.padding.y >= 0.0f)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, options.padding);
+            pushedPadding = true;
+        }
+        s_panelContentPaddingPushCount += pushedPadding ? 1 : 0;
+
+        ImGui::BeginChild(options.id, ImVec2(0, 0), options.border, options.extraFlags);
+    }
+
+    static void EndPanelContent()
+    {
+        ImGui::EndChild();
+        if (s_panelContentPaddingPushCount > 0)
+        {
+            ImGui::PopStyleVar();
+            --s_panelContentPaddingPushCount;
+        }
+    }
+
+private:
+    static inline thread_local int s_panelContentPaddingPushCount = 0;
 };
 
 HS_NS_EDITOR_END

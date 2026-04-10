@@ -62,7 +62,7 @@ std::vector<Entity> collectSceneCameras(Scene* scene)
 }
 
 GamePanel::GamePanel(Window* window)
-    : Panel(window)
+    : Panel(window, "Game")
     , _resolution(800, 600)
 {
 }
@@ -179,14 +179,13 @@ void GamePanel::drawMenuBar(Scene* scene)
 
 void GamePanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.game)
+    if (!IsVisible())
     {
         return;
     }
 
     EditorPanelWindowOptions panelOptions{};
-    panelOptions.pOpen = &vis.game;
+    panelOptions.pOpen = GetVisibilityBinding();
     panelOptions.useMenuBar = true;
     panelOptions.noTitleBar = true;
     panelOptions.noScrollbar = true;

@@ -43,8 +43,19 @@ public:
     HS_FORCEINLINE uint8  GetChannel() const { return _channel; }
     HS_FORCEINLINE ImageType GetType() const { return _type; }
     HS_FORCEINLINE void SetType(ImageType type) { _type = type; }
+    void SetDisplayName(const std::string& name)
+    {
+        _nameStorage = name;
+        this->name = _nameStorage.c_str();
+    }
+    const std::string& GetDisplayName() const { return _nameStorage; }
+    void SetSourceAssetPath(const std::string& path) { _sourceAssetPath = path; }
+    const std::string& GetSourceAssetPath() const { return _sourceAssetPath; }
+    bool HasSourceAssetPath() const { return !_sourceAssetPath.empty(); }
 
 private:
+    std::string _nameStorage;
+    std::string _sourceAssetPath;
     std::vector<uint8> _rawData;
 
     ImageType _type;

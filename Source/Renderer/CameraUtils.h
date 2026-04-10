@@ -9,6 +9,7 @@
 #define __HS_CAMERA_UTILS_H__
 
 #include "Precompile.h"
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/Math/Common.h"
 #include "Renderer/RenderDefinition.h"
 #include "Scene/Components/TransformComponent.h"
@@ -18,16 +19,22 @@ HS_NS_BEGIN
 
 struct CameraUtils
 {
-    // Compute view matrix from TransformComponent (LH convention)
+    // Engine camera convention: left-handed space, +Y up, +Z forward.
+    static glm::vec3 ComputeCameraForwardWS(const TransformComponent& transform)
+    {
+        return glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::CameraForward);
+    }
+
+    // Compute view matrix from TransformComponent using the engine camera convention.
     static glm::mat4 ComputeViewMatrixLH(const TransformComponent& transform)
     {
         glm::vec3 position = glm::vec3(transform.worldMatrix[3]);
-        glm::vec3 front = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 0.0f, 1.0f));
-        glm::vec3 up = glm::normalize(glm::mat3(transform.worldMatrix) * glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 front = ComputeCameraForwardWS(transform);
+        glm::vec3 up = glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::WorldUp);
         return glm::lookAtLH(position, position + front, up);
     }
 
-    // Compute projection matrix from CameraComponent (LH convention, with Vulkan Y-flip)
+    // Compute projection matrix from CameraComponent (LH convention, with optional Vulkan Y-flip)
     static glm::mat4 ComputeProjectionMatrixLH(const CameraComponent& camera, bool vulkanYFlip)
     {
         glm::mat4 proj;

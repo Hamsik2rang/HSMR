@@ -66,6 +66,14 @@ Tools:          Editor (ImGui) ──→ Client
 | **Editor** | ImGui panels, gizmos, asset browser, profiler |
 | **Client** | Entry point and application bootstrapping |
 
+## Rendering Conventions
+
+- Left-handed coordinate system
+- `+Y` is world up
+- `Camera forward = +Z`
+- Vulkan keeps the same camera convention and only flips projection `Y`
+- See [Docs/CoordinateSystem.md](Docs/CoordinateSystem.md)
+
 ## Prerequisites
 
 - **CMake** 3.22.0 or newer

@@ -1,5 +1,6 @@
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Engine/Window.h"
 #include "Editor/Core/EditorWindow.h"
@@ -17,6 +18,22 @@
 #include "ImGui/imgui.h"
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+const char* getPrimaryShortcutLabel(const char* suffix)
+{
+#if defined(__APPLE__)
+    static std::string label;
+    label = std::string("Cmd+") + suffix;
+    return label.c_str();
+#else
+    static std::string label;
+    label = std::string("Ctrl+") + suffix;
+    return label.c_str();
+#endif
+}
+}
 
 bool MenuPanel::Setup()
 {
@@ -52,24 +69,24 @@ void MenuPanel::drawFileMenu()
 
     if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+        if (ImGui::MenuItem("New Scene", getPrimaryShortcutLabel("N")))
         {
             newScene();
         }
 
-        if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+        if (ImGui::MenuItem("Open Scene...", getPrimaryShortcutLabel("O")))
         {
             openScene();
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+        if (ImGui::MenuItem("Save Scene", getPrimaryShortcutLabel("S")))
         {
             saveScene();
         }
 
-        if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+        if (ImGui::MenuItem("Save Scene As...", getPrimaryShortcutLabel("Shift+S")))
         {
             saveSceneAs();
         }
@@ -121,14 +138,19 @@ void MenuPanel::drawEditMenu()
 
         if (ImGui::MenuItem("Save Layout"))
         {
-            auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
-            if (guiContext)
-            {
-                guiContext->SaveLayout("");
-            }
+            ExecuteSaveLayout();
         }
 
         ImGui::EndMenu();
+    }
+}
+
+void MenuPanel::ExecuteSaveLayout()
+{
+    auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
+    if (guiContext)
+    {
+        guiContext->SaveLayout("");
     }
 }
 
@@ -178,7 +200,15 @@ void MenuPanel::openScene()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::OpenFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::OpenFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;
@@ -223,7 +253,15 @@ void MenuPanel::saveSceneAs()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::SaveFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::SaveFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;
