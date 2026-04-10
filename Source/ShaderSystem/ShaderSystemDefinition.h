@@ -116,10 +116,32 @@ std::string GetShaderLanguageString(EShaderLanguage language);
 // UBO member layout
 struct HS_SHADER_SYSTEM_API ShaderBufferMember
 {
+    enum class BaseType : uint8
+    {
+        Unknown = 0,
+        Float,
+        Int,
+        UInt,
+        Bool,
+    };
+
+    enum class Category : uint8
+    {
+        Unknown = 0,
+        Scalar,
+        Vector,
+        Matrix,
+        Struct,
+    };
+
     std::string name;
     uint32 offset;      // Byte offset within buffer
     uint32 size;        // Byte size
     uint32 nameHash;    // FNV-1a hash for fast lookup
+    BaseType baseType = BaseType::Unknown;
+    Category category = Category::Unknown;
+    uint32 rowCount = 1;
+    uint32 columnCount = 1;
 };
 
 // Buffer binding info (UBO/SSBO)

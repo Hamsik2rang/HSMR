@@ -12,6 +12,10 @@
 
 #include "Editor/Panel/Panel.h"
 #include "Scene/Entity.h"
+#include "Scene/Components/MeshRendererComponent.h"
+#include "Resource/Material.h"
+
+#include <vector>
 
 HS_NS_EDITOR_BEGIN
 
@@ -37,6 +41,15 @@ private:
     void drawMeshRendererComponent(Entity entity);
     void drawCameraComponent(Entity entity);
     void drawLightComponent(Entity entity);
+    void drawMaterialSlotEditor(MeshRendererComponent& meshRenderer, uint32 slotIndex);
+    bool drawMaterialEditor(Material* material, const char* idSuffix);
+    bool drawMaterialTextureSlot(Material* material, EMaterialTextureType type, const char* label, const char* idSuffix);
+    bool drawMaterialParameterBlockEditor(Material* material, const char* idSuffix);
+    void drawMaterialAssetInspector(const std::string& assetPath);
+    Material* createRuntimeMaterial();
+    Material* createMaterialAsset(const std::string& suggestedName, uint32 slotIndex);
+    bool saveMaterialAs(Material* material, const std::string& suggestedName);
+    void persistMaterialIfAssetBacked(Material* material);
 
 
     // Add component popup
@@ -45,6 +58,8 @@ private:
     // Component header with remove button
     template<typename T>
     bool drawComponentHeader(const char* name, Entity entity, bool canRemove = true);
+
+    std::vector<Scoped<Material>> _runtimeMaterials;
 };
 
 HS_NS_EDITOR_END

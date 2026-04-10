@@ -38,6 +38,7 @@ private:
     void drawAssetList();
     void drawAssetItem(const AssetEntry* asset);
     void drawContextMenu();
+    bool createMaterialAssetInFolder(const std::string& folderPath);
 
     // Navigation
     void navigateToFolder(const std::string& path);

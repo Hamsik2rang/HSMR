@@ -14,6 +14,7 @@ set(RESOURCE_HEADERS
     Image.h
     Mesh.h
     Material.h
+    MaterialSerializer.h
     Shader.h
     Model.h
     ObjectManager.h
@@ -29,6 +30,7 @@ set(RESOURCE_SOURCES
     Private/Image.cpp
     Private/Mesh.cpp
     Private/Material.cpp
+    Private/MaterialSerializer.cpp
     Private/Shader.cpp
     Private/Model.cpp
     Private/ObjectManager.cpp

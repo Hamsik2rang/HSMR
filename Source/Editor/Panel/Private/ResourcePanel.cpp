@@ -10,13 +10,16 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Core/SystemContext.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
 
 #include "Resource/Model.h"
+#include "Resource/Material.h"
 #include "Resource/Mesh.h"
+#include "Resource/ObjectManager.h"
 
 #include "ImGui/imgui.h"
 
@@ -25,6 +28,21 @@
 #include <cstdlib>
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+std::string buildUniqueMaterialRelativePathInFolder(const std::string& folderPath)
+{
+    const std::string prefix = folderPath.empty() ? "" : folderPath + "/";
+    std::string relativePath = prefix + "New Material.mat";
+    int suffix = 1;
+    while (AssetDatabase::Get().FindAsset(relativePath))
+    {
+        relativePath = prefix + "New Material " + std::to_string(suffix++) + ".mat";
+    }
+    return relativePath;
+}
+}
 
 ResourcePanel::ResourcePanel(Window* window)
     : Panel(window)
@@ -46,6 +64,7 @@ bool ResourcePanel::Setup()
 
     // Start at root
     navigateToFolder("");
+    EditorContext::Get().SetCurrentAssetFolderPath(_currentPath);
 
     return true;
 }
@@ -62,6 +81,8 @@ void ResourcePanel::Draw()
     {
         return;
     }
+
+    _selectedAssetPath = EditorContext::Get().GetSelectedAssetPath();
 
     // ImGui는 immediate-mode GUI입니다. 매 프레임 "현재 상태를 보고 UI를 다시 선언"합니다.
     // 그래서 이 함수 안의 Begin/End, BeginChild/EndChild 호출 순서가 곧 이번 프레임의 패널 구조입니다.
@@ -149,9 +170,6 @@ void ResourcePanel::Draw()
     ImGui::BeginChild("AssetList", ImVec2(assetListWidth, 0), true);
     drawAssetList();
     ImGui::EndChild();
-
-    // Context menu
-    drawContextMenu();
 
     ImGui::End();
 }
@@ -381,6 +399,8 @@ void ResourcePanel::drawAssetList()
     }
 
     ImGui::PopStyleVar();
+
+    drawContextMenu();
 }
 
 void ResourcePanel::drawAssetItem(const AssetEntry* asset)
@@ -403,6 +423,7 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
     if (ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))
     {
         _selectedAssetPath = asset->relativePath;
+        EditorContext::Get().SetSelectedAssetPath(asset->relativePath);
     }
     const bool rowHovered = ImGui::IsItemHovered();
 
@@ -455,6 +476,7 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
         {
             case EAssetType::Model:   payloadType = "ASSET_MODEL"; break;
             case EAssetType::Texture: payloadType = "ASSET_TEXTURE"; break;
+            case EAssetType::Material: payloadType = "ASSET_MATERIAL"; break;
             default:                  payloadType = "ASSET_PATH"; break;
         }
 
@@ -482,11 +504,20 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
 
 void ResourcePanel::drawContextMenu()
 {
-    // Popup context menu는 빈 영역을 우클릭했을 때 뜹니다.
-    // ImGuiPopupFlags_NoOpenOverItems를 사용해서 asset row 위에서 우클릭할 때는 이 "빈 영역 메뉴"가 뜨지 않게 합니다.
-    // 나중에 asset별 context menu가 필요하면 drawAssetItem() 안에서 BeginPopupContextItem()을 추가하면 됩니다.
-    if (ImGui::BeginPopupContextWindow("AssetContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    // AssetList child 영역 어디서 우클릭하든 현재 폴더 기준 생성 메뉴를 표시합니다.
+    if (ImGui::BeginPopupContextWindow("AssetContextMenu", ImGuiPopupFlags_MouseButtonRight))
     {
+        if (ImGui::BeginMenu("Create"))
+        {
+            if (ImGui::MenuItem("Material"))
+            {
+                createMaterialAssetInFolder(_currentPath);
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::Separator();
+
         if (ImGui::MenuItem("Refresh"))
         {
             AssetDatabase::Get().Refresh();
@@ -533,6 +564,8 @@ void ResourcePanel::navigateToFolder(const std::string& path)
 
     _currentPath = path;
     _selectedAssetPath.clear();
+    EditorContext::Get().SetCurrentAssetFolderPath(_currentPath);
+    EditorContext::Get().ClearSelectedAssetPath();
 }
 
 void ResourcePanel::navigateBack()
@@ -544,6 +577,8 @@ void ResourcePanel::navigateBack()
         _historyIndex--;
         _currentPath = _pathHistory[_historyIndex];
         _selectedAssetPath.clear();
+        EditorContext::Get().SetCurrentAssetFolderPath(_currentPath);
+        EditorContext::Get().ClearSelectedAssetPath();
     }
 }
 
@@ -554,7 +589,28 @@ void ResourcePanel::navigateForward()
         _historyIndex++;
         _currentPath = _pathHistory[_historyIndex];
         _selectedAssetPath.clear();
+        EditorContext::Get().SetCurrentAssetFolderPath(_currentPath);
+        EditorContext::Get().ClearSelectedAssetPath();
     }
+}
+
+bool ResourcePanel::createMaterialAssetInFolder(const std::string& folderPath)
+{
+    const std::string relativePath = buildUniqueMaterialRelativePathInFolder(folderPath);
+
+    hs::Scoped<hs::Material> material = hs::MakeScoped<hs::Material>();
+    material->SetDisplayName(std::filesystem::path(relativePath).stem().string());
+    material->SetTexture(hs::EMaterialTextureType::Diffuse, const_cast<hs::Image*>(hs::ObjectManager::GetFallbackImage2DWhite()));
+
+    if (!AssetDatabase::Get().SaveMaterial(relativePath, material.get()))
+    {
+        return false;
+    }
+
+    AssetDatabase::Get().Refresh();
+    _selectedAssetPath = relativePath;
+    EditorContext::Get().SetSelectedAssetPath(relativePath);
+    return true;
 }
 
 HS_NS_EDITOR_END

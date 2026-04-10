@@ -4,6 +4,18 @@ import GlobalUniform;
 ConstantBuffer<PerViewUBO> perView;
 ConstantBuffer<PerDrawUBO> perDraw;
 ConstantBuffer<LightUBO> lightUBO;
+
+struct MaterialParams
+{
+    float4 diffuseColor;
+    float4 specularColor;
+    float4 emissionColor;
+    float4 ambientColor;
+    float shininess;
+    float opacity;
+};
+
+ConstantBuffer<MaterialParams> materialParams;
 Sampler2D albedoSampler : register(s0);
 
 struct VSInput
@@ -55,12 +67,15 @@ float4 FragmentMain(FSInput input) : SV_Target
 
     float3 lightColor  = float3(1.0, 0.98, 0.95);
 
-    float ambient  = 0.15;
+    float ambient  = saturate(materialParams.ambientColor.r);
     float diffuse  = max(dot(N, L), 0.0);
-    float specular = pow(max(dot(N, H), 0.0), 64.0);
+    float specular = pow(max(dot(N, H), 0.0), max(materialParams.shininess, 1.0));
 
-    float3 albedo = albedoSampler.Sample(input.uv).rgb;
-    float3 color = albedo * (ambient + diffuse) * lightColor + specular * lightColor * 0.5;
+    float4 albedoSample = albedoSampler.Sample(input.uv) * materialParams.diffuseColor;
+    float3 albedo = albedoSample.rgb;
+    float3 specularTint = materialParams.specularColor.rgb;
+    float3 emission = materialParams.emissionColor.rgb;
+    float3 color = albedo * (ambient + diffuse) * lightColor + specular * lightColor * specularTint + emission;
 
-    return float4(color, 1.0);
+    return float4(color, albedoSample.a * materialParams.opacity);
 }

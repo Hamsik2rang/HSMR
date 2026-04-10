@@ -12,12 +12,14 @@
 #include "RHI/ResourceHandle.h"
 
 #include "Resource/Material.h"
+#include "Resource/MaterialTextureBinding.h"
 #include "Resource/Mesh.h"
 #include "Resource/Shader.h"
 #include "Resource/Image.h"
 #include "Resource/ObjectManager.h"
 
 #include "Renderer/CameraUtils.h"
+#include "ShaderSystem/ShaderBindingUtils.h"
 
 // ECS Scene support
 #include "Scene/Scene.h"
@@ -565,6 +567,7 @@ size_t RenderResourceManager::buildDrawResourceKey(
 ) const
 {
     uint64 key = HashCombine64(primitiveId, reinterpret_cast<uint64>(material));
+    key = HashCombine64(key, material ? material->GetResourceRevision() : 0);
     key = HashCombine64(key, reinterpret_cast<uint64>(cameraResource ? cameraResource->perViewBuffer : nullptr));
     key = HashCombine64(key, reinterpret_cast<uint64>(perDrawBuffer));
     key = HashCombine64(key, reinterpret_cast<uint64>(lightResource ? lightResource->lightBuffer : nullptr));
@@ -602,6 +605,7 @@ DrawResource* RenderResourceManager::getOrCreateDrawResource(
     resource.resourceLayout = createResourceLayoutFromReflection(
         shader->GetReflection(),
         material,
+        materialResource,
         cameraResource,
         perDrawBuffer,
         lightResource
@@ -628,6 +632,7 @@ MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* 
     auto it = _materialResources.find(material);
     if (it != _materialResources.end() && it->second.isValid)
     {
+        syncMaterialBuffers(material, it->second);
         return &it->second;
     }
 
@@ -639,6 +644,61 @@ MaterialResource* RenderResourceManager::GetOrCreateMaterialResources(Material* 
     }
 
     return nullptr;
+}
+
+void RenderResourceManager::syncMaterialBuffers(Material* material, MaterialResource& resources)
+{
+    if (!material)
+    {
+        return;
+    }
+
+    Shader* shader = material->GetShader();
+    if (!shader || !shader->IsCompiledEx())
+    {
+        return;
+    }
+
+    if (!material->GetParameterBlock())
+    {
+        material->InitializeParameterBlock();
+    }
+
+    MaterialParameterBlock* parameterBlock = material->GetParameterBlock();
+    if (!parameterBlock || !parameterBlock->GetData())
+    {
+        return;
+    }
+
+    const ShaderReflectionDataEx& reflection = shader->GetReflection();
+    for (const auto& buf : reflection.bufferBindings)
+    {
+        if (IsReservedGlobalBufferName(buf.name))
+        {
+            continue;
+        }
+
+        RHIBuffer*& targetBuffer = resources.materialBuffersByName[buf.name];
+        if (!targetBuffer)
+        {
+            targetBuffer = _rhiContext->CreateBuffer(
+                buf.name.c_str(),
+                parameterBlock->GetData(),
+                parameterBlock->GetSize(),
+                EBufferUsage::Uniform,
+                EBufferMemoryOption::Dynamic);
+            if (targetBuffer)
+            {
+                resources.materialBuffers.push_back(targetBuffer);
+            }
+        }
+        else
+        {
+            _rhiContext->UpdateBuffer(targetBuffer, 0, parameterBlock->GetData(), parameterBlock->GetSize());
+        }
+    }
+
+    parameterBlock->ClearDirty();
 }
 
 RHIGraphicsPipeline* RenderResourceManager::GetOrCreatePipeline(Material* material, const PipelineRenderTargetLayout& renderTargetLayout)
@@ -939,7 +999,9 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
         return resources;
     }
 
-    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material, nullptr, nullptr, nullptr);
+    syncMaterialBuffers(material, resources);
+
+    resources.resourceLayout = createResourceLayoutFromReflection(reflection, material, &resources, nullptr, nullptr, nullptr);
 
     if (!resources.resourceLayout)
     {
@@ -952,62 +1014,10 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     return resources;
 }
 
-// Helper function to map shader texture name to material texture type
-static EMaterialTextureType mapTextureNameToType(const std::string& name)
-{
-    // Convert to lowercase for comparison
-    std::string lowerName = name;
-    for (auto& c : lowerName) c = static_cast<char>(tolower(c));
-
-    if (lowerName.find("albedo") != std::string::npos ||
-        lowerName.find("diffuse") != std::string::npos ||
-        lowerName.find("basecolor") != std::string::npos ||
-        lowerName.find("base_color") != std::string::npos)
-    {
-        return EMaterialTextureType::Diffuse;
-    }
-
-    if (lowerName.find("normal") != std::string::npos)
-    {
-        return EMaterialTextureType::Normal;
-    }
-
-    if (lowerName.find("metallic") != std::string::npos ||
-        lowerName.find("metalness") != std::string::npos)
-    {
-        return EMaterialTextureType::Metallic;
-    }
-
-    if (lowerName.find("roughness") != std::string::npos)
-    {
-        return EMaterialTextureType::Roughness;
-    }
-
-    if (lowerName.find("emission") != std::string::npos ||
-        lowerName.find("emissive") != std::string::npos)
-    {
-        return EMaterialTextureType::Emission;
-    }
-
-    if (lowerName.find("ao") != std::string::npos ||
-        lowerName.find("occlusion") != std::string::npos ||
-        lowerName.find("ambient") != std::string::npos)
-    {
-        return EMaterialTextureType::AmbientOcclusion;
-    }
-
-    if (lowerName.find("specular") != std::string::npos)
-    {
-        return EMaterialTextureType::Specular;
-    }
-
-    // Default to diffuse
-    return EMaterialTextureType::Diffuse;
-}
-
 RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
     const ShaderReflectionDataEx& reflection,
     Material* material,
+    MaterialResource* materialResource,
     CameraResource* cameraResource,
     RHIBuffer* perDrawBuffer,
     LightResource* lightResource
@@ -1091,8 +1101,19 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         }
         else
         {
-            // Per-material or other buffer - skip for now (will be handled later)
-            continue;
+            if (materialResource)
+            {
+                auto it = materialResource->materialBuffersByName.find(buf.name);
+                if (it != materialResource->materialBuffersByName.end())
+                {
+                    targetBuffer = it->second;
+                }
+            }
+
+            if (!targetBuffer)
+            {
+                continue;
+            }
         }
 
         appendBufferBinding(buf, targetBuffer);
@@ -1105,8 +1126,9 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
     // 1x1 white image so newly dropped mesh-only models can render until the user assigns a real texture in Inspector.
     for (const auto& tex : reflection.textureBindings)
     {
-        EMaterialTextureType texType = mapTextureNameToType(tex.name);
+        EMaterialTextureType texType = MapTextureBindingNameToMaterialTextureType(tex.name);
         Image* image = material ? material->GetTexture(texType) : nullptr;
+        const bool usingFallback = (image == nullptr);
         if (!image)
         {
             image = getFallbackWhiteImage();
@@ -1155,6 +1177,13 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         }
 
         HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
+        HS_LOG(
+            info,
+            "[RenderResourceManager] Texture binding '%s' mapped to material slot %d using %s image (ptr={})",
+            tex.name.c_str(),
+            static_cast<int>(texType),
+            usingFallback ? "fallback" : "material",
+            static_cast<const void*>(image));
     }
 
     if (bindings.empty())

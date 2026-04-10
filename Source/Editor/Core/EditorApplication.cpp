@@ -12,6 +12,7 @@
 #include "Editor/Project/ProjectContext.h"
 #include "Editor/Project/RecentProjects.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Scene/SceneSerializer.h"
 
 #include "Core/HAL/CommandLine.h"
 
@@ -20,6 +21,100 @@
 #endif
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+std::string sanitizeAssetName(const std::string& name)
+{
+    std::string result;
+    result.reserve(name.size());
+    for (char c : name)
+    {
+        if (std::isalnum(static_cast<unsigned char>(c)))
+        {
+            result.push_back(c);
+        }
+        else if (c == ' ' || c == '_' || c == '-')
+        {
+            result.push_back('_');
+        }
+    }
+
+    if (result.empty())
+    {
+        result = "Material";
+    }
+
+    return result;
+}
+
+std::string buildUniqueMaterialAssetPath(const std::string& entityName, uint32 slotIndex)
+{
+    std::string baseName = sanitizeAssetName(entityName) + "_" + std::to_string(slotIndex);
+    std::string relativePath = "Materials/" + baseName + ".mat";
+    int suffix = 1;
+    while (AssetDatabase::Get().FindAsset(relativePath))
+    {
+        relativePath = "Materials/" + baseName + "_" + std::to_string(suffix++) + ".mat";
+    }
+    return relativePath;
+}
+
+void registerSceneAssetResolvers()
+{
+    SceneSerializer::SetAssetResolvers(
+        [](const Mesh* mesh) -> std::string
+        {
+            return mesh ? mesh->GetSourceAssetPath() : std::string();
+        },
+        [](Material* material, const std::string& entityName, uint32 slotIndex) -> std::string
+        {
+            if (!material)
+            {
+                return "";
+            }
+
+            if (material->HasSourceAssetPath())
+            {
+                return material->GetSourceAssetPath();
+            }
+
+            if (!ProjectContext::Get().IsProjectOpen())
+            {
+                return "";
+            }
+
+            const std::string relativePath = buildUniqueMaterialAssetPath(entityName, slotIndex);
+            if (AssetDatabase::Get().SaveMaterial(relativePath, material))
+            {
+                return relativePath;
+            }
+
+            return "";
+        },
+        [](const std::string& path) -> Mesh*
+        {
+            if (path == "__builtin__/Plane")
+            {
+                return const_cast<Mesh*>(ObjectManager::GetFallbackMeshPlane());
+            }
+            if (path == "__builtin__/Cube")
+            {
+                return const_cast<Mesh*>(ObjectManager::GetFallbackMeshCube());
+            }
+            if (path == "__builtin__/Sphere")
+            {
+                return const_cast<Mesh*>(ObjectManager::GetFallbackMeshSphere());
+            }
+
+            return AssetDatabase::Get().LoadMesh(path);
+        },
+        [](const std::string& path) -> Material*
+        {
+            return AssetDatabase::Get().LoadMaterial(path);
+        });
+}
+}
 
 EditorApplication::EditorApplication(const char* appName) noexcept
     : Application(appName)
@@ -101,6 +196,7 @@ void EditorApplication::Run()
         // Initialize AssetDatabase with project asset path
         AssetDatabase::Get().SetRootPath(ProjectContext::Get().GetAssetPath());
         AssetDatabase::Get().Scan();
+        registerSceneAssetResolvers();
 
         // 프로젝트별 레이아웃 경로로 전환
         std::string layoutPath = ProjectContext::Get().GetSettingsPath() + "imgui.ini";

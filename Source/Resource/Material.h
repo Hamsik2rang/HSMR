@@ -11,15 +11,14 @@
 
 #include "Core/Object.h"
 #include "Resource/ResourceDefinition.h"
+#include "Resource/Image.h"
+#include "Resource/Shader.h"
 
 #include "Core/Math/Common.h"
 #include <unordered_map>
 #include <string>
 
 HS_NS_BEGIN
-
-class Shader;
-class Image;
 
 // Common material texture types
 enum class HS_RESOURCE_API EMaterialTextureType : uint8
@@ -42,25 +41,44 @@ public:
     Material() : Object(EType::Material), _shader(nullptr) {}
     ~Material() override;
 
+    void SetDisplayName(const std::string& name)
+    {
+        _nameStorage = name;
+        this->name = _nameStorage.c_str();
+    }
+
+    const std::string& GetDisplayName() const { return _nameStorage; }
+
+    void SetSourceAssetPath(const std::string& path) { _sourceAssetPath = path; }
+    const std::string& GetSourceAssetPath() const { return _sourceAssetPath; }
+    bool HasSourceAssetPath() const { return !_sourceAssetPath.empty(); }
+
     // Shader management
     void SetShader(Shader* shader);
+    void SetOwnedShader(Scoped<Shader>&& shader);
     HS_FORCEINLINE Shader* GetShader() const { return _shader; }
+    void SetShaderNameHint(const std::string& shaderName) { _shaderNameHint = shaderName; }
+    const std::string& GetShaderNameHint() const { return _shaderNameHint; }
 
     // Texture management
     void SetTexture(EMaterialTextureType type, Image* texture);
+    void SetOwnedTexture(EMaterialTextureType type, Scoped<Image>&& texture, const std::string& sourcePath = "");
     Image* GetTexture(EMaterialTextureType type) const;
     bool HasTexture(EMaterialTextureType type) const;
+    void SetTextureAssetPath(EMaterialTextureType type, const std::string& path);
+    const std::string& GetTextureAssetPath(EMaterialTextureType type) const;
+    bool HasTextureAssetPath(EMaterialTextureType type) const;
 
     // Material properties
-    void SetDiffuseColor(const glm::vec4& color) { _diffuseColor = color; }
-    void SetSpecularColor(const glm::vec4& color) { _specularColor = color; }
-    void SetEmissionColor(const glm::vec4& color) { _emissionColor = color; }
-    void SetAmbientColor(const glm::vec4& color) { _ambientColor = color; }
+    void SetDiffuseColor(const glm::vec4& color) { _diffuseColor = color; markResourceDirty(); }
+    void SetSpecularColor(const glm::vec4& color) { _specularColor = color; markResourceDirty(); }
+    void SetEmissionColor(const glm::vec4& color) { _emissionColor = color; markResourceDirty(); }
+    void SetAmbientColor(const glm::vec4& color) { _ambientColor = color; markResourceDirty(); }
 
-    void SetShininess(float shininess) { _shininess = shininess; }
-    void SetOpacity(float opacity) { _opacity = opacity; }
-    void SetRoughness(float roughness) { _roughness = roughness; }
-    void SetMetallic(float metallic) { _metallic = metallic; }
+    void SetShininess(float shininess) { _shininess = shininess; markResourceDirty(); }
+    void SetOpacity(float opacity) { _opacity = opacity; markResourceDirty(); }
+    void SetRoughness(float roughness) { _roughness = roughness; markResourceDirty(); }
+    void SetMetallic(float metallic) { _metallic = metallic; markResourceDirty(); }
 
     HS_FORCEINLINE const glm::vec4& GetDiffuseColor() const { return _diffuseColor; }
     HS_FORCEINLINE const glm::vec4& GetSpecularColor() const { return _specularColor; }
@@ -92,8 +110,9 @@ public:
     bool HasShaderParameter(const std::string& name) const;
 
     // Two-sided rendering
-    void SetTwoSided(bool twoSided) { _isTwoSided = twoSided; }
+    void SetTwoSided(bool twoSided) { _isTwoSided = twoSided; markResourceDirty(); }
     HS_FORCEINLINE bool IsTwoSided() const { return _isTwoSided; }
+    uint64 GetResourceRevision() const { return _resourceRevision; }
 
     // Shader variant support
     void SetShaderDefines(const std::vector<std::string>& defines) { _shaderDefines = defines; }
@@ -115,10 +134,18 @@ public:
     void SetParameter(const std::string& name, int32 value);
 
 private:
+    void markResourceDirty() { ++_resourceRevision; }
+
     Shader* _shader;
+    std::string _nameStorage;
+    std::string _sourceAssetPath;
+    std::string _shaderNameHint;
+    Scoped<Shader> _ownedShader;
 
     // Textures
     std::unordered_map<EMaterialTextureType, Image*> _textures;
+    std::unordered_map<EMaterialTextureType, Scoped<Image>> _ownedTextures;
+    std::unordered_map<EMaterialTextureType, std::string> _textureAssetPaths;
 
     // Basic material properties
     glm::vec4 _diffuseColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -138,6 +165,7 @@ private:
 
     // NEW: Reflection-based parameter block
     MaterialParameterBlock _parameterBlock;
+    uint64 _resourceRevision = 1;
 };
 
 

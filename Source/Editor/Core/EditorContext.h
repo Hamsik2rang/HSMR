@@ -71,6 +71,12 @@ public:
 
     void SetSelectedEntity(Entity entity);
     Entity GetSelectedEntity() const { return _selectedEntity; }
+    void SetSelectedAssetPath(const std::string& assetPath);
+    void ClearSelectedAssetPath();
+    const std::string& GetSelectedAssetPath() const { return _selectedAssetPath; }
+    bool HasSelectedAsset() const { return !_selectedAssetPath.empty(); }
+    void SetCurrentAssetFolderPath(const std::string& folderPath) { _currentAssetFolderPath = folderPath; }
+    const std::string& GetCurrentAssetFolderPath() const { return _currentAssetFolderPath; }
     void ClearSelection();
     bool HasSelection() const { return _selectedEntity.IsValid(); }
 
@@ -115,6 +121,8 @@ private:
     // State
     Scene* _activeScene = nullptr;
     Entity _selectedEntity;
+    std::string _selectedAssetPath;
+    std::string _currentAssetFolderPath;
 
     // Gizmo
     GizmoOperation _gizmoOperation = GizmoOperation::Translate;

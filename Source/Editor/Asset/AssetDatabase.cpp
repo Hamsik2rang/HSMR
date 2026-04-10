@@ -8,6 +8,7 @@
 #include "Editor/Asset/AssetDatabase.h"
 #include "Core/Log.h"
 #include "Resource/ObjectManager.h"
+#include "Resource/MaterialSerializer.h"
 #include "Resource/Model.h"
 #include "Resource/Mesh.h"
 #include "Resource/Material.h"
@@ -53,6 +54,8 @@ void AssetDatabase::Shutdown()
     _assets.clear();
     _folderContents.clear();
     _loadedModels.clear();
+    _loadedMaterials.clear();
+    _loadedTextures.clear();
     _folderTree = FolderEntry{};
 }
 
@@ -252,17 +255,68 @@ hs::Mesh* AssetDatabase::LoadMesh(const std::string& relativePath)
 
 hs::Material* AssetDatabase::LoadMaterial(const std::string& relativePath)
 {
-    // For material loading, we need to load the whole model first
-    hs::Model* model = LoadModel(relativePath);
-    if (model)
+    auto it = _loadedMaterials.find(relativePath);
+    if (it != _loadedMaterials.end())
     {
-        return model->GetMaterial();
+        return it->second.get();
     }
+
+    const AssetEntry* asset = FindAsset(relativePath);
+    if (!asset || asset->type != EAssetType::Material)
+    {
+        return nullptr;
+    }
+
+    hs::Scoped<hs::Material> material = hs::MaterialSerializer::LoadFromFile(asset->absolutePath, _rootPath + "/");
+    if (material)
+    {
+        material->SetSourceAssetPath(relativePath);
+        if (material->GetDisplayName().empty())
+        {
+            material->SetDisplayName(std::filesystem::path(relativePath).stem().string());
+        }
+
+        hs::Material* rawPtr = material.get();
+        _loadedMaterials[relativePath] = std::move(material);
+        return rawPtr;
+    }
+
     return nullptr;
+}
+
+bool AssetDatabase::SaveMaterial(const std::string& relativePath, hs::Material* material)
+{
+    if (!material)
+    {
+        return false;
+    }
+
+    std::filesystem::path absolutePath = std::filesystem::path(_rootPath) / relativePath;
+    std::filesystem::create_directories(absolutePath.parent_path());
+
+    material->SetSourceAssetPath(relativePath);
+    if (material->GetDisplayName().empty())
+    {
+        material->SetDisplayName(absolutePath.stem().string());
+    }
+
+    if (!hs::MaterialSerializer::SaveToFile(absolutePath.string(), _rootPath + "/", *material))
+    {
+        return false;
+    }
+
+    Refresh();
+    return true;
 }
 
 hs::Image* AssetDatabase::LoadTexture(const std::string& relativePath)
 {
+    auto cachedIt = _loadedTextures.find(relativePath);
+    if (cachedIt != _loadedTextures.end())
+    {
+        return cachedIt->second.get();
+    }
+
     const AssetEntry* asset = FindAsset(relativePath);
     if (!asset || asset->type != EAssetType::Texture)
     {
@@ -271,12 +325,14 @@ hs::Image* AssetDatabase::LoadTexture(const std::string& relativePath)
 
     // Use ObjectManager to load
     // Note: ObjectManager expects path relative to Assets folder
-    hs::Scoped<hs::Image> image = hs::ObjectManager::LoadImageFromFile(relativePath);
+    hs::Scoped<hs::Image> image = hs::ObjectManager::LoadImageFromFile(asset->absolutePath, true);
     if (image)
     {
-        // We can't easily cache images since ObjectManager returns Scoped
-        // For now, return raw pointer (caller doesn't own it)
-        return image.release();
+        image->SetSourceAssetPath(relativePath);
+        image->SetDisplayName(asset->name);
+        hs::Image* rawPtr = image.get();
+        _loadedTextures[relativePath] = std::move(image);
+        return rawPtr;
     }
     return nullptr;
 }
@@ -300,6 +356,14 @@ hs::Model* AssetDatabase::LoadModel(const std::string& relativePath)
     hs::Scoped<hs::Model> model;
     if (hs::ObjectManager::LoadModel(relativePath, model))
     {
+        if (model->GetMesh())
+        {
+            model->GetMesh()->SetSourceAssetPath(relativePath);
+            if (model->GetMesh()->GetDisplayName().empty())
+            {
+                model->GetMesh()->SetDisplayName(std::filesystem::path(relativePath).stem().string());
+            }
+        }
         hs::Model* rawPtr = model.get();
         _loadedModels[relativePath] = std::move(model);
         return rawPtr;
