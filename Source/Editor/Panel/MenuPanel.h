@@ -27,6 +27,11 @@ public:
 
     void Draw() override;
     void SetCurrentScenePath(const std::string& scenePath) { _currentScenePath = scenePath; }
+    void ExecuteNewScene() { newScene(); }
+    void ExecuteOpenScene() { openScene(); }
+    void ExecuteSaveScene() { saveScene(); }
+    void ExecuteSaveSceneAs() { saveSceneAs(); }
+    void ExecuteSaveLayout();
 
 private:
     void drawFileMenu();

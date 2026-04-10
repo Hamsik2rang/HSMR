@@ -69,6 +69,12 @@ ImVec2 getViewportSize(const ImVec2& viewportMin, const ImVec2& viewportMax)
 {
     return ImVec2(viewportMax.x - viewportMin.x, viewportMax.y - viewportMin.y);
 }
+
+bool isMouseInsideViewportRect(const ImVec2& viewportMin, const ImVec2& viewportMax, const ImVec2& mousePos)
+{
+    return mousePos.x >= viewportMin.x && mousePos.x <= viewportMax.x &&
+           mousePos.y >= viewportMin.y && mousePos.y <= viewportMax.y;
+}
 }
 
 bool ScenePanel::Setup()
@@ -254,10 +260,6 @@ void ScenePanel::Draw()
         ImGui::EndMenuBar();
     }
 
-    // Store viewport state
-    _viewportFocused = ImGui::IsWindowFocused();
-    _viewportHovered = ImGui::IsWindowHovered();
-
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::BeginChild(
         "SceneViewport",
@@ -283,6 +285,8 @@ void ScenePanel::Draw()
     _resolution.height        = static_cast<uint32>(viewportWindowSize.y);
 
     _viewportMax = ImVec2(_viewportMin.x + viewportSize.x, _viewportMin.y + viewportSize.y);
+    _viewportFocused = ImGui::IsWindowFocused();
+    _viewportHovered = isMouseInsideViewportRect(_viewportMin, _viewportMax, ImGui::GetIO().MousePos);
 
     if (_editorCamera && viewportSize.y > 0.0f)
     {
@@ -483,6 +487,9 @@ void ScenePanel::handlePicking()
         mouseY < _viewportMin.y || mouseY > _viewportMax.y)
         return;
 
+    HS_LOG(info, "[ScenePanel] Picking at screen=(%.1f, %.1f) viewportMin=(%.1f, %.1f) viewportMax=(%.1f, %.1f)",
+           mouseX, mouseY, _viewportMin.x, _viewportMin.y, _viewportMax.x, _viewportMax.y);
+
     ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
     if (viewportSize.x <= 0.0f || viewportSize.y <= 0.0f)
         return;
@@ -501,10 +508,12 @@ void ScenePanel::handlePicking()
     // Update selection
     if (picked.IsValid())
     {
+        HS_LOG(info, "[ScenePanel] Picked entity handle={}", static_cast<uint32>(entt::to_integral(picked.GetHandle())));
         EditorContext::Get().SetSelectedEntity(picked);
     }
     else
     {
+        HS_LOG(info, "[ScenePanel] No entity picked");
         EditorContext::Get().ClearSelection();
     }
 }
@@ -518,19 +527,26 @@ glm::vec3 ScenePanel::screenToWorldRay(float viewportX, float viewportY)
     float ndcX = viewportX * 2.0f - 1.0f;
     float ndcY = 1.0f - viewportY * 2.0f; // Flip Y
 
-    // Get inverse matrices
-    glm::mat4 invProj = glm::inverse(_editorCamera->GetProjectionMatrix());
-    glm::mat4 invView = glm::inverse(_editorCamera->GetViewMatrix());
+    const glm::mat4 invViewProjection = _editorCamera->GetInverseViewProjectionMatrix();
 
-    // Unproject near and far points
-    glm::vec4 rayClip(ndcX, ndcY, -1.0f, 1.0f);
-    glm::vec4 rayEye = invProj * rayClip;
-    rayEye           = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+    // The engine uses a left-handed camera convention with +Z forward.
+    // Build the ray by unprojecting near/far clip points and differencing them,
+    // instead of using the common RH/OpenGL shortcut that assumes -Z forward.
+    const glm::vec4 nearClip(ndcX, ndcY, -1.0f, 1.0f);
+    const glm::vec4 farClip(ndcX, ndcY, 1.0f, 1.0f);
 
-    glm::vec4 rayWorld = invView * rayEye;
-    glm::vec3 rayDir   = glm::normalize(glm::vec3(rayWorld));
+    glm::vec4 nearWorld = invViewProjection * nearClip;
+    glm::vec4 farWorld = invViewProjection * farClip;
+    if (!Math::EpsilonEqual(nearWorld.w, 0.0f))
+    {
+        nearWorld /= nearWorld.w;
+    }
+    if (!Math::EpsilonEqual(farWorld.w, 0.0f))
+    {
+        farWorld /= farWorld.w;
+    }
 
-    return rayDir;
+    return glm::normalize(glm::vec3(farWorld - nearWorld));
 }
 
 Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDir)

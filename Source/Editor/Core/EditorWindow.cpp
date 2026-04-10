@@ -505,31 +505,55 @@ void EditorWindow::updateSceneCamera(float deltaTime)
 
 void EditorWindow::processShortcuts()
 {
-    // Ctrl+S (Windows) or Cmd+S (Mac) to save layout
+    // Scene shortcuts use Ctrl on Windows/Linux and Cmd on macOS.
 #if defined(__APPLE__)
     bool modifierPressed = Input::IsPressed(Input::Button::LwinOrCommand);
 #else
     bool modifierPressed = Input::IsPressed(Input::Button::Control);
 #endif
+    bool shiftPressed = Input::IsPressed(Input::Button::Shift);
+    MenuPanel* menuPanel = static_cast<MenuPanel*>(_menuPanel.get());
 
-    static bool sKeyWasPressed = false;
+    static bool shortcutWasPressed = false;
+    bool handledShortcut = false;
 
-    if (modifierPressed && Input::IsPressed(Input::Button::S))
+    if (modifierPressed && menuPanel)
     {
-        if (!sKeyWasPressed)
+        if (Input::IsPressed(Input::Button::N))
         {
-            auto* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
-            if (guiContext)
+            handledShortcut = true;
+            if (!shortcutWasPressed)
             {
-                guiContext->SaveLayout("");
+                menuPanel->ExecuteNewScene();
             }
-            sKeyWasPressed = true;
+        }
+        else if (Input::IsPressed(Input::Button::O))
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteOpenScene();
+            }
+        }
+        else if (Input::IsPressed(Input::Button::S) && shiftPressed)
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteSaveSceneAs();
+            }
+        }
+        else if (Input::IsPressed(Input::Button::S))
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteSaveScene();
+            }
         }
     }
-    else
-    {
-        sKeyWasPressed = false;
-    }
+
+    shortcutWasPressed = handledShortcut;
 
     // Gizmo operation shortcuts (W/E/R for Translate/Rotate/Scale)
     auto& context = EditorContext::Get();

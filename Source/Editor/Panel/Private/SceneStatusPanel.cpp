@@ -125,21 +125,21 @@ void SceneStatusPanel::Draw()
         }
 
         // Quick Stats
-        _drawQuickStatsSection();
+        drawQuickStatsSection();
 
         ImGui::Separator();
 
         // Frame Time Graph
         if (_showFrameGraph)
         {
-            _drawFrameTimeSection();
+            drawFrameTimeSection();
             ImGui::Separator();
         }
 
         // Camera Info
         if (_showCamera && _sceneCamera)
         {
-            _drawCameraSection();
+            drawCameraSection();
             ImGui::Separator();
         }
 
@@ -167,7 +167,7 @@ void SceneStatusPanel::Draw()
     ImGui::End();
 }
 
-void SceneStatusPanel::_drawQuickStatsSection()
+void SceneStatusPanel::drawQuickStatsSection()
 {
     float currentFPS = _avgFrameTime > 0.0f ? 1000.0f / _avgFrameTime : 0.0f;
     float targetMs = 1000.0f / _targetFPS;
@@ -194,7 +194,7 @@ void SceneStatusPanel::_drawQuickStatsSection()
     //ImGui::Text("Min: %.2f ms | Max: %.2f ms", _minFrameTime, _maxFrameTime);
 }
 
-void SceneStatusPanel::_drawFrameTimeSection()
+void SceneStatusPanel::drawFrameTimeSection()
 {
     // Reorder history for continuous display
     float orderedHistory[HISTORY_SIZE];
@@ -222,7 +222,7 @@ void SceneStatusPanel::_drawFrameTimeSection()
     );
 }
 
-void SceneStatusPanel::_drawCameraSection()
+void SceneStatusPanel::drawCameraSection()
 {
     if (!_sceneCamera) return;
 
