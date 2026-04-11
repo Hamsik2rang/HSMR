@@ -9,6 +9,8 @@
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/GUI/EditorListWidgets.h"
+#include "Editor/GUI/EditorTreeWidgets.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 #include "Core/SystemContext.h"
 #include "Editor/Project/ProjectContext.h"
@@ -300,11 +302,15 @@ void ResourcePanel::drawFolderTreeNode(const FolderEntry& folder)
     std::string displayName = folder.name.empty() ? "Assets" : folder.name;
     std::string label = std::string(icon) + " " + displayName;
 
-    bool isOpen = ImGui::TreeNodeEx(label.c_str(), flags);
+    bool isOpen = EditorTreeWidgets::BeginNode(
+        label.c_str(),
+        folder.relativePath == _currentPath,
+        folder.subFolders.empty(),
+        folder.relativePath.empty());
 
     // TreeNode는 화살표 클릭으로 open/close되고, row 클릭으로 selection도 할 수 있습니다.
     // IsItemToggledOpen()을 확인해서 "화살표를 눌러 펼친 경우"에는 폴더 이동까지 같이 발생하지 않게 막습니다.
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    if (EditorTreeWidgets::IsSelectionClick())
     {
         navigateToFolder(folder.relativePath);
     }
@@ -366,7 +372,7 @@ void ResourcePanel::drawAssetList()
 
         // PushID(folderPath) + visible label 조합입니다.
         // 같은 이름의 폴더가 다른 경로에 있더라도 ImGui ID가 충돌하지 않게 folderPath를 ID stack에 넣습니다.
-        if (ImGui::Selectable(label.c_str(), isSelected))
+        if (EditorListWidgets::SelectableRow("##FolderRow", label.c_str(), isSelected))
         {
             navigateToFolder(folderPath);
         }
@@ -409,7 +415,7 @@ void ResourcePanel::drawAssetItem(const AssetEntry* asset)
     const char* icon = GetAssetTypeIcon(asset->type);
     const std::string& displayName = asset->name.empty() ? asset->relativePath : asset->name;
     std::string label = std::string(icon) + " " + displayName;
-    if (ImGui::Selectable(label.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))
+    if (EditorListWidgets::SelectableRow("##AssetRow", label.c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick))
     {
         _selectedAssetPath = asset->relativePath;
         EditorContext::Get().SetSelectedAssetPath(asset->relativePath);

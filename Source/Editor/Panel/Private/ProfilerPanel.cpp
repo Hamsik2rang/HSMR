@@ -7,6 +7,7 @@
 
 #include "Editor/Panel/ProfilerPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 #include "Editor/GUI/EditorIcons.h"
 
@@ -75,7 +76,7 @@ void ProfilerPanel::Draw()
 #if defined(TRACY_ENABLE)
     ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Tracy: Enabled");
 #else
-    ImGui::TextDisabled("Tracy: Disabled");
+    EditorFeedbackWidgets::SecondaryText("Tracy: Disabled");
 #endif
 
     EditorPanelFrame::EndStandardPanel();
@@ -87,7 +88,7 @@ void ProfilerPanel::_drawCPUTab()
 
     if (zones.empty())
     {
-        ImGui::TextDisabled("No zone data collected");
+        EditorFeedbackWidgets::EmptyState("No zone data collected");
         return;
     }
 
@@ -182,14 +183,12 @@ void ProfilerPanel::_drawCPUTab()
 
 void ProfilerPanel::_drawGPUTab()
 {
-    ImGui::TextDisabled("GPU profiling coming soon.");
-    ImGui::TextDisabled("(Phase 2)");
+    EditorFeedbackWidgets::EmptyState("GPU profiling coming soon.", "(Phase 2)");
 }
 
 void ProfilerPanel::_drawMemoryTab()
 {
-    ImGui::TextDisabled("Memory profiling coming soon.");
-    ImGui::TextDisabled("(Phase 3)");
+    EditorFeedbackWidgets::EmptyState("Memory profiling coming soon.", "(Phase 3)");
 }
 
 void ProfilerPanel::_drawZoneBar(float fraction, uint32 color, float width, float height)

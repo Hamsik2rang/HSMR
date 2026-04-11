@@ -55,7 +55,12 @@ source_group("EntryPoint\\Private" FILES ${EDITOR_ENTRY_POINT_SOURCES})
 list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_SOURCES})
 
 set(EDITOR_GUI_HEADERS
+    GUI/EditorDialogFrame.h
+    GUI/EditorFeedbackWidgets.h
+    GUI/EditorFormLayout.h
     GUI/EditorIcons.h
+    GUI/EditorListWidgets.h
+    GUI/EditorTreeWidgets.h
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
     GUI/MaterialSymbolsIcons.h

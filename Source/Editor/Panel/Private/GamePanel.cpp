@@ -1,6 +1,7 @@
 #include "Editor/Panel/GamePanel.h"
 
 #include "Editor/Core/EditorContext.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/Panel/EditorPanelFrame.h"
@@ -223,7 +224,8 @@ void GamePanel::Draw()
         overlayPos.x += 12.0f;
         overlayPos.y += ImGui::GetFrameHeight() + 12.0f;
         ImGui::SetCursorScreenPos(overlayPos);
-        ImGui::TextDisabled("%s No active scene camera", EditorIcons::Camera);
+        const std::string message = std::string(EditorIcons::Camera) + " No active scene camera";
+        EditorFeedbackWidgets::SecondaryText(message.c_str());
     }
 
     EditorPanelFrame::EndPanelContent();

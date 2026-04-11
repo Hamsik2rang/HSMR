@@ -9,6 +9,7 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/GUI/EditorTreeWidgets.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
@@ -53,14 +54,13 @@ void HierarchyPanel::Draw()
     Scene* scene = EditorContext::Get().GetActiveScene();
     if (!scene)
     {
-        ImGui::TextDisabled("No active scene");
+        EditorTreeWidgets::EmptyState("No active scene");
         EditorPanelFrame::EndStandardPanel();
         return;
     }
 
     // Search bar
-    ImGui::SetNextItemWidth(-1);
-    if (ImGui::InputTextWithHint("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer)))
+    if (EditorTreeWidgets::SearchBar("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer)))
     {
         // Search text changed
     }
@@ -68,10 +68,7 @@ void HierarchyPanel::Draw()
     ImGui::Separator();
 
     // Scene header
-    bool sceneOpen = ImGui::TreeNodeEx(
-        scene->GetName().c_str(),
-        ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth
-    );
+    bool sceneOpen = EditorTreeWidgets::BeginNode(scene->GetName().c_str(), false, false, true);
 
     // Right-click on scene header for context menu
     if (ImGui::BeginPopupContextItem("SceneContextMenu"))
@@ -176,30 +173,13 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     bool isSelected = (EditorContext::Get().GetSelectedEntity() == entity);
 
     // Determine tree node flags
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                                ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                                ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    if (isSelected)
-    {
-        flags |= ImGuiTreeNodeFlags_Selected;
-    }
     bool shouldOpenNode = _searchBuffer[0] != '\0' || hasSelectedDescendant(entity);
-    if (shouldOpenNode)
-    {
-        flags |= ImGuiTreeNodeFlags_DefaultOpen;
-    }
 
     // Check if entity has children
     bool hasChildren = false;
     if (entity.HasComponent<TransformComponent>())
     {
         hasChildren = entity.GetComponent<TransformComponent>().HasChildren();
-    }
-
-    if (!hasChildren)
-    {
-        flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
     // Push unique ID for this entity
@@ -236,10 +216,15 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     }
 
     // Draw tree node
-    bool nodeOpen = ImGui::TreeNodeEx(displayName.c_str(), flags);
+    bool nodeOpen = EditorTreeWidgets::BeginNode(
+        displayName.c_str(),
+        isSelected,
+        !hasChildren,
+        shouldOpenNode,
+        ImGuiTreeNodeFlags_OpenOnDoubleClick);
 
     // Click to select
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    if (EditorTreeWidgets::IsSelectionClick())
     {
         EditorContext::Get().SetSelectedEntity(entity);
     }

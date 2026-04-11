@@ -22,7 +22,7 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API InspectorPanel : public Panel
 {
 public:
-    InspectorPanel(Window* window);
+    InspectorPanel(Window* window, const char* panelId = "Inspector");
     ~InspectorPanel() override;
 
     bool Setup() override;

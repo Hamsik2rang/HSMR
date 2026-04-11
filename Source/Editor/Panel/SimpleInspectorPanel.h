@@ -19,7 +19,7 @@ class SimpleInspectorPanel : public InspectorPanel
 {
 public:
     SimpleInspectorPanel(Window* window)
-        : InspectorPanel(window) {};
+        : InspectorPanel(window, "Control Panel") {};
     ~SimpleInspectorPanel() override = default;
 
     bool Setup() override;

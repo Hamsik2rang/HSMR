@@ -74,6 +74,12 @@ Tools:          Editor (ImGui) ──→ Client
 - Vulkan keeps the same camera convention and only flips projection `Y`
 - See [Docs/CoordinateSystem.md](Docs/CoordinateSystem.md)
 
+## Editor Panel Conventions
+
+- Editor panels use a shared panel architecture and common UI helper layers
+- Standard panel windows should use the shared frame/form/list/tree/dialog/feedback helpers instead of ad-hoc ImGui layout code
+- See [Docs/EditorPanelArchitecture.md](Docs/EditorPanelArchitecture.md)
+
 ## Prerequisites
 
 - **CMake** 3.22.0 or newer

@@ -33,6 +33,15 @@ const char* getPrimaryShortcutLabel(const char* suffix)
     return label.c_str();
 #endif
 }
+
+const char* getRedoShortcutLabel()
+{
+#if defined(__APPLE__)
+    return getPrimaryShortcutLabel("Shift+Z");
+#else
+    return getPrimaryShortcutLabel("Y");
+#endif
+}
 }
 
 bool MenuPanel::Setup()
@@ -124,12 +133,12 @@ void MenuPanel::drawEditMenu()
 {
     if (ImGui::BeginMenu("Edit"))
     {
-        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false))
+        if (ImGui::MenuItem("Undo", getPrimaryShortcutLabel("Z"), false, false))
         {
             // TODO: Implement undo
         }
 
-        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false))
+        if (ImGui::MenuItem("Redo", getRedoShortcutLabel(), false, false))
         {
             // TODO: Implement redo
         }

@@ -8,6 +8,8 @@
 #include "Editor/Panel/InspectorPanel.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
+#include "Editor/GUI/EditorFormLayout.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 #include "Editor/Project/ProjectContext.h"
@@ -276,8 +278,8 @@ void syncCommonMaterialState(Material* material, const std::string& memberName, 
     }
 }
 }
-InspectorPanel::InspectorPanel(Window* window)
-    : Panel(window, "Inspector")
+InspectorPanel::InspectorPanel(Window* window, const char* panelId)
+    : Panel(window, panelId)
 {
 }
 
@@ -321,7 +323,7 @@ void InspectorPanel::Draw()
             }
         }
 
-        ImGui::TextDisabled("No entity selected");
+        EditorFeedbackWidgets::EmptyState("No entity selected");
         EditorPanelFrame::EndStandardPanel();
         return;
     }
@@ -364,22 +366,19 @@ void InspectorPanel::drawTagComponent(Entity entity)
 
     if (ImGui::CollapsingHeader("Tag", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::Indent();
-
-        // Layer
-        int layer = static_cast<int>(tag.layer);
-        if (ImGui::InputInt("Layer", &layer))
+        if (EditorFormLayout::Begin("TagProperties"))
         {
-            tag.layer = static_cast<uint32>(glm::max(0, layer));
+            int layer = static_cast<int>(tag.layer);
+            if (EditorFormLayout::InputIntRow("Layer", &layer))
+            {
+                tag.layer = static_cast<uint32>(glm::max(0, layer));
+            }
+
+            EditorFormLayout::CheckboxRow("Static", &tag.isStatic);
+            EditorFormLayout::CheckboxRow("Active", &tag.isActive);
+
+            EditorFormLayout::End();
         }
-
-        // Static flag
-        ImGui::Checkbox("Static", &tag.isStatic);
-
-        // Active flag
-        ImGui::Checkbox("Active", &tag.isActive);
-
-        ImGui::Unindent();
     }
 }
 
@@ -391,8 +390,6 @@ void InspectorPanel::drawTransformComponent(Entity entity)
     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
     {
         auto& transform = entity.GetComponent<TransformComponent>();
-
-        ImGui::Indent();
 
         // Position
         glm::vec3 position = transform.position;
@@ -416,19 +413,27 @@ void InspectorPanel::drawTransformComponent(Entity entity)
         }
 
         ImGui::Separator();
-        glm::vec3 worldPosition = transform.GetWorldPosition();
-        ImGui::Text("World Position: %.3f, %.3f, %.3f", worldPosition.x, worldPosition.y, worldPosition.z);
-        ImGui::Text("Children: %zu", transform.children.size());
-        if (transform.HasParent())
+        if (EditorFormLayout::Begin("TransformReadOnly"))
         {
-            ImGui::Text("Parent: %u", static_cast<uint32>(transform.parent));
-        }
-        else
-        {
-            ImGui::TextDisabled("Parent: None");
-        }
+            glm::vec3 worldPosition = transform.GetWorldPosition();
+            EditorFormLayout::BeginRow("World Position");
+            ImGui::Text("%.3f, %.3f, %.3f", worldPosition.x, worldPosition.y, worldPosition.z);
 
-        ImGui::Unindent();
+            EditorFormLayout::BeginRow("Children");
+            ImGui::Text("%zu", transform.children.size());
+
+            EditorFormLayout::BeginRow("Parent");
+            if (transform.HasParent())
+            {
+                ImGui::Text("%u", static_cast<uint32>(transform.parent));
+            }
+            else
+            {
+                ImGui::TextDisabled("None");
+            }
+
+            EditorFormLayout::End();
+        }
     }
 }
 
@@ -444,52 +449,47 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
     {
         auto& meshRenderer = entity.GetComponent<MeshRendererComponent>();
 
-        ImGui::Indent();
-
         // Mesh reference display with drag & drop
         {
             const char* meshName = meshRenderer.mesh ? "Assigned" : "None (Drop Model Here)";
-
-            ImGui::Text("Mesh:");
-            ImGui::SameLine();
-
-            // Make a drop target button
-            ImVec4 buttonColor = meshRenderer.mesh
-                                     ? ImVec4(0.2f, 0.4f, 0.2f, 1.0f)
-                                     : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
-            ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
-
-            ImGui::Button(meshName, ImVec2(ImGui::GetContentRegionAvail().x, 0));
-
-            ImGui::PopStyleColor();
-
-            // Drag & Drop target for Model assets
-            if (ImGui::BeginDragDropTarget())
+            if (EditorFormLayout::Begin("MeshRendererHeader"))
             {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
+                EditorFormLayout::BeginRow("Mesh");
+
+                ImVec4 buttonColor = meshRenderer.mesh
+                                         ? ImVec4(0.2f, 0.4f, 0.2f, 1.0f)
+                                         : ImVec4(0.3f, 0.3f, 0.3f, 1.0f);
+                ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
+                ImGui::Button(meshName, ImVec2(-FLT_MIN, 0.0f));
+                ImGui::PopStyleColor();
+
+                if (ImGui::BeginDragDropTarget())
                 {
-                    std::string assetPath(static_cast<const char*>(payload->Data));
-
-                    // Load the model and assign mesh
-                    hs::Model* model = AssetDatabase::Get().LoadModel(assetPath);
-                    if (model)
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MODEL"))
                     {
-                        meshRenderer.mesh = model->GetMesh();
-                        if (meshRenderer.mesh)
-                        {
-                            const auto& bound        = meshRenderer.mesh->GetBound();
-                            meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
-                            meshRenderer.boundsDirty = true;
-                        }
+                        std::string assetPath(static_cast<const char*>(payload->Data));
 
-                        // Also assign material if available and no materials set
-                        if (meshRenderer.materials.empty() && model->GetMaterial())
+                        hs::Model* model = AssetDatabase::Get().LoadModel(assetPath);
+                        if (model)
                         {
-                            meshRenderer.materials.push_back(model->GetMaterial());
+                            meshRenderer.mesh = model->GetMesh();
+                            if (meshRenderer.mesh)
+                            {
+                                const auto& bound        = meshRenderer.mesh->GetBound();
+                                meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                                meshRenderer.boundsDirty = true;
+                            }
+
+                            if (meshRenderer.materials.empty() && model->GetMaterial())
+                            {
+                                meshRenderer.materials.push_back(model->GetMaterial());
+                            }
                         }
                     }
+                    ImGui::EndDragDropTarget();
                 }
-                ImGui::EndDragDropTarget();
+
+                EditorFormLayout::End();
             }
         }
 
@@ -566,16 +566,19 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
         ImGui::Separator();
 
         // Rendering flags
-        ImGui::Checkbox("Visible", &meshRenderer.isVisible);
-        ImGui::Checkbox("Cast Shadow", &meshRenderer.castShadow);
-        ImGui::Checkbox("Receive Shadow", &meshRenderer.receiveShadow);
-
-        // Render layer mask
-        ImGui::Separator();
-        int layerMask = static_cast<int>(meshRenderer.renderLayerMask);
-        if (ImGui::InputInt("Render Layer Mask", &layerMask, 1, 100, ImGuiInputTextFlags_CharsHexadecimal))
+        if (EditorFormLayout::Begin("MeshRendererFlags"))
         {
-            meshRenderer.renderLayerMask = static_cast<uint32>(layerMask);
+            EditorFormLayout::CheckboxRow("Visible", &meshRenderer.isVisible);
+            EditorFormLayout::CheckboxRow("Cast Shadow", &meshRenderer.castShadow);
+            EditorFormLayout::CheckboxRow("Receive Shadow", &meshRenderer.receiveShadow);
+
+            int layerMask = static_cast<int>(meshRenderer.renderLayerMask);
+            if (EditorFormLayout::InputIntRow("Render Layer Mask", &layerMask, ImGuiInputTextFlags_CharsHexadecimal))
+            {
+                meshRenderer.renderLayerMask = static_cast<uint32>(layerMask);
+            }
+
+            EditorFormLayout::End();
         }
 
         // Bounds info (read-only)
@@ -599,8 +602,6 @@ void InspectorPanel::drawMeshRendererComponent(Entity entity)
                 meshRenderer.worldBounds.max.z);
             ImGui::TreePop();
         }
-
-        ImGui::Unindent();
     }
 
     if (removeComponent)
@@ -621,39 +622,33 @@ void InspectorPanel::drawCameraComponent(Entity entity)
     {
         auto& camera = entity.GetComponent<CameraComponent>();
 
-        ImGui::Indent();
-
-        // Projection type
         const char* projectionTypes[] = {"Perspective", "Orthographic"};
         int currentProjection         = static_cast<int>(camera.projectionType);
-        if (ImGui::Combo("Projection", &currentProjection, projectionTypes, 2))
+        if (EditorFormLayout::Begin("CameraProperties"))
         {
-            camera.projectionType = static_cast<CameraComponent::EProjectionType>(currentProjection);
+            if (EditorFormLayout::ComboRow("Projection", &currentProjection, projectionTypes, 2))
+            {
+                camera.projectionType = static_cast<CameraComponent::EProjectionType>(currentProjection);
+            }
+
+            if (camera.projectionType == CameraComponent::EProjectionType::Perspective)
+            {
+                EditorFormLayout::DragFloatRow("FOV", &camera.fov, 0.5f, 1.0f, 179.0f, "%.1f");
+            }
+            else
+            {
+                EditorFormLayout::DragFloatRow("Ortho Size", &camera.orthoSize, 0.1f, 0.1f, 1000.0f, "%.1f");
+            }
+
+            EditorFormLayout::DragFloatRow("Near", &camera.nearPlane, 0.01f, 0.001f, camera.farPlane - 0.01f, "%.3f");
+            EditorFormLayout::DragFloatRow("Far", &camera.farPlane, 1.0f, camera.nearPlane + 0.01f, 100000.0f, "%.1f");
+            EditorFormLayout::InputIntRow("Priority", &camera.priority);
+            EditorFormLayout::CheckboxRow("Primary", &camera.isPrimary);
+            EditorFormLayout::CheckboxRow("Active", &camera.isActive);
+            EditorFormLayout::DragFloat4Row("Viewport", &camera.viewport.x, 0.01f, 0.0f, 1.0f, "%.2f");
+
+            EditorFormLayout::End();
         }
-
-        // Perspective settings
-        if (camera.projectionType == CameraComponent::EProjectionType::Perspective)
-        {
-            ImGui::DragFloat("FOV", &camera.fov, 0.5f, 1.0f, 179.0f, "%.1f");
-        }
-        else
-        {
-            ImGui::DragFloat("Ortho Size", &camera.orthoSize, 0.1f, 0.1f, 1000.0f, "%.1f");
-        }
-
-        // Common settings
-        ImGui::DragFloat("Near", &camera.nearPlane, 0.01f, 0.001f, camera.farPlane - 0.01f, "%.3f");
-        ImGui::DragFloat("Far", &camera.farPlane, 1.0f, camera.nearPlane + 0.01f, 100000.0f, "%.1f");
-        ImGui::InputInt("Priority", &camera.priority);
-
-        // Flags
-        ImGui::Checkbox("Primary", &camera.isPrimary);
-        ImGui::Checkbox("Active", &camera.isActive);
-
-        ImGui::Separator();
-        ImGui::DragFloat4("Viewport", &camera.viewport.x, 0.01f, 0.0f, 1.0f, "%.2f");
-
-        ImGui::Unindent();
     }
 
     if (removeComponent)
@@ -805,9 +800,13 @@ bool InspectorPanel::drawMaterialEditor(Material* material, const char* idSuffix
         if (!reflectedTextureTypes.empty())
         {
             ImGui::SeparatorText("Textures");
-            for (EMaterialTextureType textureType : reflectedTextureTypes)
+            if (EditorFormLayout::Begin(("MaterialTextures_" + std::string(idSuffix)).c_str()))
             {
-                changed |= drawMaterialTextureSlot(material, textureType, getMaterialTextureLabel(textureType), idSuffix);
+                for (EMaterialTextureType textureType : reflectedTextureTypes)
+                {
+                    changed |= drawMaterialTextureSlot(material, textureType, getMaterialTextureLabel(textureType), idSuffix);
+                }
+                EditorFormLayout::End();
             }
         }
 
@@ -817,7 +816,11 @@ bool InspectorPanel::drawMaterialEditor(Material* material, const char* idSuffix
     else
     {
         ImGui::SeparatorText("Textures");
-        changed |= drawMaterialTextureSlot(material, EMaterialTextureType::Diffuse, getMaterialTextureLabel(EMaterialTextureType::Diffuse), idSuffix);
+        if (EditorFormLayout::Begin(("MaterialTexturesFallback_" + std::string(idSuffix)).c_str()))
+        {
+            changed |= drawMaterialTextureSlot(material, EMaterialTextureType::Diffuse, getMaterialTextureLabel(EMaterialTextureType::Diffuse), idSuffix);
+            EditorFormLayout::End();
+        }
         ImGui::SeparatorText("Parameters");
         ImGui::TextDisabled("No reflected material parameters");
     }
@@ -835,9 +838,7 @@ bool InspectorPanel::drawMaterialTextureSlot(Material* material, EMaterialTextur
     Image* image = material ? material->GetTexture(type) : nullptr;
     bool changed = false;
 
-    std::string fieldLabel = std::string(label) + ":";
-    ImGui::Text("%s", fieldLabel.c_str());
-    ImGui::SameLine();
+    EditorFormLayout::BeginRow(label);
 
     std::string buttonLabel;
     if (image && image->name)
@@ -853,7 +854,9 @@ bool InspectorPanel::drawMaterialTextureSlot(Material* material, EMaterialTextur
         buttonLabel = "None (Drop Texture Here)##" + std::string(label) + "_" + idSuffix;
     }
 
-    ImGui::Button(buttonLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 55.0f, 0.0f));
+    const float clearButtonWidth = 32.0f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    ImGui::Button(buttonLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - clearButtonWidth - spacing, 0.0f));
 
     if (ImGui::BeginDragDropTarget())
     {
@@ -924,79 +927,21 @@ bool InspectorPanel::drawMaterialParameterBlockEditor(Material* material, const 
     }
 
     bool anyEditableMembers = false;
-    for (const auto& member : bufferInfo->members)
+    if (EditorFormLayout::Begin(("MaterialParameters_" + std::string(idSuffix)).c_str()))
     {
-        const uint8* memberData = parameterData + member.offset;
-        std::string label = member.name + "##" + idSuffix;
-
-        switch (member.category)
+        for (const auto& member : bufferInfo->members)
         {
-        case ShaderBufferMember::Category::Scalar:
-            if (member.baseType == ShaderBufferMember::BaseType::Float && member.size >= sizeof(float))
+            const uint8* memberData = parameterData + member.offset;
+            std::string widgetId = "##" + member.name + "_" + idSuffix;
+
+            switch (member.category)
             {
-                float value = *reinterpret_cast<const float*>(memberData);
-                if (ImGui::DragFloat(label.c_str(), &value, getFloatParameterSpeed(member.name)))
+            case ShaderBufferMember::Category::Scalar:
+                if (member.baseType == ShaderBufferMember::BaseType::Float && member.size >= sizeof(float))
                 {
-                    material->SetParameter(member.name, value);
-                    syncCommonMaterialState(material, member.name, value);
-                    changed = true;
-                }
-                anyEditableMembers = true;
-            }
-            else if (member.baseType == ShaderBufferMember::BaseType::Int && member.size >= sizeof(int32))
-            {
-                int32 value = *reinterpret_cast<const int32*>(memberData);
-                if (member.name == "twoSided")
-                {
-                    bool enabled = value != 0;
-                    if (ImGui::Checkbox(label.c_str(), &enabled))
-                    {
-                        value = enabled ? 1 : 0;
-                        material->SetParameter(member.name, value);
-                        syncCommonMaterialState(material, member.name, value);
-                        changed = true;
-                    }
-                }
-                else if (ImGui::DragInt(label.c_str(), &value, 1.0f))
-                {
-                    material->SetParameter(member.name, value);
-                    syncCommonMaterialState(material, member.name, value);
-                    changed = true;
-                }
-                anyEditableMembers = true;
-            }
-            break;
-        case ShaderBufferMember::Category::Vector:
-            if (member.baseType == ShaderBufferMember::BaseType::Float)
-            {
-                if (member.rowCount == 2 && member.size >= sizeof(glm::vec2))
-                {
-                    glm::vec2 value = *reinterpret_cast<const glm::vec2*>(memberData);
-                    if (ImGui::DragFloat2(label.c_str(), &value.x, 0.01f))
-                    {
-                        material->SetParameter(member.name, value);
-                        changed = true;
-                    }
-                    anyEditableMembers = true;
-                }
-                else if (member.rowCount == 3 && member.size >= sizeof(glm::vec3))
-                {
-                    glm::vec3 value = *reinterpret_cast<const glm::vec3*>(memberData);
-                    if (isColorParameterName(member.name)
-                        ? ImGui::ColorEdit3(label.c_str(), &value.x, ImGuiColorEditFlags_DisplayRGB)
-                        : ImGui::DragFloat3(label.c_str(), &value.x, 0.01f))
-                    {
-                        material->SetParameter(member.name, value);
-                        changed = true;
-                    }
-                    anyEditableMembers = true;
-                }
-                else if (member.rowCount == 4 && member.size >= sizeof(glm::vec4))
-                {
-                    glm::vec4 value = *reinterpret_cast<const glm::vec4*>(memberData);
-                    if (isColorParameterName(member.name)
-                        ? ImGui::ColorEdit4(label.c_str(), &value.x, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar)
-                        : ImGui::DragFloat4(label.c_str(), &value.x, 0.01f))
+                    float value = *reinterpret_cast<const float*>(memberData);
+                    EditorFormLayout::BeginRow(member.name.c_str());
+                    if (ImGui::DragFloat(widgetId.c_str(), &value, getFloatParameterSpeed(member.name)))
                     {
                         material->SetParameter(member.name, value);
                         syncCommonMaterialState(material, member.name, value);
@@ -1004,11 +949,76 @@ bool InspectorPanel::drawMaterialParameterBlockEditor(Material* material, const 
                     }
                     anyEditableMembers = true;
                 }
+                else if (member.baseType == ShaderBufferMember::BaseType::Int && member.size >= sizeof(int32))
+                {
+                    int32 value = *reinterpret_cast<const int32*>(memberData);
+                    EditorFormLayout::BeginRow(member.name.c_str());
+                    if (member.name == "twoSided")
+                    {
+                        bool enabled = value != 0;
+                        if (ImGui::Checkbox(widgetId.c_str(), &enabled))
+                        {
+                            value = enabled ? 1 : 0;
+                            material->SetParameter(member.name, value);
+                            syncCommonMaterialState(material, member.name, value);
+                            changed = true;
+                        }
+                    }
+                    else if (ImGui::DragInt(widgetId.c_str(), &value, 1.0f))
+                    {
+                        material->SetParameter(member.name, value);
+                        syncCommonMaterialState(material, member.name, value);
+                        changed = true;
+                    }
+                    anyEditableMembers = true;
+                }
+                break;
+            case ShaderBufferMember::Category::Vector:
+                if (member.baseType == ShaderBufferMember::BaseType::Float)
+                {
+                    EditorFormLayout::BeginRow(member.name.c_str());
+                    if (member.rowCount == 2 && member.size >= sizeof(glm::vec2))
+                    {
+                        glm::vec2 value = *reinterpret_cast<const glm::vec2*>(memberData);
+                        if (ImGui::DragFloat2(widgetId.c_str(), &value.x, 0.01f))
+                        {
+                            material->SetParameter(member.name, value);
+                            changed = true;
+                        }
+                        anyEditableMembers = true;
+                    }
+                    else if (member.rowCount == 3 && member.size >= sizeof(glm::vec3))
+                    {
+                        glm::vec3 value = *reinterpret_cast<const glm::vec3*>(memberData);
+                        if (isColorParameterName(member.name)
+                            ? ImGui::ColorEdit3(widgetId.c_str(), &value.x, ImGuiColorEditFlags_DisplayRGB)
+                            : ImGui::DragFloat3(widgetId.c_str(), &value.x, 0.01f))
+                        {
+                            material->SetParameter(member.name, value);
+                            changed = true;
+                        }
+                        anyEditableMembers = true;
+                    }
+                    else if (member.rowCount == 4 && member.size >= sizeof(glm::vec4))
+                    {
+                        glm::vec4 value = *reinterpret_cast<const glm::vec4*>(memberData);
+                        if (isColorParameterName(member.name)
+                            ? ImGui::ColorEdit4(widgetId.c_str(), &value.x, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_AlphaBar)
+                            : ImGui::DragFloat4(widgetId.c_str(), &value.x, 0.01f))
+                        {
+                            material->SetParameter(member.name, value);
+                            syncCommonMaterialState(material, member.name, value);
+                            changed = true;
+                        }
+                        anyEditableMembers = true;
+                    }
+                }
+                break;
+            default:
+                break;
             }
-            break;
-        default:
-            break;
         }
+        EditorFormLayout::End();
     }
 
     if (!anyEditableMembers)
@@ -1137,63 +1147,52 @@ void InspectorPanel::drawLightComponent(Entity entity)
     {
         auto& light = entity.GetComponent<LightComponent>();
 
-        ImGui::Indent();
-
-        // Light type
         const char* lightTypes[] = {"Directional", "Point", "Spot"};
         int currentType          = static_cast<int>(light.type);
-        if (ImGui::Combo("Type", &currentType, lightTypes, 3))
+        if (EditorFormLayout::Begin("LightProperties"))
         {
-            light.type = static_cast<ELightType>(currentType);
-        }
-
-        // Color
-        drawColorEdit("Color", light.color);
-
-        // Intensity
-        ImGui::DragFloat("Intensity", &light.intensity, 0.01f, 0.0f, 100.0f, "%.2f");
-
-        // Point/Spot light settings
-        if (light.type != ELightType::Directional)
-        {
-            ImGui::DragFloat("Range", &light.range, 0.1f, 0.1f, 1000.0f, "%.1f");
-            ImGui::DragFloat("Attenuation", &light.attenuation, 0.01f, 0.0f, 10.0f, "%.2f");
-        }
-
-        // Spot light settings
-        if (light.type == ELightType::Spot)
-        {
-            ImGui::DragFloat("Inner Cone", &light.innerConeAngle, 0.5f, 1.0f, light.outerConeAngle - 1.0f, "%.1f");
-            ImGui::DragFloat("Outer Cone", &light.outerConeAngle, 0.5f, light.innerConeAngle + 1.0f, 90.0f, "%.1f");
-        }
-
-        ImGui::Separator();
-
-        // Shadow settings
-        ImGui::Checkbox("Cast Shadow", &light.castShadow);
-        if (light.castShadow)
-        {
-            ImGui::DragFloat("Shadow Bias", &light.shadowBias, 0.0001f, 0.0f, 0.1f, "%.4f");
-
-            // Shadow map resolution
-            const char* resolutions[] = {"512", "1024", "2048", "4096"};
-            int currentRes            = 1; // Default to 1024
-            if (light.shadowMapResolution == 512) currentRes = 0;
-            else if (light.shadowMapResolution == 1024) currentRes = 1;
-            else if (light.shadowMapResolution == 2048) currentRes = 2;
-            else if (light.shadowMapResolution == 4096) currentRes = 3;
-
-            if (ImGui::Combo("Shadow Resolution", &currentRes, resolutions, 4))
+            if (EditorFormLayout::ComboRow("Type", &currentType, lightTypes, 3))
             {
-                const uint32 resValues[]  = {512, 1024, 2048, 4096};
-                light.shadowMapResolution = resValues[currentRes];
+                light.type = static_cast<ELightType>(currentType);
             }
+
+            drawColorEdit("Color", light.color);
+            EditorFormLayout::DragFloatRow("Intensity", &light.intensity, 0.01f, 0.0f, 100.0f, "%.2f");
+
+            if (light.type != ELightType::Directional)
+            {
+                EditorFormLayout::DragFloatRow("Range", &light.range, 0.1f, 0.1f, 1000.0f, "%.1f");
+                EditorFormLayout::DragFloatRow("Attenuation", &light.attenuation, 0.01f, 0.0f, 10.0f, "%.2f");
+            }
+
+            if (light.type == ELightType::Spot)
+            {
+                EditorFormLayout::DragFloatRow("Inner Cone", &light.innerConeAngle, 0.5f, 1.0f, light.outerConeAngle - 1.0f, "%.1f");
+                EditorFormLayout::DragFloatRow("Outer Cone", &light.outerConeAngle, 0.5f, light.innerConeAngle + 1.0f, 90.0f, "%.1f");
+            }
+
+            EditorFormLayout::CheckboxRow("Cast Shadow", &light.castShadow);
+            if (light.castShadow)
+            {
+                EditorFormLayout::DragFloatRow("Shadow Bias", &light.shadowBias, 0.0001f, 0.0f, 0.1f, "%.4f");
+
+                const char* resolutions[] = {"512", "1024", "2048", "4096"};
+                int currentRes            = 1;
+                if (light.shadowMapResolution == 512) currentRes = 0;
+                else if (light.shadowMapResolution == 1024) currentRes = 1;
+                else if (light.shadowMapResolution == 2048) currentRes = 2;
+                else if (light.shadowMapResolution == 4096) currentRes = 3;
+
+                if (EditorFormLayout::ComboRow("Shadow Resolution", &currentRes, resolutions, 4))
+                {
+                    const uint32 resValues[]  = {512, 1024, 2048, 4096};
+                    light.shadowMapResolution = resValues[currentRes];
+                }
+            }
+
+            EditorFormLayout::CheckboxRow("Enabled", &light.isEnabled);
+            EditorFormLayout::End();
         }
-
-        // Enabled flag
-        ImGui::Checkbox("Enabled", &light.isEnabled);
-
-        ImGui::Unindent();
     }
 
     if (removeComponent)
@@ -1207,11 +1206,12 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
     bool modified = false;
 
     ImGui::PushID(label);
-
-    ImGui::Columns(2);
-    ImGui::SetColumnWidth(0, 100.0f);
-    ImGui::Text("%s", label);
-    ImGui::NextColumn();
+    if (!EditorFormLayout::Begin("##Vec3Control", 130.0f))
+    {
+        ImGui::PopID();
+        return false;
+    }
+    EditorFormLayout::BeginRow(label);
 
     float lineHeight  = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
     ImVec2 buttonSize = {lineHeight, lineHeight};
@@ -1277,7 +1277,7 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
     ImGui::PopItemWidth();
 
     ImGui::PopStyleVar();
-    ImGui::Columns(1);
+    EditorFormLayout::End();
 
     ImGui::PopID();
 
@@ -1286,7 +1286,9 @@ bool InspectorPanel::drawVec3Control(const char* label, glm::vec3& values, float
 
 void InspectorPanel::drawColorEdit(const char* label, glm::vec3& color)
 {
-    ImGui::ColorEdit3(label, &color.x, ImGuiColorEditFlags_Float);
+    EditorFormLayout::BeginRow(label);
+    std::string id = std::string("##") + label;
+    ImGui::ColorEdit3(id.c_str(), &color.x, ImGuiColorEditFlags_Float);
 }
 
 void InspectorPanel::drawAddComponentButton(Entity entity)
