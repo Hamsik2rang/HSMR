@@ -12,6 +12,7 @@ source_group("Public" FILES ${SHADER_SYSTEM_HEADERS})
 list(APPEND TOTAL_FILES ${SHADER_SYSTEM_HEADERS})
 
 set(SHADER_SYSTEM_SOURCES
+    Private/ShaderSystemDefinition.cpp
     Private/ShaderCompiler.cpp
     Private/ShaderCache.cpp
 )

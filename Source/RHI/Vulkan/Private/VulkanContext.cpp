@@ -598,21 +598,25 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     }
 
     std::vector<VkBufferImageCopy> bufferCopyRegions;
-    uint32_t offset = 0;
 
-    for (uint32_t i = 0; i < 1 /* TODO: Mip Levels*/; i++)
+    const uint32_t layerCount   = RHIUtilityVulkan::GetTextureLayerCount(info);
+    const size_t   faceByteSize = (layerCount > 1) ? (info.byteSize / layerCount) : info.byteSize;
+
+    for (uint32_t layer = 0; layer < layerCount; ++layer)
     {
-        // Setup a buffer image copy structure for the current mip level
-        VkBufferImageCopy bufferCopyRegion               = {};
-        bufferCopyRegion.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        bufferCopyRegion.imageSubresource.mipLevel       = i;
-        bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
-        bufferCopyRegion.imageSubresource.layerCount     = 1;
-        bufferCopyRegion.imageExtent.width               = info.extent.width >> i;
-        bufferCopyRegion.imageExtent.height              = info.extent.height >> i;
-        bufferCopyRegion.imageExtent.depth               = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
-        bufferCopyRegion.bufferOffset                    = 0;
-        bufferCopyRegions.push_back(bufferCopyRegion);
+        for (uint32_t mip = 0; mip < 1 /* TODO: Mip Levels*/; ++mip)
+        {
+            VkBufferImageCopy bufferCopyRegion               = {};
+            bufferCopyRegion.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+            bufferCopyRegion.imageSubresource.mipLevel       = mip;
+            bufferCopyRegion.imageSubresource.baseArrayLayer = layer;
+            bufferCopyRegion.imageSubresource.layerCount     = 1;
+            bufferCopyRegion.imageExtent.width               = info.extent.width >> mip;
+            bufferCopyRegion.imageExtent.height              = info.extent.height >> mip;
+            bufferCopyRegion.imageExtent.depth               = (info.type == ETextureType::Tex3D) ? info.extent.depth : 1;
+            bufferCopyRegion.bufferOffset                    = static_cast<VkDeviceSize>(layer * faceByteSize);
+            bufferCopyRegions.push_back(bufferCopyRegion);
+        }
     }
 
     VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -671,8 +675,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         subresourceRange.baseMipLevel            = 0;
         // We will transition on all mip levels
         subresourceRange.levelCount              = imageCreateInfo.mipLevels;
-        // The 2D texture only has one layer
-        subresourceRange.layerCount              = 1;
+        subresourceRange.layerCount              = RHIUtilityVulkan::GetTextureLayerCount(info);
 
         // Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
         VkImageMemoryBarrier imageMemoryBarrier{};
@@ -823,7 +826,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     viewCreateInfo.subresourceRange.aspectMask     = aspectMask;
     viewCreateInfo.subresourceRange.baseMipLevel   = 0;
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    viewCreateInfo.subresourceRange.layerCount     = 1;
+    viewCreateInfo.subresourceRange.layerCount     = RHIUtilityVulkan::GetTextureLayerCount(info);
     viewCreateInfo.subresourceRange.levelCount     = 1; // TODO
 
     VkImageView imageViewVk;

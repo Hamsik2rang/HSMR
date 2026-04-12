@@ -297,7 +297,7 @@ add_library(${TARGET_NAME}
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core RHI Engine Resource Renderer Scene
+        Core RHI ShaderSystem Engine Resource Renderer Scene
         ${HS_DEPS_LIB_DIR}/vulkan-1.lib
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
