@@ -16,6 +16,18 @@
 
 HS_NS_BEGIN
 
+static bool isCPUAccessibleBuffer(EBufferMemoryOption memoryOption)
+{
+    switch (memoryOption)
+    {
+    case EBufferMemoryOption::Dynamic:
+    case EBufferMemoryOption::Mapped:
+        return true;
+    default:
+        return false;
+    }
+}
+
 id<MTLDevice> s_device         = nil;
 id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
@@ -127,16 +139,23 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     for (size_t i = 0; i < info.vertexInputDesc.attributes.size(); i++)
     {
         const auto& curAttribute = info.vertexInputDesc.attributes[i];
+        HS_ASSERT(curAttribute.binding < kMetalReservedVertexBufferSlotCount,
+                  "Metal vertex attribute binding exceeds reserved vertex buffer slots");
+        const NSUInteger bufferIndex = MetalVertexBufferSlotForBinding(curAttribute.binding);
+        HS_ASSERT(bufferIndex < kMetalMaxVertexBufferSlotCount, "Metal vertex attribute buffer index out of range");
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
-        vertexDesc.attributes[i].bufferIndex = kMetalVertexBufferBaseIndex + curAttribute.binding;
+        vertexDesc.attributes[i].bufferIndex = bufferIndex;
         vertexDesc.attributes[i].format      = MetalUtility::ToVertexFormat(curAttribute.format);
     }
 
     for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
     {
         const auto& curLayout = info.vertexInputDesc.layouts[i];
-        NSUInteger layoutIdx  = kMetalVertexBufferBaseIndex + i;
+        HS_ASSERT(curLayout.binding < kMetalReservedVertexBufferSlotCount,
+                  "Metal vertex layout binding exceeds reserved vertex buffer slots");
+        NSUInteger layoutIdx  = MetalVertexBufferSlotForBinding(curLayout.binding);
+        HS_ASSERT(layoutIdx < kMetalMaxVertexBufferSlotCount, "Metal vertex layout buffer index out of range");
 
         vertexDesc.layouts[layoutIdx].stride       = curLayout.stride;
         vertexDesc.layouts[layoutIdx].stepRate     = static_cast<uint8>(curLayout.stepRate);
@@ -362,15 +381,8 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
 
     HS_ASSERT(dataSize > 0, "Buffer size must be greater than 0");
 
-    id<MTLBuffer> handle = nil;
-    if (data != nullptr)
-    {
-        handle = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
-    }
-    else
-    {
-        handle = [s_device newBufferWithLength:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
-    }
+    const MTLResourceOptions resourceOptions = MetalUtility::ToBufferOption(info.memoryOption);
+    id<MTLBuffer> handle = [s_device newBufferWithLength:dataSize options:resourceOptions];
  
     if (nil == handle)
     {
@@ -378,8 +390,13 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
     }
 
     mtlBuffer->handle   = handle;
-    mtlBuffer->byte     = [handle contents];
+    mtlBuffer->byte     = isCPUAccessibleBuffer(info.memoryOption) ? [handle contents] : nullptr;
     mtlBuffer->byteSize = dataSize;
+
+    if (data != nullptr)
+    {
+        UpdateBuffer(static_cast<RHIBuffer*>(mtlBuffer), 0, data, dataSize);
+    }
 
     return static_cast<RHIBuffer*>(mtlBuffer);
 }

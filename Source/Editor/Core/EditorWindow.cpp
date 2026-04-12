@@ -73,7 +73,7 @@ RenderTargetInfo buildPanelRenderTargetInfo(const RenderTargetInfo& baseInfo, ui
     return info;
 }
 
-RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
+RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera, uint32 width, uint32 height)
 {
     RenderViewSnapshot viewSnapshot{};
     viewSnapshot.viewId = std::numeric_limits<uint64>::max();
@@ -93,6 +93,7 @@ RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
     perView.inverseProjectionMatrix = editorCamera->GetInverseProjectionMatrix();
     perView.inverseViewProjectionMatrix = editorCamera->GetInverseViewProjectionMatrix();
     perView.cameraPosition = editorCamera->GetPosition();
+    perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
 
     viewSnapshot.perView = perView;
     return viewSnapshot;
@@ -115,6 +116,7 @@ RenderViewSnapshot buildSceneCameraViewSnapshot(Entity cameraEntity, bool vulkan
 
     viewSnapshot.viewId = static_cast<uint64>(entt::to_integral(cameraEntity.GetHandle()));
     viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+    viewSnapshot.perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
     return viewSnapshot;
 }
 
@@ -280,7 +282,10 @@ void EditorWindow::onRender()
         ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
         RenderSceneSnapshot baseSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
             _scene.get(), _renderer->GetShaderLibrary());
-        RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(scenePanel->GetEditorCamera());
+        RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(
+            scenePanel->GetEditorCamera(),
+            sceneRT->GetWidth(),
+            sceneRT->GetHeight());
         RenderSceneSnapshot sceneSnapshot = baseSnapshot;
         setSingleViewSnapshot(sceneSnapshot, editorViewSnapshot);
 

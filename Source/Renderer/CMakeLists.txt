@@ -58,6 +58,7 @@ set(RENDERER_RENDER_PASS_HEADERS
     RenderPass/ForwardOpaquePass.h
     RenderPass/ForwardGridPass.h
     RenderPass/ForwardDebugPass.h
+    RenderPass/ForwardIconPass.h
 )
 
 source_group("RenderPass\\Public" FILES ${RENDERER_RENDER_PASS_HEADERS})
@@ -69,6 +70,7 @@ set(RENDERER_RENDER_PASS_SOURCES
     RenderPass/Private/ForwardOpaquePass.cpp
     RenderPass/Private/ForwardGridPass.cpp
     RenderPass/Private/ForwardDebugPass.cpp
+    RenderPass/Private/ForwardIconPass.cpp
 )
 
 source_group("RenderPass\\Private" FILES ${RENDERER_RENDER_PASS_SOURCES})

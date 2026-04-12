@@ -7,6 +7,7 @@
 #include "Renderer/RenderGraph/RenderGraphBuilder.h"
 #include "Renderer/RenderPass/ForwardDebugPass.h"
 #include "Renderer/RenderPass/ForwardGridPass.h"
+#include "Renderer/RenderPass/ForwardIconPass.h"
 
 namespace hs
 {
@@ -43,6 +44,7 @@ private:
 
     Scoped<ForwardGridPass> _gridPass;
     Scoped<ForwardDebugPass> _debugPass;
+    Scoped<ForwardIconPass> _iconPass;
     bool _isInitialized = false;
 };
 
