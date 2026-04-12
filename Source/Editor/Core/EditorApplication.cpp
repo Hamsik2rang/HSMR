@@ -186,7 +186,7 @@ void EditorApplication::Run()
     {
         if (!ProjectContext::Get().OpenProject(projectPath))
         {
-            HS_LOG(error, "Failed to open project: {}", projectPath.c_str());
+            HS_LOG(error, "Failed to open project: %s", projectPath.c_str());
             return;
         }
 

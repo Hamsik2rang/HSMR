@@ -878,7 +878,7 @@ bool InspectorPanel::drawMaterialTextureSlot(Material* material, EMaterialTextur
             }
             else
             {
-                HS_LOG(warning, "[InspectorPanel] Failed to load texture asset '{}'", assetPath.c_str());
+                HS_LOG(warning, "[InspectorPanel] Failed to load texture asset '%s'", assetPath.c_str());
             }
         }
         ImGui::EndDragDropTarget();

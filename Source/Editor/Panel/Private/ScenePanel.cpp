@@ -490,7 +490,7 @@ void ScenePanel::handlePicking()
     // Update selection
     if (picked.IsValid())
     {
-        HS_LOG(info, "[ScenePanel] Picked entity handle={}", static_cast<uint32>(entt::to_integral(picked.GetHandle())));
+        HS_LOG(info, "[ScenePanel] Picked entity handle=%u", static_cast<uint32>(entt::to_integral(picked.GetHandle())));
         EditorContext::Get().SetSelectedEntity(picked);
     }
     else

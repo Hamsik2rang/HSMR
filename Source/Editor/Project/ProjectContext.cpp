@@ -69,7 +69,7 @@ bool ProjectContext::CreateProject(const std::string& folderPath, const std::str
 
     if (!hs::FileSystem::CreateDirectoryRecursive(projectPath))
     {
-        HS_LOG(error, "Failed to create project directory: {}", projectPath.c_str());
+        HS_LOG(error, "Failed to create project directory: %s", projectPath.c_str());
         return false;
     }
 
@@ -95,7 +95,7 @@ bool ProjectContext::CreateProject(const std::string& folderPath, const std::str
     const std::string defaultScenePath = GetResolvedDefaultScenePath();
     if (!serializer.SaveToFile(defaultScenePath))
     {
-        HS_LOG(error, "Failed to save default scene: {}", defaultScenePath.c_str());
+        HS_LOG(error, "Failed to save default scene: %s", defaultScenePath.c_str());
         return false;
     }
 
@@ -108,7 +108,7 @@ bool ProjectContext::CreateProject(const std::string& folderPath, const std::str
 
     _isOpen = true;
 
-    HS_LOG(info, "Project created: {} at {}", name.c_str(), projectPath.c_str());
+    HS_LOG(info, "Project created: %s at %s", name.c_str(), projectPath.c_str());
     return true;
 }
 
@@ -122,13 +122,13 @@ bool ProjectContext::OpenProject(const std::string& projectFilePath)
 
     if (!hs::FileSystem::Exist(projectFilePath))
     {
-        HS_LOG(error, "Project file not found: {}", projectFilePath.c_str());
+        HS_LOG(error, "Project file not found: %s", projectFilePath.c_str());
         return false;
     }
 
     if (!loadProjectFile(projectFilePath))
     {
-        HS_LOG(error, "Failed to load project file: {}", projectFilePath.c_str());
+        HS_LOG(error, "Failed to load project file: %s", projectFilePath.c_str());
         return false;
     }
 
@@ -136,7 +136,7 @@ bool ProjectContext::OpenProject(const std::string& projectFilePath)
     _projectPath     = hs::FileSystem::GetDirectory(projectFilePath);
     _isOpen          = true;
 
-    HS_LOG(info, "Project opened: {} at {}", _settings.name.c_str(), _projectPath.c_str());
+    HS_LOG(info, "Project opened: %s at %s", _settings.name.c_str(), _projectPath.c_str());
     return true;
 }
 
@@ -268,7 +268,7 @@ bool ProjectContext::loadProjectFile(const std::string& path)
     }
     catch (const std::exception& e)
     {
-        HS_LOG(error, "Failed to parse project file: {}", e.what());
+        HS_LOG(error, "Failed to parse project file: %s", e.what());
         return false;
     }
 }

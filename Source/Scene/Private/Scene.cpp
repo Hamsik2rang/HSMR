@@ -44,13 +44,13 @@ Scene::Scene(const std::string& name)
 {
     AddSystem<TransformSystem>(_sceneGraph);
     AddSystem<MeshBoundsSystem>();
-    HS_LOG(info, "[Scene] Created scene: {}", _name.c_str());
+    HS_LOG(info, "[Scene] Created scene: %s", _name.c_str());
 }
 
 Scene::~Scene()
 {
     Clear();
-    HS_LOG(info, "[Scene] Destroyed scene: {}", _name.c_str());
+    HS_LOG(info, "[Scene] Destroyed scene: %s", _name.c_str());
 }
 
 Entity Scene::CreateEntity(const std::string& name)

@@ -334,14 +334,14 @@ bool SceneSerializer::SaveToFile(const std::string& filePath)
     std::ofstream file(filePath);
     if (!file.is_open())
     {
-        HS_LOG(error, "[SceneSerializer] Failed to open file for writing: {}", filePath.c_str());
+        HS_LOG(error, "[SceneSerializer] Failed to open file for writing: %s", filePath.c_str());
         return false;
     }
 
     file << jsonStr;
     file.close();
 
-    HS_LOG(info, "[SceneSerializer] Scene saved to: {}", filePath.c_str());
+    HS_LOG(info, "[SceneSerializer] Scene saved to: %s", filePath.c_str());
     return true;
 }
 
@@ -449,7 +449,7 @@ bool SceneSerializer::LoadFromFile(const std::string& filePath)
     std::ifstream file(filePath);
     if (!file.is_open())
     {
-        HS_LOG(error, "[SceneSerializer] Failed to open file: {}", filePath.c_str());
+        HS_LOG(error, "[SceneSerializer] Failed to open file: %s", filePath.c_str());
         return false;
     }
 
@@ -476,7 +476,7 @@ bool SceneSerializer::LoadFromString(const std::string& jsonString)
         if (root.contains("version"))
         {
             std::string version = root["version"].get<std::string>();
-            HS_LOG(info, "[SceneSerializer] Loading scene version: {}", version.c_str());
+            HS_LOG(info, "[SceneSerializer] Loading scene version: %s", version.c_str());
         }
 
         // Scene name
@@ -559,7 +559,7 @@ bool SceneSerializer::LoadFromString(const std::string& jsonString)
     }
     catch (const json::exception& e)
     {
-        HS_LOG(error, "[SceneSerializer] JSON parse error: {}", e.what());
+        HS_LOG(error, "[SceneSerializer] JSON parse error: %s", e.what());
         return false;
     }
 }

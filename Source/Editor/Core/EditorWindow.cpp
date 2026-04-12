@@ -487,7 +487,7 @@ bool EditorWindow::loadInitialScene()
             return true;
         }
 
-        HS_LOG(error, "[EditorWindow] Failed to load startup scene: {}", defaultScenePath.c_str());
+        HS_LOG(error, "[EditorWindow] Failed to load startup scene: %s", defaultScenePath.c_str());
         _scene.reset();
     }
 
@@ -511,7 +511,7 @@ void EditorWindow::persistDefaultSceneAsset()
     SceneSerializer serializer(_scene.get());
     if (!serializer.SaveToFile(defaultScenePath))
     {
-        HS_LOG(error, "[EditorWindow] Failed to persist fallback startup scene: {}", defaultScenePath.c_str());
+        HS_LOG(error, "[EditorWindow] Failed to persist fallback startup scene: %s", defaultScenePath.c_str());
         return;
     }
 

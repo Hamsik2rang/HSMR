@@ -44,7 +44,7 @@ void AssetDatabase::Scan()
         _rootPath.pop_back();
     }
 
-    HS_LOG(info, "[AssetDatabase] Scanning root: {}", _rootPath.c_str());
+    HS_LOG(info, "[AssetDatabase] Scanning root: %s", _rootPath.c_str());
 
     Refresh();
 }
@@ -73,14 +73,14 @@ void AssetDatabase::Refresh()
     std::filesystem::path rootFsPath(_rootPath);
     if (!std::filesystem::exists(rootFsPath))
     {
-        HS_LOG(warning, "[AssetDatabase] Root path does not exist: {}", _rootPath.c_str());
+        HS_LOG(warning, "[AssetDatabase] Root path does not exist: %s", _rootPath.c_str());
         return;
     }
 
     scanDirectory(rootFsPath, "");
     buildFolderTree();
 
-    HS_LOG(info, "[AssetDatabase] Scanned {} assets", _assets.size());
+    HS_LOG(info, "[AssetDatabase] Scanned %zu assets", _assets.size());
 }
 
 void AssetDatabase::scanDirectory(const std::filesystem::path& path, const std::string& relativePath)
@@ -130,7 +130,7 @@ void AssetDatabase::scanDirectory(const std::filesystem::path& path, const std::
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        HS_LOG(error, "[AssetDatabase] Error scanning directory: {}", e.what());
+        HS_LOG(error, "[AssetDatabase] Error scanning directory: %s", e.what());
     }
 }
 

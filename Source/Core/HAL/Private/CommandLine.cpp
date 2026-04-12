@@ -41,7 +41,7 @@ const std::string& CommandLine::GetArg(int index)
     static const std::string s_empty;
     if (index < 0 || index >= static_cast<int>(s_args.size()))
     {
-        HS_LOG(warning, "CommandLine::GetArg: index {} out of range (count: {})", index, s_args.size());
+        HS_LOG(warning, "CommandLine::GetArg: index %d out of range (count: %zu)", index, s_args.size());
         return s_empty;
     }
     return s_args[index];
