@@ -113,6 +113,26 @@ set(EDITOR_RESOURCE_SOURCES
 list(APPEND TOTAL_FILES ${EDITOR_RESOURCE_SOURCES})
 source_group("Resource\\Private" FILES ${EDITOR_RESOURCE_SOURCES})
 
+set(EDITOR_RENDERER_HEADERS
+    Renderer/EditorRenderer.h
+    Renderer/RenderPass/EditorGridPass.h
+    Renderer/RenderPass/EditorDebugPass.h
+    Renderer/RenderPass/EditorIconPass.h
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RENDERER_HEADERS})
+source_group("Renderer\\Public" FILES ${EDITOR_RENDERER_HEADERS})
+
+set(EDITOR_RENDERER_SOURCES
+    Renderer/Private/EditorRenderer.cpp
+    Renderer/RenderPass/Private/EditorGridPass.cpp
+    Renderer/RenderPass/Private/EditorDebugPass.cpp
+    Renderer/RenderPass/Private/EditorIconPass.cpp
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RENDERER_SOURCES})
+source_group("Renderer\\Private" FILES ${EDITOR_RENDERER_SOURCES})
+
 set(EDITOR_ASSET_HEADERS
     Asset/AssetTypes.h
     Asset/AssetDatabase.h

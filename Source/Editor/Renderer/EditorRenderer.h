@@ -1,13 +1,13 @@
-#ifndef __HS_FORWARD_OVERLAY_RENDERER_H__
-#define __HS_FORWARD_OVERLAY_RENDERER_H__
+#ifndef __HS_EDITOR_RENDERER_EDITOR_RENDERER_H__
+#define __HS_EDITOR_RENDERER_EDITOR_RENDERER_H__
 
 #include "Precompile.h"
 
 #include "Renderer/RendererDefinition.h"
 #include "Renderer/RenderGraph/RenderGraphBuilder.h"
-#include "Renderer/RenderPass/ForwardDebugPass.h"
-#include "Renderer/RenderPass/ForwardGridPass.h"
-#include "Renderer/RenderPass/ForwardIconPass.h"
+#include "Editor/Renderer/RenderPass/EditorDebugPass.h"
+#include "Editor/Renderer/RenderPass/EditorGridPass.h"
+#include "Editor/Renderer/RenderPass/EditorIconPass.h"
 
 namespace hs
 {
@@ -20,11 +20,11 @@ class ShaderLibrary;
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API ForwardOverlayRenderer
+class HS_EDITOR_API EditorRenderer
 {
 public:
-    explicit ForwardOverlayRenderer(RHIContext* rhiContext);
-    ~ForwardOverlayRenderer();
+    explicit EditorRenderer(RHIContext* rhiContext);
+    ~EditorRenderer();
 
     bool Initialize(ShaderLibrary* shaderLibrary);
     void Shutdown();
@@ -42,12 +42,12 @@ private:
     ShaderLibrary* _shaderLibrary = nullptr;
     RenderGraphBuilder _graphBuilder;
 
-    Scoped<ForwardGridPass> _gridPass;
-    Scoped<ForwardDebugPass> _debugPass;
-    Scoped<ForwardIconPass> _iconPass;
+    Scoped<EditorGridPass> _gridPass;
+    Scoped<EditorDebugPass> _debugPass;
+    Scoped<EditorIconPass> _iconPass;
     bool _isInitialized = false;
 };
 
 HS_NS_END
 
-#endif /* __HS_FORWARD_OVERLAY_RENDERER_H__ */
+#endif /* __HS_EDITOR_RENDERER_EDITOR_RENDERER_H__ */

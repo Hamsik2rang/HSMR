@@ -1,4 +1,4 @@
-#include "Renderer/RenderPass/ForwardIconPass.h"
+#include "Editor/Renderer/RenderPass/EditorIconPass.h"
 
 #include "Core/Hash.h"
 #include "Core/Log.h"
@@ -63,19 +63,19 @@ float computeWorldIconSize(const RenderViewSnapshot& viewSnapshot, const glm::ve
 }
 }
 
-ForwardIconPass::~ForwardIconPass()
+EditorIconPass::~EditorIconPass()
 {
     Shutdown();
 }
 
-bool ForwardIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
+bool EditorIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
 {
     _rhiContext = rhiContext;
 
     Shader* shader = shaderLibrary->GetOrCompile("EditorIcon", EShaderStage::Vertex | EShaderStage::Fragment);
     if (!shader || !shader->IsCompiledEx())
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to compile EditorIcon.slang");
+        HS_LOG(error, "[EditorIconPass] Failed to compile EditorIcon.slang");
         return false;
     }
 
@@ -83,7 +83,7 @@ bool ForwardIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
     const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode)
     {
-        HS_LOG(error, "[ForwardIconPass] Missing EditorIcon shader bytecode");
+        HS_LOG(error, "[EditorIconPass] Missing EditorIcon shader bytecode");
         return false;
     }
 
@@ -105,7 +105,7 @@ bool ForwardIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
 
     if (!_vertexShader || !_fragmentShader)
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to create RHI shaders");
+        HS_LOG(error, "[EditorIconPass] Failed to create RHI shaders");
         return false;
     }
 
@@ -128,7 +128,7 @@ bool ForwardIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
 
     if (!_vertexBuffer)
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to create quad vertex buffer");
+        HS_LOG(error, "[EditorIconPass] Failed to create quad vertex buffer");
         return false;
     }
 
@@ -136,7 +136,7 @@ bool ForwardIconPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
     return true;
 }
 
-void ForwardIconPass::Shutdown()
+void EditorIconPass::Shutdown()
 {
     if (!_rhiContext)
     {
@@ -196,7 +196,7 @@ void ForwardIconPass::Shutdown()
     _rhiContext = nullptr;
 }
 
-bool ForwardIconPass::Prepare(RenderResourceManager& resourceManager,
+bool EditorIconPass::Prepare(RenderResourceManager& resourceManager,
                               const RenderSceneSnapshot& snapshot,
                               const RenderViewSnapshot& viewSnapshot)
 {
@@ -261,7 +261,7 @@ bool ForwardIconPass::Prepare(RenderResourceManager& resourceManager,
     return _instanceBuffer != nullptr;
 }
 
-RHIGraphicsPipeline* ForwardIconPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
+RHIGraphicsPipeline* EditorIconPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
                                                           RHIBuffer* perViewBuffer)
 {
     if (!_isInitialized || !perViewBuffer || !_cameraIconResource || !_lightIconResource)
@@ -390,7 +390,7 @@ RHIGraphicsPipeline* ForwardIconPass::GetOrCreatePipeline(const PipelineRenderTa
     RHIGraphicsPipeline* pipeline = _rhiContext->CreateGraphicsPipeline("EditorIconPipeline", gpInfo);
     if (!pipeline)
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to create graphics pipeline");
+        HS_LOG(error, "[EditorIconPass] Failed to create graphics pipeline");
         return nullptr;
     }
 
@@ -398,14 +398,14 @@ RHIGraphicsPipeline* ForwardIconPass::GetOrCreatePipeline(const PipelineRenderTa
     return pipeline;
 }
 
-bool ForwardIconPass::ensureIconResources(RenderResourceManager& resourceManager)
+bool EditorIconPass::ensureIconResources(RenderResourceManager& resourceManager)
 {
     if (!_cameraIconImage || !_lightIconImage)
     {
         const SystemContext* sysContext = SystemContext::Get();
         if (!sysContext || sysContext->assetDirectory.empty())
         {
-            HS_LOG(error, "[ForwardIconPass] Missing asset directory");
+            HS_LOG(error, "[EditorIconPass] Missing asset directory");
             return false;
         }
 
@@ -415,7 +415,7 @@ bool ForwardIconPass::ensureIconResources(RenderResourceManager& resourceManager
             _cameraIconImage = ObjectManager::LoadImageFromFile(cameraPath, true);
             if (!_cameraIconImage)
             {
-                HS_LOG(error, "[ForwardIconPass] Failed to load camera icon: %s", cameraPath.c_str());
+                HS_LOG(error, "[EditorIconPass] Failed to load camera icon: %s", cameraPath.c_str());
                 return false;
             }
         }
@@ -426,7 +426,7 @@ bool ForwardIconPass::ensureIconResources(RenderResourceManager& resourceManager
             _lightIconImage = ObjectManager::LoadImageFromFile(lightPath, true);
             if (!_lightIconImage)
             {
-                HS_LOG(error, "[ForwardIconPass] Failed to load light icon: %s", lightPath.c_str());
+                HS_LOG(error, "[EditorIconPass] Failed to load light icon: %s", lightPath.c_str());
                 return false;
             }
         }
@@ -439,7 +439,7 @@ bool ForwardIconPass::ensureIconResources(RenderResourceManager& resourceManager
            _lightIconResource && _lightIconResource->isValid;
 }
 
-void ForwardIconPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
+void EditorIconPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
 {
     if (_resourceSet)
     {
@@ -488,21 +488,21 @@ void ForwardIconPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     _resourceLayout = _rhiContext->CreateResourceLayout("EditorIconLayout", bindings.data(), static_cast<uint32>(bindings.size()));
     if (!_resourceLayout)
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to create resource layout");
+        HS_LOG(error, "[EditorIconPass] Failed to create resource layout");
         return;
     }
 
     _resourceSet = _rhiContext->CreateResourceSet("EditorIconSet", _resourceLayout);
     if (!_resourceSet)
     {
-        HS_LOG(error, "[ForwardIconPass] Failed to create resource set");
+        HS_LOG(error, "[EditorIconPass] Failed to create resource set");
         return;
     }
 
     _perViewBuffer = perViewBuffer;
 }
 
-void ForwardIconPass::resetPipelines()
+void EditorIconPass::resetPipelines()
 {
     for (auto& [key, pipeline] : _pipelineCache)
     {
@@ -514,7 +514,7 @@ void ForwardIconPass::resetPipelines()
     _pipelineCache.clear();
 }
 
-void ForwardIconPass::addCameraIcon(const DebugCameraSnapshot& camera, const RenderViewSnapshot& viewSnapshot)
+void EditorIconPass::addCameraIcon(const DebugCameraSnapshot& camera, const RenderViewSnapshot& viewSnapshot)
 {
     addIconInstance(
         glm::vec3(camera.worldMatrix[3]),
@@ -524,7 +524,7 @@ void ForwardIconPass::addCameraIcon(const DebugCameraSnapshot& camera, const Ren
         computeDistanceFade(viewSnapshot.perView.cameraPosition, glm::vec3(camera.worldMatrix[3])));
 }
 
-void ForwardIconPass::addLightIcon(const DebugLightSnapshot& light, const RenderViewSnapshot& viewSnapshot)
+void EditorIconPass::addLightIcon(const DebugLightSnapshot& light, const RenderViewSnapshot& viewSnapshot)
 {
     addIconInstance(
         glm::vec3(light.worldMatrix[3]),
@@ -534,7 +534,7 @@ void ForwardIconPass::addLightIcon(const DebugLightSnapshot& light, const Render
         computeDistanceFade(viewSnapshot.perView.cameraPosition, glm::vec3(light.worldMatrix[3])));
 }
 
-void ForwardIconPass::addIconInstance(const glm::vec3& worldPosition,
+void EditorIconPass::addIconInstance(const glm::vec3& worldPosition,
                                       const RenderViewSnapshot& viewSnapshot,
                                       EIconType iconType,
                                       const glm::vec3& tint,

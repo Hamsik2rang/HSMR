@@ -1,4 +1,4 @@
-#include "Renderer/ForwardOverlayRenderer.h"
+#include "Editor/Renderer/EditorRenderer.h"
 
 #include "RHI/CommandHandle.h"
 #include "Renderer/RenderTarget.h"
@@ -18,17 +18,17 @@ RenderSceneSnapshot buildSingleViewSnapshot(const RenderSceneSnapshot& snapshot,
 }
 }
 
-ForwardOverlayRenderer::ForwardOverlayRenderer(RHIContext* rhiContext)
+EditorRenderer::EditorRenderer(RHIContext* rhiContext)
     : _rhiContext(rhiContext)
 {
 }
 
-ForwardOverlayRenderer::~ForwardOverlayRenderer()
+EditorRenderer::~EditorRenderer()
 {
     Shutdown();
 }
 
-bool ForwardOverlayRenderer::Initialize(ShaderLibrary* shaderLibrary)
+bool EditorRenderer::Initialize(ShaderLibrary* shaderLibrary)
 {
     _shaderLibrary = shaderLibrary;
     _graphBuilder.Initialize(_rhiContext);
@@ -36,7 +36,7 @@ bool ForwardOverlayRenderer::Initialize(ShaderLibrary* shaderLibrary)
     return true;
 }
 
-void ForwardOverlayRenderer::Shutdown()
+void EditorRenderer::Shutdown()
 {
     _iconPass.reset();
     _debugPass.reset();
@@ -45,7 +45,7 @@ void ForwardOverlayRenderer::Shutdown()
     _isInitialized = false;
 }
 
-void ForwardOverlayRenderer::Render(
+void EditorRenderer::Render(
     RHICommandBuffer& commandBuffer,
     RenderResourceManager& resourceManager,
     const RenderSceneSnapshot& snapshot,
@@ -116,13 +116,13 @@ void ForwardOverlayRenderer::Render(
 
     if (options.enableGrid && !_gridPass)
     {
-        _gridPass = MakeScoped<ForwardGridPass>();
+        _gridPass = MakeScoped<EditorGridPass>();
         _gridPass->Initialize(_shaderLibrary, _rhiContext);
     }
 
     if (!_iconPass)
     {
-        _iconPass = MakeScoped<ForwardIconPass>();
+        _iconPass = MakeScoped<EditorIconPass>();
         _iconPass->Initialize(_shaderLibrary, _rhiContext);
     }
 
@@ -131,7 +131,7 @@ void ForwardOverlayRenderer::Render(
     {
         if (!_debugPass)
         {
-            _debugPass = MakeScoped<ForwardDebugPass>();
+            _debugPass = MakeScoped<EditorDebugPass>();
             _debugPass->Initialize(_shaderLibrary, _rhiContext);
         }
 

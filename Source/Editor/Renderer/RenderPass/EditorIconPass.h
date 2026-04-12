@@ -1,5 +1,5 @@
-#ifndef __HS_RENDERER_RENDER_PASS_FORWARD_ICON_PASS_H__
-#define __HS_RENDERER_RENDER_PASS_FORWARD_ICON_PASS_H__
+#ifndef __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_ICON_PASS_H__
+#define __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_ICON_PASS_H__
 
 #include "Precompile.h"
 #include "RHI/RHIDefinition.h"
@@ -24,11 +24,11 @@ struct ImageResource;
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API ForwardIconPass
+class HS_EDITOR_API EditorIconPass
 {
 public:
-    ForwardIconPass() = default;
-    ~ForwardIconPass();
+    EditorIconPass() = default;
+    ~EditorIconPass();
 
     bool Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext);
     void Shutdown();
@@ -106,4 +106,4 @@ private:
 
 HS_NS_END
 
-#endif
+#endif /* __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_ICON_PASS_H__ */

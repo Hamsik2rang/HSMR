@@ -1,4 +1,4 @@
-#include "Renderer/RenderPass/ForwardGridPass.h"
+#include "Editor/Renderer/RenderPass/EditorGridPass.h"
 
 #include "Core/Log.h"
 #include "Core/Hash.h"
@@ -13,19 +13,19 @@
 
 HS_NS_BEGIN
 
-ForwardGridPass::~ForwardGridPass()
+EditorGridPass::~EditorGridPass()
 {
     Shutdown();
 }
 
-bool ForwardGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
+bool EditorGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
 {
     _rhiContext = rhiContext;
 
     Shader* shader = shaderLibrary->GetOrCompile("GridDepth", EShaderStage::Vertex | EShaderStage::Fragment);
     if (!shader || !shader->IsCompiledEx())
     {
-        HS_LOG(error, "[ForwardGridPass] Grid 셰이더 컴파일 실패 — Grid.slang 확인 필요");
+        HS_LOG(error, "[EditorGridPass] Grid 셰이더 컴파일 실패 — Grid.slang 확인 필요");
         return false;
     }
 
@@ -33,7 +33,7 @@ bool ForwardGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
     const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode)
     {
-        HS_LOG(error, "[ForwardGridPass] Grid 셰이더 바이트코드 없음");
+        HS_LOG(error, "[EditorGridPass] Grid 셰이더 바이트코드 없음");
         return false;
     }
 
@@ -57,7 +57,7 @@ bool ForwardGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
 
     if (!_vertexShader || !_fragmentShader)
     {
-        HS_LOG(error, "[ForwardGridPass] Grid RHI 셰이더 생성 실패");
+        HS_LOG(error, "[EditorGridPass] Grid RHI 셰이더 생성 실패");
         return false;
     }
 
@@ -65,7 +65,7 @@ bool ForwardGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCo
     return true;
 }
 
-void ForwardGridPass::Shutdown()
+void EditorGridPass::Shutdown()
 {
     if (!_rhiContext) return;
 
@@ -109,7 +109,7 @@ void ForwardGridPass::Shutdown()
     _rhiContext    = nullptr;
 }
 
-void ForwardGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
+void EditorGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
 {
     if (_resourceSet)
     {
@@ -134,21 +134,21 @@ void ForwardGridPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     _resourceLayout = _rhiContext->CreateResourceLayout("GridLayout", &binding, 1);
     if (!_resourceLayout)
     {
-        HS_LOG(error, "[ForwardGridPass] ResourceLayout 생성 실패");
+        HS_LOG(error, "[EditorGridPass] ResourceLayout 생성 실패");
         return;
     }
 
     _resourceSet = _rhiContext->CreateResourceSet("GridSet", _resourceLayout);
     if (!_resourceSet)
     {
-        HS_LOG(error, "[ForwardGridPass] ResourceSet 생성 실패");
+        HS_LOG(error, "[EditorGridPass] ResourceSet 생성 실패");
         return;
     }
 
     _perViewBuffer = perViewBuffer;
 }
 
-RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
+RHIGraphicsPipeline* EditorGridPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
                                                           RHIBuffer* perViewBuffer)
 {
     if (!_isInitialized) return nullptr;
@@ -238,7 +238,7 @@ RHIGraphicsPipeline* ForwardGridPass::GetOrCreatePipeline(const PipelineRenderTa
     }
     else
     {
-        HS_LOG(error, "[ForwardGridPass] GraphicsPipeline 생성 실패");
+        HS_LOG(error, "[EditorGridPass] GraphicsPipeline 생성 실패");
     }
 
     return pipeline;

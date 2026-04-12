@@ -1,5 +1,5 @@
-#ifndef __HS_RENDERER_RENDER_PASS_FORWARD_GRID_PASS_H__
-#define __HS_RENDERER_RENDER_PASS_FORWARD_GRID_PASS_H__
+#ifndef __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_GRID_PASS_H__
+#define __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_GRID_PASS_H__
 
 #include "Precompile.h"
 #include "RHI/RHIDefinition.h"
@@ -19,11 +19,11 @@ class ShaderLibrary;
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API ForwardGridPass
+class HS_EDITOR_API EditorGridPass
 {
 public:
-    ForwardGridPass() = default;
-    ~ForwardGridPass();
+    EditorGridPass() = default;
+    ~EditorGridPass();
 
     bool Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext);
     void Shutdown();
@@ -52,4 +52,4 @@ private:
 
 HS_NS_END
 
-#endif /* __HS_RENDERER_RENDER_PASS_FORWARD_GRID_PASS_H__ */
+#endif /* __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_GRID_PASS_H__ */

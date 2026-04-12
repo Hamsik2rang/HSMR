@@ -16,7 +16,7 @@
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
-/*#include "Renderer/ForwardOverlayRenderer.h"*/ namespace hs { class ForwardOverlayRenderer; }
+/*#include "Editor/Renderer/EditorRenderer.h"*/ namespace hs { class EditorRenderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
@@ -56,7 +56,7 @@ private:
     void setupResources();
 
     Scoped<Renderer> _renderer;
-    Scoped<ForwardOverlayRenderer> _overlayRenderer;
+    Scoped<EditorRenderer> _overlayRenderer;
 
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;

@@ -10,7 +10,7 @@
 #include "RHI/CommandHandle.h"
 
 #include "Renderer/ForwardRenderer.h"
-#include "Renderer/ForwardOverlayRenderer.h"
+#include "Editor/Renderer/EditorRenderer.h"
 #include "Renderer/CameraUtils.h"
 #include "Renderer/RenderPass/ForwardOpaquePass.h"
 #include "Resource/ObjectManager.h"
@@ -163,7 +163,7 @@ bool EditorWindow::onInitialize()
 {
     _renderer = MakeScoped<ForwardRenderer>(_rhiContext);
     _renderer->Initialize();
-    _overlayRenderer = MakeScoped<ForwardOverlayRenderer>(_rhiContext);
+    _overlayRenderer = MakeScoped<EditorRenderer>(_rhiContext);
     _overlayRenderer->Initialize(_renderer->GetShaderLibrary());
 
     ImGuiExtension::InitializeBackend(_swapchain);
