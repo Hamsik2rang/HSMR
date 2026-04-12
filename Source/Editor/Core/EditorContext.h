@@ -24,6 +24,7 @@ struct PanelVisibility
     bool inspector   = true;
     bool resources   = true;
     bool sceneStatus = true;
+    bool projectSettings = false;
     bool profiler    = false;
 };
 
@@ -77,6 +78,9 @@ public:
     bool HasSelectedAsset() const { return !_selectedAssetPath.empty(); }
     void SetCurrentAssetFolderPath(const std::string& folderPath) { _currentAssetFolderPath = folderPath; }
     const std::string& GetCurrentAssetFolderPath() const { return _currentAssetFolderPath; }
+    void SetCurrentScenePath(const std::string& scenePath) { _currentScenePath = scenePath; }
+    const std::string& GetCurrentScenePath() const { return _currentScenePath; }
+    void ClearCurrentScenePath() { _currentScenePath.clear(); }
     void ClearSelection();
     bool HasSelection() const { return _selectedEntity.IsValid(); }
 
@@ -123,6 +127,7 @@ private:
     Entity _selectedEntity;
     std::string _selectedAssetPath;
     std::string _currentAssetFolderPath;
+    std::string _currentScenePath;
 
     // Gizmo
     GizmoOperation _gizmoOperation = GizmoOperation::Translate;

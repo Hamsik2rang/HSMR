@@ -33,6 +33,7 @@
 #include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
+#include "Editor/Panel/ProjectSettingsPanel.h"
 #include "Editor/Panel/ResourcePanel.h"
 #include "Editor/Panel/ProfilerPanel.h"
 
@@ -445,6 +446,9 @@ void EditorWindow::setupPanels()
     static_cast<SceneStatusPanel*>(_sceneStatusPanel.get())->SetScenePanel(
         static_cast<ScenePanel*>(_scenePanel.get()));
 
+    _projectSettingsPanel = MakeScoped<ProjectSettingsPanel>(this);
+    registerPanel(_projectSettingsPanel.get(), &visibility.projectSettings, _basePanel.get());
+
     _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
     registerPanel(_hierarchyPanel.get(), &visibility.hierarchy, _basePanel.get());
 
@@ -462,6 +466,7 @@ void EditorWindow::setupDefaultScene()
 {
     _scene = MakeScoped<Scene>("Default Scene");
     EditorContext::Get().SetActiveScene(_scene.get());
+    EditorContext::Get().ClearCurrentScenePath();
     populateStarterScene(*_scene);
 }
 
@@ -478,6 +483,7 @@ bool EditorWindow::loadInitialScene()
         {
             EditorContext::Get().SetActiveScene(_scene.get());
             _currentScenePath = defaultScenePath;
+            EditorContext::Get().SetCurrentScenePath(defaultScenePath);
             return true;
         }
 
@@ -511,6 +517,7 @@ void EditorWindow::persistDefaultSceneAsset()
 
     projectContext.SetDefaultScene(defaultScenePath);
     _currentScenePath = defaultScenePath;
+    EditorContext::Get().SetCurrentScenePath(defaultScenePath);
 }
 
 void EditorWindow::syncEditorCameraToScene()

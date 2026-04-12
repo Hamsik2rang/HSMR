@@ -19,6 +19,11 @@ void EditorContext::SetActiveScene(Scene* scene)
 {
     _activeScene = scene;
     ClearSelection();
+
+    if (!scene)
+    {
+        _currentScenePath.clear();
+    }
 }
 
 void EditorContext::SetSelectedEntity(Entity entity)

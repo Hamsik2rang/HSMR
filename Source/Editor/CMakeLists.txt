@@ -174,6 +174,7 @@ set(PANEL_HEADERS
     Panel/GamePanel.h
     Panel/InspectorPanel.h
     Panel/MenuPanel.h
+    Panel/ProjectSettingsPanel.h
     Panel/ResourcePanel.h
     Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
@@ -194,6 +195,7 @@ set(PANEL_SOURCES
     Panel/Private/GamePanel.cpp
     Panel/Private/InspectorPanel.cpp
     Panel/Private/MenuPanel.cpp
+    Panel/Private/ProjectSettingsPanel.cpp
     Panel/Private/ResourcePanel.cpp
     Panel/Private/SceneStatusPanel.cpp
     Panel/Private/HierarchyPanel.cpp

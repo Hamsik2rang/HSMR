@@ -174,6 +174,7 @@ void MenuPanel::drawWindowMenu()
         ImGui::MenuItem("Hierarchy", nullptr, &vis.hierarchy);
         ImGui::MenuItem("Inspector", nullptr, &vis.inspector);
         ImGui::MenuItem("Assets", nullptr, &vis.resources);
+        ImGui::MenuItem("Project Settings", nullptr, &vis.projectSettings);
         ImGui::MenuItem("Scene Status", nullptr, &vis.sceneStatus);
 
         ImGui::Separator();
@@ -195,7 +196,7 @@ void MenuPanel::newScene()
     serializer.ClearScene();
 
     scene->SetName("New Scene");
-    _currentScenePath.clear();
+    EditorContext::Get().ClearCurrentScenePath();
     _sceneDirty = false;
 
     EditorContext::Get().ClearSelection();
@@ -229,7 +230,8 @@ void MenuPanel::openScene()
     hs::SceneSerializer serializer(scene);
     if (serializer.LoadFromFile(path))
     {
-        _currentScenePath = path;
+        EditorContext::Get().SetCurrentScenePath(path);
+        updateStartupScene(path);
         _sceneDirty = false;
         EditorContext::Get().ClearSelection();
     }
@@ -237,7 +239,8 @@ void MenuPanel::openScene()
 
 void MenuPanel::saveScene()
 {
-    if (_currentScenePath.empty())
+    const std::string& currentScenePath = EditorContext::Get().GetCurrentScenePath();
+    if (currentScenePath.empty())
     {
         saveSceneAs();
         return;
@@ -248,8 +251,9 @@ void MenuPanel::saveScene()
         return;
 
     hs::SceneSerializer serializer(scene);
-    if (serializer.SaveToFile(_currentScenePath))
+    if (serializer.SaveToFile(currentScenePath))
     {
+        updateStartupScene(currentScenePath);
         _sceneDirty = false;
     }
 }
@@ -282,9 +286,20 @@ void MenuPanel::saveSceneAs()
     hs::SceneSerializer serializer(scene);
     if (serializer.SaveToFile(path))
     {
-        _currentScenePath = path;
+        EditorContext::Get().SetCurrentScenePath(path);
+        updateStartupScene(path);
         _sceneDirty = false;
     }
+}
+
+void MenuPanel::updateStartupScene(const std::string& scenePath)
+{
+    if (scenePath.empty() || !ProjectContext::Get().IsProjectOpen())
+    {
+        return;
+    }
+
+    ProjectContext::Get().SetDefaultScene(scenePath);
 }
 
 HS_NS_EDITOR_END

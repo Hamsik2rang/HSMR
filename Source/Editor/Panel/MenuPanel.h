@@ -10,6 +10,7 @@
 
 #include "Precompile.h"
 
+#include "Editor/Core/EditorContext.h"
 #include "Editor/Panel/Panel.h"
 
 #include <string>
@@ -26,7 +27,7 @@ public:
     void Cleanup() override;
 
     void Draw() override;
-    void SetCurrentScenePath(const std::string& scenePath) { _currentScenePath = scenePath; }
+    void SetCurrentScenePath(const std::string& scenePath) { EditorContext::Get().SetCurrentScenePath(scenePath); }
     void ExecuteNewScene() { newScene(); }
     void ExecuteOpenScene() { openScene(); }
     void ExecuteSaveScene() { saveScene(); }
@@ -42,8 +43,8 @@ private:
     void openScene();
     void saveScene();
     void saveSceneAs();
+    void updateStartupScene(const std::string& scenePath);
 
-    std::string _currentScenePath;
     bool _sceneDirty = false;
 };
 

@@ -66,6 +66,7 @@ private:
     Scoped<Panel> _hierarchyPanel;
     Scoped<Panel> _inspectorPanel;
     Scoped<Panel> _resourcePanel;
+    Scoped<Panel> _projectSettingsPanel;
     Scoped<Panel> _profilerPanel;
     std::vector<Panel*> _registeredPanels;
 
