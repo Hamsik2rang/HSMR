@@ -27,6 +27,9 @@ public:
     HierarchyPanel(Window* window);
     ~HierarchyPanel() override = default;
 
+    HierarchyPanel(const HierarchyPanel&) = delete;
+    HierarchyPanel& operator=(const HierarchyPanel&) = delete;
+
     bool Setup() override;
     void Cleanup() override;
     void Draw() override;

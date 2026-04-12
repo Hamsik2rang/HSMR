@@ -25,6 +25,9 @@ public:
     InspectorPanel(Window* window, const char* panelId = "Inspector");
     ~InspectorPanel() override;
 
+    InspectorPanel(const InspectorPanel&) = delete;
+    InspectorPanel& operator=(const InspectorPanel&) = delete;
+
     bool Setup() override;
     void Cleanup() override;
     void Draw() override;

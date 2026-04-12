@@ -104,7 +104,7 @@ public:
     }
 
 private:
-    static inline thread_local int s_panelContentPaddingPushCount = 0;
+    static inline int s_panelContentPaddingPushCount = 0;
 };
 
 HS_NS_EDITOR_END

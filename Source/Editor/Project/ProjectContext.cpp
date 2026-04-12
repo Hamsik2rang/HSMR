@@ -219,7 +219,7 @@ std::string ProjectContext::MakeProjectRelativePath(const std::string& path) con
 
     std::error_code errorCode;
     std::filesystem::path relativePath = std::filesystem::relative(absolutePath, projectRoot, errorCode);
-    if (!errorCode && !relativePath.empty() && relativePath.native().find("..") != 0)
+    if (!errorCode && !relativePath.empty() && relativePath.generic_string().find("..") != 0)
     {
         return relativePath.generic_string();
     }
