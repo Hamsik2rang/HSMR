@@ -1,85 +1,12 @@
 # HSMR
 
-**High-Speed Modular Renderer** - A cross-platform graphics engine built with C++20
+A cross-platform graphics engine built with C++20
 
 > **WARNING**: This project is currently in active development. It may not build or run correctly on your local environment.
 
 ## Overview
 
 HSMR is a modular, cross-platform graphics engine supporting **Vulkan** (Windows) and **Metal** (macOS). The engine features an Entity-Component System, an ImGui-based editor with 3D gizmo manipulation, a runtime shader compilation pipeline, and a forward rendering architecture.
-
-## Features
-
-### Rendering
-- **Cross-platform RHI** (Rendering Hardware Interface) abstracting Vulkan and Metal
-- **Forward rendering pipeline** with render pass abstraction and PSO caching
-- **Blinn-Phong lighting** with normal mapping support
-- **Lighting system** supporting Directional, Point, and Spot lights
-- **Runtime shader compilation** via Slang with automatic reflection
-- **Shader reflection** for automated GPU resource layout creation
-- **Material system** with texture map slots (diffuse, specular, normal, etc.)
-
-### Scene & ECS
-- **EnTT-based Entity-Component System** with hierarchical scene graph
-- **Core components**: Transform, MeshRenderer, Camera, Light, Tag
-- **Scene serialization** in JSON format (save/load)
-- **Hierarchical transforms** with dirty-flag caching and parent-child propagation
-- **AABB bounds** with ray intersection testing for mouse picking
-
-### Editor
-- **ImGui dockable panel layout** with Hierarchy, Inspector, Scene viewport, Profiler
-- **ImGuizmo 3D gizmo** for Translate/Rotate/Scale manipulation (local/world space, snap)
-- **Mouse picking** via ray-AABB intersection
-- **Entity hierarchy** with search, rename, drag & drop reparenting
-- **Component inspectors** for Transform, MeshRenderer, Camera, Light
-- **Asset database** with folder scanning and lazy resource loading
-- **Tracy profiler** integration for CPU/GPU/Memory profiling
-
-### Asset Pipeline
-- **GLTF/GLB model loading** via ASSIMP with PBR material extraction
-- **Image loading** (JPG, PNG, TGA) via STB
-- **Fallback resources** (procedural cube, sphere, plane, colored test textures)
-- **ShaderSystem** with Slang compilation, SPIRV-Cross cross-compilation, and disk caching
-
-## Architecture
-
-```
-Foundation:     Platform ──→ Core
-Resources:      Resource ──→ ShaderSystem
-Graphics:       RHI ──→ Renderer ──→ Engine
-ECS:            Scene (EnTT)
-Tools:          Editor (ImGui) ──→ Client
-```
-
-### Module Overview
-
-| Module | Description |
-|:-------|:------------|
-| **Platform** | SDL3 window management, platform detection, system context |
-| **Core** | Math (GLM), logging, memory, file I/O, containers |
-| **RHI** | Vulkan/Metal abstraction (buffers, textures, pipelines, command buffers) |
-| **ShaderSystem** | Slang runtime compilation, reflection, SPIRV/Metal output |
-| **Resource** | Image, Mesh, Material, Shader, Model resource management |
-| **Renderer** | Render passes, pipeline caching, render resource manager |
-| **Scene** | ECS (EnTT), scene graph, transform hierarchy, components |
-| **Engine** | Core application loop, window management |
-| **Editor** | ImGui panels, gizmos, asset browser, profiler |
-| **Client** | Entry point and application bootstrapping |
-
-## Rendering Conventions
-
-- Left-handed coordinate system
-- `+Y` is world up
-- `Camera forward = +Z`
-- Vulkan keeps the same camera convention and only flips projection `Y`
-- See [Docs/CoordinateSystem.md](Docs/CoordinateSystem.md)
-
-## Editor Panel Conventions
-
-- Editor panels use a shared panel architecture and common UI helper layers
-- Standard panel windows should use the shared frame/form/list/tree/dialog/feedback helpers instead of ad-hoc ImGui layout code
-- See [Docs/EditorPanelArchitecture.md](Docs/EditorPanelArchitecture.md)
-- Refactoring rationale and examples: [Docs/EditorPanelRefactoringArticle.md](Docs/EditorPanelRefactoringArticle.md)
 
 ## Prerequisites
 
