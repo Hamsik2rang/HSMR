@@ -90,9 +90,8 @@ public:
 
     // TODO: ImGui 백엔드 변경되면 없애야합니다.
     HS_FORCEINLINE const VkInstance GetInstance() const { return _instanceVk; }
-    HS_FORCEINLINE const VulkanDevice* GetDevice() const { return &(_device); }
+    HS_FORCEINLINE VulkanDevice* GetDevice() { return &(_device); }
     HS_FORCEINLINE VulkanRenderingCache* GetRenderingCache() { return &_renderingCache; }
-    HS_FORCEINLINE VkDevice GetVkDevice() const { return _device.logicalDevice; }
 
     VkRenderPass GetCompatibleRenderPass(const PipelineRenderTargetLayout& layout);
     void CmdBeginRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo);

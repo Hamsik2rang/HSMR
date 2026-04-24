@@ -363,7 +363,7 @@ void VulkanDevice::queryDeviceCapabilities(VkPhysicalDevice device)
         if (getPhysicalDeviceFeatures2KHR != nullptr)
         {
             getPhysicalDeviceFeatures2KHR(device, &features2);
-            optionalFeatures.dynamicRendering = dynamicRenderingFeatures.dynamicRendering == VK_TRUE;
+            optionalFeatures.dynamicRendering = (dynamicRenderingFeatures.dynamicRendering == VK_TRUE);
         }
     }
 
@@ -375,7 +375,7 @@ void VulkanDevice::queryDeviceCapabilities(VkPhysicalDevice device)
         optionalFeatures.descriptorBindingSampledImageUpdateAfterBind &&
         optionalFeatures.shaderSampledImageArrayNonUniformIndexing;
 
-    bool supportsDynamicRendering = optionalFeatures.dynamicRendering || (apiMajor > 1 || apiMinor >= 3);
+    bool supportsDynamicRendering = (optionalFeatures.dynamicRendering || (apiMajor > 1 || apiMinor >= 3));
 
     _capabilities.platform = ERHIPlatform::Vulkan;
     _capabilities.apiVersionMajor = apiMajor;

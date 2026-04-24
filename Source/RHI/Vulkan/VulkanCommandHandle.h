@@ -34,7 +34,7 @@ struct HS_RHI_API VulkanCommandPool : public RHICommandPool
     VkCommandPool handle;
 };
 
-struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
+class HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 {
     VulkanCommandBuffer(const char* name, VulkanContext* context);
     ~VulkanCommandBuffer() override;
@@ -78,7 +78,6 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 
 private:
     VulkanContext* _rhiContext = nullptr;
-    bool _useDynamicRendering = false;
     RenderingInfo _currentRenderingInfo{};
 };
 
