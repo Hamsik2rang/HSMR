@@ -159,7 +159,7 @@ void VulkanDevice::createLogicalDevice()
     std::vector<const char*> enabledExtensions = s_requiredDeviceExtensions;
     uint32 apiMajor = (properties.apiVersion >> 22) & 0x3FF;
     uint32 apiMinor = (properties.apiVersion >> 12) & 0x3FF;
-    if (capabilities.renderingPath == ERHIRenderingPath::DynamicRendering &&
+    if (_capabilities.renderingPath == ERHIRenderingPath::DynamicRendering &&
         !(apiMajor > 1 || apiMinor >= 3) &&
         optionalExtensions.dynamicRendering)
     {
@@ -172,7 +172,7 @@ void VulkanDevice::createLogicalDevice()
 
     VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures{};
     dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-    dynamicRenderingFeatures.dynamicRendering = capabilities.renderingPath == ERHIRenderingPath::DynamicRendering ? VK_TRUE : VK_FALSE;
+    dynamicRenderingFeatures.dynamicRendering = _capabilities.renderingPath == ERHIRenderingPath::DynamicRendering ? VK_TRUE : VK_FALSE;
 
     features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     features11.shaderDrawParameters = VK_TRUE;
@@ -203,7 +203,7 @@ void VulkanDevice::createLogicalDevice()
         features12.pNext = &features11;
         featureChain = &features12;
     }
-    else if (optionalExtensions.dynamicRendering && capabilities.renderingPath == ERHIRenderingPath::DynamicRendering)
+    else if (optionalExtensions.dynamicRendering && _capabilities.renderingPath == ERHIRenderingPath::DynamicRendering)
     {
         dynamicRenderingFeatures.pNext = &features11;
         featureChain = &dynamicRenderingFeatures;
@@ -377,19 +377,19 @@ void VulkanDevice::queryDeviceCapabilities(VkPhysicalDevice device)
 
     bool supportsDynamicRendering = optionalFeatures.dynamicRendering || (apiMajor > 1 || apiMinor >= 3);
 
-    capabilities.platform = ERHIPlatform::Vulkan;
-    capabilities.apiVersionMajor = apiMajor;
-    capabilities.apiVersionMinor = apiMinor;
-    capabilities.apiVersionPatch = properties.apiVersion & 0xFFF;
-    capabilities.deviceName = properties.deviceName;
-    capabilities.supportsDynamicRendering = supportsDynamicRendering;
-    capabilities.renderingPath = supportsDynamicRendering ? ERHIRenderingPath::DynamicRendering : ERHIRenderingPath::LegacyRenderPass;
-    capabilities.supportsBindless = supportsBindless;
-    capabilities.resourceBindingTier = supportsBindless ? ERHIResourceBindingTier::Bindless : ERHIResourceBindingTier::LegacyDescriptorSet;
-    capabilities.maxBindlessSampledImages = properties.limits.maxPerStageDescriptorSampledImages;
-    capabilities.maxBindlessSamplers = properties.limits.maxPerStageDescriptorSamplers;
-    capabilities.maxBindlessStorageImages = properties.limits.maxPerStageDescriptorStorageImages;
-    capabilities.maxBindlessStorageBuffers = properties.limits.maxPerStageDescriptorStorageBuffers;
+    _capabilities.platform = ERHIPlatform::Vulkan;
+    _capabilities.apiVersionMajor = apiMajor;
+    _capabilities.apiVersionMinor = apiMinor;
+    _capabilities.apiVersionPatch = properties.apiVersion & 0xFFF;
+    _capabilities.deviceName = properties.deviceName;
+    _capabilities.supportsDynamicRendering = supportsDynamicRendering;
+    _capabilities.renderingPath = supportsDynamicRendering ? ERHIRenderingPath::DynamicRendering : ERHIRenderingPath::LegacyRenderPass;
+    _capabilities.supportsBindless = supportsBindless;
+    _capabilities.resourceBindingTier = supportsBindless ? ERHIResourceBindingTier::Bindless : ERHIResourceBindingTier::LegacyDescriptorSet;
+    _capabilities.maxBindlessSampledImages = properties.limits.maxPerStageDescriptorSampledImages;
+    _capabilities.maxBindlessSamplers = properties.limits.maxPerStageDescriptorSamplers;
+    _capabilities.maxBindlessStorageImages = properties.limits.maxPerStageDescriptorStorageImages;
+    _capabilities.maxBindlessStorageBuffers = properties.limits.maxPerStageDescriptorStorageBuffers;
 }
 
 bool VulkanDevice::hasDeviceExtension(const char* extensionName) const

@@ -105,13 +105,12 @@ public:
 
     OptionalDeviceExtensions optionalExtensions;
     OptionalDeviceFeatures optionalFeatures;
-    RHICapabilities capabilities;
 
     std::vector<VkQueueFamilyProperties> queueFamilyProperties;
     VkCommandPool commandPool = VK_NULL_HANDLE;
 
 	HS_FORCEINLINE operator VkDevice() { return logicalDevice;  }
-    HS_FORCEINLINE const RHICapabilities& GetCapabilities() const { return capabilities; }
+    HS_FORCEINLINE const RHICapabilities& GetCapabilities() const { return _capabilities; }
 
 private:
 	void getPhysicalDevice();
@@ -122,6 +121,7 @@ private:
     bool hasDeviceExtension(const char* extensionName) const;
 
     VkInstance _instanceVk;
+    RHICapabilities _capabilities;
 };
 
 HS_NS_END
