@@ -77,7 +77,7 @@ struct HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
     VkPipelineLayout curComputePipelineLayout  = VK_NULL_HANDLE;
 
 private:
-    VulkanContext* _context = nullptr;
+    VulkanContext* _rhiContext = nullptr;
     bool _useDynamicRendering = false;
     RenderingInfo _currentRenderingInfo{};
 };

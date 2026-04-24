@@ -62,6 +62,9 @@ bool SimpleWindow::onInitialize()
     _inspectorPanel->Setup();
     _inspectorPanel->SetEditorCamera(_camera.get());
 
+    _menuPanel = MakeScoped<MenuPanel>(this);
+    _menuPanel->Setup();
+
     setupDefaultScene();
 
     // ImGui event handler
@@ -84,7 +87,7 @@ void SimpleWindow::onNextFrame()
     uint32 width = _swapchain->GetWidth();
     uint32 height = _swapchain->GetHeight();
 
-    for (auto& renderTarget : _renderTargets)
+    for (auto& renderTarget : _swapchainRenderTargets)
     {
         renderTarget.Update(width, height);
     }
@@ -114,7 +117,7 @@ void SimpleWindow::onRender()
     cmdBuffer->Begin();
 
     uint8 imageIndex = _swapchain->GetCurrentImageIndex();
-    RenderTarget* curRT = &_renderTargets[imageIndex];
+    RenderTarget* curRT = &_swapchainRenderTargets[imageIndex];
 
     // Render scene to offscreen RT
     _renderer->Render(_scene.get(), curRT);
@@ -310,6 +313,7 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
+    _menuPanel->Draw();
     _inspectorPanel->Draw();
     
     guiContext->EndRender();
@@ -319,7 +323,7 @@ void SimpleWindow::drawHelperOverlayGUI()
 {
     // Display scene as fullscreen background
     uint8 imageIndex = _swapchain->GetCurrentImageIndex();
-    RenderTarget* curRT = &_renderTargets[imageIndex];
+    RenderTarget* curRT = &_swapchainRenderTargets[imageIndex];
     RHITexture* sceneTexture = curRT->GetColorTexture(0);
     
     ImGuiViewport* mainViewport = ImGui::GetMainViewport();

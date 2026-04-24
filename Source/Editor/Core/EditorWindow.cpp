@@ -190,10 +190,10 @@ bool EditorWindow::onInitialize()
     }
 
     _gameRenderTargets.resize(_swapchain->GetMaxFrameCount());
-    if (!_renderTargets.empty())
+    if (!_swapchainRenderTargets.empty())
     {
         RenderTargetInfo gameInfo = buildPanelRenderTargetInfo(
-            _renderTargets[0].GetInfo(),
+            _swapchainRenderTargets[0].GetInfo(),
             _nativeWindow.width,
             _nativeWindow.height);
 
@@ -225,7 +225,7 @@ void EditorWindow::onNextFrame()
     uint32 width          = static_cast<uint32>(resolution.width / _nativeWindow.scale);
     uint32 height         = static_cast<uint32>(resolution.height / _nativeWindow.scale);
 
-    for (auto& renderTarget : _renderTargets)
+    for (auto& renderTarget : _swapchainRenderTargets)
     {
         renderTarget.Update(resolution.width, resolution.height);
     }
@@ -273,7 +273,7 @@ void EditorWindow::onRender()
     cmdBuffer->Begin();
 
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
-    RenderTarget* sceneRT = &_renderTargets[imageIndex];
+    RenderTarget* sceneRT = &_swapchainRenderTargets[imageIndex];
     RenderTarget* gameRT = _gameRenderTargets.empty() ? nullptr : &_gameRenderTargets[imageIndex];
     const bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 

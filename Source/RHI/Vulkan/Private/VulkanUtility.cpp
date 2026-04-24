@@ -205,10 +205,10 @@ Viewport RHIUtilityVulkan::FromViewport(VkViewport vp)
 VkImageUsageFlags RHIUtilityVulkan::ToTextureUsage(ETextureUsage usage)
 {
 	VkImageUsageFlags flags = 0;
-	if ((usage & ETextureUsage::Static) != 0)
+	if ((usage & ETextureUsage::TransferDestination) != 0)
 		flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-	if ((usage & ETextureUsage::Staging) != 0)
+	if ((usage & ETextureUsage::TransferSource) != 0)
 		flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
 	if ((usage & ETextureUsage::Sampled) != 0)
@@ -236,10 +236,10 @@ ETextureUsage RHIUtilityVulkan::FromTextureUsage(VkImageUsageFlags usage)
 {
 	ETextureUsage flags = ETextureUsage::Unknown;
 	if ((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0)
-		flags |= ETextureUsage::Static;
+		flags |= ETextureUsage::TransferDestination;
 
 	if ((usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) != 0)
-		flags |= ETextureUsage::Staging;
+		flags |= ETextureUsage::TransferSource;
 
 	if ((usage & VK_IMAGE_USAGE_SAMPLED_BIT) != 0)
 		flags |= ETextureUsage::Sampled;

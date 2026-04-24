@@ -5,6 +5,7 @@
 
 #include "Engine/Window.h"
 
+#include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/SimpleInspectorPanel.h"
 
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
@@ -53,6 +54,7 @@ private:
     float _currentCameraSpeed = 0.0f;
     glm::vec3 _moveDir = glm::vec3(0.0f);
     
+    Scoped<MenuPanel> _menuPanel;
     Scoped<SimpleInspectorPanel> _inspectorPanel;
 };
 

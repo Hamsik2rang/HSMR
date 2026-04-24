@@ -29,8 +29,8 @@ bool EditorGridPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiCon
         return false;
     }
 
-    const auto* vsBytecode = shader->GetBytecode(EShaderStage::Vertex);
-    const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
+    const auto* vsBytecode = shader->GetByteCode(EShaderStage::Vertex);
+    const auto* fsBytecode = shader->GetByteCode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode)
     {
         HS_LOG(error, "[EditorGridPass] Grid 셰이더 바이트코드 없음");

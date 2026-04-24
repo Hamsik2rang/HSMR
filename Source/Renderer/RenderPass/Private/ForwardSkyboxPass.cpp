@@ -33,8 +33,8 @@ bool ForwardSkyboxPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhi
         return false;
     }
 
-    const auto* vsBytecode = shader->GetBytecode(EShaderStage::Vertex);
-    const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
+    const auto* vsBytecode = shader->GetByteCode(EShaderStage::Vertex);
+    const auto* fsBytecode = shader->GetByteCode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode)
     {
         HS_LOG(error, "[ForwardSkyboxPass] Skybox shader bytecode not found");

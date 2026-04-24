@@ -118,7 +118,7 @@ bool Shader::Compile()
     return _compileOutputEx.isValid;
 }
 
-const std::vector<uint8>* Shader::GetBytecode(EShaderStage stage) const
+const std::vector<uint8>* Shader::GetByteCode(EShaderStage stage) const
 {
     const ShaderStageOutput* stageOutput = _compileOutputEx.GetStageOutput(stage);
     if (stageOutput && stageOutput->isValid)

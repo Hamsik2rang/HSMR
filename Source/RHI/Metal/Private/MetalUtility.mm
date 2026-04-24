@@ -175,7 +175,6 @@ MTLTextureUsage MetalUtility::ToTextureUsage(ETextureUsage usage)
 {
     MTLTextureUsage result = 0;
     if ((usage & ETextureUsage::Sampled) != 0) result |= MTLTextureUsageShaderRead;
-    if ((usage & ETextureUsage::Staging) != 0) result |= MTLTextureUsageShaderWrite;
     if ((usage & ETextureUsage::Storage) != 0) result |= MTLTextureUsageShaderWrite; // UAV/RWTexture support
     if ((usage & ETextureUsage::ColorAttachment) != 0) result |= MTLTextureUsageRenderTarget;
     if ((usage & ETextureUsage::DepthStencilAttachment) != 0) result |= MTLTextureUsageRenderTarget;

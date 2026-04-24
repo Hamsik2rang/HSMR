@@ -32,6 +32,7 @@ public:
 
 	void ProcessEvent();
 	void NextFrame();
+    virtual void InitializeRenderTarget();
 	virtual void Update(float deltaTime);
 	virtual void Render();
 	virtual void Present();
@@ -71,7 +72,7 @@ protected:
 
 	NativeWindow _nativeWindow;
 
-    std::vector<RenderTarget> _renderTargets;
+    std::vector<RenderTarget> _swapchainRenderTargets;
 	Application* _ownerApp;
     RHIContext* _rhiContext = nullptr;
 

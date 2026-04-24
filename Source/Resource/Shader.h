@@ -57,7 +57,7 @@ public:
 
     // Access reflection and bytecode from ShaderCompileOutputEx
     const ShaderReflectionDataEx& GetReflection() const { return _compileOutputEx.reflection; }
-    const std::vector<uint8>* GetBytecode(EShaderStage stage) const;
+    const std::vector<uint8>* GetByteCode(EShaderStage stage) const;
     const char* GetEntryPoint(EShaderStage stage) const;
     bool IsCompiledEx() const { return _compileOutputEx.isValid; }
     const ShaderCompileOutputEx& GetCompileOutputEx() const { return _compileOutputEx; }

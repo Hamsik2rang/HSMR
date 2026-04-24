@@ -261,14 +261,14 @@ enum class ETextureType
 enum class ETextureUsage : uint16
 {
     Unknown                = 0x0000,
-    Static                 = 0x0001,
-    Staging                = 0x0002,
-    Sampled                = 0x0004,
-    Storage                = 0x0008,
-    ColorAttachment        = 0x0010,
-    DepthStencilAttachment = 0x0020,
-    TransientAttachment    = 0x0040,
-    InputAttachment        = 0x0080,
+    TransferDestination    = 0x0001,    // Transfer(CopyTexture 등) Destination
+    TransferSource         = 0x0002,    // Transfer(CopyTexture 등) Source
+    Sampled                = 0x0004,    // Sampling
+    Storage                = 0x0008,    // Storage Texture(Texel Buffer)
+    ColorAttachment        = 0x0010,    // Color Texture
+    DepthStencilAttachment = 0x0020,    // Depth Stencil Texture
+    TransientAttachment    = 0x0040,    // Transient Texture
+    InputAttachment        = 0x0080,    // Readable Framebuffer of last subpass
 };
 
 HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)

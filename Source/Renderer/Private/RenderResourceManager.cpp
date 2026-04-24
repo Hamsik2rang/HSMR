@@ -898,7 +898,7 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
     TextureInfo texInfo{};
     texInfo.format        = format;
     texInfo.type          = ETextureType::Tex2D;
-    texInfo.usage         = ETextureUsage::Sampled | ETextureUsage::Static; // STATIC adds TRANSFER_DST for data upload
+    texInfo.usage         = ETextureUsage::Sampled | ETextureUsage::TransferDestination; // STATIC adds TRANSFER_DST for data upload
     texInfo.extent.width  = width;
     texInfo.extent.height = height;
     texInfo.extent.depth  = 1;
@@ -966,8 +966,8 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     }
 
     // Create RHI shaders from bytecode
-    const auto* vsBytecode = shader->GetBytecode(EShaderStage::Vertex);
-    const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
+    const auto* vsBytecode = shader->GetByteCode(EShaderStage::Vertex);
+    const auto* fsBytecode = shader->GetByteCode(EShaderStage::Fragment);
 
     if (!vsBytecode || !fsBytecode)
     {

@@ -70,7 +70,7 @@ VulkanCommandPool::~VulkanCommandPool()
 
 VulkanCommandBuffer::VulkanCommandBuffer(const char* name, VulkanContext* context)
     : RHICommandBuffer(name)
-    , _context(context)
+    , _rhiContext(context)
 {
 }
 
@@ -190,11 +190,11 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
     HS_ASSERT(_isGraphicsBegan == false, "Graphics Pass is already began");
     HS_ASSERT(_isComputeBegan == false, "Compute Pass is aready began");
     HS_ASSERT(_isBlitBegan == false, "Blit Pass is already began");
-    HS_ASSERT(_context, "VulkanContext is nullptr");
+    HS_ASSERT(_rhiContext, "VulkanContext is nullptr");
 
-    _useDynamicRendering = _context->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering;
+    _useDynamicRendering = _rhiContext->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering;
     _currentRenderingInfo = renderingInfo;
-    _context->CmdBeginRendering(handle, renderingInfo);
+    _rhiContext->CmdBeginRendering(handle, renderingInfo);
 
     _isGraphicsBegan = true;
     _isComputeBegan  = false;
@@ -204,8 +204,8 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
 void VulkanCommandBuffer::EndRendering()
 {
     HS_ASSERT(_isGraphicsBegan && _isBegan, "Rendering has not begun");
-    HS_ASSERT(_context, "VulkanContext is nullptr");
-    _context->CmdEndRendering(handle, _currentRenderingInfo);
+    HS_ASSERT(_rhiContext, "VulkanContext is nullptr");
+    _rhiContext->CmdEndRendering(handle, _currentRenderingInfo);
     _currentRenderingInfo = RenderingInfo{};
     _isGraphicsBegan = false;
 }

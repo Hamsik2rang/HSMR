@@ -34,15 +34,17 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     scInfo.enableVSync  = true;
 
     _swapchain = _rhiContext->CreateSwapchain(scInfo);
-    _renderTargets.resize(_swapchain->GetMaxFrameCount());
+    _swapchainRenderTargets.resize(_swapchain->GetMaxFrameCount());
 
-    for (size_t i = 0; i < _renderTargets.size(); i++)
+    for (size_t i = 0; i < _swapchainRenderTargets.size(); i++)
     {
         RenderTargetInfo info{};
         info.width = width;
         info.height = height;
         info.colorTextureCount = 1;
         info.colorTextureInfos.resize(info.colorTextureCount);
+        info.isSwapchainTarget = true;
+        info.swapchain = _swapchain;
         for (size_t j = 0; j < info.colorTextureCount; j++)
         {
             info.colorTextureInfos[j].arrayLength = 1;
@@ -50,7 +52,7 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
             info.colorTextureInfos[j].extent.height = height;
             info.colorTextureInfos[j].extent.depth = 1;
             info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8Srgb;
-            info.colorTextureInfos[j].usage         = ETextureUsage::ColorAttachment | ETextureUsage::Staging | ETextureUsage::Sampled;
+            info.colorTextureInfos[j].usage         = ETextureUsage::ColorAttachment | ETextureUsage::TransferSource;
             info.colorTextureInfos[j].isCompressed  = false;
             info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
         }
@@ -60,11 +62,11 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;
         info.depthStencilInfo.format               = EPixelFormat::Depth32;
-        info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::Staging;
+        info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::TransferSource;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
 
-        _renderTargets[i].Create(info);
+        _swapchainRenderTargets[i].Create(info);
     }
 
     onInitialize();
@@ -86,12 +88,17 @@ void Window::Shutdown()
 
     DestroyNativeWindow(_nativeWindow);
 
-    for (auto& rt : _renderTargets)
+    for (auto& rt : _swapchainRenderTargets)
     {
         rt.Clear();
     }
 
     _isClosed = true;
+}
+
+void Window::InitializeRenderTarget()
+{
+
 }
 
 void Window::ProcessEvent()
