@@ -19,22 +19,48 @@ void EditorContext::SetActiveScene(Scene* scene)
 {
     _activeScene = scene;
     ClearSelection();
+
+    if (!scene)
+    {
+        _currentScenePath.clear();
+    }
 }
 
 void EditorContext::SetSelectedEntity(Entity entity)
 {
     if (_selectedEntity != entity)
     {
+        _selectedAssetPath.clear();
         _selectedEntity = entity;
+        notifySelectionChanged();
+    }
+}
+
+void EditorContext::SetSelectedAssetPath(const std::string& assetPath)
+{
+    if (_selectedAssetPath != assetPath || _selectedEntity.IsValid())
+    {
+        _selectedEntity = Entity();
+        _selectedAssetPath = assetPath;
+        notifySelectionChanged();
+    }
+}
+
+void EditorContext::ClearSelectedAssetPath()
+{
+    if (!_selectedAssetPath.empty())
+    {
+        _selectedAssetPath.clear();
         notifySelectionChanged();
     }
 }
 
 void EditorContext::ClearSelection()
 {
-    if (_selectedEntity.IsValid())
+    if (_selectedEntity.IsValid() || !_selectedAssetPath.empty())
     {
         _selectedEntity = Entity();
+        _selectedAssetPath.clear();
         notifySelectionChanged();
     }
 }

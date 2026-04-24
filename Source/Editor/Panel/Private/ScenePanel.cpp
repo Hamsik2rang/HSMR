@@ -6,7 +6,9 @@
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
 #include "Editor/GUI/EditorIcons.h"
@@ -39,6 +41,11 @@ glm::mat4 makeImGuizmoViewMatrix(const EditorCamera& editorCamera)
     return viewMatrix;
 }
 
+glm::mat3 makeDisplayViewRotation(const EditorCamera& editorCamera)
+{
+    return glm::mat3(makeImGuizmoViewMatrix(editorCamera));
+}
+
 glm::mat4 makeImGuizmoProjectionMatrix(const EditorCamera& editorCamera)
 {
     const CameraComponent& camera = editorCamera.GetCameraComponent();
@@ -62,6 +69,12 @@ glm::mat4 makeImGuizmoProjectionMatrix(const EditorCamera& editorCamera)
 ImVec2 getViewportSize(const ImVec2& viewportMin, const ImVec2& viewportMax)
 {
     return ImVec2(viewportMax.x - viewportMin.x, viewportMax.y - viewportMin.y);
+}
+
+bool isMouseInsideViewportRect(const ImVec2& viewportMin, const ImVec2& viewportMax, const ImVec2& mousePos)
+{
+    return mousePos.x >= viewportMin.x && mousePos.x <= viewportMax.x &&
+           mousePos.y >= viewportMin.y && mousePos.y <= viewportMax.y;
 }
 }
 
@@ -196,44 +209,29 @@ void ScenePanel::updateCameraControls(float deltaTime)
 
 void ScenePanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.scene)
+    if (!IsVisible())
     {
         return;
     }
 
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse |
-                                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = GetVisibilityBinding();
+    panelOptions.useMenuBar = true;
+    panelOptions.noTitleBar = true;
+    panelOptions.noScrollbar = true;
+    panelOptions.noScrollWithMouse = true;
+    EditorPanelFrame::BeginStandardPanel("Scene", panelOptions);
 
-    if (ImGui::BeginMenuBar())
+    if (EditorPanelFrame::BeginPanelMenuBar())
     {
         DebugDrawSettings& settings = EditorContext::Get().GetDebugDrawSettings();
-        const float menuBarHeight = ImGui::GetFrameHeight();
-        const float buttonEdge = (menuBarHeight - 8.0f) > 13.0f ? (menuBarHeight - 8.0f) : 13.0f;
-        ImVec2 buttonSize(buttonEdge, buttonEdge);
-        float buttonWidth = buttonSize.x;
-        float cursorX = ImGui::GetWindowContentRegionMax().x - buttonWidth;
-        if (cursorX > ImGui::GetCursorPosX())
-        {
-            ImGui::SetCursorPosX(cursorX);
-        }
-
-        float buttonPosY = ImGui::GetCursorPosY() + (menuBarHeight - buttonSize.y) * 0.5f + 2.0f;
-        ImGui::SetCursorPosY(buttonPosY);
-
-        ImGui::PushStyleColor(
-            ImGuiCol_Button,
-            settings.showDebugPass ? IM_COL32(110, 95, 35, 190) : IM_COL32(30, 30, 30, 160));
-        ImGui::PushStyleColor(
-            ImGuiCol_ButtonHovered,
-            settings.showDebugPass ? IM_COL32(135, 115, 45, 220) : IM_COL32(70, 70, 70, 200));
-        ImGui::PushStyleColor(
-            ImGuiCol_ButtonActive,
-            settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220));
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(235, 235, 235, 255));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-
-        if (ImGui::Button(EditorIcons::Visibility, buttonSize))
+        EditorWidgets::RightAlignNextItem(EditorWidgets::MeasureIconButtonMenuBar().x);
+        if (EditorWidgets::IconButtonMenuBar(
+                EditorIcons::Visibility,
+                "SceneDebugPass",
+                settings.showDebugPass ? IM_COL32(110, 95, 35, 190) : IM_COL32(30, 30, 30, 160),
+                settings.showDebugPass ? IM_COL32(135, 115, 45, 220) : IM_COL32(70, 70, 70, 200),
+                settings.showDebugPass ? IM_COL32(150, 130, 55, 240) : IM_COL32(90, 90, 90, 220)))
         {
             settings.showDebugPass = !settings.showDebugPass;
         }
@@ -243,21 +241,14 @@ void ScenePanel::Draw()
             ImGui::SetTooltip(settings.showDebugPass ? "Debug Draw: On" : "Debug Draw: Off");
         }
 
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(4);
-        ImGui::EndMenuBar();
+        EditorPanelFrame::EndPanelMenuBar();
     }
 
-    // Store viewport state
-    _viewportFocused = ImGui::IsWindowFocused();
-    _viewportHovered = ImGui::IsWindowHovered();
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::BeginChild(
-        "SceneViewport",
-        ImVec2(0, 0),
-        false,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    EditorPanelContentOptions contentOptions{};
+    contentOptions.id = "SceneViewport";
+    contentOptions.padding = ImVec2(0.0f, 0.0f);
+    contentOptions.extraFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    EditorPanelFrame::BeginPanelContent(contentOptions);
 
     ImGui::SetScrollY(0.0f);
     uint32 width  = _currentRenderTarget->GetWidth();
@@ -277,6 +268,8 @@ void ScenePanel::Draw()
     _resolution.height        = static_cast<uint32>(viewportWindowSize.y);
 
     _viewportMax = ImVec2(_viewportMin.x + viewportSize.x, _viewportMin.y + viewportSize.y);
+    _viewportFocused = ImGui::IsWindowFocused();
+    _viewportHovered = isMouseInsideViewportRect(_viewportMin, _viewportMax, ImGui::GetIO().MousePos);
 
     if (_editorCamera && viewportSize.y > 0.0f)
     {
@@ -337,9 +330,8 @@ void ScenePanel::Draw()
     // Draw view orientation gizmo
     drawViewGizmo();
 
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::End();
+    EditorPanelFrame::EndPanelContent();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void ScenePanel::drawTransformGizmo()
@@ -477,6 +469,9 @@ void ScenePanel::handlePicking()
         mouseY < _viewportMin.y || mouseY > _viewportMax.y)
         return;
 
+    HS_LOG(info, "[ScenePanel] Picking at screen=(%.1f, %.1f) viewportMin=(%.1f, %.1f) viewportMax=(%.1f, %.1f)",
+           mouseX, mouseY, _viewportMin.x, _viewportMin.y, _viewportMax.x, _viewportMax.y);
+
     ImVec2 viewportSize = getViewportSize(_viewportMin, _viewportMax);
     if (viewportSize.x <= 0.0f || viewportSize.y <= 0.0f)
         return;
@@ -495,10 +490,12 @@ void ScenePanel::handlePicking()
     // Update selection
     if (picked.IsValid())
     {
+        HS_LOG(info, "[ScenePanel] Picked entity handle=%u", static_cast<uint32>(entt::to_integral(picked.GetHandle())));
         EditorContext::Get().SetSelectedEntity(picked);
     }
     else
     {
+        HS_LOG(info, "[ScenePanel] No entity picked");
         EditorContext::Get().ClearSelection();
     }
 }
@@ -506,25 +503,32 @@ void ScenePanel::handlePicking()
 glm::vec3 ScenePanel::screenToWorldRay(float viewportX, float viewportY)
 {
     if (!_editorCamera)
-        return glm::vec3(0.0f, 0.0f, -1.0f);
+        return CoordinateConvention::CameraForward;
 
     // Convert from [0,1] to NDC [-1,1]
     float ndcX = viewportX * 2.0f - 1.0f;
     float ndcY = 1.0f - viewportY * 2.0f; // Flip Y
 
-    // Get inverse matrices
-    glm::mat4 invProj = glm::inverse(_editorCamera->GetProjectionMatrix());
-    glm::mat4 invView = glm::inverse(_editorCamera->GetViewMatrix());
+    const glm::mat4 invViewProjection = _editorCamera->GetInverseViewProjectionMatrix();
 
-    // Unproject near and far points
-    glm::vec4 rayClip(ndcX, ndcY, -1.0f, 1.0f);
-    glm::vec4 rayEye = invProj * rayClip;
-    rayEye           = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+    // The engine uses a left-handed camera convention with +Z forward.
+    // Build the ray by unprojecting near/far clip points and differencing them,
+    // instead of using the common RH/OpenGL shortcut that assumes -Z forward.
+    const glm::vec4 nearClip(ndcX, ndcY, -1.0f, 1.0f);
+    const glm::vec4 farClip(ndcX, ndcY, 1.0f, 1.0f);
 
-    glm::vec4 rayWorld = invView * rayEye;
-    glm::vec3 rayDir   = glm::normalize(glm::vec3(rayWorld));
+    glm::vec4 nearWorld = invViewProjection * nearClip;
+    glm::vec4 farWorld = invViewProjection * farClip;
+    if (!Math::EpsilonEqual(nearWorld.w, 0.0f))
+    {
+        nearWorld /= nearWorld.w;
+    }
+    if (!Math::EpsilonEqual(farWorld.w, 0.0f))
+    {
+        farWorld /= farWorld.w;
+    }
 
-    return rayDir;
+    return glm::normalize(glm::vec3(farWorld - nearWorld));
 }
 
 Entity ScenePanel::pickEntity(const glm::vec3& rayOrigin, const glm::vec3& rayDir)
@@ -635,8 +639,9 @@ void ScenePanel::drawViewGizmo()
     drawList->AddCircleFilled(center, halfSize, IM_COL32(20, 20, 20, 140), 32);
     drawList->AddCircle(center, halfSize, IM_COL32(80, 80, 80, 180), 32, 1.0f);
 
-    // View rotation (world -> view upper 3x3)
-    glm::mat3 viewRot(_editorCamera->GetViewMatrix());
+    // Use the same display-space camera basis as ImGuizmo so the world gizmo
+    // matches the object gizmo's axis orientation on screen.
+    glm::mat3 viewRot = makeDisplayViewRotation(*_editorCamera);
 
     struct Axis
     {
@@ -646,9 +651,9 @@ void ScenePanel::drawViewGizmo()
     };
 
     Axis axes[3] = {
-        {{1, 0, 0}, IM_COL32(250, 60, 60, 255), 0, 0, 0},
-        {{0, 1, 0}, IM_COL32(60, 210, 60, 255), 0, 0, 0},
-        {{0, 0, 1}, IM_COL32(80, 130, 250, 255), 0, 0, 0},
+        {CoordinateConvention::WorldRight, IM_COL32(250, 60, 60, 255), 0, 0, 0},
+        {CoordinateConvention::WorldUp, IM_COL32(60, 210, 60, 255), 0, 0, 0},
+        {CoordinateConvention::CameraForward, IM_COL32(80, 130, 250, 255), 0, 0, 0},
     };
 
     // Project each axis through view rotation

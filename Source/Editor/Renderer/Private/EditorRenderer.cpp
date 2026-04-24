@@ -1,4 +1,4 @@
-#include "Renderer/ForwardOverlayRenderer.h"
+#include "Editor/Renderer/EditorRenderer.h"
 
 #include "RHI/CommandHandle.h"
 #include "Renderer/RenderTarget.h"
@@ -18,17 +18,17 @@ RenderSceneSnapshot buildSingleViewSnapshot(const RenderSceneSnapshot& snapshot,
 }
 }
 
-ForwardOverlayRenderer::ForwardOverlayRenderer(RHIContext* rhiContext)
+EditorRenderer::EditorRenderer(RHIContext* rhiContext)
     : _rhiContext(rhiContext)
 {
 }
 
-ForwardOverlayRenderer::~ForwardOverlayRenderer()
+EditorRenderer::~EditorRenderer()
 {
     Shutdown();
 }
 
-bool ForwardOverlayRenderer::Initialize(ShaderLibrary* shaderLibrary)
+bool EditorRenderer::Initialize(ShaderLibrary* shaderLibrary)
 {
     _shaderLibrary = shaderLibrary;
     _graphBuilder.Initialize(_rhiContext);
@@ -36,15 +36,16 @@ bool ForwardOverlayRenderer::Initialize(ShaderLibrary* shaderLibrary)
     return true;
 }
 
-void ForwardOverlayRenderer::Shutdown()
+void EditorRenderer::Shutdown()
 {
+    _iconPass.reset();
     _debugPass.reset();
     _gridPass.reset();
     _shaderLibrary = nullptr;
     _isInitialized = false;
 }
 
-void ForwardOverlayRenderer::Render(
+void EditorRenderer::Render(
     RHICommandBuffer& commandBuffer,
     RenderResourceManager& resourceManager,
     const RenderSceneSnapshot& snapshot,
@@ -52,7 +53,7 @@ void ForwardOverlayRenderer::Render(
     RenderTarget* renderTarget,
     const RenderOptions& options)
 {
-    if (!_isInitialized || !renderTarget || (!options.enableGrid && !options.enableDebug))
+    if (!_isInitialized || !renderTarget)
     {
         return;
     }
@@ -115,8 +116,14 @@ void ForwardOverlayRenderer::Render(
 
     if (options.enableGrid && !_gridPass)
     {
-        _gridPass = MakeScoped<ForwardGridPass>();
+        _gridPass = MakeScoped<EditorGridPass>();
         _gridPass->Initialize(_shaderLibrary, _rhiContext);
+    }
+
+    if (!_iconPass)
+    {
+        _iconPass = MakeScoped<EditorIconPass>();
+        _iconPass->Initialize(_shaderLibrary, _rhiContext);
     }
 
     bool hasDebugDrawData = false;
@@ -124,7 +131,7 @@ void ForwardOverlayRenderer::Render(
     {
         if (!_debugPass)
         {
-            _debugPass = MakeScoped<ForwardDebugPass>();
+            _debugPass = MakeScoped<EditorDebugPass>();
             _debugPass->Initialize(_shaderLibrary, _rhiContext);
         }
 
@@ -132,6 +139,12 @@ void ForwardOverlayRenderer::Render(
         {
             hasDebugDrawData = _debugPass->Prepare(snapshot) && _debugPass->HasDrawData();
         }
+    }
+
+    bool hasIconDrawData = false;
+    if (_iconPass && _iconPass->IsInitialized())
+    {
+        hasIconDrawData = _iconPass->Prepare(resourceManager, snapshot, viewSnapshot) && _iconPass->HasDrawData();
     }
 
     _graphBuilder.Setup(&commandBuffer);
@@ -225,6 +238,54 @@ void ForwardOverlayRenderer::Render(
                 const RHIBuffer* vertexBuffer = _debugPass->GetVertexBuffer();
                 commandBufferRef.BindVertexBuffers(&vertexBuffer, &vbOffset, 1);
                 commandBufferRef.DrawArrays(0, _debugPass->GetVertexCount(), 1);
+                commandBufferRef.PopDebugMark();
+                commandBufferRef.EndRendering();
+            });
+    }
+
+    if (hasIconDrawData && _iconPass && _iconPass->IsInitialized())
+    {
+        struct IconPassParameters
+        {
+        } iconParams;
+
+        _graphBuilder.AddPass("EditorIcons", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &iconParams,
+            [&](RenderGraphBuilder& builder, RGPass* pass, IconPassParameters*) -> void
+            {
+                RGTexture* colorTex = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0));
+                builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+            },
+            [&](RHICommandBuffer& commandBufferRef) -> void
+            {
+                RHIGraphicsPipeline* pipeline = _iconPass->GetOrCreatePipeline(
+                    renderTargetLayout,
+                    sceneResource.cameraResources[0]->perViewBuffer);
+                if (!pipeline || !_iconPass->GetResourceSet() || !_iconPass->GetVertexBuffer() || !_iconPass->GetInstanceBuffer())
+                {
+                    return;
+                }
+
+                RenderingInfo iconRenderingInfo = makeRenderingInfo(colorAttachment, false, depthAttachment);
+
+                float debugColor[4]{0.55f, 0.82f, 1.0f, 1.0f};
+                commandBufferRef.BeginRendering(iconRenderingInfo);
+                commandBufferRef.PushDebugMark("Icon Pass", debugColor);
+                commandBufferRef.SetViewport(Viewport{
+                    0.0f, 0.0f,
+                    static_cast<float>(renderTarget->GetWidth()),
+                    static_cast<float>(renderTarget->GetHeight()),
+                    0.0f, 1.0f});
+                commandBufferRef.SetScissor(0, 0, renderTarget->GetWidth(), renderTarget->GetHeight());
+                commandBufferRef.BindPipeline(pipeline);
+                commandBufferRef.BindResourceSet(_iconPass->GetResourceSet());
+
+                const RHIBuffer* vertexBuffers[] = {
+                    _iconPass->GetVertexBuffer(),
+                    _iconPass->GetInstanceBuffer()
+                };
+                uint32 vbOffsets[] = { 0, 0 };
+                commandBufferRef.BindVertexBuffers(vertexBuffers, vbOffsets, 2);
+                commandBufferRef.DrawArrays(0, _iconPass->GetVertexCount(), _iconPass->GetInstanceCount());
                 commandBufferRef.PopDebugMark();
                 commandBufferRef.EndRendering();
             });

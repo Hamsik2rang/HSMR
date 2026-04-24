@@ -1,11 +1,11 @@
 //
-//  ForwardDebugPass.h
-//  Renderer
+//  EditorDebugPass.h
+//  Editor
 //
 //  Scene debug line overlay pass.
 //
-#ifndef __HS_RENDERER_RENDER_PASS_FORWARD_DEBUG_PASS_H__
-#define __HS_RENDERER_RENDER_PASS_FORWARD_DEBUG_PASS_H__
+#ifndef __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_DEBUG_PASS_H__
+#define __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_DEBUG_PASS_H__
 
 #include "Precompile.h"
 #include "RHI/RHIDefinition.h"
@@ -27,11 +27,11 @@ class ShaderLibrary;
 
 HS_NS_BEGIN
 
-class HS_RENDERER_API ForwardDebugPass
+class HS_EDITOR_API EditorDebugPass
 {
 public:
-    ForwardDebugPass() = default;
-    ~ForwardDebugPass();
+    EditorDebugPass() = default;
+    ~EditorDebugPass();
 
     bool Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext);
     void Shutdown();
@@ -87,4 +87,4 @@ private:
 
 HS_NS_END
 
-#endif /* __HS_RENDERER_RENDER_PASS_FORWARD_DEBUG_PASS_H__ */
+#endif /* __HS_EDITOR_RENDERER_RENDER_PASS_EDITOR_DEBUG_PASS_H__ */

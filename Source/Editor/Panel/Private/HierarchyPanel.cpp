@@ -9,11 +9,15 @@
 #include "Editor/Core/EditorContext.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Editor/GUI/EditorIcons.h"
+#include "Editor/GUI/EditorTreeWidgets.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
 
+#include "Resource/ObjectManager.h"
+#include "Resource/Material.h"
 #include "Resource/Model.h"
 #include "Resource/Mesh.h"
 
@@ -23,7 +27,7 @@
 HS_NS_EDITOR_BEGIN
 
 HierarchyPanel::HierarchyPanel(Window* window)
-    : Panel(window)
+    : Panel(window, "Hierarchy")
 {
 }
 
@@ -38,25 +42,25 @@ void HierarchyPanel::Cleanup()
 
 void HierarchyPanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.hierarchy)
+    if (!IsVisible())
     {
         return;
     }
 
-    ImGui::Begin("Hierarchy", &vis.hierarchy);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = GetVisibilityBinding();
+    EditorPanelFrame::BeginStandardPanel("Hierarchy", panelOptions);
 
     Scene* scene = EditorContext::Get().GetActiveScene();
     if (!scene)
     {
-        ImGui::TextDisabled("No active scene");
-        ImGui::End();
+        EditorTreeWidgets::EmptyState("No active scene");
+        EditorPanelFrame::EndStandardPanel();
         return;
     }
 
     // Search bar
-    ImGui::SetNextItemWidth(-1);
-    if (ImGui::InputTextWithHint("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer)))
+    if (EditorTreeWidgets::SearchBar("##Search", "Search...", _searchBuffer, sizeof(_searchBuffer)))
     {
         // Search text changed
     }
@@ -64,18 +68,12 @@ void HierarchyPanel::Draw()
     ImGui::Separator();
 
     // Scene header
-    bool sceneOpen = ImGui::TreeNodeEx(
-        scene->GetName().c_str(),
-        ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth
-    );
+    bool sceneOpen = EditorTreeWidgets::BeginNode(scene->GetName().c_str(), false, false, true);
 
     // Right-click on scene header for context menu
     if (ImGui::BeginPopupContextItem("SceneContextMenu"))
     {
-        if (ImGui::MenuItem("Create Empty Entity"))
-        {
-            scene->CreateEntity("Entity");
-        }
+        drawCreateEntityMenu(scene);
         ImGui::EndPopup();
     }
 
@@ -100,7 +98,7 @@ void HierarchyPanel::Draw()
         ImGui::TreePop();
     }
 
-    // Handle context menu popup
+    // Empty-space context menu for root creation
     drawContextMenu();
 
     // Drop target for ASSET_MODEL on empty area
@@ -133,17 +131,7 @@ void HierarchyPanel::Draw()
 
                     Entity entity = scene->CreateEntity(entityName);
                     auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
-                    meshRenderer.mesh = model->GetMesh();
-                    if (meshRenderer.mesh)
-                    {
-                        const auto& bound = meshRenderer.mesh->GetBound();
-                        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
-                        meshRenderer.boundsDirty = true;
-                    }
-                    if (model->GetMaterial())
-                    {
-                        meshRenderer.materials.push_back(model->GetMaterial());
-                    }
+                    initializeMeshRenderer(meshRenderer, model->GetMesh(), model->GetMaterial());
 
                     EditorContext::Get().SetSelectedEntity(entity);
                 }
@@ -158,7 +146,7 @@ void HierarchyPanel::Draw()
         EditorContext::Get().ClearSelection();
     }
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void HierarchyPanel::drawEntityNode(Entity entity, int depth)
@@ -185,30 +173,13 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     bool isSelected = (EditorContext::Get().GetSelectedEntity() == entity);
 
     // Determine tree node flags
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                                ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                                ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    if (isSelected)
-    {
-        flags |= ImGuiTreeNodeFlags_Selected;
-    }
     bool shouldOpenNode = _searchBuffer[0] != '\0' || hasSelectedDescendant(entity);
-    if (shouldOpenNode)
-    {
-        flags |= ImGuiTreeNodeFlags_DefaultOpen;
-    }
 
     // Check if entity has children
     bool hasChildren = false;
     if (entity.HasComponent<TransformComponent>())
     {
         hasChildren = entity.GetComponent<TransformComponent>().HasChildren();
-    }
-
-    if (!hasChildren)
-    {
-        flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
     // Push unique ID for this entity
@@ -245,10 +216,15 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     }
 
     // Draw tree node
-    bool nodeOpen = ImGui::TreeNodeEx(displayName.c_str(), flags);
+    bool nodeOpen = EditorTreeWidgets::BeginNode(
+        displayName.c_str(),
+        isSelected,
+        !hasChildren,
+        shouldOpenNode,
+        ImGuiTreeNodeFlags_OpenOnDoubleClick);
 
     // Click to select
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    if (EditorTreeWidgets::IsSelectionClick())
     {
         EditorContext::Get().SetSelectedEntity(entity);
     }
@@ -267,10 +243,7 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
     // Right-click context menu
     if (ImGui::BeginPopupContextItem())
     {
-        if (ImGui::MenuItem("Create Empty Child"))
-        {
-            scene->CreateChildEntity(entity, "Entity");
-        }
+        drawCreateEntityMenu(scene, entity);
 
         if (ImGui::MenuItem("Duplicate"))
         {
@@ -355,7 +328,169 @@ void HierarchyPanel::drawEntityNode(Entity entity, int depth)
 
 void HierarchyPanel::drawContextMenu()
 {
-    // This function handles any deferred context menu operations
+    Scene* scene = EditorContext::Get().GetActiveScene();
+    if (!scene)
+    {
+        return;
+    }
+
+    if (ImGui::BeginPopupContextWindow("HierarchyWindowContextMenu", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    {
+        drawCreateEntityMenu(scene);
+        ImGui::EndPopup();
+    }
+}
+
+bool HierarchyPanel::drawCreateEntityMenu(Scene* scene, Entity parent)
+{
+    if (!scene)
+    {
+        return false;
+    }
+
+    bool created = false;
+    if (ImGui::BeginMenu("Create..."))
+    {
+        if (ImGui::MenuItem("Empty Entity"))
+        {
+            created = createEmptyEntity(scene, parent).IsValid();
+        }
+
+        if (ImGui::MenuItem("Cube"))
+        {
+            created = createPrimitiveEntity(scene, PrimitiveType::Cube, parent).IsValid() || created;
+        }
+
+        if (ImGui::MenuItem("Sphere"))
+        {
+            created = createPrimitiveEntity(scene, PrimitiveType::Sphere, parent).IsValid() || created;
+        }
+
+        if (ImGui::MenuItem("Plane"))
+        {
+            created = createPrimitiveEntity(scene, PrimitiveType::Plane, parent).IsValid() || created;
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Camera"))
+        {
+            created = createPrimitiveEntity(scene, PrimitiveType::Camera, parent).IsValid() || created;
+        }
+
+        if (ImGui::MenuItem("Directional Light"))
+        {
+            created = createPrimitiveEntity(scene, PrimitiveType::DirectionalLight, parent).IsValid() || created;
+        }
+
+        ImGui::EndMenu();
+    }
+
+    return created;
+}
+
+Entity HierarchyPanel::createEmptyEntity(Scene* scene, Entity parent)
+{
+    if (!scene)
+    {
+        return Entity();
+    }
+
+    Entity entity = parent.IsValid()
+        ? scene->CreateChildEntity(parent, "Entity")
+        : scene->CreateEntity("Entity");
+    EditorContext::Get().SetSelectedEntity(entity);
+    return entity;
+}
+
+Entity HierarchyPanel::createPrimitiveEntity(Scene* scene, PrimitiveType primitiveType, Entity parent)
+{
+    if (!scene)
+    {
+        return Entity();
+    }
+
+    const char* entityName = "Entity";
+    const Mesh* fallbackMesh = nullptr;
+    switch (primitiveType)
+    {
+    case PrimitiveType::Cube:
+        entityName = "Cube";
+        fallbackMesh = ObjectManager::GetFallbackMeshCube();
+        break;
+    case PrimitiveType::Sphere:
+        entityName = "Sphere";
+        fallbackMesh = ObjectManager::GetFallbackMeshSphere();
+        break;
+    case PrimitiveType::Plane:
+        entityName = "Plane";
+        fallbackMesh = ObjectManager::GetFallbackMeshPlane();
+        break;
+    case PrimitiveType::Camera:
+        entityName = "Camera";
+        break;
+    case PrimitiveType::DirectionalLight:
+        entityName = "Directional Light";
+        break;
+    }
+
+    Entity entity = parent.IsValid()
+        ? scene->CreateChildEntity(parent, entityName)
+        : scene->CreateEntity(entityName);
+
+    if (primitiveType == PrimitiveType::Camera)
+    {
+        auto& camera = entity.AddComponent<CameraComponent>();
+        camera.isActive = true;
+        camera.isPrimary = true;
+        camera.priority = 100;
+    }
+    else if (primitiveType == PrimitiveType::DirectionalLight)
+    {
+        auto& light = entity.AddComponent<LightComponent>();
+        light.type = ELightType::Directional;
+        auto& transform = entity.GetComponent<TransformComponent>();
+        transform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+        transform.SetEulerAngles(glm::vec3(45.0f, -45.0f, 0.0f));
+    }
+    else
+    {
+        auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+        initializeMeshRenderer(meshRenderer, const_cast<Mesh*>(fallbackMesh), createPrimitiveMaterial());
+    }
+
+    EditorContext::Get().SetSelectedEntity(entity);
+    return entity;
+}
+
+void HierarchyPanel::initializeMeshRenderer(MeshRendererComponent& meshRenderer, Mesh* mesh, Material* material) const
+{
+    meshRenderer.mesh = mesh;
+    meshRenderer.materials.clear();
+
+    if (meshRenderer.mesh)
+    {
+        const auto& bound = meshRenderer.mesh->GetBound();
+        meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+    }
+
+    if (material)
+    {
+        meshRenderer.materials.push_back(material);
+    }
+
+    meshRenderer.boundsDirty = true;
+}
+
+Material* HierarchyPanel::createPrimitiveMaterial()
+{
+    Scoped<Material> material = MakeScoped<Material>();
+    material->SetTexture(EMaterialTextureType::Diffuse, const_cast<Image*>(ObjectManager::GetFallbackImage2DWhite()));
+    material->SetDiffuseColor(glm::vec4(1.0f));
+
+    Material* materialPtr = material.get();
+    _runtimeMaterials.push_back(std::move(material));
+    return materialPtr;
 }
 
 const char* HierarchyPanel::getEntityIcon(Entity entity) const

@@ -32,6 +32,18 @@ public:
     {}
     ~Mesh() override;
 
+    void SetDisplayName(const std::string& name)
+    {
+        _nameStorage = name;
+        this->name = _nameStorage.c_str();
+    }
+
+    const std::string& GetDisplayName() const { return _nameStorage; }
+
+    void SetSourceAssetPath(const std::string& path) { _sourceAssetPath = path; }
+    const std::string& GetSourceAssetPath() const { return _sourceAssetPath; }
+    bool HasSourceAssetPath() const { return !_sourceAssetPath.empty(); }
+
     HS_FORCEINLINE void AddSubMesh(Mesh* subMesh) { _subMeshes.push_back(subMesh); }
 
     HS_FORCEINLINE void SetPosition(std::vector<float>&& position)
@@ -94,6 +106,8 @@ public:
     void CalculateTangent();
 
 private:
+    std::string _nameStorage;
+    std::string _sourceAssetPath;
     std::vector<float> _position;
     std::vector<float> _texcoord[8];
     std::vector<float> _normal;

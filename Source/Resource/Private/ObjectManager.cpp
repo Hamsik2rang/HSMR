@@ -8,6 +8,7 @@
 #include "Core/Math/Common.h"
 
 #include "Resource/Image.h"
+#include "Resource/MaterialSerializer.h"
 #include "Resource/Mesh.h"
 #include "Resource/Material.h"
 #include "Resource/Shader.h"
@@ -59,6 +60,7 @@ bool ObjectManager::Initialize()
         uint8 whitePixel[4]    = {255, 255, 255, 255}; // RGBA
         s_fallbackImage2DWhite = MakeScoped<Image>(whitePixel, 1, 1, 4);
         s_fallbackImage2DWhite->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DWhite->SetDisplayName("Fallback White");
     }
 
     // 1x1 Black Image 2D
@@ -66,6 +68,7 @@ bool ObjectManager::Initialize()
         uint8 blackPixel[4]    = {0, 0, 0, 255}; // RGBA
         s_fallbackImage2DBlack = MakeScoped<Image>(blackPixel, 1, 1, 4);
         s_fallbackImage2DBlack->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DBlack->SetDisplayName("Fallback Black");
     }
 
     // 1x1 Red Image 2D
@@ -73,6 +76,7 @@ bool ObjectManager::Initialize()
         uint8 redPixel[4]    = {255, 0, 0, 255}; // RGBA
         s_fallbackImage2DRed = MakeScoped<Image>(redPixel, 1, 1, 4);
         s_fallbackImage2DRed->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DRed->SetDisplayName("Fallback Red");
     }
 
     // 1x1 Green Image 2D
@@ -80,6 +84,7 @@ bool ObjectManager::Initialize()
         uint8 greenPixel[4]    = {0, 255, 0, 255}; // RGBA
         s_fallbackImage2DGreen = MakeScoped<Image>(greenPixel, 1, 1, 4);
         s_fallbackImage2DGreen->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DGreen->SetDisplayName("Fallback Green");
     }
 
     // 1x1 Blue Image 2D
@@ -87,12 +92,19 @@ bool ObjectManager::Initialize()
         uint8 bluePixel[4]    = {0, 0, 255, 255}; // RGBA
         s_fallbackImage2DBlue = MakeScoped<Image>(bluePixel, 1, 1, 4);
         s_fallbackImage2DBlue->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DBlue->SetDisplayName("Fallback Blue");
     }
 
     // Create fallback meshes
     s_fallbackMeshPlane  = MakeScoped<Mesh>();
     s_fallbackMeshCube   = MakeScoped<Mesh>();
     s_fallbackMeshSphere = MakeScoped<Mesh>();
+    s_fallbackMeshPlane->SetDisplayName("Plane");
+    s_fallbackMeshPlane->SetSourceAssetPath("__builtin__/Plane");
+    s_fallbackMeshCube->SetDisplayName("Cube");
+    s_fallbackMeshCube->SetSourceAssetPath("__builtin__/Cube");
+    s_fallbackMeshSphere->SetDisplayName("Sphere");
+    s_fallbackMeshSphere->SetSourceAssetPath("__builtin__/Sphere");
 
     calculatePlane();
     calculateCube();
@@ -244,7 +256,7 @@ static std::vector<Scoped<Material>> ProcessMaterial(const aiScene* scene, const
         aiString name;
         if (aiMat->Get(AI_MATKEY_NAME, name) == AI_SUCCESS)
         {
-            material->name = name.C_Str();
+            material->SetDisplayName(name.C_Str());
         }
 
         // Get diffuse color
@@ -345,7 +357,7 @@ static Scoped<Mesh> ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<
     // Set mesh name
     if (mesh->mName.length > 0)
     {
-        hsMesh->name = mesh->mName.C_Str();
+        hsMesh->SetDisplayName(mesh->mName.C_Str());
     }
 
     // Process vertices
@@ -474,6 +486,8 @@ Scoped<Image> ObjectManager::LoadImageFromFile(const std::string& path, bool isA
     }
 
     Scoped<Image> pImage = MakeScoped<Image>(rawData, width, height, channel);
+    pImage->SetDisplayName(FileSystem::GetFileName(filePath));
+    pImage->SetSourceAssetPath(filePath);
 
     return pImage;
 }
@@ -668,8 +682,8 @@ void ObjectManager::calculatePlane()
     };
 
     std::vector<uint32> indices = {
-        0, 1, 2, // 첫 번째 삼각형
-        0, 2, 3  // 두 번째 삼각형
+        0, 2, 1, // 첫 번째 삼각형
+        0, 3, 2  // 두 번째 삼각형
     };
 
     s_fallbackMeshPlane->SetPosition(std::move(positions));
@@ -805,28 +819,28 @@ void ObjectManager::calculateCube()
 
     std::vector<uint32> indices = {
         // 앞면
-        0, 1, 2,
-        0, 2, 3,
+        0, 2, 1,
+        0, 3, 2,
 
         // 뒷면
-        4, 5, 6,
-        4, 6, 7,
+        4, 6, 5,
+        4, 7, 6,
 
         // 윗면
-        8, 9, 10,
-        8, 10, 11,
+        8, 10, 9,
+        8, 11, 10,
 
         // 아랫면
-        12, 13, 14,
-        12, 14, 15,
+        12, 14, 13,
+        12, 15, 14,
 
         // 오른쪽면
-        16, 17, 18,
-        16, 18, 19,
+        16, 18, 17,
+        16, 19, 18,
 
         // 왼쪽면
-        20, 21, 22,
-        20, 22, 23
+        20, 22, 21,
+        20, 23, 22
     };
 
     s_fallbackMeshCube->SetPosition(std::move(positions));
@@ -868,7 +882,6 @@ void ObjectManager::calculateSphere()
             positions.push_back(x * radius);
             positions.push_back(y * radius);
             positions.push_back(z * radius);
-            positions.push_back(1.0f);
 
             // 법선 (구의 경우 정규화된 위치가 법선)
             normals.push_back(x);
@@ -893,13 +906,13 @@ void ObjectManager::calculateSphere()
 
             // 첫 번째 삼각형
             indices.push_back(current);
-            indices.push_back(current + 1);
             indices.push_back(next);
+            indices.push_back(current + 1);
 
             // 두 번째 삼각형
             indices.push_back(current + 1);
-            indices.push_back(next + 1);
             indices.push_back(next);
+            indices.push_back(next + 1);
         }
     }
 
@@ -1248,7 +1261,7 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
         aiString matName;
         if (aiMat->Get(AI_MATKEY_NAME, matName) == AI_SUCCESS)
         {
-            material->name = matName.C_Str();
+            material->SetDisplayName(matName.C_Str());
         }
 
         // Base color (GLTF PBR)
@@ -1427,7 +1440,7 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
 
         if (mesh->mName.length > 0)
         {
-            hsMesh->name = mesh->mName.C_Str();
+            hsMesh->SetDisplayName(mesh->mName.C_Str());
         }
 
         // Positions
@@ -1512,9 +1525,24 @@ bool ObjectManager::loadGLTF(const std::string& path, Scoped<Model>& outModel, b
 
 Scoped<Material> ObjectManager::LoadMaterialFromFile(const std::string& path, bool isAbsolutePath)
 {
-    // Material loading from file is not yet implemented
-    HS_LOG(warning, "LoadMaterialFromFile not implemented yet: %s", path.c_str());
-    return nullptr;
+    std::string filePath = path;
+    if (!isAbsolutePath)
+    {
+        filePath = s_resourcePath + path;
+    }
+
+    std::string assetRoot = s_resourcePath;
+    if (!assetRoot.empty() && assetRoot.back() != HS_DIR_SEPERATOR)
+    {
+        assetRoot += HS_DIR_SEPERATOR;
+    }
+
+    Scoped<Material> material = MaterialSerializer::LoadFromFile(filePath, assetRoot);
+    if (material)
+    {
+        material->SetSourceAssetPath(isAbsolutePath ? filePath : path);
+    }
+    return material;
 }
 
 void ObjectManager::FreeMaterial(Material* material)

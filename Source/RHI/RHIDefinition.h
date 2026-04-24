@@ -810,8 +810,8 @@ struct VertexInputLayoutDescriptor
 {
     uint32 binding; // Metal에서는 무시됩니다.
     uint32 stride;
-    uint8 stepRate     : 7;
-    bool useInstancing : 1;
+    uint8 stepRate     : 7 = 1;
+    bool useInstancing : 1 = false;
 };
 
 struct VertexInputAttributeDescriptor

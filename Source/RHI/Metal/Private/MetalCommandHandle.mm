@@ -176,11 +176,16 @@ void MetalCommandBuffer::BindIndexBuffer(RHIBuffer* indexBuffer)
 
 void MetalCommandBuffer::BindVertexBuffers(const RHIBuffer* const* vertexBuffers, const uint32* offsets, const uint8 bufferCount)
 {
+    HS_ASSERT(bufferCount <= kMetalReservedVertexBufferSlotCount,
+              "Metal vertex buffer binding range exceeds available slots");
+
     for (uint8 i = 0; i < bufferCount; i++)
     {
         auto vertexBuffer = static_cast<const MetalBuffer*>(vertexBuffers[i]);
 
-        [curRenderEncoder setVertexBuffer:vertexBuffer->handle offset:offsets[i] atIndex:kMetalVertexBufferBaseIndex + i];
+        [curRenderEncoder setVertexBuffer:vertexBuffer->handle
+                                   offset:offsets[i]
+                                  atIndex:MetalVertexBufferSlotForBinding(i)];
     }
 }
 
@@ -404,7 +409,45 @@ void MetalCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstText
 void MetalCommandBuffer::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
     MetalBuffer* mtlBuffer = static_cast<MetalBuffer*>(buffer);
-    memcpy(static_cast<uint8_t*>([mtlBuffer->handle contents]) + dstOffset, srcData, dataSize);
+    HS_ASSERT(buffer, "Buffer is nullptr");
+    HS_ASSERT(srcData, "Source data is nullptr");
+    HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+    HS_ASSERT(dstOffset + dataSize <= buffer->byteSize, "Buffer update range is out of bounds");
+
+    switch (buffer->info.memoryOption)
+    {
+    case EBufferMemoryOption::Static:
+    {
+        id<MTLBuffer> stagingBuffer = [device newBufferWithLength:dataSize options:MTLResourceStorageModeShared];
+        memcpy([stagingBuffer contents], srcData, dataSize);
+
+        id<MTLBlitCommandEncoder> blitEncoder = [handle blitCommandEncoder];
+        [blitEncoder copyFromBuffer:stagingBuffer
+                       sourceOffset:0
+                           toBuffer:mtlBuffer->handle
+                  destinationOffset:dstOffset
+                               size:dataSize];
+        [blitEncoder endEncoding];
+
+        [stagingBuffer release];
+        break;
+    }
+    case EBufferMemoryOption::Dynamic:
+    case EBufferMemoryOption::Mapped:
+    {
+        memcpy(static_cast<uint8_t*>([mtlBuffer->handle contents]) + dstOffset, srcData, dataSize);
+        if (buffer->info.memoryOption == EBufferMemoryOption::Mapped)
+        {
+            [mtlBuffer->handle didModifyRange:NSMakeRange(dstOffset, dataSize)];
+        }
+        break;
+    }
+    default:
+    {
+        HS_LOG(crash, "Unsupported Buffer Memory Option!");
+        break;
+    }
+    }
 }
 
 void MetalCommandBuffer::PushDebugMark(const char* label, float* color)

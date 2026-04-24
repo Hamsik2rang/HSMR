@@ -1,4 +1,7 @@
 #include "Editor/Panel/SimpleInspectorPanel.h"
+#include "Editor/Panel/EditorPanelFrame.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
+#include "Editor/GUI/EditorFormLayout.h"
 
 #include "ThirdParty/ImGui/imgui.h"
 #include "ImGui/imgui_internal.h"
@@ -23,7 +26,14 @@ void SimpleInspectorPanel::Cleanup()
 
 void SimpleInspectorPanel::Draw()
 {
-    ImGui::Begin("Control Panel");
+    if (!IsVisible())
+    {
+        return;
+    }
+
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = GetVisibilityBinding();
+    EditorPanelFrame::BeginStandardPanel("Control Panel", panelOptions);
 
     if (_mainCameraEntity.IsValid())
     {
@@ -102,20 +112,25 @@ void SimpleInspectorPanel::Draw()
             }
         }
 
-        // Snap controls
-        ImGui::Checkbox("Snap", &_useSnap);
-        ImGui::SameLine();
-        if (_gizmoOperation == ImGuizmo::TRANSLATE)
+        if (EditorFormLayout::Begin("SimpleInspectorGizmo"))
         {
-            ImGui::InputFloat3("Snap Value", glm::value_ptr(_snapValue));
-        }
-        else if (_gizmoOperation == ImGuizmo::ROTATE)
-        {
-            ImGui::InputFloat("Angle Snap", &_snapValue.x);
-        }
-        else if (_gizmoOperation == ImGuizmo::SCALE)
-        {
-            ImGui::InputFloat("Scale Snap", &_snapValue.x);
+            EditorFormLayout::CheckboxRow("Snap", &_useSnap);
+
+            if (_gizmoOperation == ImGuizmo::TRANSLATE)
+            {
+                EditorFormLayout::BeginRow("Snap Value");
+                ImGui::InputFloat3("##SnapValue", glm::value_ptr(_snapValue));
+            }
+            else if (_gizmoOperation == ImGuizmo::ROTATE)
+            {
+                EditorFormLayout::DragFloatRow("Angle Snap", &_snapValue.x, 1.0f);
+            }
+            else if (_gizmoOperation == ImGuizmo::SCALE)
+            {
+                EditorFormLayout::DragFloatRow("Scale Snap", &_snapValue.x, 0.1f);
+            }
+
+            EditorFormLayout::End();
         }
     }
 
@@ -231,10 +246,10 @@ void SimpleInspectorPanel::Draw()
     }
     else
     {
-        ImGui::TextDisabled("Entity is not selected");
+        EditorFeedbackWidgets::EmptyState("Entity is not selected");
     }
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 HS_NS_EDITOR_END

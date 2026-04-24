@@ -16,6 +16,18 @@
 
 HS_NS_BEGIN
 
+static bool isCPUAccessibleBuffer(EBufferMemoryOption memoryOption)
+{
+    switch (memoryOption)
+    {
+    case EBufferMemoryOption::Dynamic:
+    case EBufferMemoryOption::Mapped:
+        return true;
+    default:
+        return false;
+    }
+}
+
 id<MTLDevice> s_device         = nil;
 id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
@@ -127,16 +139,23 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     for (size_t i = 0; i < info.vertexInputDesc.attributes.size(); i++)
     {
         const auto& curAttribute = info.vertexInputDesc.attributes[i];
+        HS_ASSERT(curAttribute.binding < kMetalReservedVertexBufferSlotCount,
+                  "Metal vertex attribute binding exceeds reserved vertex buffer slots");
+        const NSUInteger bufferIndex = MetalVertexBufferSlotForBinding(curAttribute.binding);
+        HS_ASSERT(bufferIndex < kMetalMaxVertexBufferSlotCount, "Metal vertex attribute buffer index out of range");
 
         vertexDesc.attributes[i].offset      = curAttribute.offset;
-        vertexDesc.attributes[i].bufferIndex = kMetalVertexBufferBaseIndex + curAttribute.binding;
+        vertexDesc.attributes[i].bufferIndex = bufferIndex;
         vertexDesc.attributes[i].format      = MetalUtility::ToVertexFormat(curAttribute.format);
     }
 
     for (size_t i = 0; i < info.vertexInputDesc.layouts.size(); i++)
     {
         const auto& curLayout = info.vertexInputDesc.layouts[i];
-        NSUInteger layoutIdx  = kMetalVertexBufferBaseIndex + i;
+        HS_ASSERT(curLayout.binding < kMetalReservedVertexBufferSlotCount,
+                  "Metal vertex layout binding exceeds reserved vertex buffer slots");
+        NSUInteger layoutIdx  = MetalVertexBufferSlotForBinding(curLayout.binding);
+        HS_ASSERT(layoutIdx < kMetalMaxVertexBufferSlotCount, "Metal vertex layout buffer index out of range");
 
         vertexDesc.layouts[layoutIdx].stride       = curLayout.stride;
         vertexDesc.layouts[layoutIdx].stepRate     = static_cast<uint8>(curLayout.stepRate);
@@ -167,7 +186,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
         pipelineDesc.depthAttachmentPixelFormat  = depthStencilFormat;
         // TODO: 스텐실 처리 추가
     }
-
+    
     NSError* error               = nil;
     pipelineMetal->pipelineState = [s_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
 
@@ -360,16 +379,24 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
 {
     MetalBuffer* mtlBuffer = new struct MetalBuffer(name, info);
 
-    id<MTLBuffer> handle = [s_device newBufferWithBytes:data length:dataSize options:MetalUtility::ToBufferOption(info.memoryOption)];
+    HS_ASSERT(dataSize > 0, "Buffer size must be greater than 0");
 
+    const MTLResourceOptions resourceOptions = MetalUtility::ToBufferOption(info.memoryOption);
+    id<MTLBuffer> handle = [s_device newBufferWithLength:dataSize options:resourceOptions];
+ 
     if (nil == handle)
     {
         HS_LOG(crash, "Fail to create buffer");
     }
 
     mtlBuffer->handle   = handle;
-    mtlBuffer->byte     = [handle contents];
+    mtlBuffer->byte     = isCPUAccessibleBuffer(info.memoryOption) ? [handle contents] : nullptr;
     mtlBuffer->byteSize = dataSize;
+
+    if (data != nullptr)
+    {
+        UpdateBuffer(static_cast<RHIBuffer*>(mtlBuffer), 0, data, dataSize);
+    }
 
     return static_cast<RHIBuffer*>(mtlBuffer);
 }
@@ -383,7 +410,11 @@ void MetalContext::DestroyBuffer(RHIBuffer* buffer)
 
 void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const void* srcData, const size_t dataSize)
 {
-    HS_ASSERT(dataSize == buffer->byteSize, "Buffer Size isn't same");
+    HS_ASSERT(buffer, "Buffer is nullptr");
+    HS_ASSERT(srcData, "Source data is nullptr");
+    HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
+    HS_ASSERT(dstOffset + dataSize <= buffer->byteSize, "Buffer update range is out of bounds");
+
     MetalBuffer* mtlBuffer = static_cast<struct MetalBuffer*>(buffer);
     id<MTLBuffer> handle   = mtlBuffer->handle;
     switch (buffer->info.memoryOption)
@@ -399,7 +430,7 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
         [blitEncoder copyFromBuffer:stagingBuffer
                        sourceOffset:0
                            toBuffer:handle
-                  destinationOffset:0
+                  destinationOffset:dstOffset
                                size:dataSize];
         
         [blitEncoder endEncoding];
@@ -414,12 +445,12 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
     case EBufferMemoryOption::Dynamic:
     case EBufferMemoryOption::Mapped:
     {
-        void* rawPtr = [handle contents];
+        void* rawPtr = static_cast<uint8_t*>([handle contents]) + dstOffset;
         memcpy(rawPtr, srcData, dataSize);
 
         if (buffer->info.memoryOption == EBufferMemoryOption::Mapped)
         {
-            [handle didModifyRange:NSMakeRange(0, dataSize)];
+            [handle didModifyRange:NSMakeRange(dstOffset, dataSize)];
         }
 
         break;

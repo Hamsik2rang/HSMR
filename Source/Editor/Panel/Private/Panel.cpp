@@ -4,6 +4,20 @@ HS_NS_EDITOR_BEGIN
 
 void Panel::InsertPanel(Panel* panel)
 {
+    if (!panel)
+    {
+        return;
+    }
+
+    for (Panel* child : _childs)
+    {
+        if (child == panel)
+        {
+            return;
+        }
+    }
+
+    panel->_parent = this;
     _childs.push_back(panel);
 }
 
@@ -22,6 +36,7 @@ void Panel::RemovePanel(Panel* panel)
 
     if (index >= 0)
     {
+        _childs[index]->_parent = nullptr;
         std::swap(_childs[index], _childs.back());
         _childs.pop_back();
     }

@@ -12,6 +12,8 @@
 
 #include "Core/Log.h"
 #include "Core/HAL/FileSystem.h"
+#include "Resource/Mesh.h"
+#include "Resource/Material.h"
 
 #include <json.hpp>
 #include <fstream>
@@ -20,6 +22,11 @@
 using json = nlohmann::json;
 
 HS_NS_BEGIN
+
+SceneSerializer::MeshPathResolver SceneSerializer::s_meshPathResolver = nullptr;
+SceneSerializer::MaterialPathResolver SceneSerializer::s_materialPathResolver = nullptr;
+SceneSerializer::MeshResolver SceneSerializer::s_meshResolver = nullptr;
+SceneSerializer::MaterialResolver SceneSerializer::s_materialResolver = nullptr;
 
 // Helper functions for GLM type serialization
 namespace
@@ -100,19 +107,36 @@ namespace
         return j;
     }
 
-    json serializeMeshRendererComponent(const MeshRendererComponent& mr)
+    json serializeMeshRendererComponent(const MeshRendererComponent& mr, const std::string& entityName)
     {
         json j;
-        // We store asset paths, but currently MeshRendererComponent doesn't track them
-        // This is a limitation - for now we just save the state
         j["castShadow"] = mr.castShadow;
         j["receiveShadow"] = mr.receiveShadow;
         j["isVisible"] = mr.isVisible;
         j["renderLayerMask"] = mr.renderLayerMask;
 
-        // TODO: Store mesh/material asset paths when asset system is integrated
-        // j["mesh"] = meshAssetPath;
-        // j["materials"] = materialPaths;
+        if (SceneSerializer::s_meshPathResolver && mr.mesh)
+        {
+            std::string meshPath = SceneSerializer::s_meshPathResolver(mr.mesh);
+            if (!meshPath.empty())
+            {
+                j["mesh"] = meshPath;
+            }
+        }
+
+        if (SceneSerializer::s_materialPathResolver)
+        {
+            json materialsArray = json::array();
+            for (uint32 slotIndex = 0; slotIndex < mr.materials.size(); ++slotIndex)
+            {
+                materialsArray.push_back(
+                    SceneSerializer::s_materialPathResolver(mr.materials[slotIndex], entityName, slotIndex));
+            }
+            if (!materialsArray.empty())
+            {
+                j["materials"] = materialsArray;
+            }
+        }
 
         return j;
     }
@@ -195,8 +219,32 @@ namespace
         if (j.contains("receiveShadow")) mr.receiveShadow = j["receiveShadow"].get<bool>();
         if (j.contains("isVisible")) mr.isVisible = j["isVisible"].get<bool>();
         if (j.contains("renderLayerMask")) mr.renderLayerMask = j["renderLayerMask"].get<uint32>();
+        if (j.contains("mesh") && j["mesh"].is_string() && SceneSerializer::s_meshResolver)
+        {
+            mr.mesh = SceneSerializer::s_meshResolver(j["mesh"].get<std::string>());
+            if (mr.mesh)
+            {
+                const auto& bound = mr.mesh->GetBound();
+                mr.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                mr.boundsDirty = true;
+            }
+        }
 
-        // TODO: Load mesh/material from asset paths
+        mr.materials.clear();
+        if (j.contains("materials") && j["materials"].is_array() && SceneSerializer::s_materialResolver)
+        {
+            for (const json& materialNode : j["materials"])
+            {
+                if (materialNode.is_string())
+                {
+                    mr.materials.push_back(SceneSerializer::s_materialResolver(materialNode.get<std::string>()));
+                }
+                else
+                {
+                    mr.materials.push_back(nullptr);
+                }
+            }
+        }
     }
 
     void deserializeCameraComponent(Entity entity, const json& j)
@@ -263,6 +311,18 @@ SceneSerializer::SceneSerializer(Scene* scene)
 {
 }
 
+void SceneSerializer::SetAssetResolvers(
+    MeshPathResolver meshPathResolver,
+    MaterialPathResolver materialPathResolver,
+    MeshResolver meshResolver,
+    MaterialResolver materialResolver)
+{
+    s_meshPathResolver = std::move(meshPathResolver);
+    s_materialPathResolver = std::move(materialPathResolver);
+    s_meshResolver = std::move(meshResolver);
+    s_materialResolver = std::move(materialResolver);
+}
+
 bool SceneSerializer::SaveToFile(const std::string& filePath)
 {
     std::string jsonStr = SaveToString();
@@ -274,14 +334,14 @@ bool SceneSerializer::SaveToFile(const std::string& filePath)
     std::ofstream file(filePath);
     if (!file.is_open())
     {
-        HS_LOG(error, "[SceneSerializer] Failed to open file for writing: {}", filePath.c_str());
+        HS_LOG(error, "[SceneSerializer] Failed to open file for writing: %s", filePath.c_str());
         return false;
     }
 
     file << jsonStr;
     file.close();
 
-    HS_LOG(info, "[SceneSerializer] Scene saved to: {}", filePath.c_str());
+    HS_LOG(info, "[SceneSerializer] Scene saved to: %s", filePath.c_str());
     return true;
 }
 
@@ -335,8 +395,11 @@ std::string SceneSerializer::SaveToString()
         // Optional components
         if (entity.HasComponent<MeshRendererComponent>())
         {
+            std::string entityName = entity.HasComponent<TagComponent>()
+                ? entity.GetComponent<TagComponent>().name
+                : std::string("Entity");
             entityJson["meshRenderer"] = serializeMeshRendererComponent(
-                entity.GetComponent<MeshRendererComponent>());
+                entity.GetComponent<MeshRendererComponent>(), entityName);
         }
 
         if (entity.HasComponent<CameraComponent>())
@@ -386,7 +449,7 @@ bool SceneSerializer::LoadFromFile(const std::string& filePath)
     std::ifstream file(filePath);
     if (!file.is_open())
     {
-        HS_LOG(error, "[SceneSerializer] Failed to open file: {}", filePath.c_str());
+        HS_LOG(error, "[SceneSerializer] Failed to open file: %s", filePath.c_str());
         return false;
     }
 
@@ -413,7 +476,7 @@ bool SceneSerializer::LoadFromString(const std::string& jsonString)
         if (root.contains("version"))
         {
             std::string version = root["version"].get<std::string>();
-            HS_LOG(info, "[SceneSerializer] Loading scene version: {}", version.c_str());
+            HS_LOG(info, "[SceneSerializer] Loading scene version: %s", version.c_str());
         }
 
         // Scene name
@@ -496,7 +559,7 @@ bool SceneSerializer::LoadFromString(const std::string& jsonString)
     }
     catch (const json::exception& e)
     {
-        HS_LOG(error, "[SceneSerializer] JSON parse error: {}", e.what());
+        HS_LOG(error, "[SceneSerializer] JSON parse error: %s", e.what());
         return false;
     }
 }

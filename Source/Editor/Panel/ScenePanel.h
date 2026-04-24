@@ -24,7 +24,7 @@ class HS_EDITOR_API ScenePanel : public Panel
 {
 public:
     ScenePanel(Window* window)
-        : Panel(window)
+        : Panel(window, "Scene")
         , _resolution(800, 600)
     {}
 	~ScenePanel() override = default;

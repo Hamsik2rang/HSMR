@@ -3,6 +3,10 @@
 #include "RHI/RHIContext.h"
 #include "RHI/RenderHandle.h"
 
+#include "Renderer/ShaderLibrary.h"
+
+#include "Resource/Image.h"
+
 HS_NS_BEGIN
 
 ForwardRenderer::ForwardRenderer(RHIContext* rhiContext)
@@ -16,7 +20,27 @@ ForwardRenderer::~ForwardRenderer()
 
 void ForwardRenderer::Shutdown()
 {
+    _skyboxPass.reset();
     Renderer::Shutdown();
+}
+
+bool ForwardRenderer::SetSkybox(const std::array<Image*, 6>& faces)
+{
+    if (!_skyboxPass)
+    {
+        _skyboxPass = MakeScoped<ForwardSkyboxPass>();
+        if (!_skyboxPass->Initialize(_shaderLibrary, _rhiContext))
+        {
+            _skyboxPass.reset();
+            return false;
+        }
+    }
+    return _skyboxPass->ConfigureSixSided(faces);
+}
+
+void ForwardRenderer::ClearSkybox()
+{
+    _skyboxPass.reset();
 }
 
 void ForwardRenderer::Render(Scene* scene, RenderTarget* renderTarget)
@@ -156,6 +180,79 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
             commandBuffer.EndRendering();
         });
 
+
+    // Skybox pass: rendered after opaque so it only fills unwritten (depth==1.0) background pixels.
+    if (_skyboxPass && _skyboxPass->HasSkybox() && !sceneResource.cameraResources.empty())
+    {
+        RenderingInfo skyboxInfo{};
+        skyboxInfo.colorAttachmentCount       = 1;
+        skyboxInfo.useDepthStencilAttachment  = useDepthStencilAttachment;
+        skyboxInfo.isSwapchainRendering       = false;
+        skyboxInfo.renderArea                 = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+        skyboxInfo.enableAutomaticTransitions = false;
+
+        Attachment skyboxColor{};
+        skyboxColor.format         = rtInfo.colorTextureInfos[0].format;
+        skyboxColor.clearValue     = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+        skyboxColor.isDepthStencil = false;
+        skyboxColor.loadAction     = ELoadAction::Load;
+        skyboxColor.storeAction    = EStoreAction::Store;
+
+        RenderingAttachmentInfo skyboxColorAttachment{};
+        skyboxColorAttachment.texture    = _currentRenderTarget->GetColorTexture(0);
+        skyboxColorAttachment.attachment = skyboxColor;
+        skyboxInfo.colorAttachments.push_back(skyboxColorAttachment);
+
+        if (useDepthStencilAttachment)
+        {
+            Attachment skyboxDepth{};
+            skyboxDepth.format         = rtInfo.depthStencilInfo.format;
+            skyboxDepth.clearValue     = ClearValue(1.0f, 0.0f);
+            skyboxDepth.isDepthStencil = true;
+            skyboxDepth.loadAction     = ELoadAction::Load;
+            skyboxDepth.storeAction    = EStoreAction::Store;
+            skyboxInfo.depthStencilAttachment.texture    = _currentRenderTarget->GetDepthStencilTexture();
+            skyboxInfo.depthStencilAttachment.attachment = skyboxDepth;
+        }
+
+        PipelineRenderTargetLayout skyboxRTLayout = skyboxInfo.ToRenderTargetLayout();
+
+        struct SkyboxPassParameters {} skyboxParams;
+
+        _graphBuilder.AddPass("Skybox", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &skyboxParams,
+            [&](RenderGraphBuilder& builder, RGPass* pass, SkyboxPassParameters*) -> void
+            {
+                RGTexture* colorTex = builder.RegisterExternalTexture(_currentRenderTarget->GetColorTexture(0));
+                builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+
+                if (useDepthStencilAttachment)
+                {
+                    RGTexture* depthTex = builder.RegisterExternalTexture(_currentRenderTarget->GetDepthStencilTexture());
+                    builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
+                }
+            },
+            [&](RHICommandBuffer& commandBuffer) -> void
+            {
+                RHIGraphicsPipeline* pipeline = _skyboxPass->GetOrCreatePipeline(
+                    skyboxRTLayout,
+                    sceneResource.cameraResources[0]->perViewBuffer);
+                if (!pipeline || !_skyboxPass->GetResourceSet()) return;
+
+                float debugColor[4]{0.6f, 0.8f, 1.0f, 1.0f};
+                commandBuffer.BeginRendering(skyboxInfo);
+                commandBuffer.PushDebugMark("Skybox Pass", debugColor);
+                commandBuffer.SetViewport(Viewport{0.0f, 0.0f,
+                    static_cast<float>(_currentRenderTarget->GetWidth()),
+                    static_cast<float>(_currentRenderTarget->GetHeight()),
+                    0.0f, 1.0f});
+                commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+                commandBuffer.BindPipeline(pipeline);
+                commandBuffer.BindResourceSet(_skyboxPass->GetResourceSet());
+                commandBuffer.DrawArrays(0, 3, 1);
+                commandBuffer.PopDebugMark();
+                commandBuffer.EndRendering();
+            });
+    }
     _graphBuilder.Compile();
     _graphBuilder.Execute();
     _graphBuilder.Reset();

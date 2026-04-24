@@ -16,7 +16,7 @@
 
 /*#include "Renderer/RenderTarget.h"*/namespace hs { class RenderTarget; } // namespace hs
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
-/*#include "Renderer/ForwardOverlayRenderer.h"*/ namespace hs { class ForwardOverlayRenderer; }
+/*#include "Editor/Renderer/EditorRenderer.h"*/ namespace hs { class EditorRenderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
 
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
@@ -33,8 +33,12 @@ public:
     GUIContext* GetGUIContext();
 
 private:
+    void registerPanel(Panel* panel, bool* visibilityBinding = nullptr, Panel* parent = nullptr);
+    void cleanupPanels();
     void setupPanels();
     void setupDefaultScene();
+    bool loadInitialScene();
+    void persistDefaultSceneAsset();
 
     bool onInitialize() override;
     void onNextFrame() override;
@@ -52,7 +56,7 @@ private:
     void setupResources();
 
     Scoped<Renderer> _renderer;
-    Scoped<ForwardOverlayRenderer> _overlayRenderer;
+    Scoped<EditorRenderer> _overlayRenderer;
 
     Scoped<Panel> _basePanel;
     Scoped<Panel> _menuPanel;
@@ -62,10 +66,13 @@ private:
     Scoped<Panel> _hierarchyPanel;
     Scoped<Panel> _inspectorPanel;
     Scoped<Panel> _resourcePanel;
+    Scoped<Panel> _projectSettingsPanel;
     Scoped<Panel> _profilerPanel;
+    std::vector<Panel*> _registeredPanels;
 
     Scoped<Scene> _scene;
     std::vector<RenderTarget> _gameRenderTargets;
+    std::string _currentScenePath;
 };
 
 HS_NS_EDITOR_END

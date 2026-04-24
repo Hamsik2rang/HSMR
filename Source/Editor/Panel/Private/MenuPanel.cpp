@@ -1,10 +1,12 @@
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Engine/Window.h"
 #include "Editor/Core/EditorWindow.h"
 
 #include "Editor/GUI/GUIContext.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Editor/Core/EditorApplication.h"
 
@@ -16,6 +18,31 @@
 #include "ImGui/imgui.h"
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+const char* getPrimaryShortcutLabel(const char* suffix)
+{
+#if defined(__APPLE__)
+    static std::string label;
+    label = std::string("Cmd+") + suffix;
+    return label.c_str();
+#else
+    static std::string label;
+    label = std::string("Ctrl+") + suffix;
+    return label.c_str();
+#endif
+}
+
+const char* getRedoShortcutLabel()
+{
+#if defined(__APPLE__)
+    return getPrimaryShortcutLabel("Shift+Z");
+#else
+    return getPrimaryShortcutLabel("Y");
+#endif
+}
+}
 
 bool MenuPanel::Setup()
 {
@@ -30,12 +57,12 @@ void MenuPanel::Draw()
 {
     static bool showDemo = false;
 
-    if (ImGui::BeginMenuBar())
+    if (EditorPanelFrame::BeginPanelMenuBar())
     {
         drawFileMenu();
         drawEditMenu();
         drawWindowMenu();
-        ImGui::EndMenuBar();
+        EditorPanelFrame::EndPanelMenuBar();
     }
 
     if (showDemo)
@@ -51,24 +78,24 @@ void MenuPanel::drawFileMenu()
 
     if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+        if (ImGui::MenuItem("New Scene", getPrimaryShortcutLabel("N")))
         {
             newScene();
         }
 
-        if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+        if (ImGui::MenuItem("Open Scene...", getPrimaryShortcutLabel("O")))
         {
             openScene();
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+        if (ImGui::MenuItem("Save Scene", getPrimaryShortcutLabel("S")))
         {
             saveScene();
         }
 
-        if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+        if (ImGui::MenuItem("Save Scene As...", getPrimaryShortcutLabel("Shift+S")))
         {
             saveSceneAs();
         }
@@ -106,12 +133,12 @@ void MenuPanel::drawEditMenu()
 {
     if (ImGui::BeginMenu("Edit"))
     {
-        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false))
+        if (ImGui::MenuItem("Undo", getPrimaryShortcutLabel("Z"), false, false))
         {
             // TODO: Implement undo
         }
 
-        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false))
+        if (ImGui::MenuItem("Redo", getRedoShortcutLabel(), false, false))
         {
             // TODO: Implement redo
         }
@@ -120,14 +147,19 @@ void MenuPanel::drawEditMenu()
 
         if (ImGui::MenuItem("Save Layout"))
         {
-            auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
-            if (guiContext)
-            {
-                guiContext->SaveLayout("");
-            }
+            ExecuteSaveLayout();
         }
 
         ImGui::EndMenu();
+    }
+}
+
+void MenuPanel::ExecuteSaveLayout()
+{
+    auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
+    if (guiContext)
+    {
+        guiContext->SaveLayout("");
     }
 }
 
@@ -142,6 +174,7 @@ void MenuPanel::drawWindowMenu()
         ImGui::MenuItem("Hierarchy", nullptr, &vis.hierarchy);
         ImGui::MenuItem("Inspector", nullptr, &vis.inspector);
         ImGui::MenuItem("Assets", nullptr, &vis.resources);
+        ImGui::MenuItem("Project Settings", nullptr, &vis.projectSettings);
         ImGui::MenuItem("Scene Status", nullptr, &vis.sceneStatus);
 
         ImGui::Separator();
@@ -163,7 +196,7 @@ void MenuPanel::newScene()
     serializer.ClearScene();
 
     scene->SetName("New Scene");
-    _currentScenePath.clear();
+    EditorContext::Get().ClearCurrentScenePath();
     _sceneDirty = false;
 
     EditorContext::Get().ClearSelection();
@@ -177,7 +210,15 @@ void MenuPanel::openScene()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::OpenFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::OpenFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;
@@ -189,7 +230,8 @@ void MenuPanel::openScene()
     hs::SceneSerializer serializer(scene);
     if (serializer.LoadFromFile(path))
     {
-        _currentScenePath = path;
+        EditorContext::Get().SetCurrentScenePath(path);
+        updateStartupScene(path);
         _sceneDirty = false;
         EditorContext::Get().ClearSelection();
     }
@@ -197,7 +239,8 @@ void MenuPanel::openScene()
 
 void MenuPanel::saveScene()
 {
-    if (_currentScenePath.empty())
+    const std::string& currentScenePath = EditorContext::Get().GetCurrentScenePath();
+    if (currentScenePath.empty())
     {
         saveSceneAs();
         return;
@@ -208,8 +251,9 @@ void MenuPanel::saveScene()
         return;
 
     hs::SceneSerializer serializer(scene);
-    if (serializer.SaveToFile(_currentScenePath))
+    if (serializer.SaveToFile(currentScenePath))
     {
+        updateStartupScene(currentScenePath);
         _sceneDirty = false;
     }
 }
@@ -222,7 +266,15 @@ void MenuPanel::saveSceneAs()
         {"All Files", "*.*"}
     };
 
-    std::string path = hs::FileDialog::SaveFile(filters, 3);
+    const char* defaultLocation = nullptr;
+    std::string sceneFolder;
+    if (ProjectContext::Get().IsProjectOpen())
+    {
+        sceneFolder = ProjectContext::Get().GetScenePath();
+        defaultLocation = sceneFolder.c_str();
+    }
+
+    std::string path = hs::FileDialog::SaveFile(filters, 3, defaultLocation);
 
     if (path.empty())
         return;
@@ -234,9 +286,20 @@ void MenuPanel::saveSceneAs()
     hs::SceneSerializer serializer(scene);
     if (serializer.SaveToFile(path))
     {
-        _currentScenePath = path;
+        EditorContext::Get().SetCurrentScenePath(path);
+        updateStartupScene(path);
         _sceneDirty = false;
     }
+}
+
+void MenuPanel::updateStartupScene(const std::string& scenePath)
+{
+    if (scenePath.empty() || !ProjectContext::Get().IsProjectOpen())
+    {
+        return;
+    }
+
+    ProjectContext::Get().SetDefaultScene(scenePath);
 }
 
 HS_NS_EDITOR_END

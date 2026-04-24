@@ -46,7 +46,6 @@ private:
     uint8 _maxFrameCount = 3;
 
     void setRenderTargets();
-    void setRenderTargets();
 
     id<CAMetalDrawable> _drawable;
     RHICommandBuffer** _commandBuffers;

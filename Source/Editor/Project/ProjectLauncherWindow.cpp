@@ -9,7 +9,11 @@
 #include "Editor/Project/ProjectContext.h"
 #include "Editor/Project/RecentProjects.h"
 
+#include "Editor/GUI/EditorDialogFrame.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
 #include "Editor/GUI/GUIContext.h"
+#include "Editor/GUI/EditorFormLayout.h"
+#include "Editor/GUI/EditorListWidgets.h"
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/Core/EditorApplication.h"
 
@@ -27,6 +31,19 @@
 #include <ctime>
 
 HS_NS_EDITOR_BEGIN
+
+namespace
+{
+ImVec4 lerpColor(const ImVec4& lhs, const ImVec4& rhs, float t)
+{
+    return ImVec4(
+        lhs.x + (rhs.x - lhs.x) * t,
+        lhs.y + (rhs.y - lhs.y) * t,
+        lhs.z + (rhs.z - lhs.z) * t,
+        lhs.w + (rhs.w - lhs.w) * t
+    );
+}
+}
 
 ProjectLauncherWindow::ProjectLauncherWindow(Application* ownerApp)
     : Window(ownerApp, "HSMR", 1024, 600,
@@ -151,7 +168,7 @@ void ProjectLauncherWindow::drawLauncherUI()
         ImGui::PushFont(nullptr); // Use default font for now
         ImGui::SetCursorPosY(20);
         ImGui::SetCursorPosX(20);
-        ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), titleText.c_str());
+        ImGui::TextColored(ImVec4(0.12f, 0.36f, 0.72f, 1.0f), "%s", titleText.c_str());
         ImGui::PopFont();
 
         ImGui::SetCursorPosY(50);
@@ -181,7 +198,7 @@ void ProjectLauncherWindow::drawLauncherUI()
         ImGui::Separator();
         ImGui::Spacing();
         ImGui::SetCursorPosX(10);
-        ImGui::TextDisabled("Version 0.1.0");
+        EditorFeedbackWidgets::SecondaryText("Version 0.1.0");
         ImGui::SetCursorPosX(10);
     }
     ImGui::EndChild();
@@ -214,13 +231,19 @@ void ProjectLauncherWindow::drawLauncherUI()
 void ProjectLauncherWindow::drawProjectList()
 {
     auto& recentProjects = RecentProjects::Get().GetProjects();
+    const ImVec4 buttonColor = EditorListWidgets::GetSurfaceColor();
+    const ImVec4 buttonHoveredColor = EditorListWidgets::GetSurfaceHoverColor();
+    const ImVec4 textColor = EditorListWidgets::GetPrimaryTextColor();
+    const ImVec4 textDisabledColor = EditorListWidgets::GetSecondaryTextColor();
+    const ImVec4 warningColor = EditorListWidgets::GetTintedSurfaceColor(ImVec4(0.85f, 0.25f, 0.25f, 1.0f), false);
+    const ImVec4 warningHoveredColor = EditorListWidgets::GetTintedSurfaceColor(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), true);
 
     if (recentProjects.empty())
     {
         ImGui::SetCursorPos(ImVec2(20, 80));
-        ImGui::TextDisabled("No recent projects");
-        ImGui::SetCursorPosX(20);
-        ImGui::TextDisabled("Create a new project or open an existing one.");
+        EditorFeedbackWidgets::EmptyState(
+            "No recent projects",
+            "Create a new project or open an existing one.");
         return;
     }
 
@@ -241,16 +264,16 @@ void ProjectLauncherWindow::drawProjectList()
         bool isHovered   = mousePos.x >= cardStart.x && mousePos.x <= cardStart.x + cardSize.x &&
                            mousePos.y >= cardStart.y && mousePos.y <= cardStart.y + cardSize.y;
 
-        ImU32 bgColor = isHovered ? IM_COL32(60, 60, 70, 255) : IM_COL32(45, 45, 55, 255);
+        ImVec4 bgColor = isHovered ? buttonHoveredColor : buttonColor;
         if (!project.exists)
         {
-            bgColor = IM_COL32(70, 40, 40, 255);
+            bgColor = isHovered ? warningHoveredColor : warningColor;
         }
 
         ImGui::GetWindowDrawList()->AddRectFilled(
             cardStart,
             ImVec2(cardStart.x + cardSize.x, cardStart.y + cardSize.y),
-            bgColor,
+            ImGui::ColorConvertFloat4ToU32(bgColor),
             5.0f
         );
 
@@ -283,17 +306,17 @@ void ProjectLauncherWindow::drawProjectList()
         ImGui::SetCursorScreenPos(ImVec2(cardStart.x + 15, cardStart.y + 12));
 
         // Project name
-        ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%s", project.name.c_str());
+        ImGui::TextColored(textColor, "%s", project.name.c_str());
 
         // Project path
         ImGui::SetCursorScreenPos(ImVec2(cardStart.x + 15, cardStart.y + 32));
         if (project.exists)
         {
-            ImGui::TextDisabled("%s", project.path.c_str());
+            EditorFeedbackWidgets::SecondaryText(project.path.c_str());
         }
         else
         {
-            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "(Project not found)");
+            ImGui::TextColored(lerpColor(textDisabledColor, ImVec4(1.0f, 0.2f, 0.2f, 1.0f), 0.65f), "(Project not found)");
         }
 
         // Last opened time
@@ -309,7 +332,7 @@ void ProjectLauncherWindow::drawProjectList()
             localtime_r(&time, &timeInfo);
 #endif
             strftime(timeStr, sizeof(timeStr), "Last opened: %Y-%m-%d %H:%M", &timeInfo);
-            ImGui::TextDisabled("%s", timeStr);
+            EditorFeedbackWidgets::SecondaryText(timeStr);
         }
 
         ImGui::PopID();
@@ -321,37 +344,40 @@ void ProjectLauncherWindow::drawProjectList()
 
 void ProjectLauncherWindow::drawNewProjectDialog()
 {
-    ImGui::OpenPopup("New Project");
-
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(600, 300));
-
-    if (ImGui::BeginPopupModal("New Project", &_showNewProjectDialog, ImGuiWindowFlags_AlwaysAutoResize))
+    if (EditorDialogFrame::BeginCenteredModal("New Project", &_showNewProjectDialog, ImVec2(600, 300)))
     {
         ImGui::Spacing();
 
-        // Project Name
-        ImGui::Text("Project Name:");
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText("##name", _newProjectNameBuffer, sizeof(_newProjectNameBuffer));
-
-        ImGui::Spacing();
-        ImGui::Spacing();
-
-        // Location
-        ImGui::Text("Location:");
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 90);
-        ImGui::InputText("##path", _newProjectPathBuffer, sizeof(_newProjectPathBuffer));
-        ImGui::SameLine();
-        if (ImGui::Button("Browse...", ImVec2(80, 0)))
+        if (EditorFormLayout::Begin("NewProjectForm", 110.0f))
         {
-            std::string folder = FileDialog::OpenFolder();
-            if (!folder.empty())
+            EditorFormLayout::InputTextRow("Project Name", _newProjectNameBuffer, sizeof(_newProjectNameBuffer));
+
+            EditorFormLayout::BeginRow("Location");
+            const float browseButtonWidth = 80.0f;
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - browseButtonWidth - spacing);
+            ImGui::InputText("##Location", _newProjectPathBuffer, sizeof(_newProjectPathBuffer));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse...", ImVec2(browseButtonWidth, 0)))
             {
-                strncpy(_newProjectPathBuffer, folder.c_str(), sizeof(_newProjectPathBuffer) - 1);
-                _newProjectPathBuffer[sizeof(_newProjectPathBuffer) - 1] = '\0';
+                std::string folder = FileDialog::OpenFolder();
+                if (!folder.empty())
+                {
+                    strncpy(_newProjectPathBuffer, folder.c_str(), sizeof(_newProjectPathBuffer) - 1);
+                    _newProjectPathBuffer[sizeof(_newProjectPathBuffer) - 1] = '\0';
+                }
             }
+
+            EditorFormLayout::BeginRow("Full Path");
+            std::string fullPathPreview = std::string(_newProjectPathBuffer);
+            if (!fullPathPreview.empty() && fullPathPreview.back() != HS_DIR_SEPERATOR)
+            {
+                fullPathPreview += HS_DIR_SEPERATOR;
+            }
+            fullPathPreview += _newProjectNameBuffer;
+            EditorFeedbackWidgets::SecondaryText(fullPathPreview.c_str());
+
+            EditorFormLayout::End();
         }
 
         // Full path preview
@@ -369,10 +395,8 @@ void ProjectLauncherWindow::drawNewProjectDialog()
         ImGui::Spacing();
 
         // Buttons
-        float buttonWidth = 120;
-        float spacing     = 10;
-        float totalWidth  = buttonWidth * 2 + spacing;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - totalWidth) * 0.5f);
+        const float buttonWidth = 120.0f;
+        EditorDialogFrame::BeginFooterButtons(2, buttonWidth, 10.0f);
 
         bool canCreate = strlen(_newProjectNameBuffer) > 0 && strlen(_newProjectPathBuffer) > 0;
 
@@ -408,7 +432,7 @@ void ProjectLauncherWindow::drawNewProjectDialog()
             _showNewProjectDialog = false;
         }
 
-        ImGui::EndPopup();
+        EditorDialogFrame::EndModal();
     }
 }
 

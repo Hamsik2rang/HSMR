@@ -55,7 +55,12 @@ source_group("EntryPoint\\Private" FILES ${EDITOR_ENTRY_POINT_SOURCES})
 list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_SOURCES})
 
 set(EDITOR_GUI_HEADERS
+    GUI/EditorDialogFrame.h
+    GUI/EditorFeedbackWidgets.h
+    GUI/EditorFormLayout.h
     GUI/EditorIcons.h
+    GUI/EditorListWidgets.h
+    GUI/EditorTreeWidgets.h
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
     GUI/MaterialSymbolsIcons.h
@@ -108,6 +113,26 @@ set(EDITOR_RESOURCE_SOURCES
 list(APPEND TOTAL_FILES ${EDITOR_RESOURCE_SOURCES})
 source_group("Resource\\Private" FILES ${EDITOR_RESOURCE_SOURCES})
 
+set(EDITOR_RENDERER_HEADERS
+    Renderer/EditorRenderer.h
+    Renderer/RenderPass/EditorGridPass.h
+    Renderer/RenderPass/EditorDebugPass.h
+    Renderer/RenderPass/EditorIconPass.h
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RENDERER_HEADERS})
+source_group("Renderer\\Public" FILES ${EDITOR_RENDERER_HEADERS})
+
+set(EDITOR_RENDERER_SOURCES
+    Renderer/Private/EditorRenderer.cpp
+    Renderer/RenderPass/Private/EditorGridPass.cpp
+    Renderer/RenderPass/Private/EditorDebugPass.cpp
+    Renderer/RenderPass/Private/EditorIconPass.cpp
+)
+
+list(APPEND TOTAL_FILES ${EDITOR_RENDERER_SOURCES})
+source_group("Renderer\\Private" FILES ${EDITOR_RENDERER_SOURCES})
+
 set(EDITOR_ASSET_HEADERS
     Asset/AssetTypes.h
     Asset/AssetDatabase.h
@@ -143,11 +168,13 @@ source_group("Project\\Private" FILES ${EDITOR_PROJECT_SOURCES})
 
 set(PANEL_HEADERS
     Panel/Panel.h
+    Panel/EditorPanelFrame.h
     Panel/DockspacePanel.h
     Panel/ScenePanel.h
     Panel/GamePanel.h
     Panel/InspectorPanel.h
     Panel/MenuPanel.h
+    Panel/ProjectSettingsPanel.h
     Panel/ResourcePanel.h
     Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
@@ -162,11 +189,13 @@ list(APPEND TOTAL_FILES ${PANEL_HEADERS})
 
 set(PANEL_SOURCES
     Panel/Private/Panel.cpp
+    Panel/Private/EditorPanelFrame.cpp
     Panel/Private/DockspacePanel.cpp
     Panel/Private/ScenePanel.cpp
     Panel/Private/GamePanel.cpp
     Panel/Private/InspectorPanel.cpp
     Panel/Private/MenuPanel.cpp
+    Panel/Private/ProjectSettingsPanel.cpp
     Panel/Private/ResourcePanel.cpp
     Panel/Private/SceneStatusPanel.cpp
     Panel/Private/HierarchyPanel.cpp
@@ -268,7 +297,7 @@ add_library(${TARGET_NAME}
 if(WIN32)
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core RHI Engine Resource Renderer Scene
+        Core RHI ShaderSystem Engine Resource Renderer Scene
         ${HS_DEPS_LIB_DIR}/vulkan-1.lib
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )

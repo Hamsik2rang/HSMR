@@ -4,8 +4,13 @@
 #include "Precompile.h"
 
 #include "Renderer/Renderer.h"
+#include "Renderer/RenderPass/ForwardSkyboxPass.h"
+
+#include <array>
 
 HS_NS_BEGIN
+
+class Image;
 
 class HS_RENDERER_API ForwardRenderer : public Renderer
 {
@@ -19,8 +24,14 @@ public:
     void Render(const RenderSceneSnapshot& snapshot, RenderTarget* renderTarget, const RenderOptions& options) override;
     void Shutdown() override;
 
-    //...
+    // Configure the skybox from 6 separate 2D images.
+    // Face order: +X, -X, +Y, -Y, +Z, -Z. Must be called after Initialize().
+    bool SetSkybox(const std::array<Image*, 6>& faces);
 
+    void ClearSkybox();
+
+private:
+    Scoped<ForwardSkyboxPass> _skyboxPass;
 };
 
 HS_NS_END

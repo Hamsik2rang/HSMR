@@ -16,7 +16,7 @@
 
 HS_NS_BEGIN
 
-class RenderGraphBuilder
+class HS_RENDERER_API RenderGraphBuilder
 {
 public:
     // 리소스-패스 간 접근 방식을 기록하는 구조체.

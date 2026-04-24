@@ -38,7 +38,7 @@ void RecentProjects::Load()
     std::ifstream file(configPath);
     if (!file.is_open())
     {
-        HS_LOG(warning, "Failed to open recent projects file: {}", configPath.c_str());
+        HS_LOG(warning, "Failed to open recent projects file: %s", configPath.c_str());
         return;
     }
 
@@ -70,11 +70,11 @@ void RecentProjects::Load()
         // Validate existence
         ValidateProjects();
 
-        HS_LOG(info, "Loaded {} recent projects", _projects.size());
+        HS_LOG(info, "Loaded %zu recent projects", _projects.size());
     }
     catch (const std::exception& e)
     {
-        HS_LOG(error, "Failed to parse recent projects file: {}", e.what());
+        HS_LOG(error, "Failed to parse recent projects file: %s", e.what());
         _projects.clear();
     }
 }
@@ -102,14 +102,14 @@ void RecentProjects::Save()
     std::ofstream file(configPath);
     if (!file.is_open())
     {
-        HS_LOG(error, "Failed to save recent projects file: {}", configPath.c_str());
+        HS_LOG(error, "Failed to save recent projects file: %s", configPath.c_str());
         return;
     }
 
     file << j.dump(4);
     file.close();
 
-    HS_LOG(info, "Saved {} recent projects", _projects.size());
+    HS_LOG(info, "Saved %zu recent projects", _projects.size());
 }
 
 void RecentProjects::AddProject(const std::string& projectFilePath, const std::string& name)

@@ -1,8 +1,10 @@
 #include "Editor/Panel/GamePanel.h"
 
 #include "Editor/Core/EditorContext.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Editor/GUI/ImGuiExtension.h"
+#include "Editor/Panel/EditorPanelFrame.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -61,7 +63,7 @@ std::vector<Entity> collectSceneCameras(Scene* scene)
 }
 
 GamePanel::GamePanel(Window* window)
-    : Panel(window)
+    : Panel(window, "Game")
     , _resolution(800, 600)
 {
 }
@@ -116,7 +118,7 @@ std::string GamePanel::getCameraLabel(Entity camera) const
 
 void GamePanel::drawMenuBar(Scene* scene)
 {
-    if (!ImGui::BeginMenuBar())
+    if (!EditorPanelFrame::BeginPanelMenuBar())
     {
         return;
     }
@@ -173,28 +175,32 @@ void GamePanel::drawMenuBar(Scene* scene)
         ImGui::EndCombo();
     }
 
-    ImGui::EndMenuBar();
+    EditorPanelFrame::EndPanelMenuBar();
 }
 
 void GamePanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.game)
+    if (!IsVisible())
     {
         return;
     }
 
-    ImGui::Begin(
-        "Game",
-        &vis.game,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar |
-            ImGuiWindowFlags_MenuBar);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = GetVisibilityBinding();
+    panelOptions.useMenuBar = true;
+    panelOptions.noTitleBar = true;
+    panelOptions.noScrollbar = true;
+    panelOptions.noScrollWithMouse = true;
+    EditorPanelFrame::BeginStandardPanel("Game", panelOptions);
 
     Scene* scene = EditorContext::Get().GetActiveScene();
     drawMenuBar(scene);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::BeginChild("GameViewport", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    EditorPanelContentOptions contentOptions{};
+    contentOptions.id = "GameViewport";
+    contentOptions.padding = ImVec2(0.0f, 0.0f);
+    contentOptions.extraFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    EditorPanelFrame::BeginPanelContent(contentOptions);
 
     ImVec2 availableSize = ImGui::GetContentRegionAvail();
     _resolution.width = static_cast<uint32>(availableSize.x > 1.0f ? availableSize.x : 1.0f);
@@ -218,12 +224,12 @@ void GamePanel::Draw()
         overlayPos.x += 12.0f;
         overlayPos.y += ImGui::GetFrameHeight() + 12.0f;
         ImGui::SetCursorScreenPos(overlayPos);
-        ImGui::TextDisabled("%s No active scene camera", EditorIcons::Camera);
+        const std::string message = std::string(EditorIcons::Camera) + " No active scene camera";
+        EditorFeedbackWidgets::SecondaryText(message.c_str());
     }
 
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
-    ImGui::End();
+    EditorPanelFrame::EndPanelContent();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 HS_NS_EDITOR_END

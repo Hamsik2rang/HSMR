@@ -56,6 +56,7 @@ struct HS_RENDERER_API MaterialResource
     RHIResourceLayout* resourceLayout = nullptr;
     RHIResourceSet* resourceSet       = nullptr; // Compatibility only; draw sets own concrete bindings.
     std::vector<RHIBuffer*> materialBuffers;
+    std::unordered_map<std::string, RHIBuffer*> materialBuffersByName;
     std::unordered_map<size_t, RHIGraphicsPipeline*> pipelineCache;
     std::vector<ImageResource*> textureResources; // Referenced textures
     bool isValid = false;
@@ -140,10 +141,12 @@ private:
     );
 
     MaterialResource createMaterialResources(Material* material);
+    void syncMaterialBuffers(Material* material, MaterialResource& resources);
     ImageResource createImageResource(Image* image);
     RHIResourceLayout* createResourceLayoutFromReflection(
         const ShaderReflectionDataEx& reflection,
         Material* material,
+        MaterialResource* materialResource,
         CameraResource* cameraResource,
         RHIBuffer* perDrawBuffer,
         LightResource* lightResource

@@ -42,6 +42,9 @@ public:
     std::string GetAssetPath() const;
     std::string GetScenePath() const;
     std::string GetSettingsPath() const;
+    std::string GetResolvedScenePath(const std::string& scenePath) const;
+    std::string GetResolvedDefaultScenePath() const;
+    std::string MakeProjectRelativePath(const std::string& path) const;
 
     // Settings
     const ProjectSettings& GetSettings() const { return _settings; }

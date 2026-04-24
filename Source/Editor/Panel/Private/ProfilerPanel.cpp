@@ -7,6 +7,9 @@
 
 #include "Editor/Panel/ProfilerPanel.h"
 #include "Editor/Core/EditorContext.h"
+#include "Editor/GUI/EditorFeedbackWidgets.h"
+#include "Editor/Panel/EditorPanelFrame.h"
+#include "Editor/GUI/EditorIcons.h"
 
 #include "Core/Profiler/ProfileDataCollector.h"
 #include "Core/Profiler/Profiler.h"
@@ -16,7 +19,7 @@
 HS_NS_EDITOR_BEGIN
 
 ProfilerPanel::ProfilerPanel(Window* window)
-    : Panel(window)
+    : Panel(window, "Profiler")
 {
 }
 
@@ -35,13 +38,14 @@ void ProfilerPanel::Cleanup()
 
 void ProfilerPanel::Draw()
 {
-    auto& vis = EditorContext::Get().GetPanelVisibility();
-    if (!vis.profiler)
+    if (!IsVisible())
     {
         return;
     }
 
-    ImGui::Begin("Profiler", &vis.profiler);
+    EditorPanelWindowOptions panelOptions{};
+    panelOptions.pOpen = GetVisibilityBinding();
+    EditorPanelFrame::BeginStandardPanel("Profiler", panelOptions);
 
     if (ImGui::BeginTabBar("ProfilerTabs"))
     {
@@ -72,10 +76,10 @@ void ProfilerPanel::Draw()
 #if defined(TRACY_ENABLE)
     ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Tracy: Enabled");
 #else
-    ImGui::TextDisabled("Tracy: Disabled");
+    EditorFeedbackWidgets::SecondaryText("Tracy: Disabled");
 #endif
 
-    ImGui::End();
+    EditorPanelFrame::EndStandardPanel();
 }
 
 void ProfilerPanel::_drawCPUTab()
@@ -84,7 +88,7 @@ void ProfilerPanel::_drawCPUTab()
 
     if (zones.empty())
     {
-        ImGui::TextDisabled("No zone data collected");
+        EditorFeedbackWidgets::EmptyState("No zone data collected");
         return;
     }
 
@@ -149,9 +153,9 @@ void ProfilerPanel::_drawCPUTab()
         bool nodeOpen = ImGui::TreeNodeEx(zone.name, flags);
 
         // Duration and percentage on the same line
-        ImGui::SameLine(ImGui::GetWindowWidth() - 200);
+        EditorWidgets::RightAlignNextItem(160.0f);
         ImGui::Text("%.2f ms", zone.durationMs);
-        ImGui::SameLine(ImGui::GetWindowWidth() - 120);
+        ImGui::SameLine();
 
         // Draw mini bar
         _drawZoneBar(fraction, zone.color, 60.0f, ImGui::GetTextLineHeight());
@@ -179,14 +183,12 @@ void ProfilerPanel::_drawCPUTab()
 
 void ProfilerPanel::_drawGPUTab()
 {
-    ImGui::TextDisabled("GPU profiling coming soon.");
-    ImGui::TextDisabled("(Phase 2)");
+    EditorFeedbackWidgets::EmptyState("GPU profiling coming soon.", "(Phase 2)");
 }
 
 void ProfilerPanel::_drawMemoryTab()
 {
-    ImGui::TextDisabled("Memory profiling coming soon.");
-    ImGui::TextDisabled("(Phase 3)");
+    EditorFeedbackWidgets::EmptyState("Memory profiling coming soon.", "(Phase 3)");
 }
 
 void ProfilerPanel::_drawZoneBar(float fraction, uint32 color, float width, float height)

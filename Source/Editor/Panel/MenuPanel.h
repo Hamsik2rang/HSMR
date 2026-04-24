@@ -10,6 +10,7 @@
 
 #include "Precompile.h"
 
+#include "Editor/Core/EditorContext.h"
 #include "Editor/Panel/Panel.h"
 
 #include <string>
@@ -19,13 +20,19 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API MenuPanel : public Panel
 {
 public:
-    MenuPanel(Window* window) : Panel(window) {}
+    MenuPanel(Window* window) : Panel(window, "Menu") {}
     ~MenuPanel() override = default;
 
     bool Setup() override;
     void Cleanup() override;
 
     void Draw() override;
+    void SetCurrentScenePath(const std::string& scenePath) { EditorContext::Get().SetCurrentScenePath(scenePath); }
+    void ExecuteNewScene() { newScene(); }
+    void ExecuteOpenScene() { openScene(); }
+    void ExecuteSaveScene() { saveScene(); }
+    void ExecuteSaveSceneAs() { saveSceneAs(); }
+    void ExecuteSaveLayout();
 
 private:
     void drawFileMenu();
@@ -36,8 +43,8 @@ private:
     void openScene();
     void saveScene();
     void saveSceneAs();
+    void updateStartupScene(const std::string& scenePath);
 
-    std::string _currentScenePath;
     bool _sceneDirty = false;
 };
 

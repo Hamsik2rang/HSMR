@@ -1,5 +1,6 @@
-#include "Renderer/RenderPass/ForwardDebugPass.h"
+#include "Editor/Renderer/RenderPass/EditorDebugPass.h"
 
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/Hash.h"
 #include "Core/Log.h"
 
@@ -50,19 +51,19 @@ size_t buildPipelineKey(const PipelineRenderTargetLayout& renderTargetLayout)
 }
 }
 
-ForwardDebugPass::~ForwardDebugPass()
+EditorDebugPass::~EditorDebugPass()
 {
     Shutdown();
 }
 
-bool ForwardDebugPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
+bool EditorDebugPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiContext)
 {
     _rhiContext = rhiContext;
 
     Shader* shader = shaderLibrary->GetOrCompile("DebugLine", EShaderStage::Vertex | EShaderStage::Fragment);
     if (!shader || !shader->IsCompiledEx())
     {
-        HS_LOG(error, "[ForwardDebugPass] Failed to compile DebugLine.slang");
+        HS_LOG(error, "[EditorDebugPass] Failed to compile DebugLine.slang");
         return false;
     }
 
@@ -70,7 +71,7 @@ bool ForwardDebugPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiC
     const auto* fsBytecode = shader->GetBytecode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode)
     {
-        HS_LOG(error, "[ForwardDebugPass] Missing DebugLine shader bytecode");
+        HS_LOG(error, "[EditorDebugPass] Missing DebugLine shader bytecode");
         return false;
     }
 
@@ -94,7 +95,7 @@ bool ForwardDebugPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiC
 
     if (!_vertexShader || !_fragmentShader)
     {
-        HS_LOG(error, "[ForwardDebugPass] Failed to create RHI shaders");
+        HS_LOG(error, "[EditorDebugPass] Failed to create RHI shaders");
         return false;
     }
 
@@ -102,7 +103,7 @@ bool ForwardDebugPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* rhiC
     return true;
 }
 
-void ForwardDebugPass::Shutdown()
+void EditorDebugPass::Shutdown()
 {
     if (!_rhiContext) return;
 
@@ -148,7 +149,7 @@ void ForwardDebugPass::Shutdown()
     _rhiContext     = nullptr;
 }
 
-bool ForwardDebugPass::Prepare(const RenderSceneSnapshot& snapshot)
+bool EditorDebugPass::Prepare(const RenderSceneSnapshot& snapshot)
 {
     if (!_isInitialized) return false;
 
@@ -202,7 +203,7 @@ bool ForwardDebugPass::Prepare(const RenderSceneSnapshot& snapshot)
     return _vertexBuffer != nullptr;
 }
 
-void ForwardDebugPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
+void EditorDebugPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
 {
     if (_resourceSet)
     {
@@ -227,21 +228,21 @@ void ForwardDebugPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     _resourceLayout = _rhiContext->CreateResourceLayout("DebugLineLayout", &binding, 1);
     if (!_resourceLayout)
     {
-        HS_LOG(error, "[ForwardDebugPass] Failed to create resource layout");
+        HS_LOG(error, "[EditorDebugPass] Failed to create resource layout");
         return;
     }
 
     _resourceSet = _rhiContext->CreateResourceSet("DebugLineSet", _resourceLayout);
     if (!_resourceSet)
     {
-        HS_LOG(error, "[ForwardDebugPass] Failed to create resource set");
+        HS_LOG(error, "[EditorDebugPass] Failed to create resource set");
         return;
     }
 
     _perViewBuffer = perViewBuffer;
 }
 
-void ForwardDebugPass::resetPipelines()
+void EditorDebugPass::resetPipelines()
 {
     for (auto& [key, pipeline] : _pipelineCache)
     {
@@ -253,7 +254,7 @@ void ForwardDebugPass::resetPipelines()
     _pipelineCache.clear();
 }
 
-RHIGraphicsPipeline* ForwardDebugPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
+RHIGraphicsPipeline* EditorDebugPass::GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
                                                            RHIBuffer* perViewBuffer)
 {
     if (!_isInitialized || !perViewBuffer) return nullptr;
@@ -277,7 +278,7 @@ RHIGraphicsPipeline* ForwardDebugPass::GetOrCreatePipeline(const PipelineRenderT
     VertexInputLayoutDescriptor layout{};
     layout.binding        = 0;
     layout.stride         = sizeof(DebugLineVertex);
-    layout.stepRate       = 0;
+    layout.stepRate       = 1;
     layout.useInstancing  = false;
     viDesc.layouts.push_back(layout);
 
@@ -348,7 +349,7 @@ RHIGraphicsPipeline* ForwardDebugPass::GetOrCreatePipeline(const PipelineRenderT
     RHIGraphicsPipeline* pipeline = _rhiContext->CreateGraphicsPipeline("DebugLinePipeline", gpInfo);
     if (!pipeline)
     {
-        HS_LOG(error, "[ForwardDebugPass] Failed to create graphics pipeline");
+        HS_LOG(error, "[EditorDebugPass] Failed to create graphics pipeline");
         return nullptr;
     }
 
@@ -356,13 +357,13 @@ RHIGraphicsPipeline* ForwardDebugPass::GetOrCreatePipeline(const PipelineRenderT
     return pipeline;
 }
 
-void ForwardDebugPass::addLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color)
+void EditorDebugPass::addLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color)
 {
     _vertices.push_back(DebugLineVertex{from, color});
     _vertices.push_back(DebugLineVertex{to, color});
 }
 
-void ForwardDebugPass::addCamera(const DebugCameraSnapshot& camera)
+void EditorDebugPass::addCamera(const DebugCameraSnapshot& camera)
 {
     constexpr glm::vec4 cameraColor(0.2f, 0.75f, 1.0f, 0.85f);
 
@@ -374,28 +375,28 @@ void ForwardDebugPass::addCamera(const DebugCameraSnapshot& camera)
         float farHeight  = glm::tan(glm::radians(camera.fov) * 0.5f) * camera.farPlane;
         float farWidth   = farHeight * camera.aspectRatio;
 
-        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth, -nearHeight, -camera.nearPlane));
-        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth, -nearHeight, -camera.nearPlane));
-        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth,  nearHeight, -camera.nearPlane));
-        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth,  nearHeight, -camera.nearPlane));
-        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth, -farHeight, -camera.farPlane));
-        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( farWidth, -farHeight, -camera.farPlane));
-        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( farWidth,  farHeight, -camera.farPlane));
-        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth,  farHeight, -camera.farPlane));
+        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth, -nearHeight, camera.nearPlane));
+        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth, -nearHeight, camera.nearPlane));
+        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( nearWidth,  nearHeight, camera.nearPlane));
+        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-nearWidth,  nearHeight, camera.nearPlane));
+        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth, -farHeight, camera.farPlane));
+        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( farWidth, -farHeight, camera.farPlane));
+        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( farWidth,  farHeight, camera.farPlane));
+        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-farWidth,  farHeight, camera.farPlane));
     }
     else
     {
         float halfHeight = camera.orthoSize;
         float halfWidth  = camera.orthoSize * camera.aspectRatio;
 
-        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, -camera.nearPlane));
-        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, -camera.nearPlane));
-        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, -camera.nearPlane));
-        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, -camera.nearPlane));
-        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, -camera.farPlane));
-        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, -camera.farPlane));
-        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, -camera.farPlane));
-        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, -camera.farPlane));
+        corners[0] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, camera.nearPlane));
+        corners[1] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, camera.nearPlane));
+        corners[2] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, camera.nearPlane));
+        corners[3] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, camera.nearPlane));
+        corners[4] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth, -halfHeight, camera.farPlane));
+        corners[5] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth, -halfHeight, camera.farPlane));
+        corners[6] = transformPoint(camera.worldMatrix, glm::vec3( halfWidth,  halfHeight, camera.farPlane));
+        corners[7] = transformPoint(camera.worldMatrix, glm::vec3(-halfWidth,  halfHeight, camera.farPlane));
     }
 
     for (uint32 i = 0; i < 4; ++i)
@@ -406,14 +407,14 @@ void ForwardDebugPass::addCamera(const DebugCameraSnapshot& camera)
     }
 }
 
-void ForwardDebugPass::addLight(const DebugLightSnapshot& light)
+void EditorDebugPass::addLight(const DebugLightSnapshot& light)
 {
     if (!light.isEnabled) return;
 
     glm::vec3 center  = transformPoint(light.worldMatrix, glm::vec3(0.0f));
-    glm::vec3 forward = transformDirection(light.worldMatrix, glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-    glm::vec3 right   = transformDirection(light.worldMatrix, glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::vec3 up      = transformDirection(light.worldMatrix, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 forward = transformDirection(light.worldMatrix, CoordinateConvention::LegacyObjectForward, CoordinateConvention::LegacyObjectForward);
+    glm::vec3 right   = transformDirection(light.worldMatrix, CoordinateConvention::WorldRight, CoordinateConvention::WorldRight);
+    glm::vec3 up      = transformDirection(light.worldMatrix, CoordinateConvention::WorldUp, CoordinateConvention::WorldUp);
 
     glm::vec4 color(glm::clamp(light.color * std::max(light.intensity, 0.25f), glm::vec3(0.0f), glm::vec3(1.0f)), 0.9f);
     float range = std::max(light.range, 0.1f);
@@ -454,7 +455,7 @@ void ForwardDebugPass::addLight(const DebugLightSnapshot& light)
     addCircle(coneCenter, right, up, innerRadius, innerColor, s_debugCircleSegments);
 }
 
-void ForwardDebugPass::addCircle(const glm::vec3& center,
+void EditorDebugPass::addCircle(const glm::vec3& center,
                                  const glm::vec3& axisA,
                                  const glm::vec3& axisB,
                                  float radius,

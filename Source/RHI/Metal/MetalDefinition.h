@@ -12,12 +12,12 @@
 // Metal의 vertex stage에서 setVertexBuffer로 바인딩하는 버퍼 슬롯은
 // UBO(Uniform Buffer)와 정점 버퍼(Vertex Buffer)가 같은 네임스페이스를 공유한다.
 //
-//   Slot  0 ~ 29 : UBO (Slang 리플렉션의 getOffset(MetalBuffer)로 결정)
-//   Slot 30 ~    : Vertex Buffer (kMetalVertexBufferBaseIndex + binding)
+//   Slot  0 ~ 28 : UBO (Slang 리플렉션의 getOffset(MetalBuffer)로 결정)
+//   Slot 30 ~ 29 : Vertex Buffer (kMetalVertexBufferBaseIndex - binding)
 //
 // MTLVertexDescriptor의 layouts[i].bufferIndex와
 // BindVertexBuffers()의 setVertexBuffer:atIndex: 모두
-// kMetalVertexBufferBaseIndex를 기준으로 오프셋한다.
+// kMetalVertexBufferBaseIndex를 기준으로 역방향 오프셋한다.
 // 이로써 UBO 슬롯과 정점 버퍼 슬롯이 겹치지 않는다.
 //
 // [[stage_in]] 메커니즘:
@@ -31,3 +31,12 @@
 // 버퍼 슬롯 번호를 직접 참조할 필요가 없다.
 // ──────────────────────────────────────────────────────────────
 static constexpr NSUInteger kMetalVertexBufferBaseIndex = 30;
+static constexpr NSUInteger kMetalVertexBufferMinIndex = 29;
+static constexpr NSUInteger kMetalMaxVertexBufferSlotCount = 31;
+static constexpr NSUInteger kMetalReservedVertexBufferSlotCount =
+    kMetalVertexBufferBaseIndex - kMetalVertexBufferMinIndex + 1;
+
+static inline NSUInteger MetalVertexBufferSlotForBinding(NSUInteger binding)
+{
+    return kMetalVertexBufferBaseIndex - binding;
+}

@@ -20,6 +20,7 @@ class Mesh;
 class Material;
 class Image;
 class Model;
+class Shader;
 HS_NS_END
 
 HS_NS_EDITOR_BEGIN
@@ -126,6 +127,7 @@ public:
     // Resource loading (with caching)
     hs::Mesh* LoadMesh(const std::string& relativePath);
     hs::Material* LoadMaterial(const std::string& relativePath);
+    bool SaveMaterial(const std::string& relativePath, hs::Material* material);
     hs::Image* LoadTexture(const std::string& relativePath);
     hs::Model* LoadModel(const std::string& relativePath);
 
@@ -156,6 +158,8 @@ private:
 
     // Cached loaded resources (owned by ObjectManager, we just store pointers)
     std::unordered_map<std::string, hs::Scoped<hs::Model>> _loadedModels;
+    std::unordered_map<std::string, hs::Scoped<hs::Material>> _loadedMaterials;
+    std::unordered_map<std::string, hs::Scoped<hs::Image>> _loadedTextures;
 };
 
 HS_NS_EDITOR_END

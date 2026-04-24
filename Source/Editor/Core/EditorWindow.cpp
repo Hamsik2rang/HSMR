@@ -10,7 +10,7 @@
 #include "RHI/CommandHandle.h"
 
 #include "Renderer/ForwardRenderer.h"
-#include "Renderer/ForwardOverlayRenderer.h"
+#include "Editor/Renderer/EditorRenderer.h"
 #include "Renderer/CameraUtils.h"
 #include "Renderer/RenderPass/ForwardOpaquePass.h"
 #include "Resource/ObjectManager.h"
@@ -18,10 +18,12 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
+#include "Scene/SceneSerializer.h"
 
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/EditorApplication.h"
+#include "Editor/Project/ProjectContext.h"
 
 #include "Editor/Panel/Panel.h"
 #include "Editor/Panel/DockspacePanel.h"
@@ -31,6 +33,7 @@
 #include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
+#include "Editor/Panel/ProjectSettingsPanel.h"
 #include "Editor/Panel/ResourcePanel.h"
 #include "Editor/Panel/ProfilerPanel.h"
 
@@ -71,7 +74,7 @@ RenderTargetInfo buildPanelRenderTargetInfo(const RenderTargetInfo& baseInfo, ui
     return info;
 }
 
-RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
+RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera, uint32 width, uint32 height)
 {
     RenderViewSnapshot viewSnapshot{};
     viewSnapshot.viewId = std::numeric_limits<uint64>::max();
@@ -91,6 +94,7 @@ RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera)
     perView.inverseProjectionMatrix = editorCamera->GetInverseProjectionMatrix();
     perView.inverseViewProjectionMatrix = editorCamera->GetInverseViewProjectionMatrix();
     perView.cameraPosition = editorCamera->GetPosition();
+    perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
 
     viewSnapshot.perView = perView;
     return viewSnapshot;
@@ -113,6 +117,7 @@ RenderViewSnapshot buildSceneCameraViewSnapshot(Entity cameraEntity, bool vulkan
 
     viewSnapshot.viewId = static_cast<uint64>(entt::to_integral(cameraEntity.GetHandle()));
     viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
+    viewSnapshot.perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
     return viewSnapshot;
 }
 
@@ -123,6 +128,26 @@ void setSingleViewSnapshot(RenderSceneSnapshot& snapshot, const RenderViewSnapsh
     {
         snapshot.views.push_back(viewSnapshot);
     }
+}
+
+void populateStarterScene(Scene& scene)
+{
+    scene.SetName("Main");
+
+    Entity cameraEntity = scene.CreateEntity("Main Camera");
+    auto& camera = cameraEntity.AddComponent<CameraComponent>();
+    camera.isPrimary = true;
+    camera.isActive = true;
+    camera.priority = 100;
+
+    Entity lightEntity = scene.CreateEntity("Directional Light");
+    auto& light = lightEntity.AddComponent<LightComponent>();
+    light.type = ELightType::Directional;
+    auto& lightTransform = lightEntity.GetComponent<TransformComponent>();
+    lightTransform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+    lightTransform.SetEulerAngles(glm::vec3(-90.0f, 0.0f, 45.0f));
+
+    scene.Update(0.0f);
 }
 }
 
@@ -139,7 +164,7 @@ bool EditorWindow::onInitialize()
 {
     _renderer = MakeScoped<ForwardRenderer>(_rhiContext);
     _renderer->Initialize();
-    _overlayRenderer = MakeScoped<ForwardOverlayRenderer>(_rhiContext);
+    _overlayRenderer = MakeScoped<EditorRenderer>(_rhiContext);
     _overlayRenderer->Initialize(_renderer->GetShaderLibrary());
 
     ImGuiExtension::InitializeBackend(_swapchain);
@@ -156,8 +181,13 @@ bool EditorWindow::onInitialize()
     _renderer->AddPass(std::move(opaquePass));
 
     setupResources();
-    setupDefaultScene();
+    loadInitialScene();
     setupPanels();
+
+    if (_menuPanel && !_currentScenePath.empty())
+    {
+        static_cast<MenuPanel*>(_menuPanel.get())->SetCurrentScenePath(_currentScenePath);
+    }
 
     _gameRenderTargets.resize(_swapchain->GetMaxFrameCount());
     if (!_renderTargets.empty())
@@ -216,6 +246,14 @@ void EditorWindow::onUpdate(float deltaTime)
     processShortcuts();
     updateSceneCamera(deltaTime);
 
+    for (Panel* panel : _registeredPanels)
+    {
+        if (panel)
+        {
+            panel->Update(deltaTime);
+        }
+    }
+
     // Update scene transforms
     if (_scene)
     {
@@ -245,7 +283,10 @@ void EditorWindow::onRender()
         ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
         RenderSceneSnapshot baseSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
             _scene.get(), _renderer->GetShaderLibrary());
-        RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(scenePanel->GetEditorCamera());
+        RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(
+            scenePanel->GetEditorCamera(),
+            sceneRT->GetWidth(),
+            sceneRT->GetHeight());
         RenderSceneSnapshot sceneSnapshot = baseSnapshot;
         setSingleViewSnapshot(sceneSnapshot, editorViewSnapshot);
 
@@ -314,6 +355,8 @@ void EditorWindow::onShutdown()
 {
     ImGuiExtension::FinalizeBackend();
 
+    cleanupPanels();
+
     // Clear editor context
     EditorContext::Get().SetActiveScene(nullptr);
     EditorContext::Get().RemoveAllSelectionListeners();
@@ -345,71 +388,136 @@ void EditorWindow::onRenderGUI()
 
     guiContext->BeginRender(_swapchain);
 
-    _basePanel->Draw(); // Draw panel tree.
+    if (_basePanel)
+    {
+        _basePanel->Draw();
+    }
 
     guiContext->EndRender();
 }
 
+void EditorWindow::registerPanel(Panel* panel, bool* visibilityBinding, Panel* parent)
+{
+    if (!panel)
+    {
+        return;
+    }
+
+    panel->BindVisibility(visibilityBinding);
+    panel->Setup();
+    _registeredPanels.push_back(panel);
+
+    if (parent)
+    {
+        parent->InsertPanel(panel);
+    }
+}
+
+void EditorWindow::cleanupPanels()
+{
+    for (auto it = _registeredPanels.rbegin(); it != _registeredPanels.rend(); ++it)
+    {
+        if (*it)
+        {
+            (*it)->Cleanup();
+        }
+    }
+    _registeredPanels.clear();
+}
+
 void EditorWindow::setupPanels()
 {
+    PanelVisibility& visibility = EditorContext::Get().GetPanelVisibility();
+
     _basePanel = MakeScoped<DockspacePanel>(this);
-    _basePanel->Setup();
+    registerPanel(_basePanel.get());
 
     _menuPanel = MakeScoped<MenuPanel>(this);
-    _menuPanel->Setup();
-    _basePanel->InsertPanel(_menuPanel.get());
+    registerPanel(_menuPanel.get(), nullptr, _basePanel.get());
 
     _scenePanel = MakeScoped<ScenePanel>(this);
-    _scenePanel->Setup();
-    _basePanel->InsertPanel(_scenePanel.get());
+    registerPanel(_scenePanel.get(), &visibility.scene, _basePanel.get());
 
     _gamePanel = MakeScoped<GamePanel>(this);
-    _gamePanel->Setup();
-    _basePanel->InsertPanel(_gamePanel.get());
+    registerPanel(_gamePanel.get(), &visibility.game, _basePanel.get());
 
     _sceneStatusPanel = MakeScoped<SceneStatusPanel>(this);
-    _sceneStatusPanel->Setup();
+    registerPanel(_sceneStatusPanel.get(), &visibility.sceneStatus, _basePanel.get());
     static_cast<SceneStatusPanel*>(_sceneStatusPanel.get())->SetScenePanel(
         static_cast<ScenePanel*>(_scenePanel.get()));
-    _basePanel->InsertPanel(_sceneStatusPanel.get());
+
+    _projectSettingsPanel = MakeScoped<ProjectSettingsPanel>(this);
+    registerPanel(_projectSettingsPanel.get(), &visibility.projectSettings, _basePanel.get());
 
     _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
-    _hierarchyPanel->Setup();
-    _basePanel->InsertPanel(_hierarchyPanel.get());
+    registerPanel(_hierarchyPanel.get(), &visibility.hierarchy, _basePanel.get());
 
     _inspectorPanel = MakeScoped<InspectorPanel>(this);
-    _inspectorPanel->Setup();
-    _basePanel->InsertPanel(_inspectorPanel.get());
+    registerPanel(_inspectorPanel.get(), &visibility.inspector, _basePanel.get());
 
     _resourcePanel = MakeScoped<ResourcePanel>(this);
-    _resourcePanel->Setup();
-    _basePanel->InsertPanel(_resourcePanel.get());
+    registerPanel(_resourcePanel.get(), &visibility.resources, _basePanel.get());
 
     _profilerPanel = MakeScoped<ProfilerPanel>(this);
-    _profilerPanel->Setup();
-    _basePanel->InsertPanel(_profilerPanel.get());
+    registerPanel(_profilerPanel.get(), &visibility.profiler, _basePanel.get());
 }
 
 void EditorWindow::setupDefaultScene()
 {
     _scene = MakeScoped<Scene>("Default Scene");
     EditorContext::Get().SetActiveScene(_scene.get());
+    EditorContext::Get().ClearCurrentScenePath();
+    populateStarterScene(*_scene);
+}
 
-    // Editor camera entity
-    Entity cameraEntity = _scene->CreateEntity("Editor Camera");
-    auto& camera = cameraEntity.AddComponent<CameraComponent>();
-    camera.isPrimary = true;
-    camera.isActive = true;
-    camera.priority = 100;
+bool EditorWindow::loadInitialScene()
+{
+    ProjectContext& projectContext = ProjectContext::Get();
+    const std::string defaultScenePath = projectContext.GetResolvedDefaultScenePath();
 
-    Entity lightEntity = _scene->CreateEntity("Directional Light");
-    auto& light = lightEntity.AddComponent<LightComponent>();
-    light.type = ELightType::Directional;
-    auto& lightTransform = lightEntity.GetComponent<TransformComponent>();
-    lightTransform.SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
-    lightTransform.SetEulerAngles(glm::vec3(45.0f, -45.0f, 0.0f));
+    if (projectContext.IsProjectOpen() && !defaultScenePath.empty() && FileSystem::Exist(defaultScenePath))
+    {
+        _scene = MakeScoped<Scene>("Main");
+        SceneSerializer serializer(_scene.get());
+        if (serializer.LoadFromFile(defaultScenePath))
+        {
+            EditorContext::Get().SetActiveScene(_scene.get());
+            _currentScenePath = defaultScenePath;
+            EditorContext::Get().SetCurrentScenePath(defaultScenePath);
+            return true;
+        }
 
-    _scene->Update(0.0f);
+        HS_LOG(error, "[EditorWindow] Failed to load startup scene: %s", defaultScenePath.c_str());
+        _scene.reset();
+    }
+
+    setupDefaultScene();
+    persistDefaultSceneAsset();
+    return true;
+}
+
+void EditorWindow::persistDefaultSceneAsset()
+{
+    ProjectContext& projectContext = ProjectContext::Get();
+    if (!projectContext.IsProjectOpen() || !_scene)
+    {
+        return;
+    }
+
+    const std::string defaultScenePath = projectContext.GetResolvedDefaultScenePath().empty()
+        ? projectContext.GetScenePath() + "Main.scene"
+        : projectContext.GetResolvedDefaultScenePath();
+
+    SceneSerializer serializer(_scene.get());
+    if (!serializer.SaveToFile(defaultScenePath))
+    {
+        HS_LOG(error, "[EditorWindow] Failed to persist fallback startup scene: %s", defaultScenePath.c_str());
+        return;
+    }
+
+    projectContext.SetDefaultScene(defaultScenePath);
+    _currentScenePath = defaultScenePath;
+    EditorContext::Get().SetCurrentScenePath(defaultScenePath);
 }
 
 void EditorWindow::syncEditorCameraToScene()
@@ -445,31 +553,55 @@ void EditorWindow::updateSceneCamera(float deltaTime)
 
 void EditorWindow::processShortcuts()
 {
-    // Ctrl+S (Windows) or Cmd+S (Mac) to save layout
+    // Scene shortcuts use Ctrl on Windows/Linux and Cmd on macOS.
 #if defined(__APPLE__)
     bool modifierPressed = Input::IsPressed(Input::Button::LwinOrCommand);
 #else
     bool modifierPressed = Input::IsPressed(Input::Button::Control);
 #endif
+    bool shiftPressed = Input::IsPressed(Input::Button::Shift);
+    MenuPanel* menuPanel = static_cast<MenuPanel*>(_menuPanel.get());
 
-    static bool sKeyWasPressed = false;
+    static bool shortcutWasPressed = false;
+    bool handledShortcut = false;
 
-    if (modifierPressed && Input::IsPressed(Input::Button::S))
+    if (modifierPressed && menuPanel)
     {
-        if (!sKeyWasPressed)
+        if (Input::IsPressed(Input::Button::N))
         {
-            auto* guiContext = static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
-            if (guiContext)
+            handledShortcut = true;
+            if (!shortcutWasPressed)
             {
-                guiContext->SaveLayout("");
+                menuPanel->ExecuteNewScene();
             }
-            sKeyWasPressed = true;
+        }
+        else if (Input::IsPressed(Input::Button::O))
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteOpenScene();
+            }
+        }
+        else if (Input::IsPressed(Input::Button::S) && shiftPressed)
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteSaveSceneAs();
+            }
+        }
+        else if (Input::IsPressed(Input::Button::S))
+        {
+            handledShortcut = true;
+            if (!shortcutWasPressed)
+            {
+                menuPanel->ExecuteSaveScene();
+            }
         }
     }
-    else
-    {
-        sKeyWasPressed = false;
-    }
+
+    shortcutWasPressed = handledShortcut;
 
     // Gizmo operation shortcuts (W/E/R for Translate/Rotate/Scale)
     auto& context = EditorContext::Get();

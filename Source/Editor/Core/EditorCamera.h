@@ -3,6 +3,7 @@
 
 #include "Precompile.h"
 
+#include "Core/Math/CoordinateConvention.h"
 #include "Core/Math/Common.h"
 #include "Scene/Components/TransformComponent.h"
 #include "Scene/Components/CameraComponent.h"
@@ -48,8 +49,8 @@ public:
     HS_FORCEINLINE glm::vec3 GetPosition() const { return _transform.position; }
     glm::vec3 GetRotation() const;  // returns euler radians: pitch(x), yaw(y), 0
 
-    // Direction vectors (LH convention: forward = +Z)
-    HS_FORCEINLINE glm::vec3 GetForward() const { return glm::normalize(_transform.rotation * glm::vec3(0.0f, 0.0f, 1.0f)); }
+    // Direction vectors use the engine camera convention: +Z forward in LH space.
+    HS_FORCEINLINE glm::vec3 GetForward() const { return glm::normalize(_transform.rotation * CoordinateConvention::CameraForward); }
     HS_FORCEINLINE glm::vec3 GetUp() const { return _transform.GetUp(); }
     HS_FORCEINLINE glm::vec3 GetRight() const { return _transform.GetRight(); }
 

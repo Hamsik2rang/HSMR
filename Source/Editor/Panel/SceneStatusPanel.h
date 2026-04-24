@@ -34,9 +34,9 @@ public:
 
 private:
     // UI sections
-    void _drawFrameTimeSection();
-    void _drawQuickStatsSection();
-    void _drawCameraSection();
+    void drawFrameTimeSection();
+    void drawQuickStatsSection();
+    void drawCameraSection();
 
     // Frame time history
     static constexpr int HISTORY_SIZE = 128;
