@@ -26,7 +26,10 @@ int main(int argc, char* argv[])
     {
         return hs_simple_main(argc, argv);
     }
-    return hs_editor_main(argc, argv);
+    else
+    {
+        return hs_editor_main(argc, argv);
+    }
 #else
     // return hs_play_main(argc, argv);
     return 0;
