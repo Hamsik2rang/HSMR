@@ -119,10 +119,10 @@ void SimpleWindow::onRender()
     uint8 imageIndex = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_swapchainRenderTargets[imageIndex];
 
-    // Render scene to offscreen RT
+    // RT is swapchain-backed: scene draws directly into the swapchain backbuffer (Clear).
     _renderer->Render(_scene.get(), curRT);
 
-    // Render ImGui overlay (scene displayed fullscreen + overlay widgets)
+    // ImGui composites on top of the swapchain via Load action.
     onRenderGUI();
 
     cmdBuffer->End();
@@ -313,7 +313,7 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
-    _menuPanel->Draw();
+//    _menuPanel->Draw();
     _inspectorPanel->Draw();
     
     guiContext->EndRender();
@@ -321,32 +321,11 @@ void SimpleWindow::onRenderGUI()
 
 void SimpleWindow::drawHelperOverlayGUI()
 {
-    // Display scene as fullscreen background
-    uint8 imageIndex = _swapchain->GetCurrentImageIndex();
-    RenderTarget* curRT = &_swapchainRenderTargets[imageIndex];
-    RHITexture* sceneTexture = curRT->GetColorTexture(0);
-    
+    // The scene is already rendered directly into the swapchain backbuffer by onRender().
+    // ImGui composites on top via its Load action, so no fullscreen quad is needed here.
     ImGuiViewport* mainViewport = ImGui::GetMainViewport();
     ImVec2 viewportPos  = mainViewport->Pos;
-    ImVec2 viewportSize = mainViewport->Size;
-    
-    ImGui::SetNextWindowPos(viewportPos);
-    ImGui::SetNextWindowSize(viewportSize);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    ImGui::Begin("##SceneViewport", nullptr,
-                 ImGuiWindowFlags_NoDecoration |
-                 ImGuiWindowFlags_NoMove |
-                 ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoSavedSettings |
-                 ImGuiWindowFlags_NoBringToFrontOnFocus |
-                 ImGuiWindowFlags_NoFocusOnAppearing |
-                 ImGuiWindowFlags_NoScrollbar |
-                 ImGuiWindowFlags_NoScrollWithMouse);
-    
-    ImGuiExtension::ImageOffscreen(sceneTexture, viewportSize);
-    ImGui::End();
-    ImGui::PopStyleVar();
-    
+
     // Stats overlay
     ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 10), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);

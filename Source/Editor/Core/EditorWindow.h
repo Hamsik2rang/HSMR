@@ -71,7 +71,6 @@ private:
     std::vector<Panel*> _registeredPanels;
 
     Scoped<Scene> _scene;
-    std::vector<RenderTarget> _gameRenderTargets;
     std::string _currentScenePath;
 };
 

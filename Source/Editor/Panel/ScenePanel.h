@@ -35,7 +35,7 @@ public:
 
     void Draw() override;
 
-    HS_FORCEINLINE void SetSceneRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
+    RenderTarget* GetRenderTarget(uint32 imageIndex);
 
     HS_FORCEINLINE Resolution GetResolution() const { return _resolution; }
 
@@ -46,7 +46,7 @@ public:
 
 private:
     Resolution _resolution;
-    RenderTarget* _currentRenderTarget = nullptr;
+    std::vector<RenderTarget> _panelRenderTargets;
 
     Scoped<EditorCamera> _editorCamera;
 

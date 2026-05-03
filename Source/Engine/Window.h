@@ -46,6 +46,7 @@ public:
 	HS_FORCEINLINE bool IsMinimize() { return _nativeWindow.isMinimized; }
 	HS_FORCEINLINE void Close() { _shouldClose = true; }
 	HS_FORCEINLINE float GetScale() { return _nativeWindow.scale; }
+	HS_FORCEINLINE Swapchain* GetSwapchain() const { return _swapchain; }
 
 	Application* GetApplication();
 

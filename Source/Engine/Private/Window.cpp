@@ -34,8 +34,13 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     scInfo.enableVSync  = true;
 
     _swapchain = _rhiContext->CreateSwapchain(scInfo);
-    _swapchainRenderTargets.resize(_swapchain->GetMaxFrameCount());
 
+    // Window's _renderTargets are swapchain-backed: color is delegated to the swapchain
+    // (which rotates drawables every frame), while depth is owned per-frame. Panels that
+    // need offscreen render targets (Scene/Game) own their own RTs.
+    const EPixelFormat swapchainFormat = _swapchain->GetCurrentColorTexture()->info.format;
+
+    _swapchainRenderTargets.resize(_swapchain->GetMaxFrameCount());
     for (size_t i = 0; i < _swapchainRenderTargets.size(); i++)
     {
         RenderTargetInfo info{};
@@ -43,19 +48,13 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
         info.height = height;
         info.colorTextureCount = 1;
         info.colorTextureInfos.resize(info.colorTextureCount);
-        info.isSwapchainTarget = true;
-        info.swapchain = _swapchain;
-        for (size_t j = 0; j < info.colorTextureCount; j++)
-        {
-            info.colorTextureInfos[j].arrayLength = 1;
-            info.colorTextureInfos[j].extent.width  = width;
-            info.colorTextureInfos[j].extent.height = height;
-            info.colorTextureInfos[j].extent.depth = 1;
-            info.colorTextureInfos[j].format        = EPixelFormat::R8G8B8A8Srgb;
-            info.colorTextureInfos[j].usage         = ETextureUsage::ColorAttachment | ETextureUsage::TransferSource;
-            info.colorTextureInfos[j].isCompressed  = false;
-            info.colorTextureInfos[j].byteSize      = 4 * width * height * 1 /*depth*/;
-        }
+        info.colorTextureInfos[0].arrayLength   = 1;
+        info.colorTextureInfos[0].extent.width  = width;
+        info.colorTextureInfos[0].extent.height = height;
+        info.colorTextureInfos[0].extent.depth  = 1;
+        info.colorTextureInfos[0].format        = swapchainFormat;
+        info.colorTextureInfos[0].usage         = ETextureUsage::ColorAttachment;
+        info.colorTextureInfos[0].isCompressed  = false;
 
         info.useDepthStencilTexture                = true;
         info.depthStencilInfo.extent.width         = width;
@@ -65,6 +64,9 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
         info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::TransferSource;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
+
+        info.isSwapchainTarget = true;
+        info.swapchain         = _swapchain;
 
         _swapchainRenderTargets[i].Create(info);
     }

@@ -27,9 +27,10 @@ public:
 
     bool Setup() override;
     void Cleanup() override;
+    void Update(float deltaTime) override;
     void Draw() override;
 
-    void SetGameRenderTarget(RenderTarget* renderTarget) { _currentRenderTarget = renderTarget; }
+    RenderTarget* GetRenderTarget(uint32 imageIndex);
 
     Resolution GetResolution() const { return _resolution; }
     Entity ResolveCamera(Scene* scene) const;
@@ -39,7 +40,7 @@ private:
     std::string getCameraLabel(Entity camera) const;
 
     Resolution _resolution;
-    RenderTarget* _currentRenderTarget = nullptr;
+    std::vector<RenderTarget> _panelRenderTargets;
     bool _useAutoCamera = true;
     Entity _selectedCamera;
 };

@@ -308,14 +308,14 @@ else()
     if(HSMR_USE_SDL)
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            "-Wl, -all_load" Core RHI Engine Resource Renderer Scene
+            "-Wl, -all_load" Core RHI ShaderSystem Engine Resource Renderer Scene
             ${OSX_FRAMEWORK}
             "-F${HS_SDL3_FRAMEWORK_DIR}/.." "-framework SDL3"
         )
     else()
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            "-Wl, -all_load" Core RHI Engine Resource Renderer Scene
+            "-Wl, -all_load" Core RHI ShaderSystem Engine Resource Renderer Scene
             ${OSX_FRAMEWORK}
         )
     endif()

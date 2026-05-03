@@ -14,6 +14,8 @@
 
 HS_NS_BEGIN
 
+class Swapchain;
+
 class HS_RENDERER_API RenderTarget
 {
 public:
@@ -29,21 +31,22 @@ public:
     uint32 GetWidth() const { return _info.width; }
     uint32 GetHeight() const { return _info.height; }
 
-    RHITexture* GetColorTexture(uint32 index) const { return _colorTextures[index]; }
+    RHITexture* GetColorTexture(uint32 index) const;
     RHITexture* GetDepthStencilTexture() const { return _depthStencilTexture; }
 
-    const std::vector<RHITexture*>& GetColorTextures() const { return _colorTextures; }
-    size_t                       GetColorTextureCount() const { return _colorTextures.size(); }
+    size_t GetColorTextureCount() const { return _info.colorTextureCount; }
 
-    const TextureInfo& GetColorTextureInfo(uint32 index) const { return _colorTextures[index]->info; }
+    const TextureInfo& GetColorTextureInfo(uint32 index) const { return _info.colorTextureInfos[index]; }
     const TextureInfo& GetDepthStencilTextureInfo() const { return _depthStencilTexture->info; }
 
     const RenderTargetInfo& GetInfo() const { return _info; }
+    bool IsSwapchainBacked() const { return _swapchain != nullptr; }
 
 private:
-    RenderTargetInfo      _info;
+    RenderTargetInfo         _info;
     std::vector<RHITexture*> _colorTextures;
-    RHITexture*              _depthStencilTexture;
+    RHITexture*              _depthStencilTexture = nullptr;
+    Swapchain*               _swapchain = nullptr;
 };
 
 HS_NS_END
@@ -63,8 +66,16 @@ namespace std
             std::hash<hs::TextureInfo> textureHash;
             for (size_t i = 0; i < key.GetColorTextureCount(); i++)
             {
-                hs::RHITexture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
-                h = hs::HashCombine64(h, textureHash(colorTexture->info), hs::PointerHash(colorTexture));
+                // For swapchain-backed RTs the underlying texture handle changes every frame
+                // (drawable rotation), so we must hash the *intended* TextureInfo from the
+                // RenderTargetInfo rather than the live texture pointer — otherwise pipeline
+                // cache keys would churn on every frame and never hit.
+                h = hs::HashCombine64(h, textureHash(info.colorTextureInfos[i]));
+                if (false == info.isSwapchainTarget)
+                {
+                    hs::RHITexture* colorTexture = key.GetColorTexture(static_cast<uint32>(i));
+                    h = hs::HashCombine64(h, hs::PointerHash(colorTexture));
+                }
             }
 
             if (info.useDepthStencilTexture)

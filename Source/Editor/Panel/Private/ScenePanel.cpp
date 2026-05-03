@@ -11,6 +11,7 @@
 #include "Core/Math/CoordinateConvention.h"
 #include "Core/HAL/Input.h"
 #include "RHI/ResourceHandle.h"
+#include "RHI/Swapchain.h"
 #include "Editor/GUI/EditorIcons.h"
 #include "Editor/GUI/ImGuiExtension.h"
 
@@ -83,16 +84,78 @@ bool ScenePanel::Setup()
     _editorCamera = MakeScoped<EditorCamera>();
     _editorCamera->SetAspectRatio(static_cast<float>(_resolution.width) / static_cast<float>(_resolution.height));
 
+    Swapchain* swapchain = _window->GetSwapchain();
+    HS_CHECK(swapchain != nullptr, "ScenePanel::Setup requires a window with a valid swapchain");
+
+    const uint8 frameCount = swapchain->GetMaxFrameCount();
+    _panelRenderTargets.resize(frameCount);
+
+    RenderTargetInfo info{};
+    info.width  = _resolution.width;
+    info.height = _resolution.height;
+    info.colorTextureCount = 1;
+    info.colorTextureInfos.resize(1);
+    info.colorTextureInfos[0].arrayLength   = 1;
+    info.colorTextureInfos[0].extent.width  = _resolution.width;
+    info.colorTextureInfos[0].extent.height = _resolution.height;
+    info.colorTextureInfos[0].extent.depth  = 1;
+    info.colorTextureInfos[0].format        = EPixelFormat::R8G8B8A8Srgb;
+    info.colorTextureInfos[0].usage         = ETextureUsage::ColorAttachment | ETextureUsage::TransferSource | ETextureUsage::Sampled;
+    info.colorTextureInfos[0].isCompressed  = false;
+    info.colorTextureInfos[0].byteSize      = 4 * _resolution.width * _resolution.height;
+
+    info.useDepthStencilTexture                = true;
+    info.depthStencilInfo.arrayLength          = 1;
+    info.depthStencilInfo.extent.width         = _resolution.width;
+    info.depthStencilInfo.extent.height        = _resolution.height;
+    info.depthStencilInfo.extent.depth         = 1;
+    info.depthStencilInfo.format               = EPixelFormat::Depth32;
+    info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment;
+    info.depthStencilInfo.isDepthStencilBuffer = true;
+    info.depthStencilInfo.isCompressed         = false;
+
+    info.isSwapchainTarget = false;
+    info.swapchain         = nullptr;
+
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Create(info);
+    }
+
     return true;
 }
 
 void ScenePanel::Cleanup()
 {
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Clear();
+    }
+    _panelRenderTargets.clear();
 }
 
 void ScenePanel::Update(float deltaTime)
 {
     _deltaTime = deltaTime;
+
+    if (_resolution.width == 0 || _resolution.height == 0)
+    {
+        return;
+    }
+
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Update(_resolution.width, _resolution.height);
+    }
+}
+
+RenderTarget* ScenePanel::GetRenderTarget(uint32 imageIndex)
+{
+    if (_panelRenderTargets.empty() || imageIndex >= _panelRenderTargets.size())
+    {
+        return nullptr;
+    }
+    return &_panelRenderTargets[imageIndex];
 }
 
 void ScenePanel::updateCameraControls(float deltaTime)
@@ -251,11 +314,17 @@ void ScenePanel::Draw()
     EditorPanelFrame::BeginPanelContent(contentOptions);
 
     ImGui::SetScrollY(0.0f);
-    uint32 width  = _currentRenderTarget->GetWidth();
-    uint32 height = _currentRenderTarget->GetHeight();
+
+    Swapchain* swapchain = _window->GetSwapchain();
+    const uint8 imageIndex = swapchain ? swapchain->GetCurrentImageIndex() : 0;
+    RenderTarget* currentRT = GetRenderTarget(imageIndex);
+    HS_CHECK(currentRT != nullptr, "ScenePanel::Draw missing render target for current frame");
+
+    uint32 width  = currentRT->GetWidth();
+    uint32 height = currentRT->GetHeight();
 
     ImVec2 viewportSize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-    RHITexture* texture = _currentRenderTarget->GetColorTexture(0);
+    RHITexture* texture = currentRT->GetColorTexture(0);
 
     // Get viewport bounds before drawing image
     ImVec2 viewportPos = ImGui::GetCursorScreenPos();

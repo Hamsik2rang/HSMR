@@ -41,20 +41,20 @@ bool MetalContext::Initialize()
 
     _device = (__bridge void*)s_device;
 
-    _capabilities.platform = ERHIPlatform::Metal;
-    _capabilities.renderingPath = ERHIRenderingPath::DynamicRendering;
-    _capabilities.resourceBindingTier = ERHIResourceBindingTier::LegacyDescriptorSet;
-    _capabilities.deviceName = [[s_device name] UTF8String];
+    _capabilities.platform                 = ERHIPlatform::Metal;
+    _capabilities.renderingPath            = ERHIRenderingPath::DynamicRendering;
+    _capabilities.resourceBindingTier      = ERHIResourceBindingTier::LegacyDescriptorSet;
+    _capabilities.deviceName               = [[s_device name] UTF8String];
     _capabilities.supportsDynamicRendering = true;
 #if defined(__MAC_11_0) || defined(__IPHONE_14_0)
     if ([s_device respondsToSelector:@selector(argumentBuffersSupport)])
     {
-        MTLArgumentBuffersTier tier = [s_device argumentBuffersSupport];
+        MTLArgumentBuffersTier tier               = [s_device argumentBuffersSupport];
         _capabilities.supportsArgumentBufferTier2 = (tier == MTLArgumentBuffersTier2);
-        _capabilities.supportsBindless = _capabilities.supportsArgumentBufferTier2;
-        _capabilities.resourceBindingTier = _capabilities.supportsArgumentBufferTier2
-            ? ERHIResourceBindingTier::Bindless
-            : ERHIResourceBindingTier::LegacyDescriptorSet;
+        _capabilities.supportsBindless            = _capabilities.supportsArgumentBufferTier2;
+        _capabilities.resourceBindingTier         = _capabilities.supportsArgumentBufferTier2
+                                                        ? ERHIResourceBindingTier::Bindless
+                                                        : ERHIResourceBindingTier::LegacyDescriptorSet;
     }
 #endif
 
@@ -90,7 +90,7 @@ uint32 MetalContext::AcquireNextImage(Swapchain* swapchain)
     swMetal->_drawable           = drawable;
 
     MetalTexture* colorTexture = static_cast<MetalTexture*>(swMetal->GetCurrentColorTexture());
-    colorTexture->handle = drawable.texture;
+    colorTexture->handle       = drawable.texture;
 
     return swMetal->_frameIndex;
 }
@@ -140,7 +140,7 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     {
         const auto& curAttribute = info.vertexInputDesc.attributes[i];
         HS_ASSERT(curAttribute.binding < kMetalReservedVertexBufferSlotCount,
-                  "Metal vertex attribute binding exceeds reserved vertex buffer slots");
+            "Metal vertex attribute binding exceeds reserved vertex buffer slots");
         const NSUInteger bufferIndex = MetalVertexBufferSlotForBinding(curAttribute.binding);
         HS_ASSERT(bufferIndex < kMetalMaxVertexBufferSlotCount, "Metal vertex attribute buffer index out of range");
 
@@ -153,8 +153,8 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
     {
         const auto& curLayout = info.vertexInputDesc.layouts[i];
         HS_ASSERT(curLayout.binding < kMetalReservedVertexBufferSlotCount,
-                  "Metal vertex layout binding exceeds reserved vertex buffer slots");
-        NSUInteger layoutIdx  = MetalVertexBufferSlotForBinding(curLayout.binding);
+            "Metal vertex layout binding exceeds reserved vertex buffer slots");
+        NSUInteger layoutIdx = MetalVertexBufferSlotForBinding(curLayout.binding);
         HS_ASSERT(layoutIdx < kMetalMaxVertexBufferSlotCount, "Metal vertex layout buffer index out of range");
 
         vertexDesc.layouts[layoutIdx].stride       = curLayout.stride;
@@ -182,11 +182,11 @@ RHIGraphicsPipeline* MetalContext::CreateGraphicsPipeline(const char* name, cons
 
     if (info.depthStencilDesc.depthTestEnable)
     {
-        MTLPixelFormat depthStencilFormat        = MetalUtility::ToPixelFormat(renderTargetLayout.depthStencilFormat);
-        pipelineDesc.depthAttachmentPixelFormat  = depthStencilFormat;
+        MTLPixelFormat depthStencilFormat       = MetalUtility::ToPixelFormat(renderTargetLayout.depthStencilFormat);
+        pipelineDesc.depthAttachmentPixelFormat = depthStencilFormat;
         // TODO: 스텐실 처리 추가
     }
-    
+
     NSError* error               = nil;
     pipelineMetal->pipelineState = [s_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
 
@@ -382,8 +382,8 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
     HS_ASSERT(dataSize > 0, "Buffer size must be greater than 0");
 
     const MTLResourceOptions resourceOptions = MetalUtility::ToBufferOption(info.memoryOption);
-    id<MTLBuffer> handle = [s_device newBufferWithLength:dataSize options:resourceOptions];
- 
+    id<MTLBuffer> handle                     = [s_device newBufferWithLength:dataSize options:resourceOptions];
+
     if (nil == handle)
     {
         HS_LOG(crash, "Fail to create buffer");
@@ -432,13 +432,13 @@ void MetalContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, const
                            toBuffer:handle
                   destinationOffset:dstOffset
                                size:dataSize];
-        
+
         [blitEncoder endEncoding];
         [cmdBuffer commit];
         [cmdBuffer waitUntilCompleted];
-        
+
         [stagingBuffer release];
-        
+
         break;
     }
 
@@ -496,14 +496,14 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
         if (MTLStorageModePrivate == desc.storageMode)
         {
             id<MTLBuffer> stagingBuffer = [s_device newBufferWithBytes:image length:info.byteSize options:MTLResourceStorageModeShared];
-            
-            id<MTLCommandBuffer> cmdBuffer = [s_cmdQueue commandBuffer];
+
+            id<MTLCommandBuffer> cmdBuffer        = [s_cmdQueue commandBuffer];
             id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer blitCommandEncoder];
-            
-            NSUInteger bytesPerRow = info.byteSize / info.extent.depth / info.extent.height;
+
+            NSUInteger bytesPerRow   = info.byteSize / info.extent.depth / info.extent.height;
             NSUInteger bytesPerImage = bytesPerRow * info.extent.height;
-            
-            [blitEncoder copyFromBuffer: stagingBuffer
+
+            [blitEncoder copyFromBuffer:stagingBuffer
                            sourceOffset:0
                       sourceBytesPerRow:bytesPerRow
                     sourceBytesPerImage:bytesPerImage
@@ -512,11 +512,11 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
                        destinationSlice:0
                        destinationLevel:0
                       destinationOrigin:MTLOriginMake(0, 0, 0)];
-            
+
             [blitEncoder endEncoding];
             [cmdBuffer commit];
             [cmdBuffer waitUntilCompleted];
-            
+
             [stagingBuffer release];
         }
         else
@@ -525,8 +525,7 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
             NSUInteger bytesPerRow = info.byteSize / info.extent.depth / info.extent.height;
             MTLRegion region       = {
                 {0, 0, 0},
-                {info.extent.width, info.extent.height, info.extent.depth}
-            };
+                {info.extent.width, info.extent.height, info.extent.depth}};
 
             [mtlTexture->handle replaceRegion:region mipmapLevel:0 withBytes:image bytesPerRow:bytesPerRow];
         }
@@ -584,8 +583,8 @@ RHISampler* MetalContext::CreateSampler(const char* name, const SamplerInfo& inf
     MTLSamplerDescriptor* desc = [[MTLSamplerDescriptor alloc] init];
 
     desc.minFilter    = MetalUtility::ToMinMagFilter(info.minFilter);
-    desc.magFilter    =  MetalUtility::ToMinMagFilter(info.magFilter);
-    desc.mipFilter    =  MetalUtility::ToMipFilter(info.mipmapMode);
+    desc.magFilter    = MetalUtility::ToMinMagFilter(info.magFilter);
+    desc.mipFilter    = MetalUtility::ToMipFilter(info.mipmapMode);
     desc.sAddressMode = MetalUtility::ToSamplerAddressMode(info.addressU);
     desc.tAddressMode = MetalUtility::ToSamplerAddressMode(info.addressV);
     desc.rAddressMode = MetalUtility::ToSamplerAddressMode(info.addressW);

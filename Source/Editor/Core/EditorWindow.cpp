@@ -48,32 +48,6 @@ namespace
 {
 constexpr uint64 s_invalidGameViewId = std::numeric_limits<uint64>::max() - 1;
 
-RenderTargetInfo buildPanelRenderTargetInfo(const RenderTargetInfo& baseInfo, uint32 width, uint32 height)
-{
-    RenderTargetInfo info = baseInfo;
-    info.width = width;
-    info.height = height;
-
-    for (TextureInfo& colorInfo : info.colorTextureInfos)
-    {
-        colorInfo.arrayLength = 1;
-        colorInfo.extent.width = width;
-        colorInfo.extent.height = height;
-        colorInfo.extent.depth = 1;
-        colorInfo.byteSize = 4 * width * height;
-    }
-
-    if (info.useDepthStencilTexture)
-    {
-        info.depthStencilInfo.arrayLength = 1;
-        info.depthStencilInfo.extent.width = width;
-        info.depthStencilInfo.extent.height = height;
-        info.depthStencilInfo.extent.depth = 1;
-    }
-
-    return info;
-}
-
 RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera, uint32 width, uint32 height)
 {
     RenderViewSnapshot viewSnapshot{};
@@ -189,20 +163,6 @@ bool EditorWindow::onInitialize()
         static_cast<MenuPanel*>(_menuPanel.get())->SetCurrentScenePath(_currentScenePath);
     }
 
-    _gameRenderTargets.resize(_swapchain->GetMaxFrameCount());
-    if (!_swapchainRenderTargets.empty())
-    {
-        RenderTargetInfo gameInfo = buildPanelRenderTargetInfo(
-            _swapchainRenderTargets[0].GetInfo(),
-            _nativeWindow.width,
-            _nativeWindow.height);
-
-        for (RenderTarget& renderTarget : _gameRenderTargets)
-        {
-            renderTarget.Create(gameInfo);
-        }
-    }
-
     void* handler = nullptr;
     ImGuiExtension::SetProcessEventHandler(&handler);
     SetPreEventHandler(handler);
@@ -221,23 +181,8 @@ void EditorWindow::onNextFrame()
 
     _renderer->NextFrame(_swapchain);
 
-    Resolution resolution = static_cast<ScenePanel*>(_scenePanel.get())->GetResolution();
-    uint32 width          = static_cast<uint32>(resolution.width / _nativeWindow.scale);
-    uint32 height         = static_cast<uint32>(resolution.height / _nativeWindow.scale);
-
-    for (auto& renderTarget : _swapchainRenderTargets)
-    {
-        renderTarget.Update(resolution.width, resolution.height);
-    }
-
-    if (_gamePanel && !_gameRenderTargets.empty())
-    {
-        Resolution gameResolution = static_cast<GamePanel*>(_gamePanel.get())->GetResolution();
-        for (auto& renderTarget : _gameRenderTargets)
-        {
-            renderTarget.Update(gameResolution.width, gameResolution.height);
-        }
-    }
+    // Each panel resizes its own offscreen RTs in its Update() callback.
+    // The Window's swapchain-backed _renderTargets follow swapchain dimensions automatically.
 }
 
 void EditorWindow::onUpdate(float deltaTime)
@@ -273,14 +218,17 @@ void EditorWindow::onRender()
     cmdBuffer->Begin();
 
     uint8 imageIndex    = _swapchain->GetCurrentImageIndex();
-    RenderTarget* sceneRT = &_swapchainRenderTargets[imageIndex];
-    RenderTarget* gameRT = _gameRenderTargets.empty() ? nullptr : &_gameRenderTargets[imageIndex];
+    ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
+    GamePanel*  gamePanel  = _gamePanel ? static_cast<GamePanel*>(_gamePanel.get()) : nullptr;
+
+    RenderTarget* sceneRT = scenePanel ? scenePanel->GetRenderTarget(imageIndex) : nullptr;
+    RenderTarget* gameRT  = gamePanel  ? gamePanel->GetRenderTarget(imageIndex)  : nullptr;
     const bool vulkanYFlip = (_rhiContext->GetCurrentPlatform() == ERHIPlatform::Vulkan);
 
     // 1. Render Scene to Scene Panel
+    if (sceneRT)
     {
         HS_COLLECT_ZONE_NC("Scene Render", HS::Profile::ColorRender);
-        ScenePanel* scenePanel = static_cast<ScenePanel*>(_scenePanel.get());
         RenderSceneSnapshot baseSnapshot = _renderer->GetResourceManager()->BuildRenderSceneSnapshot(
             _scene.get(), _renderer->GetShaderLibrary());
         RenderViewSnapshot editorViewSnapshot = buildEditorViewSnapshot(
@@ -305,9 +253,8 @@ void EditorWindow::onRender()
                 sceneOptions);
         }
 
-        if (_gamePanel && gameRT)
+        if (gamePanel && gameRT)
         {
-            GamePanel* gamePanel = static_cast<GamePanel*>(_gamePanel.get());
             Entity gameCamera = gamePanel->ResolveCamera(_scene.get());
             RenderViewSnapshot gameViewSnapshot = buildSceneCameraViewSnapshot(
                 gameCamera,
@@ -320,16 +267,9 @@ void EditorWindow::onRender()
                 RenderSceneSnapshot gameSnapshot = baseSnapshot;
                 setSingleViewSnapshot(gameSnapshot, gameViewSnapshot);
                 _renderer->Render(gameSnapshot, gameRT, RenderOptions{});
-                gamePanel->SetGameRenderTarget(gameRT);
-            }
-            else
-            {
-                gamePanel->SetGameRenderTarget(nullptr);
             }
         }
     }
-
-    static_cast<ScenePanel*>(_scenePanel.get())->SetSceneRenderTarget(sceneRT);
 
     // 2. Render GUI
     {
@@ -372,12 +312,6 @@ void EditorWindow::onShutdown()
         _renderer->Shutdown();
         _renderer.reset();
     }
-
-    for (RenderTarget& renderTarget : _gameRenderTargets)
-    {
-        renderTarget.Clear();
-    }
-    _gameRenderTargets.clear();
 
     _scene.reset();
 }

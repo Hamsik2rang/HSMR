@@ -6,6 +6,8 @@
 #include "Editor/GUI/ImGuiExtension.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 
+#include "RHI/Swapchain.h"
+
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
@@ -74,11 +76,76 @@ GamePanel::~GamePanel()
 
 bool GamePanel::Setup()
 {
+    Swapchain* swapchain = _window->GetSwapchain();
+    HS_CHECK(swapchain != nullptr, "GamePanel::Setup requires a window with a valid swapchain");
+
+    const uint8 frameCount = swapchain->GetMaxFrameCount();
+    _panelRenderTargets.resize(frameCount);
+
+    RenderTargetInfo info{};
+    info.width  = _resolution.width;
+    info.height = _resolution.height;
+    info.colorTextureCount = 1;
+    info.colorTextureInfos.resize(1);
+    info.colorTextureInfos[0].arrayLength   = 1;
+    info.colorTextureInfos[0].extent.width  = _resolution.width;
+    info.colorTextureInfos[0].extent.height = _resolution.height;
+    info.colorTextureInfos[0].extent.depth  = 1;
+    info.colorTextureInfos[0].format        = EPixelFormat::R8G8B8A8Srgb;
+    info.colorTextureInfos[0].usage         = ETextureUsage::ColorAttachment | ETextureUsage::TransferSource | ETextureUsage::Sampled;
+    info.colorTextureInfos[0].isCompressed  = false;
+    info.colorTextureInfos[0].byteSize      = 4 * _resolution.width * _resolution.height;
+
+    info.useDepthStencilTexture                = true;
+    info.depthStencilInfo.arrayLength          = 1;
+    info.depthStencilInfo.extent.width         = _resolution.width;
+    info.depthStencilInfo.extent.height        = _resolution.height;
+    info.depthStencilInfo.extent.depth         = 1;
+    info.depthStencilInfo.format               = EPixelFormat::Depth32;
+    info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment;
+    info.depthStencilInfo.isDepthStencilBuffer = true;
+    info.depthStencilInfo.isCompressed         = false;
+
+    info.isSwapchainTarget = false;
+    info.swapchain         = nullptr;
+
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Create(info);
+    }
+
     return true;
 }
 
 void GamePanel::Cleanup()
 {
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Clear();
+    }
+    _panelRenderTargets.clear();
+}
+
+void GamePanel::Update(float /*deltaTime*/)
+{
+    if (_resolution.width == 0 || _resolution.height == 0)
+    {
+        return;
+    }
+
+    for (RenderTarget& rt : _panelRenderTargets)
+    {
+        rt.Update(_resolution.width, _resolution.height);
+    }
+}
+
+RenderTarget* GamePanel::GetRenderTarget(uint32 imageIndex)
+{
+    if (_panelRenderTargets.empty() || imageIndex >= _panelRenderTargets.size())
+    {
+        return nullptr;
+    }
+    return &_panelRenderTargets[imageIndex];
 }
 
 Entity GamePanel::ResolveCamera(Scene* scene) const
@@ -206,12 +273,15 @@ void GamePanel::Draw()
     _resolution.width = static_cast<uint32>(availableSize.x > 1.0f ? availableSize.x : 1.0f);
     _resolution.height = static_cast<uint32>(availableSize.y > 1.0f ? availableSize.y : 1.0f);
 
-    if (_currentRenderTarget)
+    Swapchain* swapchain = _window->GetSwapchain();
+    const uint8 imageIndex = swapchain ? swapchain->GetCurrentImageIndex() : 0;
+    RenderTarget* currentRT = GetRenderTarget(imageIndex);
+    if (currentRT)
     {
         ImVec2 viewportSize(
-            static_cast<float>(_currentRenderTarget->GetWidth()),
-            static_cast<float>(_currentRenderTarget->GetHeight()));
-        ImGuiExtension::ImageOffscreen(_currentRenderTarget->GetColorTexture(0), viewportSize);
+            static_cast<float>(currentRT->GetWidth()),
+            static_cast<float>(currentRT->GetHeight()));
+        ImGuiExtension::ImageOffscreen(currentRT->GetColorTexture(0), viewportSize);
     }
     else
     {
