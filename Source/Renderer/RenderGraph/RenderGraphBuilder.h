@@ -43,7 +43,11 @@ public:
     // -----------------------------------------------------------------------
 
     // 스왑체인 등 외부에서 이미 생성된 텍스처를 RenderGraph에 등록합니다.
-    RGTexture* RegisterExternalTexture(RHITexture* texture);
+    // externalState는 그래프 실행 전후의 외부 상태(즉 마지막 패스 이후 되돌릴 final layout)를 의미합니다.
+    // 예: ImGui 등에서 sample되는 panel offscreen RT는 ReadOnly, swapchain color는 Present,
+    // 다음 프레임에 다시 attachment로 쓰는 depth는 DepthAttachmentWrite를 사용합니다.
+    RGTexture* RegisterExternalTexture(RHITexture* texture,
+                                       ERGTextureAccess externalState = ERGTextureAccess::ReadOnly);
 
     // RenderGraph가 생명주기를 관리하는 트랜지언트 텍스처를 생성합니다.
     RGTexture* CreateTexture(const RGTextureDescriptor& desc);
@@ -127,7 +131,7 @@ private:
     std::vector<RGPass*>     _executablePasses;
     std::vector<RGResource*> _allResources; // 소멸자 호출용 추적 목록
 
-    // Pass → 해당 패스가 사용하는 리소스 접근 목록
+    // 각 패스가 사용하는 리소스 접근 목록
     std::unordered_map<RGPass*, std::vector<RGResourceAccess>> _resourceDependencyMap;
     std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _textureBarriers;
     std::unordered_map<RGPass*, std::vector<RHITextureBarrierDesc>> _texturePostBarriers;

@@ -93,7 +93,7 @@ void EditorRenderer::Render(
     };
 
     Attachment colorAttachment{};
-    colorAttachment.format = rtInfo.colorTextureInfos[0].format;
+    colorAttachment.format = rtInfo.colorTextureInfo[0].format;
     colorAttachment.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 0.0f);
     colorAttachment.isDepthStencil = false;
     colorAttachment.loadAction = ELoadAction::Load;
@@ -163,7 +163,9 @@ void EditorRenderer::Render(
 
                 if (rtInfo.useDepthStencilTexture)
                 {
-                    RGTexture* depthTex = builder.RegisterExternalTexture(renderTarget->GetDepthStencilTexture());
+                    RGTexture* depthTex = builder.RegisterExternalTexture(
+                        renderTarget->GetDepthStencilTexture(),
+                        ERGTextureAccess::DepthAttachmentWrite);
                     builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
                 }
             },
@@ -208,7 +210,9 @@ void EditorRenderer::Render(
 
                 if (rtInfo.useDepthStencilTexture)
                 {
-                    RGTexture* depthTex = builder.RegisterExternalTexture(renderTarget->GetDepthStencilTexture());
+                    RGTexture* depthTex = builder.RegisterExternalTexture(
+                        renderTarget->GetDepthStencilTexture(),
+                        ERGTextureAccess::DepthAttachmentWrite);
                     builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
                 }
             },
@@ -257,8 +261,14 @@ void EditorRenderer::Render(
             },
             [&](RHICommandBuffer& commandBufferRef) -> void
             {
+                // Icon pass never uses depth — build a color-only layout so the pipeline's
+                // VkPipelineRenderingCreateInfo::depthAttachmentFormat stays VK_FORMAT_UNDEFINED,
+                // matching the BeginRendering call below (which also has no depth attachment).
+                PipelineRenderTargetLayout iconRTLayout = renderTargetLayout;
+                iconRTLayout.useDepthStencilAttachment = false;
+
                 RHIGraphicsPipeline* pipeline = _iconPass->GetOrCreatePipeline(
-                    renderTargetLayout,
+                    iconRTLayout,
                     sceneResource.cameraResources[0]->perViewBuffer);
                 if (!pipeline || !_iconPass->GetResourceSet() || !_iconPass->GetVertexBuffer() || !_iconPass->GetInstanceBuffer())
                 {

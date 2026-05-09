@@ -69,8 +69,9 @@ enum class ERGTextureAccess
 struct RGTextureDescriptor
 {
     TextureInfo info;
-    ERGTextureAccess access;
-    const char* name;
+    ERGTextureAccess access      = ERGTextureAccess::ReadOnly; // 그래프 진입 시점에 가정되는 상태(initial)
+    ERGTextureAccess finalAccess = ERGTextureAccess::ReadOnly; // 그래프 종료 후 외부에 돌려줄 상태(final)
+    const char* name             = nullptr;
 };
 
 struct RGBufferDescriptor

@@ -87,7 +87,7 @@ void RenderGraphBuilder::Initialize(RHIContext* rhiContext)
 // 리소스 등록 / 생성 / 조회
 // =============================================================================
 
-RGTexture* RenderGraphBuilder::RegisterExternalTexture(RHITexture* texture)
+RGTexture* RenderGraphBuilder::RegisterExternalTexture(RHITexture* texture, ERGTextureAccess externalState)
 {
     auto it = _externalRHIHandleMap.find(texture);
     if (it != _externalRHIHandleMap.end())
@@ -95,11 +95,15 @@ RGTexture* RenderGraphBuilder::RegisterExternalTexture(RHITexture* texture)
         return static_cast<RGTexture*>(it->second);
     }
 
+    // initial은 ReadOnly로 두어 첫 프레임에 pre-barrier가 만들어지도록 한다
+    // (VulkanCommandBuffer::TextureBarrier가 실제 oldLayout=UNDEFINED를 감지해 보정).
+    // externalState는 그래프 종료 후 외부에 돌려줄 final state로만 쓰인다.
     RGTextureDescriptor desc =
         {
-            .info   = texture->info,
-            .access = ERGTextureAccess::ReadOnly,
-            .name   = texture->GetName()};
+            .info        = texture->info,
+            .access      = ERGTextureAccess::ReadOnly,
+            .finalAccess = externalState,
+            .name        = texture->GetName()};
     RGTexture* rgTexture           = _allocator.Allocate<RGTexture>(_frameIndex, desc);
     rgTexture->_rhiTexture         = texture;
     _externalRHIHandleMap[texture] = rgTexture;
@@ -533,7 +537,7 @@ void RenderGraphBuilder::Compile()
             ? rgTex->_rhiTexture->info
             : rgTex->_desc.info;
         ERHITextureState before = ToRHITextureState(finalAccess, textureInfo);
-        ERHITextureState after = ToRHITextureState(rgTex->_desc.access, textureInfo);
+        ERHITextureState after = ToRHITextureState(rgTex->_desc.finalAccess, textureInfo);
         if (before == after)
         {
             continue;
