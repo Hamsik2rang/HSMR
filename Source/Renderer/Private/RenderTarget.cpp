@@ -1,4 +1,4 @@
-#include "Renderer/RenderTarget.h"
+﻿#include "Renderer/RenderTarget.h"
 
 #include "RHI/RHIContext.h"
 #include "RHI/RHIDefinition.h"
@@ -38,7 +38,7 @@ void RenderTarget::Create(const RenderTargetInfo& info)
     {
         for (size_t i = 0; i < info.colorTextureCount; i++)
         {
-            RHITexture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfos[i]);
+            RHITexture* texture = rhiContext->CreateTexture("RenderTarget Color Texture", nullptr, info.colorTextureInfo[i]);
             _colorTextures.push_back(texture);
         }
     }
@@ -87,8 +87,8 @@ void RenderTarget::Update(uint32 width, uint32 height)
     updateInfo.height = height;
     for (size_t i = 0; i < updateInfo.colorTextureCount; i++)
     {
-        updateInfo.colorTextureInfos[i].extent.width  = width;
-        updateInfo.colorTextureInfos[i].extent.height = height;
+        updateInfo.colorTextureInfo[i].extent.width  = width;
+        updateInfo.colorTextureInfo[i].extent.height = height;
     }
 
     if (updateInfo.useDepthStencilTexture)

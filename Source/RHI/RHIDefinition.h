@@ -174,8 +174,8 @@ enum class ERHITextureState
 
 struct RHICapabilities
 {
-    ERHIPlatform platform                      = ERHIPlatform::Invalid;
-    ERHIRenderingPath renderingPath            = ERHIRenderingPath::Invalid;
+    ERHIPlatform platform                       = ERHIPlatform::Invalid;
+    ERHIRenderingPath renderingPath             = ERHIRenderingPath::Invalid;
     ERHIResourceBindingTier resourceBindingTier = ERHIResourceBindingTier::Invalid;
 
     uint32 apiVersionMajor = 0;
@@ -194,9 +194,9 @@ struct RHICapabilities
     uint32 maxBindlessStorageBuffers = 0;
 };
 
-enum class EVertexFormat
+enum class EVertexFormat : uint8
 {
-    Invalid,
+    Invalid = 0,
 
     Float,
     Float2,
@@ -261,14 +261,14 @@ enum class ETextureType
 enum class ETextureUsage : uint16
 {
     Unknown                = 0x0000,
-    TransferDestination    = 0x0001,    // Transfer(CopyTexture 등) Destination
-    TransferSource         = 0x0002,    // Transfer(CopyTexture 등) Source
-    Sampled                = 0x0004,    // Sampling
-    Storage                = 0x0008,    // Storage Texture(Texel Buffer)
-    ColorAttachment        = 0x0010,    // Color Texture
-    DepthStencilAttachment = 0x0020,    // Depth Stencil Texture
-    TransientAttachment    = 0x0040,    // Transient Texture
-    InputAttachment        = 0x0080,    // Readable Framebuffer of last subpass
+    TransferDestination    = 0x0001, // Transfer(CopyTexture 등) Destination
+    TransferSource         = 0x0002, // Transfer(CopyTexture 등) Source
+    Sampled                = 0x0004, // Sampling
+    Storage                = 0x0008, // Storage Texture(Texel Buffer)
+    ColorAttachment        = 0x0010, // Color Texture
+    DepthStencilAttachment = 0x0020, // Depth Stencil Texture
+    TransientAttachment    = 0x0040, // Transient Texture
+    InputAttachment        = 0x0080, // Readable Framebuffer of last subpass
 };
 
 HS_FORCEINLINE ETextureUsage operator|(ETextureUsage lhs, ETextureUsage rhs)
@@ -538,17 +538,17 @@ struct RenderingInfo
     std::vector<RenderingAttachmentInfo> colorAttachments;
     RenderingAttachmentInfo depthStencilAttachment{};
     Area renderArea{};
-    uint8 colorAttachmentCount     = 0;
-    bool useDepthStencilAttachment = false;
+    uint8 colorAttachmentCount      = 0;
+    bool useDepthStencilAttachment  = false;
     bool isSwapchainRendering       = false;
     bool enableAutomaticTransitions = true;
 
     PipelineRenderTargetLayout ToRenderTargetLayout() const
     {
         PipelineRenderTargetLayout layout{};
-        layout.colorAttachmentCount = colorAttachmentCount;
+        layout.colorAttachmentCount      = colorAttachmentCount;
         layout.useDepthStencilAttachment = useDepthStencilAttachment;
-        layout.isSwapchainRenderPass = isSwapchainRendering;
+        layout.isSwapchainRenderPass     = isSwapchainRendering;
         layout.colorFormats.reserve(colorAttachments.size());
         for (const RenderingAttachmentInfo& attachmentInfo : colorAttachments)
         {
@@ -588,9 +588,9 @@ struct RHIHeapInfo
 
 struct RHITextureBarrierDesc
 {
-    RHITexture* texture       = nullptr;
-    ERHITextureState before   = ERHITextureState::Undefined;
-    ERHITextureState after    = ERHITextureState::Undefined;
+    RHITexture* texture     = nullptr;
+    ERHITextureState before = ERHITextureState::Undefined;
+    ERHITextureState after  = ERHITextureState::Undefined;
 };
 
 enum class EShaderParameterType
@@ -808,18 +808,18 @@ struct ShaderProgramDescriptor
 
 struct VertexInputLayoutDescriptor
 {
-    uint32 binding; // Metal에서는 무시됩니다.
-    uint32 stride;
+    uint32 binding     : 8; // Metal에서는 무시됩니다.
+    uint32 stride      : 24;
     uint8 stepRate     : 7 = 1;
     bool useInstancing : 1 = false;
 };
 
 struct VertexInputAttributeDescriptor
 {
-    uint32 location;
-    uint32 binding; // Metal에서는 무시됩니다.
-    EVertexFormat format;
+    uint32 location : 8;
+    uint32 binding  : 24; // Metal에서는 무시됩니다.
     uint32 offset;
+    EVertexFormat format;
 };
 
 struct VertexInputStateDescriptor

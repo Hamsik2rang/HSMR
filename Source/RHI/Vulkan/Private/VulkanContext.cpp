@@ -34,8 +34,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData
-)
+    void* pUserData)
 {
     const char* name = pCallbackData->pObjects->pObjectName;
     name             = (name != nullptr) ? name : "Unknown";
@@ -199,10 +198,10 @@ uint32 VulkanContext::AcquireNextImage(Swapchain* swapchain)
 
     uint32 imageIndex = 0;
     VkResult result   = vkAcquireNextImageKHR(_device, swapchainVK->handle,
-                                              UINT64_MAX, // Timeout
-                                              swapchainVK->syncObjects.imageAvailableSemaphores[curframeIndex],
-                                              VK_NULL_HANDLE, // Fence
-                                              &(swapchainVK->_curImageIndex));
+          UINT64_MAX, // Timeout
+          swapchainVK->syncObjects.imageAvailableSemaphores[curframeIndex],
+          VK_NULL_HANDLE, // Fence
+          &(swapchainVK->_curImageIndex));
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -243,11 +242,11 @@ RHIGraphicsPipeline* VulkanContext::CreateGraphicsPipeline(const char* name, con
     VulkanGraphicsPipeline* pipelineVK = new VulkanGraphicsPipeline(name, info);
 
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline pipelineVk           = createGraphicsPipeline(info, pipelineLayout);
+    VkPipeline pipelineVk           = buildGraphicsPipeline(info, pipelineLayout);
     pipelineVK->handle              = pipelineVk;
     pipelineVK->layout              = pipelineLayout;
 
-    setDebugObjectName(VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<uint64>(pipelineVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<uint64>(pipelineVk), name);
 
     return static_cast<RHIGraphicsPipeline*>(pipelineVK);
 }
@@ -268,7 +267,7 @@ void VulkanContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
 RHIComputePipeline* VulkanContext::CreateComputePipeline(const char* name, const ComputePipelineInfo& info)
 {
     VulkanComputePipeline* pipelineVK = new VulkanComputePipeline(name, info);
-    pipelineVK->handle                = createComputePipeline(info, pipelineVK->layout);
+    pipelineVK->handle                = buildComputePipeline(info, pipelineVK->layout);
 
     if (pipelineVK->handle == VK_NULL_HANDLE)
     {
@@ -277,7 +276,7 @@ RHIComputePipeline* VulkanContext::CreateComputePipeline(const char* name, const
         return nullptr;
     }
 
-    setDebugObjectName(VK_OBJECT_TYPE_PIPELINE, (uint64)pipelineVK->handle, name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_PIPELINE, (uint64)pipelineVK->handle, name);
     return static_cast<RHIComputePipeline*>(pipelineVK);
 }
 
@@ -326,7 +325,7 @@ RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info,
 
     delete[] byteCode;
 
-    setDebugObjectName(VK_OBJECT_TYPE_SHADER_MODULE, reinterpret_cast<uint64>(shaderVK->handle), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_SHADER_MODULE, reinterpret_cast<uint64>(shaderVK->handle), name);
 
     return shaderVK;
 }
@@ -337,7 +336,7 @@ RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info,
     VkShaderModuleCreateInfo shaderCreateInfo{};
     shaderCreateInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     shaderCreateInfo.codeSize = byteCodeSize;
-    shaderCreateInfo.pCode    = reinterpret_cast<const uint32_t*>(byteCode);
+    shaderCreateInfo.pCode    = reinterpret_cast<const uint32*>(byteCode);
     shaderCreateInfo.pNext    = nullptr;
 
     VkShaderModule shaderModule;
@@ -352,11 +351,11 @@ RHIShader* VulkanContext::CreateShader(const char* name, const ShaderInfo& info,
     shaderVK->handle       = shaderModule;
 
     shaderVK->stageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderVK->stageInfo.stage  = RHIUtilityVulkan::RHIUtilityVulkan::ToShaderStageFlags(info.stage);
+    shaderVK->stageInfo.stage  = VulkanUtility::VulkanUtility::ToShaderStageFlags(info.stage);
     shaderVK->stageInfo.pName  = info.entryName;
     shaderVK->stageInfo.module = shaderVK->handle;
 
-    setDebugObjectName(VK_OBJECT_TYPE_SHADER_MODULE, reinterpret_cast<uint64>(shaderVK->handle), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_SHADER_MODULE, reinterpret_cast<uint64>(shaderVK->handle), name);
 
     return static_cast<RHIShader*>(shaderVK);
 }
@@ -389,7 +388,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     VkBufferCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     createInfo.size  = dataSize;
-    createInfo.usage = RHIUtilityVulkan::ToBufferUsage(info.usage);
+    createInfo.usage = VulkanUtility::ToBufferUsage(info.usage);
     if (needsStaging)
     {
         createInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -425,7 +424,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize  = memoryRequirement.size;
-    allocInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirement.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = VulkanUtility::GetMemoryTypeIndex(_device.physicalDevice, memoryRequirement.memoryTypeBits, properties);
 
     vkAllocateMemory(_device, &allocInfo, nullptr, &bufferMemory);
     VK_CHECK_RESULT(vkBindBufferMemory(_device, bufferVk, bufferMemory, 0));
@@ -452,7 +451,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
             VkMemoryAllocateInfo stagingAllocInfo{};
             stagingAllocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             stagingAllocInfo.allocationSize  = stagingMemReq.size;
-            stagingAllocInfo.memoryTypeIndex = getMemoryTypeIndex(stagingMemReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            stagingAllocInfo.memoryTypeIndex = VulkanUtility::GetMemoryTypeIndex(_device.physicalDevice, stagingMemReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
             VK_CHECK_RESULT(vkAllocateMemory(_device, &stagingAllocInfo, nullptr, &stagingMemory));
             VK_CHECK_RESULT(vkBindBufferMemory(_device, stagingBuffer, stagingMemory, 0));
@@ -491,7 +490,7 @@ RHIBuffer* VulkanContext::CreateBuffer(const char* name, const void* data, size_
     bufferVK->memory       = bufferMemory;
     bufferVK->byteSize     = dataSize;
 
-    setDebugObjectName(VK_OBJECT_TYPE_BUFFER, reinterpret_cast<uint64>(bufferVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_BUFFER, reinterpret_cast<uint64>(bufferVk), name);
 
     return static_cast<RHIBuffer*>(bufferVK);
 }
@@ -518,7 +517,7 @@ void VulkanContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, cons
     HS_ASSERT(buffer, "Buffer is nullptr");
     HS_ASSERT(srcData, "Source data is nullptr");
     HS_ASSERT(dataSize > 0, "Data size must be greater than 0");
-    VulkanBuffer* bufferVK    = static_cast<VulkanBuffer*>(buffer);
+    VulkanBuffer* bufferVK = static_cast<VulkanBuffer*>(buffer);
     if (buffer->info.memoryOption == EBufferMemoryOption::Mapped ||
         buffer->info.memoryOption == EBufferMemoryOption::Dynamic)
     {
@@ -529,8 +528,7 @@ void VulkanContext::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset, cons
             static_cast<VkDeviceSize>(dstOffset),
             static_cast<VkDeviceSize>(dataSize),
             0,
-            &mapped
-        ));
+            &mapped));
         memcpy(mapped, srcData, dataSize);
         vkUnmapMemory(_device, bufferVK->memory);
         return;
@@ -580,6 +578,8 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     // Swapchain이면 vkGetSwapchainImagesKHR를 통해서 가져온 VkImage와 해당 핸들로 만든 VkImageView를 사용해야 합니다.
     if (isSwapchainTexture)
     {
+        HS_ASSERT(info.swapchain, "Swapchain is null for swapchain texture creation.");
+
         VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(info.swapchain);
         for (uint8 i = 0; i < swapchainVK->imageVks.size(); i++)
         {
@@ -594,17 +594,18 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
                 return static_cast<RHITexture*>(textureVK);
             }
         }
+
         HS_ASSERT(false, "No available swapchain Image for texture creation. Are Framebuffers full?");
     }
 
     std::vector<VkBufferImageCopy> bufferCopyRegions;
 
-    const uint32_t layerCount   = RHIUtilityVulkan::GetTextureLayerCount(info);
-    const size_t   faceByteSize = (layerCount > 1) ? (info.byteSize / layerCount) : info.byteSize;
+    const uint32 layerCount   = VulkanUtility::GetTextureLayerCount(info);
+    const size_t faceByteSize = (layerCount > 1) ? (info.byteSize / layerCount) : info.byteSize;
 
-    for (uint32_t layer = 0; layer < layerCount; ++layer)
+    for (uint32 layer = 0; layer < layerCount; ++layer)
     {
-        for (uint32_t mip = 0; mip < 1 /* TODO: Mip Levels*/; ++mip)
+        for (uint32 mip = 0; mip < 1 /* TODO: Mip Levels*/; ++mip)
         {
             VkBufferImageCopy bufferCopyRegion               = {};
             bufferCopyRegion.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -621,7 +622,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
 
     VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, false);
+    VkImageCreateInfo imageCreateInfo = VulkanUtility::MakeTextureCreateInfo(info, false);
 
     VkImage imageVk;
     VK_CHECK_RESULT(vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk));
@@ -632,7 +633,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize  = memoryRequirements.size;
-    allocInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    allocInfo.memoryTypeIndex = VulkanUtility::GetMemoryTypeIndex(_device.physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     VkDeviceMemory imageMemory;
     VK_CHECK_RESULT(vkAllocateMemory(_device, &allocInfo, nullptr, &imageMemory));
@@ -655,7 +656,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         VkMemoryAllocateInfo stagingAllocInfo{};
         stagingAllocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         stagingAllocInfo.allocationSize  = stagingMemReq.size;
-        stagingAllocInfo.memoryTypeIndex = getMemoryTypeIndex(stagingMemReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        stagingAllocInfo.memoryTypeIndex = VulkanUtility::GetMemoryTypeIndex(_device.physicalDevice, stagingMemReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         VkDeviceMemory stagingMemory;
         VK_CHECK_RESULT(vkAllocateMemory(_device, &stagingAllocInfo, nullptr, &stagingMemory));
@@ -675,7 +676,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
         subresourceRange.baseMipLevel            = 0;
         // We will transition on all mip levels
         subresourceRange.levelCount              = imageCreateInfo.mipLevels;
-        subresourceRange.layerCount              = RHIUtilityVulkan::GetTextureLayerCount(info);
+        subresourceRange.layerCount              = VulkanUtility::GetTextureLayerCount(info);
 
         // Transition the texture image layout to transfer target, so we can safely copy our buffer data to it.
         VkImageMemoryBarrier imageMemoryBarrier{};
@@ -699,8 +700,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
             0,
             0, nullptr,
             0, nullptr,
-            1, &imageMemoryBarrier
-        );
+            1, &imageMemoryBarrier);
 
         // Copy mip levels from staging buffer
         vkCmdCopyBufferToImage(
@@ -708,9 +708,8 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
             stagingBuffer,
             imageVk,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            static_cast<uint32_t>(bufferCopyRegions.size()),
-            bufferCopyRegions.data()
-        );
+            static_cast<uint32>(bufferCopyRegions.size()),
+            bufferCopyRegions.data());
 
         // Once the data has been uploaded we transfer to the texture image to the shader read layout, so it can be sampled from
         imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -729,8 +728,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
             0,
             0, nullptr,
             0, nullptr,
-            1, &imageMemoryBarrier
-        );
+            1, &imageMemoryBarrier);
 
         endSingleTimeCommands(copyCmd);
 
@@ -770,8 +768,7 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
             0,
             0, nullptr,
             0, nullptr,
-            1, &imageMemoryBarrier
-        );
+            1, &imageMemoryBarrier);
 
         endSingleTimeCommands(transitionCmd);
 
@@ -808,25 +805,24 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
             0,
             0, nullptr,
             0, nullptr,
-            1, &imageMemoryBarrier
-        );
+            1, &imageMemoryBarrier);
 
         endSingleTimeCommands(transitionCmd);
 
         initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
-    VkImageAspectFlags aspectMask = RHIUtilityVulkan::GetImageAspectMask(info);
+    VkImageAspectFlags aspectMask = VulkanUtility::GetImageAspectMask(info);
 
     VkImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewCreateInfo.image                           = imageVk;
-    viewCreateInfo.viewType                        = RHIUtilityVulkan::ToImageViewType(info.type);
+    viewCreateInfo.viewType                        = VulkanUtility::ToImageViewType(info.type);
     viewCreateInfo.format                          = imageCreateInfo.format;
     viewCreateInfo.subresourceRange.aspectMask     = aspectMask;
     viewCreateInfo.subresourceRange.baseMipLevel   = 0;
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    viewCreateInfo.subresourceRange.layerCount     = RHIUtilityVulkan::GetTextureLayerCount(info);
+    viewCreateInfo.subresourceRange.layerCount     = VulkanUtility::GetTextureLayerCount(info);
     viewCreateInfo.subresourceRange.levelCount     = 1; // TODO
 
     VkImageView imageViewVk;
@@ -838,8 +834,8 @@ RHITexture* VulkanContext::CreateTexture(const char* name, void* image, const Te
     textureVK->memoryVk      = imageMemory;
     textureVK->layoutVk      = initialLayout;
 
-    setDebugObjectName(VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
-    setDebugObjectName(VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
 
     return static_cast<RHITexture*>(textureVK);
 }
@@ -851,7 +847,7 @@ RHITextureMemoryRequirements VulkanContext::GetTextureMemoryRequirements(const T
         return {};
     }
 
-    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, true);
+    VkImageCreateInfo imageCreateInfo = VulkanUtility::MakeTextureCreateInfo(info, true);
     VkImage imageVk                   = VK_NULL_HANDLE;
     VkResult result                   = vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk);
     if (result != VK_SUCCESS)
@@ -864,11 +860,11 @@ RHITextureMemoryRequirements VulkanContext::GetTextureMemoryRequirements(const T
     vkDestroyImage(_device, imageVk, nullptr);
 
     RHITextureMemoryRequirements resultRequirements{};
-    resultRequirements.size           = memoryRequirements.size;
-    resultRequirements.alignment      = memoryRequirements.alignment;
-    resultRequirements.memoryTypeBits = memoryRequirements.memoryTypeBits;
-    resultRequirements.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    resultRequirements.isValid        = true;
+    resultRequirements.size            = memoryRequirements.size;
+    resultRequirements.alignment       = memoryRequirements.alignment;
+    resultRequirements.memoryTypeBits  = memoryRequirements.memoryTypeBits;
+    resultRequirements.memoryTypeIndex = VulkanUtility::GetMemoryTypeIndex(_device.physicalDevice, memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    resultRequirements.isValid         = true;
     return resultRequirements;
 }
 
@@ -890,9 +886,9 @@ RHIHeap* VulkanContext::CreateHeap(const RHIHeapInfo& info)
         return nullptr;
     }
 
-    VulkanHeap* heapVK     = new VulkanHeap("RHI Heap", info);
-    heapVK->memory         = memory;
-    heapVK->size           = static_cast<VkDeviceSize>(info.size);
+    VulkanHeap* heapVK      = new VulkanHeap("RHI Heap", info);
+    heapVK->memory          = memory;
+    heapVK->size            = static_cast<VkDeviceSize>(info.size);
     heapVK->memoryTypeIndex = info.memoryTypeIndex;
     return heapVK;
 }
@@ -920,8 +916,8 @@ RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& in
         return nullptr;
     }
 
-    VulkanHeap* heapVK = static_cast<VulkanHeap*>(heap);
-    VkImageCreateInfo imageCreateInfo = RHIUtilityVulkan::MakeTextureCreateInfo(info, true);
+    VulkanHeap* heapVK                = static_cast<VulkanHeap*>(heap);
+    VkImageCreateInfo imageCreateInfo = VulkanUtility::MakeTextureCreateInfo(info, true);
 
     VkImage imageVk = VK_NULL_HANDLE;
     if (vkCreateImage(_device, &imageCreateInfo, nullptr, &imageVk) != VK_SUCCESS)
@@ -947,9 +943,9 @@ RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& in
     VkImageViewCreateInfo viewCreateInfo{};
     viewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewCreateInfo.image                           = imageVk;
-    viewCreateInfo.viewType                        = RHIUtilityVulkan::ToImageViewType(info.type);
+    viewCreateInfo.viewType                        = VulkanUtility::ToImageViewType(info.type);
     viewCreateInfo.format                          = imageCreateInfo.format;
-    viewCreateInfo.subresourceRange.aspectMask     = RHIUtilityVulkan::GetImageAspectMask(info);
+    viewCreateInfo.subresourceRange.aspectMask     = VulkanUtility::GetImageAspectMask(info);
     viewCreateInfo.subresourceRange.baseMipLevel   = 0;
     viewCreateInfo.subresourceRange.baseArrayLayer = 0;
     viewCreateInfo.subresourceRange.layerCount     = imageCreateInfo.arrayLayers;
@@ -971,8 +967,8 @@ RHITexture* VulkanContext::CreateTexture(const char* name, const TextureInfo& in
     textureVK->memorySize    = memoryRequirements.size;
     textureVK->ownsMemory    = false;
 
-    setDebugObjectName(VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
-    setDebugObjectName(VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_IMAGE, reinterpret_cast<uint64>(imageVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_IMAGE_VIEW, reinterpret_cast<uint64>(imageViewVk), name);
 
     return textureVK;
 }
@@ -1012,12 +1008,12 @@ RHISampler* VulkanContext::CreateSampler(const char* name, const SamplerInfo& in
 {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter               = RHIUtilityVulkan::ToFilter(info.magFilter);
-    samplerInfo.minFilter               = RHIUtilityVulkan::ToFilter(info.minFilter);
-    samplerInfo.mipmapMode              = RHIUtilityVulkan::ToMipmapMode(info.mipmapMode);
-    samplerInfo.addressModeU            = RHIUtilityVulkan::ToAddressMode(info.addressU);
-    samplerInfo.addressModeV            = RHIUtilityVulkan::ToAddressMode(info.addressV);
-    samplerInfo.addressModeW            = RHIUtilityVulkan::ToAddressMode(info.addressW);
+    samplerInfo.magFilter               = VulkanUtility::ToFilter(info.magFilter);
+    samplerInfo.minFilter               = VulkanUtility::ToFilter(info.minFilter);
+    samplerInfo.mipmapMode              = VulkanUtility::ToMipmapMode(info.mipmapMode);
+    samplerInfo.addressModeU            = VulkanUtility::ToAddressMode(info.addressU);
+    samplerInfo.addressModeV            = VulkanUtility::ToAddressMode(info.addressV);
+    samplerInfo.addressModeW            = VulkanUtility::ToAddressMode(info.addressW);
     samplerInfo.anisotropyEnable        = VK_FALSE; // TODO: Add anisotropy support
     samplerInfo.maxAnisotropy           = 1.0f;     // TODO: Set max anisotropy
     samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -1029,7 +1025,7 @@ RHISampler* VulkanContext::CreateSampler(const char* name, const SamplerInfo& in
     VulkanSampler* samplerVK = new VulkanSampler(name, info);
     samplerVK->handle        = vkSampler;
 
-    setDebugObjectName(VK_OBJECT_TYPE_SAMPLER, reinterpret_cast<uint64>(vkSampler), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_SAMPLER, reinterpret_cast<uint64>(vkSampler), name);
 
     return static_cast<RHISampler*>(samplerVK);
 }
@@ -1094,7 +1090,7 @@ RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, Resourc
         binding.descriptorCount    = bindings[i].arrayCount;
         binding.descriptorType     = descType;
         binding.pImmutableSamplers = nullptr;
-        binding.stageFlags         = RHIUtilityVulkan::ToShaderStageFlags(bindings[i].stage);
+        binding.stageFlags         = VulkanUtility::ToShaderStageFlags(bindings[i].stage);
     }
 
     VkDescriptorSetLayout layout;
@@ -1106,7 +1102,7 @@ RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, Resourc
 
     resourceLayoutVK->handle = layout;
 
-    setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, reinterpret_cast<uint64>(layout), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, reinterpret_cast<uint64>(layout), name);
 
     return static_cast<RHIResourceLayout*>(resourceLayoutVK);
 }
@@ -1128,8 +1124,8 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
     VulkanResourceLayout* layoutVK = static_cast<VulkanResourceLayout*>(resourceLayouts);
 
     // Create a Vulkan resource set
-    VkDescriptorPool usedPool  = VK_NULL_HANDLE;
-    VkDescriptorSet  rSetVk    = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr, usedPool);
+    VkDescriptorPool usedPool = VK_NULL_HANDLE;
+    VkDescriptorSet rSetVk    = _descriptorPoolAllocator.AllocateDescriptorSet(layoutVK->handle, nullptr, usedPool);
 
     if (rSetVk == VK_NULL_HANDLE)
     {
@@ -1264,7 +1260,7 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
     resourceSetVK->pool              = usedPool;
     resourceSetVK->layouts.push_back(resourceLayouts);
 
-    setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64>(rSetVk), name);
 
     return static_cast<RHIResourceSet*>(resourceSetVK);
 }
@@ -1292,8 +1288,7 @@ RHIResourceSetPool* VulkanContext::CreateResourceSetPool(const char* name, uint3
         {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textureSize},
         {VK_DESCRIPTOR_TYPE_SAMPLER, textureSize},
         {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, textureSize},
-        {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, textureSize}
-    };
+        {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, textureSize}};
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1308,7 +1303,7 @@ RHIResourceSetPool* VulkanContext::CreateResourceSetPool(const char* name, uint3
     VulkanResourceSetPool* resourceSetPoolVK = new VulkanResourceSetPool(name);
     resourceSetPoolVK->handle                = descriptorPool;
 
-    setDebugObjectName(VK_OBJECT_TYPE_DESCRIPTOR_POOL, reinterpret_cast<uint64>(descriptorPool), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_DESCRIPTOR_POOL, reinterpret_cast<uint64>(descriptorPool), name);
 
     return static_cast<RHIResourceSetPool*>(resourceSetPoolVK);
 }
@@ -1340,7 +1335,7 @@ RHICommandPool* VulkanContext::CreateCommandPool(const char* name, uint32 queueF
     VulkanCommandPool* commandPoolVK = new VulkanCommandPool(name);
     commandPoolVK->handle            = commandPool;
 
-    setDebugObjectName(VK_OBJECT_TYPE_COMMAND_POOL, reinterpret_cast<uint64>(commandPool), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_COMMAND_POOL, reinterpret_cast<uint64>(commandPool), name);
 
     return static_cast<RHICommandPool*>(commandPoolVK);
 }
@@ -1373,7 +1368,7 @@ RHICommandBuffer* VulkanContext::CreateCommandBuffer(const char* name)
     VulkanCommandBuffer* commandBufferVK = new VulkanCommandBuffer(name, this);
     commandBufferVK->handle              = cmdBufferVk;
 
-    setDebugObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
+    VulkanUtility::SetDebugObjectName(_instanceVk, _device.logicalDevice, VK_OBJECT_TYPE_COMMAND_BUFFER, reinterpret_cast<uint64>(cmdBufferVk), name);
 
     return static_cast<RHICommandBuffer*>(commandBufferVK);
 }
@@ -1417,7 +1412,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
         commandBufferVks[i]                  = commandBufferVK->handle;
     }
     submitInfo.pCommandBuffers    = commandBufferVks.data();
-    submitInfo.commandBufferCount = static_cast<uint32_t>(bufferCount);
+    submitInfo.commandBufferCount = static_cast<uint32>(bufferCount);
 
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.pWaitDstStageMask      = waitStages;
@@ -1464,12 +1459,10 @@ VkRenderPass VulkanContext::GetCompatibleRenderPass(const PipelineRenderTargetLa
 
 void VulkanContext::CmdBeginRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
 {
-    
 }
 
 void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const RenderingInfo& renderingInfo)
 {
-  
 }
 
 void VulkanContext::cleanup()
@@ -1520,9 +1513,13 @@ bool VulkanContext::createInstance()
     for (const auto& extension : availableExtensions)
     {
         HS_LOG(info, "Available Extension: %s", extension.extensionName);
-        if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+        if (s_enableValidationLayers)
         {
-            extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+            if (::strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+            {
+                extensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            }
         }
     }
 
@@ -1618,7 +1615,7 @@ VkSurfaceKHR VulkanContext::createSurface(const NativeWindow& nativeWindow)
     return surface;
 }
 
-VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout)
+VkPipeline VulkanContext::buildGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout)
 {
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1665,7 +1662,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.primitiveRestartEnable = info.inputAssemblyDesc.isRestartEnable ? VK_TRUE : VK_FALSE; // Primitive restart disabled
-    inputAssembly.topology               = RHIUtilityVulkan::ToPrimitiveTopology(info.inputAssemblyDesc.primitiveTopology);
+    inputAssembly.topology               = VulkanUtility::ToPrimitiveTopology(info.inputAssemblyDesc.primitiveTopology);
 
     pipelineCreateInfo.pInputAssemblyState = &inputAssembly;
 
@@ -1695,7 +1692,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
         auto& attributeDesc    = attributeDescriptions[i];
         attributeDesc.binding  = attribute.binding;
         attributeDesc.location = attribute.location;
-        attributeDesc.format   = RHIUtilityVulkan::ToVertexFormat(attribute.format);
+        attributeDesc.format   = VulkanUtility::ToVertexFormat(attribute.format);
         attributeDesc.offset   = attribute.offset;
     }
 
@@ -1716,10 +1713,10 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     rasterizer.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable        = info.rasterizerDesc.depthClampEnable ? VK_TRUE : VK_FALSE;
     rasterizer.rasterizerDiscardEnable = info.rasterizerDesc.rasterizerDiscardEnable ? VK_TRUE : VK_FALSE;
-    rasterizer.polygonMode             = RHIUtilityVulkan::ToPolygonMode(info.rasterizerDesc.polygonMode);
+    rasterizer.polygonMode             = VulkanUtility::ToPolygonMode(info.rasterizerDesc.polygonMode);
     rasterizer.lineWidth               = info.rasterizerDesc.lineWidth;
-    rasterizer.cullMode                = RHIUtilityVulkan::ToCullMode(info.rasterizerDesc.cullMode);
-    rasterizer.frontFace               = RHIUtilityVulkan::ToFrontFace(info.rasterizerDesc.frontFace);
+    rasterizer.cullMode                = VulkanUtility::ToCullMode(info.rasterizerDesc.cullMode);
+    rasterizer.frontFace               = VulkanUtility::ToFrontFace(info.rasterizerDesc.frontFace);
     rasterizer.depthBiasEnable         = info.rasterizerDesc.depthBiasEnable ? VK_TRUE : VK_FALSE;
     rasterizer.depthBiasConstantFactor = info.rasterizerDesc.depthBiasConstant;
     rasterizer.depthBiasSlopeFactor    = info.rasterizerDesc.depthBiasSlope;
@@ -1743,20 +1740,20 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     depthStencil.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencil.depthTestEnable       = info.depthStencilDesc.depthTestEnable ? VK_TRUE : VK_FALSE;
     depthStencil.depthWriteEnable      = info.depthStencilDesc.depthWriteEnable ? VK_TRUE : VK_FALSE;
-    depthStencil.depthCompareOp        = RHIUtilityVulkan::ToCompareOp(info.depthStencilDesc.depthCompareOp);
+    depthStencil.depthCompareOp        = VulkanUtility::ToCompareOp(info.depthStencilDesc.depthCompareOp);
     depthStencil.depthBoundsTestEnable = info.depthStencilDesc.depthBoundTestEnable ? VK_TRUE : VK_FALSE;
     depthStencil.stencilTestEnable     = info.depthStencilDesc.stencilTestEnable ? VK_TRUE : VK_FALSE;
-    depthStencil.front.failOp          = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilFront.failOp);
-    depthStencil.front.passOp          = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilFront.passOp);
-    depthStencil.front.depthFailOp     = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilFront.depthFailOp);
-    depthStencil.front.compareOp       = RHIUtilityVulkan::ToCompareOp(info.depthStencilDesc.stencilFront.compareOp);
+    depthStencil.front.failOp          = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilFront.failOp);
+    depthStencil.front.passOp          = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilFront.passOp);
+    depthStencil.front.depthFailOp     = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilFront.depthFailOp);
+    depthStencil.front.compareOp       = VulkanUtility::ToCompareOp(info.depthStencilDesc.stencilFront.compareOp);
     depthStencil.front.compareMask     = info.depthStencilDesc.stencilFront.compareMask;
     depthStencil.front.writeMask       = info.depthStencilDesc.stencilFront.writeMask;
     depthStencil.front.reference       = info.depthStencilDesc.stencilFront.reference;
-    depthStencil.back.failOp           = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilBack.failOp);
-    depthStencil.back.passOp           = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilBack.passOp);
-    depthStencil.back.depthFailOp      = RHIUtilityVulkan::ToStencilOp(info.depthStencilDesc.stencilBack.depthFailOp);
-    depthStencil.back.compareOp        = RHIUtilityVulkan::ToCompareOp(info.depthStencilDesc.stencilBack.compareOp);
+    depthStencil.back.failOp           = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilBack.failOp);
+    depthStencil.back.passOp           = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilBack.passOp);
+    depthStencil.back.depthFailOp      = VulkanUtility::ToStencilOp(info.depthStencilDesc.stencilBack.depthFailOp);
+    depthStencil.back.compareOp        = VulkanUtility::ToCompareOp(info.depthStencilDesc.stencilBack.compareOp);
     depthStencil.back.compareMask      = info.depthStencilDesc.stencilBack.compareMask;
     depthStencil.back.writeMask        = info.depthStencilDesc.stencilBack.writeMask;
     depthStencil.back.reference        = info.depthStencilDesc.stencilBack.reference;
@@ -1771,7 +1768,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     colorBlendState.sType             = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlendState.attachmentCount   = static_cast<uint32>(info.colorBlendDesc.attachmentCount);
     colorBlendState.logicOpEnable     = info.colorBlendDesc.logicOpEnable;
-    colorBlendState.logicOp           = RHIUtilityVulkan::ToLogicOp(info.colorBlendDesc.blendLogic);
+    colorBlendState.logicOp           = VulkanUtility::ToLogicOp(info.colorBlendDesc.blendLogic);
     colorBlendState.blendConstants[0] = info.colorBlendDesc.blendConstants[0];
     colorBlendState.blendConstants[1] = info.colorBlendDesc.blendConstants[1];
     colorBlendState.blendConstants[2] = info.colorBlendDesc.blendConstants[2];
@@ -1781,12 +1778,12 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     for (size_t i = 0; i < info.colorBlendDesc.attachmentCount; i++)
     {
         const auto& attachment               = info.colorBlendDesc.attachments[i];
-        attachmentVks[i].alphaBlendOp        = RHIUtilityVulkan::ToBlendOp(attachment.alphaBlendOp);
-        attachmentVks[i].colorBlendOp        = RHIUtilityVulkan::ToBlendOp(attachment.colorBlendOp);
-        attachmentVks[i].srcAlphaBlendFactor = RHIUtilityVulkan::ToBlendFactor(attachment.srcAlphaFactor);
-        attachmentVks[i].dstAlphaBlendFactor = RHIUtilityVulkan::ToBlendFactor(attachment.dstAlphaFactor);
-        attachmentVks[i].srcColorBlendFactor = RHIUtilityVulkan::ToBlendFactor(attachment.srcColorFactor);
-        attachmentVks[i].dstColorBlendFactor = RHIUtilityVulkan::ToBlendFactor(attachment.dstColorFactor);
+        attachmentVks[i].alphaBlendOp        = VulkanUtility::ToBlendOp(attachment.alphaBlendOp);
+        attachmentVks[i].colorBlendOp        = VulkanUtility::ToBlendOp(attachment.colorBlendOp);
+        attachmentVks[i].srcAlphaBlendFactor = VulkanUtility::ToBlendFactor(attachment.srcAlphaFactor);
+        attachmentVks[i].dstAlphaBlendFactor = VulkanUtility::ToBlendFactor(attachment.dstAlphaFactor);
+        attachmentVks[i].srcColorBlendFactor = VulkanUtility::ToBlendFactor(attachment.srcColorFactor);
+        attachmentVks[i].dstColorBlendFactor = VulkanUtility::ToBlendFactor(attachment.dstColorFactor);
         attachmentVks[i].blendEnable         = attachment.blendEnable ? VK_TRUE : VK_FALSE;
         attachmentVks[i].colorWriteMask      = attachment.writeMask;
     }
@@ -1808,8 +1805,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     // Dynamic State
     VkDynamicState dynamicStates[2] = {
         VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR
-    };
+        VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = 2;
@@ -1824,20 +1820,20 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     std::vector<VkFormat> colorFormats(renderTargetLayout.colorAttachmentCount);
     for (uint32 i = 0; i < renderTargetLayout.colorAttachmentCount; i++)
     {
-        colorFormats[i] = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.colorFormats[i]);
+        colorFormats[i] = VulkanUtility::ToPixelFormat(renderTargetLayout.colorFormats[i]);
     }
 
     VkPipelineRenderingCreateInfo renderingCreateInfo{};
     if (_device.GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering)
     {
-        renderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-        renderingCreateInfo.colorAttachmentCount = renderTargetLayout.colorAttachmentCount;
+        renderingCreateInfo.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        renderingCreateInfo.colorAttachmentCount    = renderTargetLayout.colorAttachmentCount;
         renderingCreateInfo.pColorAttachmentFormats = colorFormats.data();
         if (renderTargetLayout.useDepthStencilAttachment)
         {
-            renderingCreateInfo.depthAttachmentFormat = RHIUtilityVulkan::ToPixelFormat(renderTargetLayout.depthStencilFormat);
+            renderingCreateInfo.depthAttachmentFormat = VulkanUtility::ToPixelFormat(renderTargetLayout.depthStencilFormat);
         }
-        pipelineCreateInfo.pNext = &renderingCreateInfo;
+        pipelineCreateInfo.pNext      = &renderingCreateInfo;
         pipelineCreateInfo.renderPass = VK_NULL_HANDLE;
     }
     else
@@ -1851,7 +1847,7 @@ VkPipeline VulkanContext::createGraphicsPipeline(const GraphicsPipelineInfo& inf
     return pipelineVk;
 }
 
-VkPipeline VulkanContext::createComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout)
+VkPipeline VulkanContext::buildComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout)
 {
     outLayout = VK_NULL_HANDLE;
 
@@ -1907,28 +1903,6 @@ VkPipeline VulkanContext::createComputePipeline(const ComputePipelineInfo& info,
 
 #pragma endregion
 
-#pragma region>>> Resource Utility Functions
-
-uint32 VulkanContext::getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(_device.physicalDevice, &deviceMemoryProperties);
-    for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++)
-    {
-        if ((typeBits & 1) == 1)
-        {
-            if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            {
-                return i;
-            }
-        }
-        typeBits >>= 1;
-    }
-    return 0;
-}
-
-#pragma endregion
-
 #pragma region>>> Command Utility Functions
 
 VkCommandBuffer VulkanContext::beginSingleTimeCommands()
@@ -1966,12 +1940,11 @@ void VulkanContext::endSingleTimeCommands(VkCommandBuffer commandBuffer)
     vkFreeCommandBuffers(_device, _defaultCommandPool, 1, &commandBuffer);
 }
 
-void VulkanContext::traisitionImageLayout(
+void VulkanContext::transitionImageLayout(
     VkImage image,
     VkFormat format,
     VkImageLayout oldLayout,
-    VkImageLayout newLayout
-)
+    VkImageLayout newLayout)
 {
     VkCommandBuffer cmdBufferVk = beginSingleTimeCommands();
 
@@ -2026,8 +1999,7 @@ void VulkanContext::copyBufferToImage(
     VkBuffer buffer,
     VkImage image,
     uint32 width,
-    uint32 height
-)
+    uint32 height)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
     VkBufferImageCopy region{};
@@ -2052,29 +2024,11 @@ void VulkanContext::copyBufferToImage(
 
 #pragma region>>> Debugging Functions
 
-HS_FORCEINLINE void VulkanContext::setDebugObjectName(VkObjectType type, uint64 handle, const char* name)
-{
-#ifdef _DEBUG
-    static auto vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(_instanceVk, "vkSetDebugUtilsObjectNameEXT");
-    HS_ASSERT(vkSetDebugUtilsObjectNameEXT, "function addr is nullptr");
-
-    VkDebugUtilsObjectNameInfoEXT nameInfo{};
-    nameInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-    nameInfo.objectType   = type;
-    nameInfo.objectHandle = handle;
-    nameInfo.pObjectName  = name;
-    nameInfo.pNext        = nullptr;
-
-    vkSetDebugUtilsObjectNameEXT(_device, &nameInfo);
-#endif
-}
-
 VkResult VulkanContext::createDebugUtilsMessengerEXT(
     VkInstance instance,
     const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
     VkDebugUtilsMessengerEXT* pDebugMessenger,
-    const VkAllocationCallbacks* npAllocator = nullptr
-)
+    const VkAllocationCallbacks* npAllocator = nullptr)
 {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr)

@@ -12,9 +12,9 @@ namespace
 {
 struct VulkanTextureStateInfo
 {
-    VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    VkImageLayout layout       = VK_IMAGE_LAYOUT_UNDEFINED;
     VkPipelineStageFlags stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    VkAccessFlags access = 0;
+    VkAccessFlags access       = 0;
 };
 
 VulkanTextureStateInfo getTextureStateInfo(ERHITextureState state)
@@ -25,18 +25,18 @@ VulkanTextureStateInfo getTextureStateInfo(ERHITextureState state)
         return {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT};
     case ERHITextureState::ColorAttachmentWrite:
         return {VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT};
+            VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT};
     case ERHITextureState::DepthAttachmentRead:
         return {VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT};
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT};
     case ERHITextureState::DepthAttachmentWrite:
         return {VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT};
+            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT};
     case ERHITextureState::StorageReadWrite:
         return {VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT};
+            VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT};
     case ERHITextureState::TransferRead:
         return {VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT};
     case ERHITextureState::TransferWrite:
@@ -49,7 +49,7 @@ VulkanTextureStateInfo getTextureStateInfo(ERHITextureState state)
     }
 }
 
-}
+} // namespace
 
 VulkanCommandQueue::VulkanCommandQueue(const char* name)
     : RHICommandQueue(name)
@@ -193,8 +193,8 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
     HS_ASSERT(_isBlitBegan == false, "Blit Pass is already began");
     HS_ASSERT(_rhiContext, "VulkanContext is nullptr");
 
-    bool useDynamicRendering = _rhiContext->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering;
-    _currentRenderingInfo = renderingInfo;
+    bool useDynamicRendering     = _rhiContext->GetCapabilities().renderingPath == ERHIRenderingPath::DynamicRendering;
+    _currentRenderingInfo        = renderingInfo;
     const VulkanDevice* deviceVK = _rhiContext->GetDevice();
     if (deviceVK->GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
     {
@@ -237,53 +237,15 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
         return;
     }
 
-    auto transitionAttachment = [this](VkCommandBuffer cmdBuffer,
-                                    VulkanTexture* textureVK,
-                                    VkImageLayout newLayout,
-                                    VkPipelineStageFlags dstStage,
-                                    VkAccessFlags dstAccess,
-                                    VkImageAspectFlags aspectMask)
+    auto fnGetSrcStageAndAccess = [](VkImageLayout layout) -> std::pair<VkPipelineStageFlags, VkAccessFlags>
     {
-        if (textureVK == nullptr || textureVK->layoutVk == newLayout)
+        switch (layout)
         {
-            return;
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:         return {VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT};
+        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:         return {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT};
+        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: return {VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT};
+        default:                                               return {VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0};
         }
-
-        VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        VkAccessFlags srcAccess       = 0;
-        if (textureVK->layoutVk == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        {
-            srcStage  = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-            srcAccess = VK_ACCESS_SHADER_READ_BIT;
-        }
-        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        {
-            srcStage  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            srcAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        }
-        else if (textureVK->layoutVk == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-        {
-            srcStage  = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-            srcAccess = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }
-
-        VkImageMemoryBarrier barrier{};
-        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcAccessMask                   = srcAccess;
-        barrier.dstAccessMask                   = dstAccess;
-        barrier.oldLayout                       = textureVK->layoutVk;
-        barrier.newLayout                       = newLayout;
-        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image                           = textureVK->handle;
-        barrier.subresourceRange.aspectMask     = aspectMask;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
-
-        vkCmdPipelineBarrier(cmdBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-        textureVK->layoutVk = newLayout;
     };
 
     std::vector<VkRenderingAttachmentInfo> colorAttachments(renderingInfo.colorAttachmentCount);
@@ -294,10 +256,14 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
 
         if (renderingInfo.enableAutomaticTransitions)
         {
-            transitionAttachment(
+            auto [srcStage, srcAccess] = fnGetSrcStageAndAccess(textureVK->layoutVk);
+            VulkanUtility::TransitionImageLayout(
                 handle,
                 textureVK,
+                textureVK->layoutVk,
                 VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                srcStage,
+                srcAccess,
                 VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                 VK_IMAGE_ASPECT_COLOR_BIT);
@@ -306,8 +272,8 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
         colorAttachments[i].sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         colorAttachments[i].imageView   = textureVK->imageViewVk;
         colorAttachments[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachments[i].loadOp      = RHIUtilityVulkan::ToLoadOp(attachmentInfo.attachment.loadAction);
-        colorAttachments[i].storeOp     = RHIUtilityVulkan::ToStoreOp(attachmentInfo.attachment.storeAction);
+        colorAttachments[i].loadOp      = VulkanUtility::ToLoadOp(attachmentInfo.attachment.loadAction);
+        colorAttachments[i].storeOp     = VulkanUtility::ToStoreOp(attachmentInfo.attachment.storeAction);
         ::memcpy(colorAttachments[i].clearValue.color.float32, attachmentInfo.attachment.clearValue.color, sizeof(float[4]));
     }
 
@@ -317,10 +283,14 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
         VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
         if (renderingInfo.enableAutomaticTransitions)
         {
-            transitionAttachment(
+            auto [srcStage, stcAccess] = fnGetSrcStageAndAccess(textureVK->layoutVk);
+            VulkanUtility::TransitionImageLayout(
                 handle,
                 textureVK,
+                textureVK->layoutVk,
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                srcStage,
+                stcAccess,
                 VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
                 VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                 VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -329,8 +299,8 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
         depthAttachment.sType                           = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         depthAttachment.imageView                       = textureVK->imageViewVk;
         depthAttachment.imageLayout                     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        depthAttachment.loadOp                          = RHIUtilityVulkan::ToLoadOp(renderingInfo.depthStencilAttachment.attachment.loadAction);
-        depthAttachment.storeOp                         = RHIUtilityVulkan::ToStoreOp(renderingInfo.depthStencilAttachment.attachment.storeAction);
+        depthAttachment.loadOp                          = VulkanUtility::ToLoadOp(renderingInfo.depthStencilAttachment.attachment.loadAction);
+        depthAttachment.storeOp                         = VulkanUtility::ToStoreOp(renderingInfo.depthStencilAttachment.attachment.storeAction);
         depthAttachment.clearValue.depthStencil.depth   = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.depth;
         depthAttachment.clearValue.depthStencil.stencil = renderingInfo.depthStencilAttachment.attachment.clearValue.depthStencil.stencil;
     }
@@ -347,7 +317,7 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
     vkRenderingInfo.pDepthAttachment         = renderingInfo.useDepthStencilAttachment ? &depthAttachment : nullptr;
     vkRenderingInfo.pStencilAttachment       = nullptr;
 
-    PFN_vkCmdBeginRendering beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(deviceVK->logicalDevice, "vkCmdBeginRendering"));
+    static PFN_vkCmdBeginRendering beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(deviceVK->logicalDevice, "vkCmdBeginRendering"));
     if (beginRendering == nullptr)
     {
         beginRendering = reinterpret_cast<PFN_vkCmdBeginRendering>(vkGetDeviceProcAddr(deviceVK->logicalDevice, "vkCmdBeginRenderingKHR"));
@@ -364,97 +334,59 @@ void VulkanCommandBuffer::EndRendering()
 {
     HS_ASSERT(_isGraphicsBegan && _isBegan, "Rendering has not begun");
     HS_ASSERT(_rhiContext, "VulkanContext is nullptr");
-    
+
     VulkanDevice* deviceVK = _rhiContext->GetDevice();
+
     if (deviceVK->GetCapabilities().renderingPath == ERHIRenderingPath::LegacyRenderPass)
     {
-        vkCmdEndRenderPass(commandBuffer);
+        vkCmdEndRenderPass(handle);
         return;
     }
 
-    PFN_vkCmdEndRendering endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRendering"));
-    if (endRendering == nullptr)
+    static PFN_vkCmdEndRendering vkCmdEndRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(deviceVK->logicalDevice, "vkCmdEndRendering"));
+    if (vkCmdEndRendering == nullptr)
     {
-        endRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(_device.logicalDevice, "vkCmdEndRenderingKHR"));
+        vkCmdEndRendering = reinterpret_cast<PFN_vkCmdEndRendering>(vkGetDeviceProcAddr(deviceVK->logicalDevice, "vkCmdEndRenderingKHR"));
     }
-    HS_ASSERT(endRendering != nullptr, "Dynamic rendering function is not available");
-    endRendering(commandBuffer);
+    HS_ASSERT(vkCmdEndRendering != nullptr, "Dynamic rendering function is not available");
+    vkCmdEndRendering(handle);
 
-    if (!renderingInfo.enableAutomaticTransitions)
+    if (_currentRenderingInfo.enableAutomaticTransitions)
     {
-        return;
-    }
-
-    auto transitionAttachment = [this](VkCommandBuffer cmdBuffer,
-                                    VulkanTexture* textureVK,
-                                    VkImageLayout oldLayout,
-                                    VkImageLayout newLayout,
-                                    VkPipelineStageFlags srcStage,
-                                    VkAccessFlags srcAccess,
-                                    VkImageAspectFlags aspectMask)
-    {
-        if (textureVK == nullptr || textureVK->layoutVk != oldLayout)
+        VkImageLayout colorFinalLayout = _currentRenderingInfo.isSwapchainRendering ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        for (const RenderingAttachmentInfo& attachmentInfo : _currentRenderingInfo.colorAttachments)
         {
-            return;
+            VulkanTexture* vulkanTexture = static_cast<VulkanTexture*>(attachmentInfo.texture);
+            VulkanUtility::TransitionImageLayout(
+                handle,
+                vulkanTexture,
+                vulkanTexture->layoutVk,
+                colorFinalLayout,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                VK_ACCESS_SHADER_READ_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT);
         }
 
-        VkImageMemoryBarrier barrier{};
-        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcAccessMask                   = srcAccess;
-        barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
-        barrier.oldLayout                       = oldLayout;
-        barrier.newLayout                       = newLayout;
-        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image                           = textureVK->handle;
-        barrier.subresourceRange.aspectMask     = aspectMask;
-        barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
-
-        vkCmdPipelineBarrier(
-            cmdBuffer,
-            srcStage,
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-        textureVK->layoutVk = newLayout;
-    };
-
-    VkImageLayout colorFinalLayout = renderingInfo.isSwapchainRendering ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    for (const RenderingAttachmentInfo& attachmentInfo : renderingInfo.colorAttachments)
-    {
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(attachmentInfo.texture);
-        transitionAttachment(
-            commandBuffer,
-            textureVK,
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            colorFinalLayout,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_ASPECT_COLOR_BIT);
+        if (_currentRenderingInfo.useDepthStencilAttachment)
+        {
+            VulkanTexture* vulkanTexture = static_cast<VulkanTexture*>(_currentRenderingInfo.depthStencilAttachment.texture);
+            VulkanUtility::TransitionImageLayout(
+                handle,
+                vulkanTexture,
+                vulkanTexture->layoutVk,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                VK_ACCESS_SHADER_READ_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT);
+        }
     }
 
-    if (renderingInfo.useDepthStencilAttachment)
-    {
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(renderingInfo.depthStencilAttachment.texture);
-        transitionAttachment(
-            commandBuffer,
-            textureVK,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            VK_IMAGE_ASPECT_DEPTH_BIT);
-    }
-    _currentRenderingInfo = RenderingInfo{};
-    _isGraphicsBegan = false;
-
-
-
+    _currentRenderingInfo = {};
+    _isGraphicsBegan      = false;
 }
 
 void VulkanCommandBuffer::CopyTexture(RHITexture* srcTexture, RHITexture* dstTexture)
@@ -478,10 +410,39 @@ void VulkanCommandBuffer::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset
 
 void VulkanCommandBuffer::PushDebugMark(const char* label, float color[4])
 {
+#ifdef _DEBUG
+    // VK_EXT_debug_marker는 deprecated이고 모던 driver에서 노출되지 않는 경우가 많아
+    // 표준 대체인 VK_EXT_debug_utils의 BeginDebugUtilsLabel을 사용한다.
+    // debug_utils가 enable되지 않은 환경(release-strip된 SDK 등)에서는 silently skip.
+    static PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT =
+        reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(
+            vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdBeginDebugUtilsLabelEXT"));
+    if (!vkCmdBeginDebugUtilsLabelEXT)
+    {
+        return;
+    }
+
+    VkDebugUtilsLabelEXT info{};
+    info.sType      = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    info.pLabelName = label;
+    ::memcpy(info.color, color, sizeof(float) * 4);
+
+    vkCmdBeginDebugUtilsLabelEXT(handle, &info);
+#endif
 }
 
 void VulkanCommandBuffer::PopDebugMark()
 {
+#ifdef _DEBUG
+    static PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT =
+        reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(
+            vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdEndDebugUtilsLabelEXT"));
+    if (!vkCmdEndDebugUtilsLabelEXT)
+    {
+        return;
+    }
+    vkCmdEndDebugUtilsLabelEXT(handle);
+#endif
 }
 
 void VulkanCommandBuffer::BindComputePipeline(RHIComputePipeline* pipeline)
@@ -547,34 +508,34 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
             continue;
         }
 
-        VulkanTexture* textureVK = static_cast<VulkanTexture*>(desc.texture);
+        VulkanTexture* textureVK          = static_cast<VulkanTexture*>(desc.texture);
         VulkanTextureStateInfo beforeInfo = getTextureStateInfo(desc.before);
-        VulkanTextureStateInfo afterInfo = getTextureStateInfo(desc.after);
-        VkImageLayout oldLayout = textureVK->layoutVk;
+        VulkanTextureStateInfo afterInfo  = getTextureStateInfo(desc.after);
+        VkImageLayout oldLayout           = textureVK->layoutVk;
         if (oldLayout == afterInfo.layout)
         {
             continue;
         }
         if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED)
         {
-            beforeInfo.stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            beforeInfo.stage  = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             beforeInfo.access = 0;
         }
 
         VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcAccessMask = beforeInfo.access;
-        barrier.dstAccessMask = afterInfo.access;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = afterInfo.layout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = textureVK->handle;
-        barrier.subresourceRange.aspectMask = RHIUtilityVulkan::GetImageAspectMask(textureVK->info);
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = RHIUtilityVulkan::GetTextureMipLevelCount(textureVK->info);
+        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcAccessMask                   = beforeInfo.access;
+        barrier.dstAccessMask                   = afterInfo.access;
+        barrier.oldLayout                       = oldLayout;
+        barrier.newLayout                       = afterInfo.layout;
+        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image                           = textureVK->handle;
+        barrier.subresourceRange.aspectMask     = VulkanUtility::GetImageAspectMask(textureVK->info);
+        barrier.subresourceRange.baseMipLevel   = 0;
+        barrier.subresourceRange.levelCount     = VulkanUtility::GetTextureMipLevelCount(textureVK->info);
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = RHIUtilityVulkan::GetTextureLayerCount(textureVK->info);
+        barrier.subresourceRange.layerCount     = VulkanUtility::GetTextureLayerCount(textureVK->info);
 
         imageBarriers.push_back(barrier);
         srcStages |= beforeInfo.stage;
@@ -594,16 +555,15 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
         0,
         0, nullptr,
         0, nullptr,
-        static_cast<uint32>(imageBarriers.size()), imageBarriers.data()
-    );
+        static_cast<uint32>(imageBarriers.size()), imageBarriers.data());
 }
 
 void VulkanCommandBuffer::TextureBarrier(RHITexture* texture)
 {
     RHITextureBarrierDesc barrier{};
     barrier.texture = texture;
-    barrier.before = ERHITextureState::StorageReadWrite;
-    barrier.after = ERHITextureState::ShaderRead;
+    barrier.before  = ERHITextureState::StorageReadWrite;
+    barrier.after   = ERHITextureState::ShaderRead;
     TextureBarrier(&barrier, 1);
 }
 

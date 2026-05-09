@@ -12,123 +12,139 @@
 #include "Core/Log.h"
 #include "RHI/RHIDefinition.h"
 
-#define VK_USE_PLATFORM_WIN32_KHR 
+#define VK_USE_PLATFORM_WIN32_KHR
 
 #include <vulkan/vulkan.h>
 #include <string>
 
+namespace hs
+{
+struct VulkanTexture;
+}
 
 HS_NS_BEGIN
 
-#define VK_CHECK_RESULT(vkFunc)                                                             \
-    do                                                                                      \
-    {                                                                                       \
-        if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
-        {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
-        }                                                                                   \
+#define VK_CHECK_RESULT(vkFunc)                                                            \
+    do                                                                                     \
+    {                                                                                      \
+        if (VkResult result = vkFunc; result != VK_SUCCESS)                                \
+        {                                                                                  \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::VulkanUtility::ToString(result)); \
+        }                                                                                  \
     } while (0)
 
-#define VK_CHECK_RESULT_AND_RETURN(vkFunc)                                                  \
-    do                                                                                      \
-    {                                                                                       \
-        if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
-        {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
-            return result;                                                                  \
-        }                                                                                   \
+#define VK_CHECK_RESULT_AND_RETURN(vkFunc)                                                 \
+    do                                                                                     \
+    {                                                                                      \
+        if (VkResult result = vkFunc; result != VK_SUCCESS)                                \
+        {                                                                                  \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::VulkanUtility::ToString(result)); \
+            return result;                                                                 \
+        }                                                                                  \
     } while (0)
 
-#define VK_CHECK_RESULT_AND_THROW(vkFunc)                                                   \
-    do                                                                                      \
-    {                                                                                       \
-        if (VkResult result = vkFunc; result != VK_SUCCESS)                                 \
-        {                                                                                   \
-            HS_LOG(error, "%s returns %s.", #vkFunc, hs::RHIUtilityVulkan::ToString(result));    \
-            throw Exception(__FILE__, __LINE__, result)                                     \
-        }                                                                                   \
+#define VK_CHECK_RESULT_AND_THROW(vkFunc)                                                  \
+    do                                                                                     \
+    {                                                                                      \
+        if (VkResult result = vkFunc; result != VK_SUCCESS)                                \
+        {                                                                                  \
+            HS_LOG(error, "%s returns %s.", #vkFunc, hs::VulkanUtility::ToString(result)); \
+            throw Exception(__FILE__, __LINE__, result)                                    \
+        }                                                                                  \
     } while (0)
 
-
-class HS_RHI_API RHIUtilityVulkan
+class HS_RHI_API VulkanUtility
 {
 public:
-	static VkFormat ToPixelFormat(EPixelFormat format);
-	static EPixelFormat FromPixelFormat(VkFormat format);
-
-	static VkFormat ToVertexFormat(EVertexFormat format);
-	static EVertexFormat FromVertexFormat(VkFormat format);
-
-	static VkAttachmentLoadOp ToLoadOp(ELoadAction action);
-	static ELoadAction FromLoadOp(VkAttachmentLoadOp action);
-
-	static VkAttachmentStoreOp ToStoreOp(EStoreAction action);
-	static EStoreAction FromStoreOp(VkAttachmentStoreOp action);
-
-	static VkViewport ToViewport(Viewport vp);
-	static Viewport FromViewport(VkViewport vp);
-
-	static VkImageUsageFlags ToTextureUsage(ETextureUsage usage);
-	static ETextureUsage FromTextureUsage(VkImageUsageFlags usage);
-
-	static VkImageType ToImageType(ETextureType type);
-	static ETextureType FromImageType(VkImageType type);
-
-	static VkImageViewType ToImageViewType(ETextureType type);
-	static ETextureType FromImageViewType(VkImageViewType type);
-
     static uint32 GetTextureMipLevelCount(const TextureInfo& info);
     static uint32 GetTextureLayerCount(const TextureInfo& info);
     static VkImageAspectFlags GetImageAspectMask(const TextureInfo& info);
     static VkImageCreateInfo MakeTextureCreateInfo(const TextureInfo& info, bool useAlias);
+    static void TransitionImageLayout(
+        VkCommandBuffer cmdBufferVk,
+        VulkanTexture* textureVK,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout,
+        VkPipelineStageFlags srcStage,
+        VkAccessFlags srcAccess,
+        VkPipelineStageFlags dstStage,
+        VkAccessFlags dstAccess,
+        VkImageAspectFlags aspectMask);
 
-	static VkBlendFactor ToBlendFactor(EBlendFactor factor);
-	static EBlendFactor FromBlendFactor(VkBlendFactor factor);
+    static uint32 GetMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32 typeBits, VkMemoryPropertyFlags properties);
 
-	static VkBlendOp ToBlendOp(EBlendOp operation);
-	static EBlendOp FromBlendOp(VkBlendOp operation);
+    static void SetDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64 handle, std::string_view name);
 
-	static VkLogicOp ToLogicOp(ELogicOp logicOp);
-	static ELogicOp FromLogicOp(VkLogicOp logicOp);
+    static VkFormat ToPixelFormat(EPixelFormat format);
+    static EPixelFormat FromPixelFormat(VkFormat format);
 
-	static VkCompareOp ToCompareOp(ECompareOp compareOp);
-	static ECompareOp FromCompareOp(VkCompareOp compareOp);
+    static VkFormat ToVertexFormat(EVertexFormat format);
+    static EVertexFormat FromVertexFormat(VkFormat format);
 
-	static VkStencilOp ToStencilOp(EStencilOp stencilOp);
-	static EStencilOp FromStencilOp(VkStencilOp stencilOp);
+    static VkAttachmentLoadOp ToLoadOp(ELoadAction action);
+    static ELoadAction FromLoadOp(VkAttachmentLoadOp action);
 
-	static VkFrontFace ToFrontFace(EFrontFace frontFace);
-	static EFrontFace FromFrontFace(VkFrontFace frontFace);
+    static VkAttachmentStoreOp ToStoreOp(EStoreAction action);
+    static EStoreAction FromStoreOp(VkAttachmentStoreOp action);
 
-	static VkCullModeFlags ToCullMode(ECullMode cullMode);
-	static ECullMode FromCullMode(VkCullModeFlags cullMode);
+    static VkViewport ToViewport(Viewport vp);
+    static Viewport FromViewport(VkViewport vp);
 
-	static VkBufferUsageFlags ToBufferUsage(EBufferUsage usage);
-	static EBufferUsage FromBufferUsage(VkBufferUsageFlags usage);
+    static VkImageUsageFlags ToTextureUsage(ETextureUsage usage);
+    static ETextureUsage FromTextureUsage(VkImageUsageFlags usage);
 
-	static VkPolygonMode ToPolygonMode(EPolygonMode polygonMode);
-	static EPolygonMode FromPolygonMode(VkPolygonMode polygonMode);
+    static VkImageType ToImageType(ETextureType type);
+    static ETextureType FromImageType(VkImageType type);
 
-	static VkShaderStageFlagBits ToShaderStageFlags(EShaderStage stage);
-	static EShaderStage FromShaderStageFlags(VkShaderStageFlagBits flags);
+    static VkImageViewType ToImageViewType(ETextureType type);
+    static ETextureType FromImageViewType(VkImageViewType type);
 
-	static VkPrimitiveTopology ToPrimitiveTopology(EPrimitiveTopology topology);
-	static EPrimitiveTopology FromPrimitiveTopology(VkPrimitiveTopology topology);
-	
-	static VkSamplerAddressMode ToAddressMode(EAddressMode addressMode);
-	static EAddressMode FromAddressMode(VkSamplerAddressMode addressMode);
+    static VkBlendFactor ToBlendFactor(EBlendFactor factor);
+    static EBlendFactor FromBlendFactor(VkBlendFactor factor);
 
-	static VkFilter ToFilter(EFilterMode filter);
-	static EFilterMode FromFilter(VkFilter filter);
+    static VkBlendOp ToBlendOp(EBlendOp operation);
+    static EBlendOp FromBlendOp(VkBlendOp operation);
 
-	static VkSamplerMipmapMode ToMipmapMode(EFilterMode mipmapMode);
-	static EFilterMode FromMipmapMode(VkSamplerMipmapMode mipmapMode);
+    static VkLogicOp ToLogicOp(ELogicOp logicOp);
+    static ELogicOp FromLogicOp(VkLogicOp logicOp);
 
-	//static VkVertexInputRate ToInputRate(uint8 stepRate);
-	//static uint8 FromInputRate(VkVertexInputRate inputRate);
+    static VkCompareOp ToCompareOp(ECompareOp compareOp);
+    static ECompareOp FromCompareOp(VkCompareOp compareOp);
 
+    static VkStencilOp ToStencilOp(EStencilOp stencilOp);
+    static EStencilOp FromStencilOp(VkStencilOp stencilOp);
 
-	static const char* ToString(VkResult result);
+    static VkFrontFace ToFrontFace(EFrontFace frontFace);
+    static EFrontFace FromFrontFace(VkFrontFace frontFace);
+
+    static VkCullModeFlags ToCullMode(ECullMode cullMode);
+    static ECullMode FromCullMode(VkCullModeFlags cullMode);
+
+    static VkBufferUsageFlags ToBufferUsage(EBufferUsage usage);
+    static EBufferUsage FromBufferUsage(VkBufferUsageFlags usage);
+
+    static VkPolygonMode ToPolygonMode(EPolygonMode polygonMode);
+    static EPolygonMode FromPolygonMode(VkPolygonMode polygonMode);
+
+    static VkShaderStageFlagBits ToShaderStageFlags(EShaderStage stage);
+    static EShaderStage FromShaderStageFlags(VkShaderStageFlagBits flags);
+
+    static VkPrimitiveTopology ToPrimitiveTopology(EPrimitiveTopology topology);
+    static EPrimitiveTopology FromPrimitiveTopology(VkPrimitiveTopology topology);
+
+    static VkSamplerAddressMode ToAddressMode(EAddressMode addressMode);
+    static EAddressMode FromAddressMode(VkSamplerAddressMode addressMode);
+
+    static VkFilter ToFilter(EFilterMode filter);
+    static EFilterMode FromFilter(VkFilter filter);
+
+    static VkSamplerMipmapMode ToMipmapMode(EFilterMode mipmapMode);
+    static EFilterMode FromMipmapMode(VkSamplerMipmapMode mipmapMode);
+
+    // static VkVertexInputRate ToInputRate(uint8 stepRate);
+    // static uint8 FromInputRate(VkVertexInputRate inputRate);
+
+    static const char* ToString(VkResult result);
 };
 
 HS_NS_END

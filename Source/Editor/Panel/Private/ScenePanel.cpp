@@ -94,15 +94,15 @@ bool ScenePanel::Setup()
     info.width  = _resolution.width;
     info.height = _resolution.height;
     info.colorTextureCount = 1;
-    info.colorTextureInfos.resize(1);
-    info.colorTextureInfos[0].arrayLength   = 1;
-    info.colorTextureInfos[0].extent.width  = _resolution.width;
-    info.colorTextureInfos[0].extent.height = _resolution.height;
-    info.colorTextureInfos[0].extent.depth  = 1;
-    info.colorTextureInfos[0].format        = EPixelFormat::R8G8B8A8Srgb;
-    info.colorTextureInfos[0].usage         = ETextureUsage::ColorAttachment | ETextureUsage::TransferSource | ETextureUsage::Sampled;
-    info.colorTextureInfos[0].isCompressed  = false;
-    info.colorTextureInfos[0].byteSize      = 4 * _resolution.width * _resolution.height;
+    info.colorTextureInfo.resize(1);
+    info.colorTextureInfo[0].arrayLength   = 1;
+    info.colorTextureInfo[0].extent.width  = _resolution.width;
+    info.colorTextureInfo[0].extent.height = _resolution.height;
+    info.colorTextureInfo[0].extent.depth  = 1;
+    info.colorTextureInfo[0].format        = EPixelFormat::R8G8B8A8Srgb;
+    info.colorTextureInfo[0].usage         = ETextureUsage::ColorAttachment | ETextureUsage::Sampled;
+    info.colorTextureInfo[0].isCompressed  = false;
+    info.colorTextureInfo[0].byteSize      = 4 * _resolution.width * _resolution.height;
 
     info.useDepthStencilTexture                = true;
     info.depthStencilInfo.arrayLength          = 1;

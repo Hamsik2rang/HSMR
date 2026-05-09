@@ -127,7 +127,7 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
 
     PipelineRenderTargetLayout swapchainLayout{};
     swapchainLayout.colorAttachmentCount = 1;
-    swapchainLayout.colorFormats.push_back(RHIUtilityVulkan::FromPixelFormat(s_swapchainColorFormat));
+    swapchainLayout.colorFormats.push_back(VulkanUtility::FromPixelFormat(s_swapchainColorFormat));
     swapchainLayout.sampleCount = 1;
     swapchainLayout.isSwapchainRenderPass = true;
 
@@ -160,7 +160,7 @@ void ImGuiExtension::InitializeBackend(hs::Swapchain* swapchain)
         pool_info.maxSets                    = 0;
         for (VkDescriptorPoolSize& pool_size : pool_sizes)
             pool_info.maxSets += pool_size.descriptorCount;
-        pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+        pool_info.poolSizeCount = (uint32)IM_ARRAYSIZE(pool_sizes);
         pool_info.pPoolSizes    = pool_sizes;
         VkResult err            = vkCreateDescriptorPool(rhiDeviceVK->logicalDevice, &pool_info, nullptr, &s_descriptorPool);
         check_vk_result(err);
@@ -236,7 +236,7 @@ void ImGuiExtension::EndRender()
 
     RenderingAttachmentInfo colorAttachment{};
     colorAttachment.texture = swapchainVK->GetCurrentColorTexture();
-    colorAttachment.attachment.format = RHIUtilityVulkan::FromPixelFormat(s_swapchainColorFormat);
+    colorAttachment.attachment.format = VulkanUtility::FromPixelFormat(s_swapchainColorFormat);
     colorAttachment.attachment.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
     colorAttachment.attachment.loadAction = ELoadAction::Load;
     colorAttachment.attachment.storeAction = EStoreAction::Store;

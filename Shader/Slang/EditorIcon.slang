@@ -1,9 +1,9 @@
 module EditorIcon;
 import GlobalUniform;
 
-ConstantBuffer<PerViewUBO> perView : register(b0);
-Sampler2D cameraIconSampler : register(s0);
-Sampler2D lightIconSampler : register(s1);
+ConstantBuffer<PerViewUBO> perView;
+Sampler2D cameraIconSampler;
+Sampler2D lightIconSampler;
 
 struct VSInput
 {

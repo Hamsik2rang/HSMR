@@ -129,12 +129,12 @@ VkRenderPass VulkanRenderingCache::createRenderPass(const LegacyRenderPassInfo& 
     for (; index < info.colorAttachmentCount; index++)
     {
         const Attachment& attachment = info.colorAttachments[index];
-        VkAttachmentLoadOp loadOp = RHIUtilityVulkan::ToLoadOp(attachment.loadAction);
+        VkAttachmentLoadOp loadOp = VulkanUtility::ToLoadOp(attachment.loadAction);
 
         attachments[index].flags = 0;
-        attachments[index].format = RHIUtilityVulkan::ToPixelFormat(attachment.format);
+        attachments[index].format = VulkanUtility::ToPixelFormat(attachment.format);
         attachments[index].loadOp = loadOp;
-        attachments[index].storeOp = RHIUtilityVulkan::ToStoreOp(attachment.storeAction);
+        attachments[index].storeOp = VulkanUtility::ToStoreOp(attachment.storeAction);
         attachments[index].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[index].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[index].initialLayout = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
@@ -145,12 +145,12 @@ VkRenderPass VulkanRenderingCache::createRenderPass(const LegacyRenderPassInfo& 
     if (info.useDepthStencilAttachment)
     {
         const Attachment& attachment = info.depthStencilAttachment;
-        VkAttachmentLoadOp loadOp = RHIUtilityVulkan::ToLoadOp(attachment.loadAction);
+        VkAttachmentLoadOp loadOp = VulkanUtility::ToLoadOp(attachment.loadAction);
 
         attachments[index].flags = 0;
-        attachments[index].format = RHIUtilityVulkan::ToPixelFormat(attachment.format);
+        attachments[index].format = VulkanUtility::ToPixelFormat(attachment.format);
         attachments[index].loadOp = loadOp;
-        attachments[index].storeOp = RHIUtilityVulkan::ToStoreOp(attachment.storeAction);
+        attachments[index].storeOp = VulkanUtility::ToStoreOp(attachment.storeAction);
         attachments[index].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[index].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachments[index].initialLayout = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;

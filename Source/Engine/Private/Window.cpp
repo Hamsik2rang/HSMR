@@ -25,12 +25,12 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     {
         HS_LOG(crash, "Fail to create NativeWindow");
     }
-    
+
     SwapchainInfo scInfo{};
     scInfo.nativeWindow = &_nativeWindow;
-    scInfo.useDepth = false;
-    scInfo.useMSAA = false;
-    scInfo.useStencil = false;
+    scInfo.useDepth     = false;
+    scInfo.useMSAA      = false;
+    scInfo.useStencil   = false;
     scInfo.enableVSync  = true;
 
     _swapchain = _rhiContext->CreateSwapchain(scInfo);
@@ -38,30 +38,30 @@ Window::Window(Application* ownerApp, const char* name, uint16 width, uint16 hei
     // Window's _renderTargets are swapchain-backed: color is delegated to the swapchain
     // (which rotates drawables every frame), while depth is owned per-frame. Panels that
     // need offscreen render targets (Scene/Game) own their own RTs.
-    const EPixelFormat swapchainFormat = _swapchain->GetCurrentColorTexture()->info.format;
+    const EPixelFormat swapchainFormat = _swapchain->GetColorFormat();
 
     _swapchainRenderTargets.resize(_swapchain->GetMaxFrameCount());
     for (size_t i = 0; i < _swapchainRenderTargets.size(); i++)
     {
         RenderTargetInfo info{};
-        info.width = width;
-        info.height = height;
+        info.width             = width;
+        info.height            = height;
         info.colorTextureCount = 1;
-        info.colorTextureInfos.resize(info.colorTextureCount);
-        info.colorTextureInfos[0].arrayLength   = 1;
-        info.colorTextureInfos[0].extent.width  = width;
-        info.colorTextureInfos[0].extent.height = height;
-        info.colorTextureInfos[0].extent.depth  = 1;
-        info.colorTextureInfos[0].format        = swapchainFormat;
-        info.colorTextureInfos[0].usage         = ETextureUsage::ColorAttachment;
-        info.colorTextureInfos[0].isCompressed  = false;
+        info.colorTextureInfo.resize(info.colorTextureCount);
+        info.colorTextureInfo[0].arrayLength   = 1;
+        info.colorTextureInfo[0].extent.width  = width;
+        info.colorTextureInfo[0].extent.height = height;
+        info.colorTextureInfo[0].extent.depth  = 1;
+        info.colorTextureInfo[0].format        = swapchainFormat;
+        info.colorTextureInfo[0].usage         = ETextureUsage::ColorAttachment;
+        info.colorTextureInfo[0].isCompressed  = false;
 
         info.useDepthStencilTexture                = true;
         info.depthStencilInfo.extent.width         = width;
         info.depthStencilInfo.extent.height        = height;
         info.depthStencilInfo.extent.depth         = 1;
         info.depthStencilInfo.format               = EPixelFormat::Depth32;
-        info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::TransferSource;
+        info.depthStencilInfo.usage                = ETextureUsage::DepthStencilAttachment | ETextureUsage::Sampled;
         info.depthStencilInfo.isDepthStencilBuffer = true;
         info.depthStencilInfo.isCompressed         = false;
 
@@ -96,11 +96,6 @@ void Window::Shutdown()
     }
 
     _isClosed = true;
-}
-
-void Window::InitializeRenderTarget()
-{
-
 }
 
 void Window::ProcessEvent()

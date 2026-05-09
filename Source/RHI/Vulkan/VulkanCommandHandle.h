@@ -36,6 +36,7 @@ struct HS_RHI_API VulkanCommandPool : public RHICommandPool
 
 class HS_RHI_API VulkanCommandBuffer : public RHICommandBuffer
 {
+public:
     VulkanCommandBuffer(const char* name, VulkanContext* context);
     ~VulkanCommandBuffer() override;
     void Begin() override;

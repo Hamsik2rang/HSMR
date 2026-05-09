@@ -13,7 +13,7 @@ VulkanSwapchain::VulkanSwapchain(const SwapchainInfo& info, VkSurfaceKHR surface
     , _deviceVulkan(nullptr)
     , surface(surface)
     , handle(VK_NULL_HANDLE)
-    , _colorTextures(nullptr)
+    , _colorTextures()
     , _frameIndex(static_cast<uint8>(-1))
     , _maxFrameCount(2)
     , _isSuspended(true)
@@ -28,9 +28,9 @@ VulkanSwapchain::~VulkanSwapchain()
 
 void VulkanSwapchain::setRenderTargets()
 {
-    HS_ASSERT(_colorTextures == nullptr, "Swapchain render targets already exist. Destroy them before creating new ones.");
+    HS_ASSERT(_colorTextures.empty(), "Swapchain render targets already exist. Destroy them before creating new ones.");
 
-    _colorTextures = new RHITexture*[imageVks.size()]{nullptr};
+    _colorTextures.resize(imageVks.size());
 
     RHIContext* rhiContext = RHIContext::Get();
 
@@ -42,7 +42,7 @@ void VulkanSwapchain::setRenderTargets()
         tInfo.extent.width         = _info.nativeWindow->surfaceWidth;
         tInfo.extent.height        = _info.nativeWindow->surfaceHeight;
         tInfo.extent.depth         = 1;
-        tInfo.format               = RHIUtilityVulkan::FromPixelFormat(surfaceFormat.format);
+        tInfo.format               = VulkanUtility::FromPixelFormat(surfaceFormat.format);
         tInfo.usage                = ETextureUsage::ColorAttachment;
         tInfo.isCompressed         = false;
         tInfo.useGenerateMipmap    = false;
@@ -61,15 +61,6 @@ void VulkanSwapchain::setRenderTargets()
 
 void VulkanSwapchain::chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-    // for (const auto& availableFormat : availableFormats)
-    //{
-    //	if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-    //	{
-    //		surfaceFormat = availableFormat;
-    //		return;
-    //	}
-    // }
-
     for (const auto& availableFormat : availableFormats)
     {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -128,7 +119,7 @@ bool VulkanSwapchain::initSwapchainVK(VulkanContext* rhiContext, VkInstance inst
     extent.height = _info.nativeWindow->surfaceHeight;
     extent.width  = _info.nativeWindow->surfaceWidth;
 
-    uint32_t formatCount;
+    uint32 formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(_deviceVulkan->physicalDevice, surface, &formatCount, nullptr);
     std::vector<VkSurfaceFormatKHR> availabieSurfaceFormat;
     if (formatCount != 0)
@@ -258,7 +249,7 @@ void VulkanSwapchain::destroySwapchainVK()
         handle = VK_NULL_HANDLE;
     }
 
-    if (_colorTextures)
+    if (!_colorTextures.empty())
     {
         for (size_t i = 0; i < _maxFrameCount; i++)
         {
@@ -268,8 +259,7 @@ void VulkanSwapchain::destroySwapchainVK()
                 _colorTextures[i] = nullptr;
             }
         }
-        delete[] _colorTextures;
-        _colorTextures = nullptr;
+        _colorTextures.clear();
     }
 
     _isInitialized = false;

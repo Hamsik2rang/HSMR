@@ -32,7 +32,7 @@ struct HS_RENDERER_API RenderTargetInfo
     uint32 height;
 
     uint8 colorTextureCount;
-    std::vector<TextureInfo> colorTextureInfos;
+    std::vector<TextureInfo> colorTextureInfo;
 
     bool useDepthStencilTexture = false;
     TextureInfo depthStencilInfo;
@@ -165,11 +165,11 @@ struct hash<hs::RenderTargetInfo>
         std::hash<hs::TextureInfo> textureHash;
         for (size_t i = 0; i + 1 < key.colorTextureCount; i += 2)
         {
-            h = hs::HashCombine64(h, textureHash(key.colorTextureInfos[i]), textureHash(key.colorTextureInfos[i + 1]));
+            h = hs::HashCombine64(h, textureHash(key.colorTextureInfo[i]), textureHash(key.colorTextureInfo[i + 1]));
         }
         if (key.colorTextureCount % 2 != 0)
         {
-            h = hs::HashCombine64(h, textureHash(key.colorTextureInfos.back()));
+            h = hs::HashCombine64(h, textureHash(key.colorTextureInfo.back()));
         }
 
         h = hs::HashCombine64(h, key.width, key.height);

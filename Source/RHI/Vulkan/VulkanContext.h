@@ -101,17 +101,14 @@ private:
     bool createInstance();
     void createDefaultCommandPool();
     VkSurfaceKHR createSurface(const NativeWindow& nativeWindow);
-    VkPipeline createGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout);
-    VkPipeline createComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout);
-
-    uint32 getMemoryTypeIndex(uint32 typeBits, VkMemoryPropertyFlags properties);
+    VkPipeline buildGraphicsPipeline(const GraphicsPipelineInfo& info, VkPipelineLayout& outLayout);
+    VkPipeline buildComputePipeline(const ComputePipelineInfo& info, VkPipelineLayout& outLayout);
 
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-    void traisitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32 width, uint32 height);
 
-    void setDebugObjectName(VkObjectType type, uint64 handle, const char* name);
     VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger, const VkAllocationCallbacks* npAllocator);
     void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* npAllocator);
 

@@ -58,7 +58,7 @@ HS_CORE_API inline void AlignedFree(void* ptr) noexcept
 }
 } // namespace MemoryUtils
 
-template <size_t BlockSize, size_t Alignment, uint8 BlockCount>
+template <size_t BlockSize, size_t Alignment, uint8 BlockCount = 2 /* by default, use double buffering */>
     requires((Alignment > 0 && (Alignment & (Alignment - 1)) == 0) && BlockSize % Alignment == 0)
 class LinearAllocator
 {
@@ -108,7 +108,7 @@ public:
     T* Allocate(uint8 allocIndex, Args&&... args)
     {
         void* mem = Allocate(AllocSize, allocIndex);
-        T* ptr = new (mem) T(std::forward<Args>(args)...);
+        T* ptr    = new (mem) T(std::forward<Args>(args)...);
 
         return ptr;
     }
@@ -122,6 +122,14 @@ private:
     Scoped<uint8> _block[BlockCount];
     size_t _offset[BlockCount]{};
 };
+
+// TODO: Stack Allocator 구현하기 (필요할때)
+//template <size_t BlockSize, uint8 BlockCount = 2>
+//class StackAllocator
+//{
+//public:
+//private:
+//};
 
 HS_NS_END
 

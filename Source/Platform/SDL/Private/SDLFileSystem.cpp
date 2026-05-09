@@ -21,7 +21,7 @@ std::wstring FileSystem::Utf8ToUtf16(const std::string& utf8)
     size_t i = 0;
     while (i < utf8.size())
     {
-        uint32_t codepoint = 0;
+        uint32 codepoint = 0;
         unsigned char c    = static_cast<unsigned char>(utf8[i]);
 
         if (c < 0x80)
@@ -91,7 +91,7 @@ std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
     size_t i = 0;
     while (i < utf16.size())
     {
-        uint32_t codepoint = 0;
+        uint32 codepoint = 0;
 
         if (sizeof(wchar_t) == 2)
         {
@@ -112,13 +112,13 @@ std::string FileSystem::Utf16ToUtf8(const std::wstring& utf16)
             }
             else
             {
-                codepoint = static_cast<uint32_t>(w);
+                codepoint = static_cast<uint32>(w);
                 i += 1;
             }
         }
         else
         {
-            codepoint = static_cast<uint32_t>(utf16[i]);
+            codepoint = static_cast<uint32>(utf16[i]);
             i += 1;
         }
 

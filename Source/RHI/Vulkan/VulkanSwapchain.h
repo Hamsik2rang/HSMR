@@ -35,7 +35,29 @@ public:
         HS_ASSERT(index < _maxFrameCount, "out of index");
         return static_cast<RHICommandBuffer*>(_commandBufferVKs[index]);
     }
-    HS_FORCEINLINE RHITexture* GetCurrentColorTexture() const override { return _colorTextures[_curImageIndex]; }
+    
+    HS_FORCEINLINE RHITexture* GetCurrentColorTexture() const override 
+    {
+        
+        if (_curImageIndex > _colorTextures.size())
+        {
+            HS_LOG(error, "Swapchain wasn't acquired yet.");
+            return nullptr;
+        }
+
+        return _colorTextures[_curImageIndex]; 
+    }
+    
+    HS_FORCEINLINE EPixelFormat GetColorFormat() const override
+    {
+        if (_colorTextures.empty())
+        {
+            return EPixelFormat::Invalid;
+        }
+
+        // 스왑체인의 모든 이미지는 같은 포맷으로만 구성되므로 0번 텍스쳐의 포맷을 리턴
+        return _colorTextures.front()->info.format;
+    }
 
     VkSwapchainKHR handle = VK_NULL_HANDLE;
 
@@ -66,7 +88,7 @@ private:
     uint32 _curImageIndex = static_cast<uint32>(-1);
     VulkanDevice* _deviceVulkan;
     VulkanCommandBuffer** _commandBufferVKs;
-    RHITexture** _colorTextures;
+    std::vector<RHITexture*> _colorTextures;
     bool _isSuspended;
     bool _isInitialized = false;
 };
