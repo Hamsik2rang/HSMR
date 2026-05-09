@@ -21,7 +21,6 @@
 
 namespace hs
 {
-/*#include "Renderer/RenderPass/RenderPass.h"*/ class RenderPass;
 /*#include "RHI/Swapchain.h"*/ class Swapchain;
 /*#include "Platform/NativeWindow.h"*/ struct NativeWindow;
 /*#include "Renderer/ShaderLibrary.h"*/ class ShaderLibrary;
@@ -41,31 +40,21 @@ public:
 
     virtual void Render(
         Scene* scene,
-        RenderTarget* renderTarget
-    );
+        RenderTarget* renderTarget) = 0;
 
     virtual void Render(
         Scene* scene,
         RenderTarget* renderTarget,
-        const RenderOptions& options
-    );
+        const RenderOptions& options) = 0;
 
     virtual void Render(
         const RenderSceneSnapshot& snapshot,
-        RenderTarget* renderTarget
-    );
+        RenderTarget* renderTarget) = 0;
 
     virtual void Render(
         const RenderSceneSnapshot& snapshot,
         RenderTarget* renderTarget,
-        const RenderOptions& options
-    );
-
-    virtual void AddPass(RenderPass* pass)
-    {
-        _rendererPasses.push_back(pass);
-        _isPassListSorted = false;
-    }
+        const RenderOptions& options) = 0;
 
     virtual void Shutdown();
 
@@ -81,12 +70,10 @@ protected:
     RHIContext* _rhiContext;
     RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
     RenderResourceManager* _resourceManager = nullptr;
-    ShaderLibrary* _shaderLibrary = nullptr;
+    ShaderLibrary* _shaderLibrary           = nullptr;
 
-    std::vector<RenderPass*> _rendererPasses;
-    uint32 frameIndex      = 0;
-    bool _isInitialized    = false;
-    bool _isPassListSorted = true;
+    uint32 frameIndex   = 0;
+    bool _isInitialized = false;
     RenderTarget* _currentRenderTarget;
 
     RenderGraphBuilder _graphBuilder;

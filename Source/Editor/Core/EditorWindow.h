@@ -30,7 +30,7 @@ public:
     EditorWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~EditorWindow() override;
 
-    GUIContext* GetGUIContext();
+    GUIContext* GetGUIContext() override;
 
 private:
     void registerPanel(Panel* panel, bool* visibilityBinding = nullptr, Panel* parent = nullptr);

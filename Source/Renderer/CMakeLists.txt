@@ -51,10 +51,6 @@ source_group("RenderGraph\\Private" FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 
 set(RENDERER_RENDER_PASS_HEADERS
-    RenderPass/RenderPass.h
-    RenderPass/ForwardRenderPass.h
-    RenderPass/ForwardOpaquePass.h
-    RenderPass/ForwardShadowMapPass.h
     RenderPass/ForwardSkyboxPass.h
 )
 
@@ -62,10 +58,6 @@ source_group("RenderPass\\Public" FILES ${RENDERER_RENDER_PASS_HEADERS})
 list(APPEND TOTAL_FILES ${RENDERER_RENDER_PASS_HEADERS})
 
 set(RENDERER_RENDER_PASS_SOURCES
-    RenderPass/Private/RenderPass.cpp
-    RenderPass/Private/ForwardRenderPass.cpp
-    RenderPass/Private/ForwardOpaquePass.cpp
-    RenderPass/Private/ForwardShadowMapPass.cpp
     RenderPass/Private/ForwardSkyboxPass.cpp
 )
 

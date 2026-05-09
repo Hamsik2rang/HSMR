@@ -19,6 +19,7 @@
 /*#include "Engine/Application.h"*/ namespace hs { class Application; }
 namespace hs { class Renderer; }
 /*#include "RHI/RHIContext.h"*/ namespace hs { class RHIContext; }
+/*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
 
 HS_NS_BEGIN
 
@@ -32,7 +33,7 @@ public:
 
 	void ProcessEvent();
 	void NextFrame();
-    virtual void InitializeRenderTarget();
+
 	virtual void Update(float deltaTime);
 	virtual void Render();
 	virtual void Present();
@@ -49,6 +50,8 @@ public:
 	HS_FORCEINLINE Swapchain* GetSwapchain() const { return _swapchain; }
 
 	Application* GetApplication();
+
+	virtual editor::GUIContext* GetGUIContext() { return nullptr; }
 
 	void SetPreEventHandler(void* handler);
 

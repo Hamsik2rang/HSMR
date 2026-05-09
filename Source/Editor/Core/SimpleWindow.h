@@ -22,7 +22,7 @@ public:
     SimpleWindow(Application* ownerApp, const char* name, uint32 width, uint32 height, EWindowFlags flags);
     ~SimpleWindow() override;
 
-    GUIContext* GetGUIContext();
+    GUIContext* GetGUIContext() override;
 
 private:
     bool onInitialize() override;

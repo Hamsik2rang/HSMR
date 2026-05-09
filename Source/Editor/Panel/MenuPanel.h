@@ -20,7 +20,13 @@ HS_NS_EDITOR_BEGIN
 class HS_EDITOR_API MenuPanel : public Panel
 {
 public:
-    MenuPanel(Window* window) : Panel(window, "Menu") {}
+    enum class EMode
+    {
+        Embedded,    // Drawn inside a parent window that has ImGuiWindowFlags_MenuBar
+        MainMenuBar, // Drawn as the global top-screen main menu bar
+    };
+
+    MenuPanel(Window* window, EMode mode = EMode::Embedded) : Panel(window, "Menu"), _mode(mode) {}
     ~MenuPanel() override = default;
 
     bool Setup() override;
@@ -45,6 +51,7 @@ private:
     void saveSceneAs();
     void updateStartupScene(const std::string& scenePath);
 
+    EMode _mode;
     bool _sceneDirty = false;
 };
 

@@ -8,8 +8,6 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Panel/EditorPanelFrame.h"
 
-#include "Editor/Core/EditorApplication.h"
-
 #include "Scene/Scene.h"
 #include "Scene/SceneSerializer.h"
 #include "Core/SystemContext.h"
@@ -57,12 +55,25 @@ void MenuPanel::Draw()
 {
     static bool showDemo = false;
 
-    if (EditorPanelFrame::BeginPanelMenuBar())
+    const bool isMainMenuBar = (_mode == EMode::MainMenuBar);
+    const bool opened = isMainMenuBar
+                      ? ImGui::BeginMainMenuBar()
+                      : EditorPanelFrame::BeginPanelMenuBar();
+
+    if (opened)
     {
         drawFileMenu();
         drawEditMenu();
         drawWindowMenu();
-        EditorPanelFrame::EndPanelMenuBar();
+
+        if (isMainMenuBar)
+        {
+            ImGui::EndMainMenuBar();
+        }
+        else
+        {
+            EditorPanelFrame::EndPanelMenuBar();
+        }
     }
 
     if (showDemo)
@@ -108,9 +119,11 @@ void MenuPanel::drawFileMenu()
 
         if (ImGui::MenuItem("Change Theme", nullptr, false))
         {
-            auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
-            guiContext->SetColorTheme(useWhite);
-            useWhite = !useWhite;
+            if (auto* guiContext = _window->GetGUIContext())
+            {
+                guiContext->SetColorTheme(useWhite);
+                useWhite = !useWhite;
+            }
         }
 
         ImGui::Separator();
@@ -156,8 +169,7 @@ void MenuPanel::drawEditMenu()
 
 void MenuPanel::ExecuteSaveLayout()
 {
-    auto* guiContext = static_cast<EditorApplication*>(_window->GetApplication())->GetGUIContext();
-    if (guiContext)
+    if (auto* guiContext = _window->GetGUIContext())
     {
         guiContext->SaveLayout("");
     }

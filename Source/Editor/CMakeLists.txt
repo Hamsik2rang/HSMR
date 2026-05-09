@@ -64,8 +64,6 @@ set(EDITOR_GUI_HEADERS
     GUI/GUIContext.h
     GUI/ImGuiExtension.h
     GUI/MaterialSymbolsIcons.h
-    GUI/GUIRenderer.h
-    GUI/GUIRendererPass.h
 )
 
 source_group("GUI\\Public" FILES ${EDITOR_GUI_HEADERS})
@@ -74,8 +72,6 @@ list(APPEND TOTAL_FILES ${EDITOR_GUI_HEADERS})
 
 set(EDITOR_GUI_SOURCES
     GUI/GUIContext.cpp
-    GUI/GUIRenderer.cpp
-    GUI/GUIRendererPass.cpp
 )
 
 list(APPEND TOTAL_FILES ${EDITOR_GUI_SOURCES})
@@ -179,7 +175,6 @@ set(PANEL_HEADERS
     Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
     Panel/ProfilerPanel.h
-    Panel/SimpleMenuPanel.h
     Panel/SimpleInspectorPanel.h
 )
 
@@ -200,7 +195,6 @@ set(PANEL_SOURCES
     Panel/Private/SceneStatusPanel.cpp
     Panel/Private/HierarchyPanel.cpp
     Panel/Private/ProfilerPanel.cpp
-    Panel/Private/SimpleMenuPanel.cpp
     Panel/Private/SimpleInspectorPanel.cpp
 )
 

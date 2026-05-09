@@ -12,7 +12,6 @@
 #include "Renderer/ForwardRenderer.h"
 #include "Editor/Renderer/EditorRenderer.h"
 #include "Renderer/CameraUtils.h"
-#include "Renderer/RenderPass/ForwardOpaquePass.h"
 #include "Resource/ObjectManager.h"
 
 #include "Scene/Scene.h"
@@ -134,6 +133,11 @@ EditorWindow::EditorWindow(Application* ownerApp, const char* name, uint32 width
 EditorWindow::~EditorWindow()
 {}
 
+GUIContext* EditorWindow::GetGUIContext()
+{
+    return static_cast<EditorApplication*>(_ownerApp)->GetGUIContext();
+}
+
 bool EditorWindow::onInitialize()
 {
     _renderer = MakeScoped<ForwardRenderer>(_rhiContext);
@@ -150,9 +154,6 @@ bool EditorWindow::onInitialize()
     {
         guiContext->ApplyDPIScale(dpiScale);
     }
-
-    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::Opaque);
-    _renderer->AddPass(std::move(opaquePass));
 
     setupResources();
     loadInitialScene();

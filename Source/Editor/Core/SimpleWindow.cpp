@@ -9,7 +9,6 @@
 #include "RHI/CommandHandle.h"
 
 #include "Renderer/ForwardRenderer.h"
-#include "Renderer/RenderPass/ForwardOpaquePass.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -19,6 +18,7 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/SimpleApplication.h"
 #include "Editor/Core/EditorCamera.h"
+#include "Editor/Core/EditorContext.h"
 
 
 #include "Resource/ObjectManager.h"
@@ -49,9 +49,6 @@ bool SimpleWindow::onInitialize()
         guiContext->ApplyDPIScale(dpiScale);
     }
 
-    auto* opaquePass = new ForwardOpaquePass("Forward Opaque Pass", _renderer.get(), ERenderingOrder::Opaque);
-    _renderer->AddPass(std::move(opaquePass));
-
     // EditorCamera setup
     _camera = MakeScoped<EditorCamera>();
     float aspect = static_cast<float>(_nativeWindow.surfaceWidth) / static_cast<float>(_nativeWindow.surfaceHeight);
@@ -62,7 +59,7 @@ bool SimpleWindow::onInitialize()
     _inspectorPanel->Setup();
     _inspectorPanel->SetEditorCamera(_camera.get());
 
-    _menuPanel = MakeScoped<MenuPanel>(this);
+    _menuPanel = MakeScoped<MenuPanel>(this, MenuPanel::EMode::MainMenuBar);
     _menuPanel->Setup();
 
     setupDefaultScene();
@@ -148,6 +145,7 @@ void SimpleWindow::onShutdown()
         _renderer.reset();
     }
 
+    EditorContext::Get().SetActiveScene(nullptr);
     _camera.reset();
     _scene.reset();
 }
@@ -160,6 +158,7 @@ GUIContext* SimpleWindow::GetGUIContext()
 void SimpleWindow::setupDefaultScene()
 {
     _scene = MakeScoped<Scene>("Simple Scene");
+    EditorContext::Get().SetActiveScene(_scene.get());
 
     // Camera entity
     {
@@ -313,7 +312,7 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
-//    _menuPanel->Draw();
+    _menuPanel->Draw();
     _inspectorPanel->Draw();
     
     guiContext->EndRender();

@@ -12,7 +12,6 @@
 #include "Renderer/CoordinateConventionValidation.h"
 #include "RHI/Swapchain.h"
 #include "Renderer/RenderDefinition.h"
-#include "Renderer/RenderPass/RenderPass.h"
 #include "Renderer/RenderResourceManager.h"
 #include "Renderer/ShaderLibrary.h"
 
@@ -61,83 +60,9 @@ void Renderer::NextFrame(Swapchain* swapchain)
     _curCommandBuffer = swapchain->GetCommandBufferForCurrentFrame();
 }
 
-void Renderer::Render(
-    Scene* scene,
-    RenderTarget* renderTarget)
-{
-    Render(scene, renderTarget, RenderOptions{});
-}
-
-void Renderer::Render(
-    Scene* scene,
-    RenderTarget* renderTarget,
-    const RenderOptions& options)
-{
-    (void)options;
-    SceneResource sceneResource = _resourceManager->BuildSceneResource(scene, _shaderLibrary);
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnBeforeRendering(frameIndex);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->Configure(renderTarget);
-
-        pass->Execute(_curCommandBuffer, sceneResource);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnAfterRendering();
-    }
-}
-
-void Renderer::Render(
-    const RenderSceneSnapshot& snapshot,
-    RenderTarget* renderTarget)
-{
-    Render(snapshot, renderTarget, RenderOptions{});
-}
-
-void Renderer::Render(
-    const RenderSceneSnapshot& snapshot,
-    RenderTarget* renderTarget,
-    const RenderOptions& options)
-{
-    (void)options;
-    SceneResource sceneResource = _resourceManager->BuildSceneResource(snapshot);
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnBeforeRendering(frameIndex);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->Configure(renderTarget);
-
-        pass->Execute(_curCommandBuffer, sceneResource);
-    }
-
-    for (auto* pass : _rendererPasses)
-    {
-        pass->OnAfterRendering();
-    }
-}
 
 void Renderer::Shutdown()
 {
-    for (size_t i = 0; i < _rendererPasses.size(); i++)
-    {
-        if (nullptr != _rendererPasses[i])
-        {
-            delete _rendererPasses[i];
-            _rendererPasses[i] = nullptr;
-        }
-    }
-    _rendererPasses.clear();
     _curCommandBuffer = nullptr;
 
     if (_shaderLibrary)
