@@ -15,6 +15,7 @@ void ShowNativeWindowInternal(const NativeWindow& nativeWindow);
 void PollNativeEventInternal(NativeWindow& nativeWindow);
 void SetNativeWindowSizeInternal(uint16 width, uint16 height);
 void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight);
+void SetNativePreEventHandlerInternal(void* fnHandler);
 
 static std::unordered_map<const NativeWindow*, std::queue<NativeEvent>> s_eventQueueTable;
 
@@ -56,6 +57,11 @@ void SetNativeWindowSize(uint16 width, uint16 height)
 void GetNativeWindowSize(uint16& outWidth, uint16& outHeight)
 {
     GetNativeWindowSizeInternal(outWidth, outHeight);
+}
+
+void SetNativePreEventHandler(void* fnHandler)
+{
+    SetNativePreEventHandlerInternal(fnHandler);
 }
 
 bool PeekNativeEvent(NativeWindow* pWindow, NativeEvent& outEvent)

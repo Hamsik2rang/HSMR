@@ -130,11 +130,18 @@ list(APPEND TOTAL_FILES ${CORE_PROFILER_SOURCES})
 
 add_library(${TARGET_NAME} SHARED ${TOTAL_FILES})
 
+add_dependencies(${TARGET_NAME} Platform)
+
 if(APPLE)
     list(APPEND CORE_FRAMEWORKS
         "-framework Foundation"
+        "-framework CoreFoundation"
         "-framework AppKit"
         "-framework IOKit"
+        "-framework QuartzCore"
+        "-framework Metal"
+        "-framework MetalKit"
+        "-framework GameController"
     )
 
     # Add SDL3 framework support
@@ -154,14 +161,8 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
+        "-Wl,-force_load,$<TARGET_FILE:Platform>"
         ${CORE_FRAMEWORKS}
-    )
-
-    # Platform implements Core's *Internal() functions (CreateNativeWindowInternal, etc.)
-    # We defer symbol resolution to runtime to avoid Core <-> Platform circular dependency.
-    target_link_options(${TARGET_NAME}
-        PRIVATE
-        "-undefined" "dynamic_lookup"
     )
 elseif(WIN32)
     # On Windows, DLLs cannot defer symbol resolution like macOS (-undefined dynamic_lookup).

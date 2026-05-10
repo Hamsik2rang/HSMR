@@ -1,6 +1,7 @@
 set(TARGET_NAME Platform)
 
 set(TOTAL_FILES)
+set(PLATFORM_CORE_API_SOURCES)
 
 if(HSMR_USE_SDL)
     set(PLATFORM_SDL_HEADERS
@@ -11,6 +12,10 @@ if(HSMR_USE_SDL)
     list(APPEND TOTAL_FILES ${PLATFORM_SDL_HEADERS})
 
     set(PLATFORM_SDL_SOURCES
+        SDL/Private/SDLFileDialog.cpp
+        SDL/Private/SDLFileSystem.cpp
+    )
+    list(APPEND PLATFORM_CORE_API_SOURCES
         SDL/Private/SDLFileDialog.cpp
         SDL/Private/SDLFileSystem.cpp
     )
@@ -41,6 +46,7 @@ if(WIN32)
     if(NOT HSMR_USE_SDL)
         list(APPEND PLATFORM_WIN_HEADERS Win/WinFileDialog.h Win/Private/WinFileSystem.h)
         list(APPEND PLATFORM_WIN_SOURCES Win/Private/WinFileDialog.cpp Win/Private/WinFileSystem.cpp)
+        list(APPEND PLATFORM_CORE_API_SOURCES Win/Private/WinFileDialog.cpp Win/Private/WinFileSystem.cpp)
     endif()
 
     source_group("Win\\Public" FILES ${PLATFORM_WIN_HEADERS})
@@ -71,6 +77,7 @@ else() # MAC
     if(NOT HSMR_USE_SDL)
         list(APPEND PLATFORM_MAC_HEADERS Mac/MacFileDialog.h Mac/MacFileSystem.h)
         list(APPEND PLATFORM_MAC_SOURCES Mac/Private/MacFileDialog.mm Mac/Private/MacFileSystem.mm)
+        list(APPEND PLATFORM_CORE_API_SOURCES Mac/Private/MacFileDialog.mm Mac/Private/MacFileSystem.mm)
     endif()
 
     source_group("Mac\\Public" FILES ${PLATFORM_MAC_HEADERS})
@@ -117,11 +124,11 @@ add_library(${TARGET_NAME}
     ${TOTAL_FILES}
 )
 
-# On Windows, Platform is WHOLEARCHIVE'd into Core.dll, so we don't create
-# a dependency on Core here (would cause circular CMake dependency).
-# Core headers are available via the global include_directories(Source).
-if(NOT WIN32)
-    add_dependencies(${TARGET_NAME} Core)
+if(PLATFORM_CORE_API_SOURCES)
+    set_source_files_properties(${PLATFORM_CORE_API_SOURCES}
+        PROPERTIES
+        COMPILE_DEFINITIONS HS_CORE_API_EXPORT
+    )
 endif()
 
 target_include_directories(${TARGET_NAME}
@@ -157,7 +164,6 @@ if(HSMR_USE_SDL)
 
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            Core
             "-framework Foundation"
             "-framework CoreFoundation"
             "-framework QuartzCore"
@@ -173,7 +179,6 @@ else()
     if(APPLE)
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            Core
             "-framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
         )
     endif()
@@ -189,9 +194,6 @@ target_compile_definitions(${TARGET_NAME}
     $<$<CONFIG:RelWithDebInfo>:_RELWITHDEBINFO>
     HS_PLATFORM
     HS_API_EXPORT
-    # On Windows, Platform is WHOLEARCHIVE'd into Core.dll, so Platform functions
-    # that use HS_CORE_API need dllexport to be visible from Core.dll.
-    $<$<PLATFORM_ID:Windows>:HS_CORE_API_EXPORT>
 )
 
 install(TARGETS ${TARGET_NAME}

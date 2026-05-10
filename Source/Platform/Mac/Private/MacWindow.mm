@@ -819,7 +819,7 @@ void GetNativeWindowSizeInternal(uint16& outWidth, uint16& outHeight)
 #endif
 }
 
-void SetNativePreEventHandler(void* fnHandler)
+void SetNativePreEventHandlerInternal(void* fnHandler)
 {
 #ifdef __SDL__
     s_preEventHandler = reinterpret_cast<bool (*)(SDL_Event*)>(fnHandler);

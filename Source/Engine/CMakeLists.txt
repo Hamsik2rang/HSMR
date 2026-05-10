@@ -39,18 +39,15 @@ if(APPLE)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        "-Wl, -all_load" Core Platform RHI ShaderSystem Resource Renderer Scene
+        Core RHI ShaderSystem Resource Renderer Scene
         ${OSX_FRAMEWORK}
     )
 else()
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Core Platform RHI ShaderSystem Resource Renderer Scene
+        Core RHI ShaderSystem Resource Renderer Scene
     )
 endif()
-
-# On Windows, Platform is already WHOLEARCHIVE'd into Core.dll.
-# No need to duplicate it here.
 
 target_include_directories(${TARGET_NAME}
     PRIVATE

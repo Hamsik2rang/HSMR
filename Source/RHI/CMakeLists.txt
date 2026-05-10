@@ -97,27 +97,28 @@ if(APPLE)
         "-framework QuartzCore"
     )
 
-    # Platform (STATIC) links SDL3 but its -F search path doesn't propagate
-    if(HSMR_USE_SDL)
-        target_link_options(${TARGET_NAME}
-            PRIVATE
-            -F${HS_DEPS_LIB_DIR}
-        )
-    endif()
-
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Platform Core
+        Core
         ${RHI_FRAMEWORKS}
     )
+
+    if(HSMR_USE_SDL)
+        target_link_options(${TARGET_NAME} PRIVATE -F${HS_DEPS_LIB_DIR})
+        target_link_libraries(${TARGET_NAME} PRIVATE "-framework SDL3")
+    endif()
 else()
     set(VULKAN ${HS_DEPS_LIB_DIR}/vulkan-1.lib)
     set(SPIRV ${HS_DEPS_LIB_DIR}/SPIRV.lib)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-        Platform Core
+        Core
         ${VULKAN} ${SPIRV})
+
+    if(HSMR_USE_SDL)
+        target_link_libraries(${TARGET_NAME} PRIVATE ${HS_SDL3_LIB})
+    endif()
 endif()
 
 target_include_directories(${TARGET_NAME}
@@ -125,7 +126,7 @@ target_include_directories(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_dependencies(${TARGET_NAME} Core Platform)
+add_dependencies(${TARGET_NAME} Core)
 
 target_compile_definitions(${TARGET_NAME}
     PRIVATE
