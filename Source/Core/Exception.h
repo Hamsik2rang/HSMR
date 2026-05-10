@@ -15,12 +15,12 @@ class HS_CORE_API Exception
 {
 public:
 	Exception(const char* file, unsigned int line, const char* fmt, ...);
-	~Exception();
+	~Exception() = default;
 
 	const char* const what() const;
 
 private:
-	char* _message;
+	std::string _message;
 
 };
 
