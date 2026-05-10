@@ -261,6 +261,12 @@ void VulkanContext::DestroyGraphicsPipeline(RHIGraphicsPipeline* pipeline)
         pipelineVK->handle = VK_NULL_HANDLE;
     }
 
+    if (pipelineVK->layout != VK_NULL_HANDLE)
+    {
+        vkDestroyPipelineLayout(_device, pipelineVK->layout, nullptr);
+        pipelineVK->layout = VK_NULL_HANDLE;
+    }
+
     delete pipelineVK;
 }
 
