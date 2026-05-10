@@ -27,7 +27,7 @@ static const std::vector<const char*> s_validationLayers =
 #ifdef _DEBUG
 static constexpr bool s_enableValidationLayers = true;
 #else
-static constexpr bool enableValidationLayers = false;
+static constexpr bool s_enableValidationLayers = false;
 #endif
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL hs_rhi_vk_report_debug_callback(
@@ -1572,7 +1572,10 @@ bool VulkanContext::createInstance()
 
     VK_CHECK_RESULT(vkCreateInstance(&instanceCreateInfo, nullptr, &_instanceVk));
 
-    VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instanceVk, &debugCreateInfo, &_debugMessenger, nullptr));
+    if (useValidationLayers)
+    {
+        VK_CHECK_RESULT(createDebugUtilsMessengerEXT(_instanceVk, &debugCreateInfo, &_debugMessenger, nullptr));
+    }
 
     return true;
 }
