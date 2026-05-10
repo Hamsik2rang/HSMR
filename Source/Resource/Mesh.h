@@ -54,11 +54,19 @@ public:
     HS_FORCEINLINE void SetPosition(const std::vector<float>& position) { _position = position; }
     HS_FORCEINLINE const std::vector<float>& GetPosition() const { return _position; }
 
-    HS_FORCEINLINE void SetTexCoord(std::vector<float>&& texcoord, int index) { _texcoord[index] = std::move(texcoord); }
-    HS_FORCEINLINE void SetTexCoord(const std::vector<float>& texcoord, int index) { _texcoord[index] = texcoord; }
+    HS_FORCEINLINE void SetTexCoord(std::vector<float>&& texcoord, int index)
+    {
+        HS_ASSERT(index >= 0 && index < 8, "out of range");
+        _texcoord[index] = std::move(texcoord);
+    }
+    HS_FORCEINLINE void SetTexCoord(const std::vector<float>& texcoord, int index)
+    {
+        HS_ASSERT(index >= 0 && index < 8, "out of range");
+        _texcoord[index] = texcoord;
+    }
     HS_FORCEINLINE const std::vector<float>& GetTexCoord(int index) const
     {
-        HS_ASSERT(0 >= index && index <= 8, "out of range");
+        HS_ASSERT(index >= 0 && index < 8, "out of range");
         return _texcoord[index];
     }
 
