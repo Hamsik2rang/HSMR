@@ -61,6 +61,9 @@ bool SimpleWindow::onInitialize()
     _menuPanel = MakeScoped<MenuPanel>(this, MenuPanel::EMode::MainMenuBar);
     _menuPanel->Setup();
 
+    _inspectorPanel = MakeScoped<SimpleInspectorPanel>(this);
+    _inspectorPanel->Setup();
+
     setupDefaultScene();
 
     // ImGui event handler
@@ -145,6 +148,12 @@ void SimpleWindow::onShutdown()
         _renderer.reset();
     }
 
+    if (_inspectorPanel)
+    {
+        _inspectorPanel->Cleanup();
+        _inspectorPanel.reset();
+    }
+
     EditorContext::Get().SetActiveScene(nullptr);
     _camera.reset();
     _scene.reset();
@@ -161,23 +170,23 @@ void SimpleWindow::setupDefaultScene()
     EditorContext::Get().SetActiveScene(_scene.get());
 
     // Camera entity
+    Entity cameraEntity;
     {
-        Entity cameraEntity = _scene->CreateEntity("Camera");
+        cameraEntity = _scene->CreateEntity("Camera");
         auto& camera = cameraEntity.AddComponent<CameraComponent>();
         camera.isPrimary = true;
     }
 
-    // Main light (sun-style directional). Direction points roughly down with a
-    // bit of slant so light reaches into Sponza's open atrium. Intensity uses
-    // the PBR convention range (sun-like LDR scenes are typically 3-10 since
-    // there's no tone mapping yet). The handle is kept so the overlay GUI can
-    // tweak it live.
+    // Main light (sun-style directional). Rotation is angle-based; the
+    // renderer derives the light direction from transform.forward as long as
+    // LightComponent.direction is left at the zero default. -60° pitch +
+    // 30° yaw points the light roughly down with a slant into the atrium.
     {
         _directionalLightEntity = _scene->CreateEntity("Directional Light");
-        auto& light = _directionalLightEntity.AddComponent<LightComponent>();
+        auto& light     = _directionalLightEntity.AddComponent<LightComponent>();
         auto& transform = _directionalLightEntity.GetComponent<TransformComponent>();
         transform.SetPosition(glm::vec3(1.0f, 5.0f, 1.0f));
-        light.direction = glm::normalize(glm::vec3(0.3f, -1.0f, 0.4f));
+        transform.SetEulerAngles(glm::vec3(-60.0f, 30.0f, 0.0f));
         light.intensity = 5.0f;
     }
 
@@ -221,6 +230,21 @@ void SimpleWindow::setupDefaultScene()
     }
 
     _scene->Update(0.0f);
+
+    // Wire the inspector now that the entities exist. The light is the default
+    // gizmo target so the user can manipulate it visually.
+    if (_inspectorPanel)
+    {
+        if (cameraEntity.IsValid())
+        {
+            _inspectorPanel->SetMainCamera(cameraEntity);
+        }
+        if (_directionalLightEntity.IsValid())
+        {
+            _inspectorPanel->SetMainLight(_directionalLightEntity);
+            _inspectorPanel->SetTarget(_directionalLightEntity);
+        }
+    }
 }
 
 void SimpleWindow::syncEditorCameraToScene()
@@ -327,57 +351,13 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
-    drawLightControlGUI();
+    if (_inspectorPanel)
+    {
+        _inspectorPanel->Draw();
+    }
     _menuPanel->Draw();
 
     guiContext->EndRender();
-}
-
-void SimpleWindow::drawLightControlGUI()
-{
-    if (!_directionalLightEntity.IsValid()) return;
-    if (!_directionalLightEntity.HasComponent<LightComponent>()) return;
-
-    auto& light = _directionalLightEntity.GetComponent<LightComponent>();
-
-    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-    ImVec2 viewportPos = mainViewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 200), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowBgAlpha(0.6f);
-    ImGui::Begin("Directional Light", nullptr,
-                 ImGuiWindowFlags_AlwaysAutoResize |
-                 ImGuiWindowFlags_NoSavedSettings |
-                 ImGuiWindowFlags_NoFocusOnAppearing);
-
-    // Direction sliders. We renormalize on edit so it always represents a
-    // unit vector; keep a working copy because pure-zero direction would
-    // get treated as "unset" by the renderer.
-    glm::vec3 dir = light.direction;
-    bool dirChanged = false;
-    dirChanged |= ImGui::SliderFloat("dir.x", &dir.x, -1.0f, 1.0f);
-    dirChanged |= ImGui::SliderFloat("dir.y", &dir.y, -1.0f, 1.0f);
-    dirChanged |= ImGui::SliderFloat("dir.z", &dir.z, -1.0f, 1.0f);
-    if (dirChanged)
-    {
-        float len = glm::length(dir);
-        light.direction = (len > 1e-4f) ? (dir / len) : glm::vec3(0.0f, -1.0f, 0.0f);
-    }
-    ImGui::Text("normalized: (%.2f, %.2f, %.2f)", light.direction.x, light.direction.y, light.direction.z);
-
-    ImGui::Separator();
-    ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 20.0f);
-    ImGui::ColorEdit3("color", &light.color.x);
-    ImGui::Checkbox("enabled", &light.isEnabled);
-
-    if (ImGui::Button("Reset (sun-ish)"))
-    {
-        light.direction = glm::normalize(glm::vec3(0.3f, -1.0f, 0.4f));
-        light.intensity = 5.0f;
-        light.color     = glm::vec3(1.0f);
-        light.isEnabled = true;
-    }
-
-    ImGui::End();
 }
 
 void SimpleWindow::drawHelperOverlayGUI()
