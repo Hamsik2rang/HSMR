@@ -12,6 +12,7 @@
 #include "RHI/Swapchain.h"
 
 #include "RHI/Metal/MetalUtility.h"
+#include "RHI/ResourceHandle.h"
 
 #import <MetalKit/MetalKit.h>
 
@@ -39,6 +40,11 @@ public:
         return _commandBuffers[index];
     }
     HS_FORCEINLINE RHITexture* GetCurrentColorTexture() const override { return _colorTextures[_frameIndex]; }
+    HS_FORCEINLINE EPixelFormat GetColorFormat() const override
+    {
+        HS_ASSERT(_colorTextures, "Swapchain Texture isn't initialized yet.");
+        return _colorTextures[0]->info.format;
+    }
 
 private:
     uint8 _frameIndex;
