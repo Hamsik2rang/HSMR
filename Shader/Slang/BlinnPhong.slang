@@ -60,12 +60,12 @@ FSInput VertexMain(VSInput input)
 float4 FragmentMain(FSInput input) : SV_Target
 {
     float3 N = normalize(input.normalWS);
-    // lightUBO.direction is authored as the direction light travels in world space.
-    float3 L = normalize(-lightUBO.direction.xyz);
-    float3 V = normalize(perView.cameraPos.xyz - input.positionWS);
+    // lightUBO.directionType.xyz is authored as the direction light travels.
+    float3 L = normalize(-lightUBO.directionType.xyz);
+    float3 V = normalize(perView.cameraPositionTime.xyz - input.positionWS);
     float3 H = normalize(L + V);
 
-    float3 lightColor  = float3(1.0, 0.98, 0.95);
+    float3 lightColor  = lightUBO.colorIntensity.rgb * lightUBO.colorIntensity.w;
 
     float ambient  = saturate(materialParams.ambientColor.r);
     float diffuse  = max(dot(N, L), 0.0);

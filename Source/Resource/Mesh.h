@@ -105,6 +105,21 @@ public:
     void CalculateNormal();
     void CalculateTangent();
 
+    // Drop CPU-side vertex/index arrays after the GPU buffers are created.
+    // Keeps name, materialIndex, bound and submesh links intact.
+    void ReleaseCpuData()
+    {
+        std::vector<float>().swap(_position);
+        for (int i = 0; i < 8; ++i) std::vector<float>().swap(_texcoord[i]);
+        std::vector<float>().swap(_normal);
+        std::vector<float>().swap(_color);
+        std::vector<float>().swap(_tangent);
+        std::vector<float>().swap(_bitangent);
+        std::vector<int>().swap(_bondIDs);
+        std::vector<float>().swap(_boneWeights);
+        std::vector<uint32>().swap(_indices);
+    }
+
 private:
     std::string _nameStorage;
     std::string _sourceAssetPath;

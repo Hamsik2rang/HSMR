@@ -46,14 +46,37 @@ Image* getFallbackWhiteImage()
     return const_cast<Image*>(ObjectManager::GetFallbackImage2DWhite());
 }
 
+// Returns a 1x1 image whose value matches the PBR-correct default for the
+// given material slot when the material has no real texture bound:
+//   baseColor / roughness / AO → white
+//   metallic / emission         → black
+//   normal                       → (0.5, 0.5, 1.0) tangent-space "no perturb"
+Image* getFallbackImageForType(EMaterialTextureType type)
+{
+    switch (type)
+    {
+    case EMaterialTextureType::Normal:
+        return const_cast<Image*>(ObjectManager::GetFallbackImage2DNormalUp());
+    case EMaterialTextureType::Metallic:
+    case EMaterialTextureType::Emission:
+        return const_cast<Image*>(ObjectManager::GetFallbackImage2DBlack());
+    case EMaterialTextureType::Diffuse:
+    case EMaterialTextureType::Roughness:
+    case EMaterialTextureType::AmbientOcclusion:
+    case EMaterialTextureType::Specular:
+    case EMaterialTextureType::Ambient:
+    default:
+        return const_cast<Image*>(ObjectManager::GetFallbackImage2DWhite());
+    }
+}
+
 LightUBO createDefaultLight()
 {
     LightUBO light{};
-    light.position  = glm::vec4(0.0f, 10.0f, 0.0f, 0.0f);
-    light.color     = glm::vec3(1.0f);
-    light.intensity = 1.0f;
-    light.direction = glm::vec3(0.0f, -1.0f, 0.0f);
-    light.type      = static_cast<int>(ELightType::Directional);
+    light.position       = glm::vec4(0.0f, 10.0f, 0.0f, 0.0f);
+    light.colorIntensity = glm::vec4(1.0f, 1.0f, 1.0f, /*intensity=*/ 1.0f);
+    light.directionType  = glm::vec4(0.0f, -1.0f, 0.0f,
+                                      static_cast<float>(ELightType::Directional));
     return light;
 }
 
@@ -298,12 +321,14 @@ SceneResource RenderResourceManager::BuildSceneResource(
     auto lightView = registry.view<TransformComponent, LightComponent>();
     for (auto [entity, transform, light] : lightView.each())
     {
+        const glm::vec3 dir = (glm::length(light.direction) > 1e-4f)
+            ? glm::normalize(light.direction)
+            : glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
+
         LightUBO lightUBO{};
-        lightUBO.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
-        lightUBO.color     = light.color;
-        lightUBO.intensity = light.intensity;
-        lightUBO.direction = glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
-        lightUBO.type      = static_cast<int>(light.type);
+        lightUBO.position       = glm::vec4(transform.GetWorldPosition(), 0.0f);
+        lightUBO.colorIntensity = glm::vec4(light.color, light.intensity);
+        lightUBO.directionType  = glm::vec4(dir, static_cast<float>(light.type));
 
         LightResource* lightRes = GetOrCreateLightResource(static_cast<uint64>(entt::to_integral(entity)), lightUBO);
 
@@ -332,11 +357,13 @@ SceneResource RenderResourceManager::BuildSceneResource(
         Material* mat = meshRenderer.GetMaterial(0);
         if (!mesh || !mat) continue;
 
-        // Assign default shader if needed
+        // Assign default shader if needed (honor hint set by importers, e.g. GLTF→PBR).
         Shader* shader = mat->GetShader();
         if ((!shader || !shader->IsCompiledEx()) && shaderLibrary)
         {
-            Shader* defaultShader = shaderLibrary->GetOrCompile("BlinnPhong");
+            const std::string& hint = mat->GetShaderNameHint();
+            const char* shaderName  = hint.empty() ? "BlinnPhong" : hint.c_str();
+            Shader* defaultShader   = shaderLibrary->GetOrCompile(shaderName);
             if (defaultShader)
             {
                 mat->SetShader(defaultShader);
@@ -419,13 +446,15 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
     auto lightView = registry.view<TransformComponent, LightComponent>();
     for (auto [entity, transform, light] : lightView.each())
     {
+        const glm::vec3 dir = (glm::length(light.direction) > 1e-4f)
+            ? glm::normalize(light.direction)
+            : glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
+
         RenderLightSnapshot lightSnapshot{};
-        lightSnapshot.lightId = static_cast<uint64>(entt::to_integral(entity));
-        lightSnapshot.light.position  = glm::vec4(transform.GetWorldPosition(), 0.0f);
-        lightSnapshot.light.color     = light.color;
-        lightSnapshot.light.intensity = light.intensity;
-        lightSnapshot.light.direction = glm::normalize(glm::mat3(transform.worldMatrix) * CoordinateConvention::LegacyObjectForward);
-        lightSnapshot.light.type      = static_cast<int>(light.type);
+        lightSnapshot.lightId               = static_cast<uint64>(entt::to_integral(entity));
+        lightSnapshot.light.position        = glm::vec4(transform.GetWorldPosition(), 0.0f);
+        lightSnapshot.light.colorIntensity  = glm::vec4(light.color, light.intensity);
+        lightSnapshot.light.directionType   = glm::vec4(dir, static_cast<float>(light.type));
         snapshot.lights.push_back(lightSnapshot);
 
         if (isEntityActive(registry, entity) && light.isEnabled)
@@ -463,7 +492,9 @@ RenderSceneSnapshot RenderResourceManager::BuildRenderSceneSnapshot(Scene* scene
         Shader* shader = mat->GetShader();
         if ((!shader || !shader->IsCompiledEx()) && shaderLibrary)
         {
-            Shader* defaultShader = shaderLibrary->GetOrCompile("BlinnPhong");
+            const std::string& hint = mat->GetShaderNameHint();
+            const char* shaderName  = hint.empty() ? "BlinnPhong" : hint.c_str();
+            Shader* defaultShader   = shaderLibrary->GetOrCompile(shaderName);
             if (defaultShader)
             {
                 mat->SetShader(defaultShader);
@@ -822,6 +853,10 @@ MeshResource* RenderResourceManager::GetOrCreateMeshResources(Mesh* mesh, const 
     resources.indexCount = static_cast<uint32>(indices.size());
     resources.isValid    = true;
 
+    // GPU buffers now own the data — drop the CPU copies to halve memory use.
+    // Bounds/material index/name remain on the Mesh.
+    mesh->ReleaseCpuData();
+
     _meshResources[mesh] = std::move(resources);
     return &_meshResources[mesh];
 }
@@ -861,8 +896,11 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
     uint32 height  = image->GetHeight();
     uint8 channels = image->GetChannel();
 
-    // Determine pixel format
-    EPixelFormat format = EPixelFormat::R8G8B8A8Unorm;
+    // Determine pixel format. Color textures (baseColor, emissive) are flagged
+    // sRGB by Material::SetTexture so the sampler does sRGB→linear for free;
+    // linear-data textures (normal, metallic, roughness, AO) stay UNORM.
+    EPixelFormat format = image->IsSrgb() ? EPixelFormat::R8G8B8A8Srgb
+                                          : EPixelFormat::R8G8B8A8Unorm;
     if (channels == 1)
         format = EPixelFormat::R8Unorm;
     else if (channels == 2)
@@ -940,6 +978,10 @@ ImageResource RenderResourceManager::createImageResource(Image* image)
     resource.height  = height;
     resource.format  = format;
     resource.isValid = true;
+
+    // GPU texture is up; drop the CPU pixel buffer. The Image object stays
+    // alive (Material owns it) but only metadata + sRGB flag remain.
+    image->ReleaseRawData();
 
     return resource;
 }
@@ -1131,7 +1173,7 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         const bool usingFallback = (image == nullptr);
         if (!image)
         {
-            image = getFallbackWhiteImage();
+            image = getFallbackImageForType(texType);
         }
 
         if (!image)

@@ -9,6 +9,8 @@
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/SimpleWindow.h"
 
+#include "ThirdParty/ImGui/imgui.h"
+
 #if defined(__APPLE__)
 #include "Platform/Mac/AutoReleasePool.h"
 #endif
@@ -21,6 +23,15 @@ SimpleApplication::SimpleApplication(const char* appName) noexcept
     , _deltaTime(0.0f)
 {
     _guiContext = new GUIContext();
+
+    // SimpleWindow draws the scene mesh directly into the swapchain backbuffer while
+    // ImGui (gizmo, panels) composites on top via Load action. With multi-viewport
+    // enabled, ImGui routes the main viewport through its own platform-window pipeline
+    // (UpdatePlatformWindows / RenderPlatformWindowsDefault) which can desync ImGui draws
+    // from the direct mesh draws by one frame. The Simple path doesn't need draggable
+    // panels outside the main OS window, so disable multi-viewport here.
+    ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
+
     ObjectManager::Initialize();
 }
 

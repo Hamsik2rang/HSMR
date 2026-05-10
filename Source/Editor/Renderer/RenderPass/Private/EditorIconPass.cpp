@@ -46,7 +46,7 @@ float computeWorldIconSize(const RenderViewSnapshot& viewSnapshot, const glm::ve
 {
     const glm::mat4& viewMatrix = viewSnapshot.perView.viewMatrix;
     const glm::mat4& projectionMatrix = viewSnapshot.perView.projectionMatrix;
-    const glm::vec2 resolution = viewSnapshot.perView.resolution;
+    const glm::vec2 resolution = glm::vec2(viewSnapshot.perView.resolution);
 
     const float projYY = projectionMatrix[1][1];
     const bool isPerspective = glm::abs(projectionMatrix[3][3]) < s_perspectiveProjectionSentinel;
@@ -523,7 +523,7 @@ void EditorIconPass::addCameraIcon(const DebugCameraSnapshot& camera, const Rend
         viewSnapshot,
         EIconType::Camera,
         s_cameraIconTint,
-        computeDistanceFade(viewSnapshot.perView.cameraPosition, glm::vec3(camera.worldMatrix[3])));
+        computeDistanceFade(glm::vec3(viewSnapshot.perView.cameraPositionTime), glm::vec3(camera.worldMatrix[3])));
 }
 
 void EditorIconPass::addLightIcon(const DebugLightSnapshot& light, const RenderViewSnapshot& viewSnapshot)
@@ -533,7 +533,7 @@ void EditorIconPass::addLightIcon(const DebugLightSnapshot& light, const RenderV
         viewSnapshot,
         EIconType::Light,
         s_lightIconTint,
-        computeDistanceFade(viewSnapshot.perView.cameraPosition, glm::vec3(light.worldMatrix[3])));
+        computeDistanceFade(glm::vec3(viewSnapshot.perView.cameraPositionTime), glm::vec3(light.worldMatrix[3])));
 }
 
 void EditorIconPass::addIconInstance(const glm::vec3& worldPosition,

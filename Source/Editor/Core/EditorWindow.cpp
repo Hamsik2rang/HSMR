@@ -66,8 +66,8 @@ RenderViewSnapshot buildEditorViewSnapshot(EditorCamera* editorCamera, uint32 wi
     perView.inverseViewMatrix = editorCamera->GetInverseViewMatrix();
     perView.inverseProjectionMatrix = editorCamera->GetInverseProjectionMatrix();
     perView.inverseViewProjectionMatrix = editorCamera->GetInverseViewProjectionMatrix();
-    perView.cameraPosition = editorCamera->GetPosition();
-    perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
+    perView.cameraPositionTime = glm::vec4(editorCamera->GetPosition(), 0.0f);
+    perView.resolution = glm::vec4(static_cast<float>(width), static_cast<float>(height), 0.0f, 0.0f);
 
     viewSnapshot.perView = perView;
     return viewSnapshot;
@@ -90,7 +90,7 @@ RenderViewSnapshot buildSceneCameraViewSnapshot(Entity cameraEntity, bool vulkan
 
     viewSnapshot.viewId = static_cast<uint64>(entt::to_integral(cameraEntity.GetHandle()));
     viewSnapshot.perView = CameraUtils::BuildPerViewData(transform, camera, vulkanYFlip);
-    viewSnapshot.perView.resolution = glm::vec2(static_cast<float>(width), static_cast<float>(height));
+    viewSnapshot.perView.resolution = glm::vec4(static_cast<float>(width), static_cast<float>(height), 0.0f, 0.0f);
     return viewSnapshot;
 }
 

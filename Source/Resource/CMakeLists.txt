@@ -21,6 +21,7 @@ set(RESOURCE_HEADERS
     ResourceDefinition.h
     GeometryDefinition.h
     Light.h
+    AssetCache.h
 )
 
 source_group("Public" FILES ${RESOURCE_HEADERS})
@@ -37,6 +38,7 @@ set(RESOURCE_SOURCES
     Private/ResourceDefinition.cpp
     Private/GeometryDefinition.cpp
     Private/Light.cpp
+    Private/AssetCache.cpp
 )
 
 source_group("Private" FILES ${RESOURCE_SOURCES})

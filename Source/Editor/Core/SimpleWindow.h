@@ -6,11 +6,16 @@
 #include "Engine/Window.h"
 
 #include "Editor/Panel/MenuPanel.h"
-#include "Editor/Panel/SimpleInspectorPanel.h"
 
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
 /*#include "Scene/Scene.h"*/ namespace hs { class Scene; }
+/*#include "Resource/Mesh.h"*/ namespace hs { class Mesh; }
+/*#include "Resource/Material.h"*/ namespace hs { class Material; }
 /*#include "Editor/GUI/GUIContext.h"*/ namespace hs { namespace editor { class GUIContext; } }
+
+#include "Scene/Entity.h"
+
+#include <vector>
 
 HS_NS_EDITOR_BEGIN
 
@@ -39,6 +44,7 @@ private:
     void processCameraInput(float deltaTime);
     
     void drawHelperOverlayGUI();
+    void drawLightControlGUI();
     
     Scoped<Renderer> _renderer;
     Scoped<Scene> _scene;
@@ -55,7 +61,14 @@ private:
     glm::vec3 _moveDir = glm::vec3(0.0f);
     
     Scoped<MenuPanel> _menuPanel;
-    Scoped<SimpleInspectorPanel> _inspectorPanel;
+
+    // Owns the meshes/materials loaded via the multi-submesh GLTF path
+    // (e.g. Sponza). The single-mesh ObjectManager cache covers DamagedHelmet,
+    // but multi-submesh models are not cached there yet.
+    std::vector<Scoped<Mesh>> _ownedMeshes;
+    std::vector<Scoped<Material>> _ownedMaterials;
+
+    Entity _directionalLightEntity;
 };
 
 HS_NS_EDITOR_END

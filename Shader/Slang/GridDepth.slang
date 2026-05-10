@@ -100,13 +100,13 @@ FSInput VertexMain(uint vertexIndex : SV_VertexID)
 
     int index = indices[vertexIndex];
     float3 positionWS = worldPositions[index] * g_GridSize;
-    positionWS.x += perView.cameraPos.x;
-    positionWS.z += perView.cameraPos.z;
+    positionWS.x += perView.cameraPositionTime.x;
+    positionWS.z += perView.cameraPositionTime.z;
     float4 positionCS = mul(perView.viewProjectionMatrix, float4(positionWS, 1.0f));
-    
+
     FSInput output;
     output.uv = positionWS.xz;
-    output.camPos = perView.cameraPos.xz;
+    output.camPos = perView.cameraPositionTime.xz;
     output.positionCS = positionCS;
     
     return output;

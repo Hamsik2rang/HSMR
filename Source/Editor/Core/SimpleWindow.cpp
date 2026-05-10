@@ -20,8 +20,9 @@
 #include "Editor/Core/EditorCamera.h"
 #include "Editor/Core/EditorContext.h"
 
-
 #include "Resource/ObjectManager.h"
+#include "Resource/Mesh.h"
+#include "Resource/Material.h"
 
 HS_NS_EDITOR_BEGIN
 
@@ -49,15 +50,13 @@ bool SimpleWindow::onInitialize()
         guiContext->ApplyDPIScale(dpiScale);
     }
 
-    // EditorCamera setup
     _camera = MakeScoped<EditorCamera>();
     float aspect = static_cast<float>(_nativeWindow.surfaceWidth) / static_cast<float>(_nativeWindow.surfaceHeight);
     _camera->SetAspectRatio(aspect);
-
-    // NOTE: setupDefaultScene()에서 inspectorPanel을 사용하기 때문에 Initialize순서가 바뀌면 안된다.
-    _inspectorPanel = MakeScoped<SimpleInspectorPanel>(this);
-    _inspectorPanel->Setup();
-    _inspectorPanel->SetEditorCamera(_camera.get());
+    // Sponza fits inside ~50 units; tighter bounds give us ~6x more depth
+    // precision than the previous 0.5/300 (which still showed z-fighting).
+    _camera->SetNearZ(0.1f);
+    _camera->SetFarZ(1000.0f);
 
     _menuPanel = MakeScoped<MenuPanel>(this, MenuPanel::EMode::MainMenuBar);
     _menuPanel->Setup();
@@ -116,7 +115,8 @@ void SimpleWindow::onRender()
     uint8 imageIndex = _swapchain->GetCurrentImageIndex();
     RenderTarget* curRT = &_swapchainRenderTargets[imageIndex];
 
-    // RT is swapchain-backed: scene draws directly into the swapchain backbuffer (Clear).
+    // Scene primary camera is kept in sync with EditorCamera by syncEditorCameraToScene()
+    // in onUpdate, so the standard scene render path produces the correct view.
     _renderer->Render(_scene.get(), curRT);
 
     // ImGui composites on top of the swapchain via Load action.
@@ -165,44 +165,59 @@ void SimpleWindow::setupDefaultScene()
         Entity cameraEntity = _scene->CreateEntity("Camera");
         auto& camera = cameraEntity.AddComponent<CameraComponent>();
         camera.isPrimary = true;
-        
-        _inspectorPanel->SetMainCamera(cameraEntity);
     }
-    
-    // Main light(Directional) entity
+
+    // Main light (sun-style directional). Direction points roughly down with a
+    // bit of slant so light reaches into Sponza's open atrium. Intensity uses
+    // the PBR convention range (sun-like LDR scenes are typically 3-10 since
+    // there's no tone mapping yet). The handle is kept so the overlay GUI can
+    // tweak it live.
     {
-        Entity lightEntity = _scene->CreateEntity("Directional Light");
-        auto& light = lightEntity.AddComponent<LightComponent>();
-        auto& transform = lightEntity.GetComponent<TransformComponent>();
+        _directionalLightEntity = _scene->CreateEntity("Directional Light");
+        auto& light = _directionalLightEntity.AddComponent<LightComponent>();
+        auto& transform = _directionalLightEntity.GetComponent<TransformComponent>();
         transform.SetPosition(glm::vec3(1.0f, 5.0f, 1.0f));
-        
-        _inspectorPanel->SetMainLight(lightEntity);
+        light.direction = glm::normalize(glm::vec3(0.3f, -1.0f, 0.4f));
+        light.intensity = 5.0f;
     }
-    
-    // Load DamagedHelmet model
+
+    // Load Sponza (multi-submesh GLTF). Meshes/materials are owned by SimpleWindow
+    // because ObjectManager only caches single-(mesh,material) Models today.
     {
         std::string gltfPath = std::string("GLTF") + HS_DIR_SEPERATOR
-                             + "DamagedHelmet" + HS_DIR_SEPERATOR
-                             + "DamagedHelmet.gltf";
-        auto [mesh, material] = ObjectManager::LoadModel(gltfPath);
+                             + "Sponza" + HS_DIR_SEPERATOR
+                             + "Sponza.gltf";
 
-        // Damaged Helmet entity
-        Entity entity = _scene->CreateEntity("Damaged Helmet");
-        if (mesh)
+        if (ObjectManager::LoadModel(gltfPath, _ownedMeshes, _ownedMaterials))
         {
-            auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
-            meshRenderer.mesh = mesh;
-            if (material)
+            for (size_t i = 0; i < _ownedMeshes.size(); ++i)
             {
-                meshRenderer.materials.push_back(material);
-            }
+                Mesh* mesh = _ownedMeshes[i].get();
+                if (!mesh) continue;
 
-            // Set local bounds from mesh
-            const auto& bound = mesh->GetBound();
-            meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+                int32 matIdx    = mesh->GetMaterialIndex();
+                Material* mat   = (matIdx >= 0 && static_cast<size_t>(matIdx) < _ownedMaterials.size())
+                                    ? _ownedMaterials[matIdx].get()
+                                    : nullptr;
+
+                std::string entityName = "Sponza_" + std::to_string(i);
+                Entity entity = _scene->CreateEntity(entityName.c_str());
+
+                auto& meshRenderer = entity.AddComponent<MeshRendererComponent>();
+                meshRenderer.mesh = mesh;
+                if (mat)
+                {
+                    meshRenderer.materials.push_back(mat);
+                }
+
+                const auto& bound = mesh->GetBound();
+                meshRenderer.localBounds = AABB(glm::vec3(bound.min), glm::vec3(bound.max));
+            }
         }
-        
-        _inspectorPanel->SetTarget(entity);
+        else
+        {
+            HS_LOG(error, "Failed to load Sponza GLTF: %s", gltfPath.c_str());
+        }
     }
 
     _scene->Update(0.0f);
@@ -312,10 +327,57 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
+    drawLightControlGUI();
     _menuPanel->Draw();
-    _inspectorPanel->Draw();
-    
+
     guiContext->EndRender();
+}
+
+void SimpleWindow::drawLightControlGUI()
+{
+    if (!_directionalLightEntity.IsValid()) return;
+    if (!_directionalLightEntity.HasComponent<LightComponent>()) return;
+
+    auto& light = _directionalLightEntity.GetComponent<LightComponent>();
+
+    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+    ImVec2 viewportPos = mainViewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 200), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.6f);
+    ImGui::Begin("Directional Light", nullptr,
+                 ImGuiWindowFlags_AlwaysAutoResize |
+                 ImGuiWindowFlags_NoSavedSettings |
+                 ImGuiWindowFlags_NoFocusOnAppearing);
+
+    // Direction sliders. We renormalize on edit so it always represents a
+    // unit vector; keep a working copy because pure-zero direction would
+    // get treated as "unset" by the renderer.
+    glm::vec3 dir = light.direction;
+    bool dirChanged = false;
+    dirChanged |= ImGui::SliderFloat("dir.x", &dir.x, -1.0f, 1.0f);
+    dirChanged |= ImGui::SliderFloat("dir.y", &dir.y, -1.0f, 1.0f);
+    dirChanged |= ImGui::SliderFloat("dir.z", &dir.z, -1.0f, 1.0f);
+    if (dirChanged)
+    {
+        float len = glm::length(dir);
+        light.direction = (len > 1e-4f) ? (dir / len) : glm::vec3(0.0f, -1.0f, 0.0f);
+    }
+    ImGui::Text("normalized: (%.2f, %.2f, %.2f)", light.direction.x, light.direction.y, light.direction.z);
+
+    ImGui::Separator();
+    ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 20.0f);
+    ImGui::ColorEdit3("color", &light.color.x);
+    ImGui::Checkbox("enabled", &light.isEnabled);
+
+    if (ImGui::Button("Reset (sun-ish)"))
+    {
+        light.direction = glm::normalize(glm::vec3(0.3f, -1.0f, 0.4f));
+        light.intensity = 5.0f;
+        light.color     = glm::vec3(1.0f);
+        light.isEnabled = true;
+    }
+
+    ImGui::End();
 }
 
 void SimpleWindow::drawHelperOverlayGUI()
@@ -326,7 +388,7 @@ void SimpleWindow::drawHelperOverlayGUI()
     ImVec2 viewportPos  = mainViewport->Pos;
 
     // Stats overlay
-    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 50), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowBgAlpha(0.5f);
     ImGui::Begin("Stats", nullptr,
                  ImGuiWindowFlags_NoDecoration |

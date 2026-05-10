@@ -161,34 +161,49 @@ void SimpleInspectorPanel::Draw()
         // Render ImGuizmo
         if (_editorCamera)
         {
-            ImGuizmo::SetOrthographic(false);
-            ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
-
-            // Tell ImGuizmo to accept mouse input from the SceneViewport window,
-            // since the gizmo is drawn on the foreground drawlist but the mouse
-            // hovers over the scene viewport, not the Control Panel.
-            ImGuiWindow* sceneWindow = ImGui::FindWindowByName("##SceneViewport");
-            if (sceneWindow)
-            {
-                ImGuizmo::SetAlternativeWindow(sceneWindow);
-            }
-
+            // Spawn a fullscreen invisible overlay window and call ImGuizmo from inside it.
+            // The overlay must cover the *entire main viewport* (Pos/Size, not WorkPos/
+            // WorkSize) so the NDC→screen mapping matches the swapchain area where the mesh
+            // was drawn. Using WorkPos/WorkSize subtracts the main menu bar height, which
+            // shifted the gizmo's screen mapping relative to the mesh and surfaced as a
+            // "frame lag" when the camera rotated and the entity moved across the screen.
             ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(mainViewport->Pos);
+            ImGui::SetNextWindowSize(mainViewport->Size);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            const ImGuiWindowFlags overlayFlags =
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoDocking |
+                ImGuiWindowFlags_NoBackground |
+                ImGuiWindowFlags_NoBringToFrontOnFocus |
+                ImGuiWindowFlags_NoFocusOnAppearing |
+                ImGuiWindowFlags_NoInputs;
+            ImGui::Begin("##SimpleGizmoOverlay", nullptr, overlayFlags);
+
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(
                 mainViewport->Pos.x, mainViewport->Pos.y,
                 mainViewport->Size.x, mainViewport->Size.y
             );
+
+            // Mesh renderer also reads EditorCamera directly (see SimpleWindow::onRender),
+            // so the gizmo uses the exact same matrix instance — no Scene primary camera
+            // sync detour, no chance of frame N/N-1 desync.
+            glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
 
             // ImGuizmo extracts camera direction from inverse(view) column 2.
             // In LH that column points forward, but ImGuizmo expects RH where
             // it points backward.  Negate only the Z row of the LH view matrix
             // and pair with perspectiveRH so screen x,y stay identical to LH
             // while the camera-direction extraction matches RH convention.
-            glm::mat4 viewMatrix = _editorCamera->GetViewMatrix();
-            viewMatrix[0][2]     = -viewMatrix[0][2];
-            viewMatrix[1][2]     = -viewMatrix[1][2];
-            viewMatrix[2][2]     = -viewMatrix[2][2];
-            viewMatrix[3][2]     = -viewMatrix[3][2];
+            viewMatrix[0][2] = -viewMatrix[0][2];
+            viewMatrix[1][2] = -viewMatrix[1][2];
+            viewMatrix[2][2] = -viewMatrix[2][2];
+            viewMatrix[3][2] = -viewMatrix[3][2];
 
             glm::mat4 projMatrix = glm::perspectiveRH(
                 _editorCamera->GetFov(), _editorCamera->GetAspectRatio(),
@@ -209,6 +224,9 @@ void SimpleInspectorPanel::Draw()
                 glm::value_ptr(deltaMatrix),
                 snap
             );
+
+            ImGui::End();
+            ImGui::PopStyleVar(2);
 
             if (manipulated)
             {

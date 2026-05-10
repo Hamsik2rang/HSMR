@@ -66,6 +66,7 @@ public:
     static const Image* GetFallbackImage2DRed();
     static const Image* GetFallbackImage2DGreen();
     static const Image* GetFallbackImage2DBlue();
+    static const Image* GetFallbackImage2DNormalUp();
 
     // TODO: PTR로변경
     static const Mesh* GetFallbackMeshPlane();
@@ -93,6 +94,7 @@ private:
     static Scoped<Image> s_fallbackImage2DRed;
     static Scoped<Image> s_fallbackImage2DGreen;
     static Scoped<Image> s_fallbackImage2DBlue;
+    static Scoped<Image> s_fallbackImage2DNormalUp;
 
     static Scoped<Mesh> s_fallbackMeshPlane;
     static Scoped<Mesh> s_fallbackMeshCube;

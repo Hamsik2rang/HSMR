@@ -411,12 +411,7 @@ void VulkanCommandBuffer::UpdateBuffer(RHIBuffer* buffer, const size_t dstOffset
 void VulkanCommandBuffer::PushDebugMark(const char* label, float color[4])
 {
 #ifdef _DEBUG
-    // VK_EXT_debug_marker는 deprecated이고 모던 driver에서 노출되지 않는 경우가 많아
-    // 표준 대체인 VK_EXT_debug_utils의 BeginDebugUtilsLabel을 사용한다.
-    // debug_utils가 enable되지 않은 환경(release-strip된 SDK 등)에서는 silently skip.
-    static PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT =
-        reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(
-            vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdBeginDebugUtilsLabelEXT"));
+    static PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdBeginDebugUtilsLabelEXT"));
     if (!vkCmdBeginDebugUtilsLabelEXT)
     {
         return;
@@ -434,13 +429,12 @@ void VulkanCommandBuffer::PushDebugMark(const char* label, float color[4])
 void VulkanCommandBuffer::PopDebugMark()
 {
 #ifdef _DEBUG
-    static PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT =
-        reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(
-            vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdEndDebugUtilsLabelEXT"));
+    static PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(_rhiContext->GetInstance(), "vkCmdEndDebugUtilsLabelEXT"));
     if (!vkCmdEndDebugUtilsLabelEXT)
     {
         return;
     }
+
     vkCmdEndDebugUtilsLabelEXT(handle);
 #endif
 }

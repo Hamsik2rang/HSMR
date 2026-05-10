@@ -12,6 +12,7 @@
 #include "Resource/Mesh.h"
 #include "Resource/Material.h"
 #include "Resource/Shader.h"
+#include "Resource/AssetCache.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -22,8 +23,59 @@
 
 #include <unordered_map>
 #include <thread>
+#include <future>
+#include <chrono>
 
 HS_NS_BEGIN
+
+namespace
+{
+struct DeferredTextureBinding
+{
+    Material* material;
+    EMaterialTextureType hsType;
+    std::string absolutePath;
+};
+
+// Parallel-decode the given (material, type, path) bindings via std::async and
+// attach the resulting Image to each material. Each LoadImageFromFile call
+// hits the AssetCache image cache on warm runs, so this stays cheap there too.
+void decodeAndBindTexturesParallel(const std::vector<DeferredTextureBinding>& items)
+{
+    if (items.empty()) return;
+
+    auto t0 = std::chrono::steady_clock::now();
+    HS_LOG(info, "[Loading] Decoding %zu external textures in parallel...", items.size());
+
+    std::vector<std::future<Image*>> futures;
+    futures.reserve(items.size());
+    for (const auto& it : items)
+    {
+        futures.push_back(std::async(std::launch::async, [path = it.absolutePath]() -> Image*
+        {
+            Scoped<Image> img = ObjectManager::LoadImageFromFile(path, true);
+            return img.release();
+        }));
+    }
+
+    for (size_t k = 0; k < items.size(); ++k)
+    {
+        Image* img = futures[k].get();
+        if (img)
+        {
+            items[k].material->SetTexture(items[k].hsType, img);
+        }
+        else
+        {
+            HS_LOG(warning, "  Failed to load texture: %s", items[k].absolutePath.c_str());
+        }
+    }
+
+    auto t1 = std::chrono::steady_clock::now();
+    HS_LOG(info, "[Loading] External textures decoded in %lld ms",
+           static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()));
+}
+} // namespace
 
 bool ObjectManager::s_isInitialize        = false;
 std::string ObjectManager::s_resourcePath = "";
@@ -33,6 +85,7 @@ Scoped<Image> ObjectManager::s_fallbackImage2DBlack;
 Scoped<Image> ObjectManager::s_fallbackImage2DRed;
 Scoped<Image> ObjectManager::s_fallbackImage2DGreen;
 Scoped<Image> ObjectManager::s_fallbackImage2DBlue;
+Scoped<Image> ObjectManager::s_fallbackImage2DNormalUp;
 
 Scoped<Mesh> ObjectManager::s_fallbackMeshPlane;
 Scoped<Mesh> ObjectManager::s_fallbackMeshCube;
@@ -54,6 +107,13 @@ bool ObjectManager::Initialize()
     }
 
     HS_LOG(info, "ObjectManager initialized with path: %s", s_resourcePath.c_str());
+
+    // Initialize disk asset cache so repeated runs of the same GLTF can skip
+    // stb_image / Assimp on cache hit.
+    if (!s_resourcePath.empty())
+    {
+        AssetCache::Initialize(s_resourcePath + ".cache" + HS_DIR_SEPERATOR);
+    }
 
     // 1x1 White Image 2D
     {
@@ -95,6 +155,15 @@ bool ObjectManager::Initialize()
         s_fallbackImage2DBlue->SetDisplayName("Fallback Blue");
     }
 
+    // 1x1 tangent-space "no perturbation" normal: (0.5, 0.5, 1.0).
+    // PBR shader does (sample * 2 - 1) so this maps to (0, 0, 1) in tangent space.
+    {
+        uint8 normalPixel[4]      = {128, 128, 255, 255};
+        s_fallbackImage2DNormalUp = MakeScoped<Image>(normalPixel, 1, 1, 4);
+        s_fallbackImage2DNormalUp->SetType(Image::ImageType::Buffer);
+        s_fallbackImage2DNormalUp->SetDisplayName("Fallback NormalUp");
+    }
+
     // Create fallback meshes
     s_fallbackMeshPlane  = MakeScoped<Mesh>();
     s_fallbackMeshCube   = MakeScoped<Mesh>();
@@ -121,6 +190,7 @@ void ObjectManager::Finalize()
     {
         return;
     }
+    AssetCache::Finalize();
     if (s_fallbackImage2DBlack)
     {
         s_fallbackImage2DBlack = nullptr;
@@ -140,6 +210,10 @@ void ObjectManager::Finalize()
     if (s_fallbackImage2DBlue)
     {
         s_fallbackImage2DBlue = nullptr;
+    }
+    if (s_fallbackImage2DNormalUp)
+    {
+        s_fallbackImage2DNormalUp = nullptr;
     }
 
     // Clean up fallback meshes
@@ -462,32 +536,35 @@ static Scoped<Mesh> ProcessNode(aiNode* node, const aiScene* scene, std::vector<
 
 Scoped<Image> ObjectManager::LoadImageFromFile(const std::string& path, bool isAbsolutePath)
 {
+    std::string filePath = isAbsolutePath ? path : FileSystem::GetAbsolutePath(path);
+
+    // Disk cache fast path: skip stb_image when a valid pre-decoded blob exists.
+    {
+        Scoped<Image> cached;
+        if (AssetCache::TryLoadImage(filePath, cached) && cached)
+        {
+            return cached;
+        }
+    }
+
     int width   = 0;
     int height  = 0;
     int channel = 0;
-
-    std::string filePath;
-    if (isAbsolutePath)
-    {
-        filePath = path;
-    }
-    else
-    {
-        filePath = FileSystem::GetAbsolutePath(path);
-    }
-
-    uint8* rawData = nullptr;
-    rawData        = stbi_load(filePath.c_str(), &width, &height, &channel, 0);
-
+    uint8* rawData = stbi_load(filePath.c_str(), &width, &height, &channel, 0);
     if (rawData == nullptr)
     {
-        HS_LOG(error, "Fail to load Image!");
+        HS_LOG(error, "Fail to load Image: %s", filePath.c_str());
         return nullptr;
     }
 
     Scoped<Image> pImage = MakeScoped<Image>(rawData, width, height, channel);
     pImage->SetDisplayName(FileSystem::GetFileName(filePath));
     pImage->SetSourceAssetPath(filePath);
+
+    stbi_image_free(rawData);
+
+    // Persist for the next run. Failures here are non-fatal (warning only).
+    AssetCache::StoreImage(filePath, *pImage);
 
     return pImage;
 }
@@ -966,6 +1043,14 @@ const Image* ObjectManager::GetFallbackImage2DBlue()
     }
     return s_fallbackImage2DBlue.get(); // Return empty image or handle error appropriately
 }
+const Image* ObjectManager::GetFallbackImage2DNormalUp()
+{
+    if (!s_isInitialize)
+    {
+        HS_LOG(crash, "ObjectManager is not initialized. Cannot get fallback image.");
+    }
+    return s_fallbackImage2DNormalUp.get();
+}
 
 const Mesh* ObjectManager::GetFallbackMeshPlane()
 {
@@ -1209,16 +1294,51 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
         filePath = s_resourcePath + path;
     }
 
+    // Disk model-cache fast path: skip Assimp entirely on warm runs.
+    {
+        auto t0 = std::chrono::steady_clock::now();
+        std::vector<Scoped<Mesh>> cachedMeshes;
+        std::vector<Scoped<Material>> cachedMaterials;
+        if (AssetCache::TryLoadModel(filePath, cachedMeshes, cachedMaterials))
+        {
+            // Re-decode external textures (image cache hit makes this cheap).
+            std::vector<DeferredTextureBinding> pending;
+            constexpr uint8 kTypeCount = static_cast<uint8>(EMaterialTextureType::MaxTextureTypes);
+            for (auto& matPtr : cachedMaterials)
+            {
+                if (!matPtr) continue;
+                for (uint8 t = 0; t < kTypeCount; ++t)
+                {
+                    auto type = static_cast<EMaterialTextureType>(t);
+                    if (!matPtr->HasTextureAssetPath(type)) continue;
+                    pending.push_back({ matPtr.get(), type, matPtr->GetTextureAssetPath(type) });
+                }
+            }
+            decodeAndBindTexturesParallel(pending);
+
+            outMeshes    = std::move(cachedMeshes);
+            outMaterials = std::move(cachedMaterials);
+
+            auto t1 = std::chrono::steady_clock::now();
+            HS_LOG(info, "[Loading] GLTF cache hit: %s (%lld ms total)",
+                   filePath.c_str(),
+                   static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()));
+            return true;
+        }
+    }
+
+    auto tParseStart = std::chrono::steady_clock::now();
     Assimp::Importer importer;
 
+    // FindInvalidData/JoinIdenticalVertices를 다시 켜서 Sponza의 깨진/중복 vertex가
+    // pipeline까지 전달되지 않도록 막음. OptimizeMeshes/ImproveCacheLocality는
+    // 여전히 빼서 Step 1 다이어트 효과 일부는 유지.
     uint32 importFlags =
         aiProcess_Triangulate |
         aiProcess_CalcTangentSpace |
         aiProcess_GenNormals |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_ImproveCacheLocality |
         aiProcess_RemoveRedundantMaterials |
-        aiProcess_OptimizeMeshes |
         aiProcess_GenUVCoords |
         aiProcess_TransformUVCoords |
         aiProcess_SortByPType |
@@ -1252,10 +1372,20 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
     std::vector<Scoped<Material>> materials;
     materials.reserve(scene->mNumMaterials);
 
+    // External-texture decode is the dominant cost on big GLTF (Sponza ~137 PNGs).
+    // We collect external paths during the material walk and decode them in
+    // parallel with std::async after the walk finishes. GLB embedded textures are
+    // already in memory so they stay inline.
+    std::vector<DeferredTextureBinding> pendingExternalTextures;
+
     for (uint32 i = 0; i < scene->mNumMaterials; ++i)
     {
         aiMaterial* aiMat         = scene->mMaterials[i];
         Scoped<Material> material = MakeScoped<Material>();
+
+        // GLTF materials are PBR; request the PBR shader by name hint so the
+        // RenderResourceManager fallback assigns it instead of the default BlinnPhong.
+        material->SetShaderNameHint("PBR");
 
         // Material name
         aiString matName;
@@ -1406,12 +1536,21 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
             }
             else
             {
-                // 외부 텍스처 파일
+                // External file: defer decoding to the parallel phase below.
                 if (!FileSystem::IsAbsolutePath(texturePathStr))
                 {
                     texturePathStr = modelDirectory + HS_DIR_SEPERATOR + texturePathStr;
                 }
-                texture = LoadImageFromFile(texturePathStr, true);
+                // Remember the path on the material so the model cache can
+                // restore it without re-walking aiMaterial on the next run.
+                material->SetTextureAssetPath(mapping.hsType, texturePathStr);
+
+                pendingExternalTextures.push_back({
+                    material.get(),
+                    mapping.hsType,
+                    std::move(texturePathStr)
+                });
+                continue;
             }
 
             if (texture)
@@ -1427,6 +1566,9 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
 
         materials.push_back(std::move(material));
     }
+
+    // Phase B: parallel decode of external textures.
+    decodeAndBindTexturesParallel(pendingExternalTextures);
 
     // --- Meshes ---
     outMeshes.clear();
@@ -1502,7 +1644,15 @@ bool ObjectManager::loadGLTF(const std::string& path, std::vector<Scoped<Mesh>>&
 
     outMaterials = std::move(materials);
 
-    HS_LOG(info, "Successfully loaded GLTF: %s (%d meshes, %d materials)", filePath.c_str(), static_cast<int>(outMeshes.size()), static_cast<int>(outMaterials.size()));
+    auto tParseEnd = std::chrono::steady_clock::now();
+    HS_LOG(info, "[Loading] GLTF parse cold path: %s (%lld ms total, %d meshes, %d materials)",
+           filePath.c_str(),
+           static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(tParseEnd - tParseStart).count()),
+           static_cast<int>(outMeshes.size()),
+           static_cast<int>(outMaterials.size()));
+
+    // Persist for next run. Failures are non-fatal.
+    AssetCache::StoreModel(filePath, outMeshes, outMaterials);
 
     return true;
 }

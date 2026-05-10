@@ -35,6 +35,8 @@ struct HS_SCENE_API LightComponent
     glm::vec3 color{ 1.0f, 1.0f, 1.0f };
     float intensity = 1.0f;
 
+    glm::vec3 direction{ 0.0f, 0.0f, 0.0f };
+
     // Point/Spot light parameters
     float range = 10.0f;
     float attenuation = 1.0f;

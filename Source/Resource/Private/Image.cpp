@@ -32,6 +32,15 @@ Image::Image(void* data, uint32 width, uint32 height, uint32 channel) noexcept
     ::memcpy(_rawData.data(), data, size);
 }
 
+Image::Image(std::vector<uint8>&& rawData, uint16 width, uint16 height, uint8 channel) noexcept
+    : Object(EType::Image)
+    , _rawData(std::move(rawData))
+    , _width(width)
+    , _height(height)
+    , _channel(channel)
+{
+}
+
 Image::Image(const Image& o) noexcept
     : Object(EType::Image)
     , _rawData(o._rawData)  // std::vector copy constructor handles memory safely

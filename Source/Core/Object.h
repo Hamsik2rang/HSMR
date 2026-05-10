@@ -63,7 +63,7 @@ public:
     Object::EType GetType() const { return _type; }
     bool IsValid() const { return _isValid; }
 
-    const char* name;
+    const char* name = "";
 
     uint64 GetObjectId() const { return _objectId; }
 

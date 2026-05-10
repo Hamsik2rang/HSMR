@@ -42,6 +42,16 @@ void Material::SetTexture(EMaterialTextureType type, Image* texture)
 
     _ownedTextures.erase(type);
     _textures[type] = texture;
+    if (texture)
+    {
+        // Color-channel textures (baseColor, emissive) carry sRGB-encoded data;
+        // PBR/normal/metallic/roughness/AO are linear data. Marking lets the
+        // renderer pick the correct GPU format so the sampler does the gamma
+        // conversion automatically.
+        const bool isColor = (type == EMaterialTextureType::Diffuse) ||
+                             (type == EMaterialTextureType::Emission);
+        texture->SetSrgb(isColor);
+    }
     markResourceDirty();
 }
 
