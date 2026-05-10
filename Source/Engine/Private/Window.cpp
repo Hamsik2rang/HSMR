@@ -229,7 +229,8 @@ void Window::Flush()
     }
 
     // 트리 순회하면서 자식들 중에 close된 애들 해제 후 리스트에서 삭제
-    std::list<Window*> deletedChilds(_childs.size());
+    std::vector<Window*> deletedChilds;
+    deletedChilds.reserve(_childs.size());
     for (auto* child : _childs)
     {
         child->Flush();
