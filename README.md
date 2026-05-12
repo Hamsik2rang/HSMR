@@ -14,7 +14,7 @@ HSMR is a modular, cross-platform graphics engine supporting **Vulkan** (Windows
 - **C++20** compatible compiler
 
 ### Windows
-- Visual Studio 2022 (or 2019, untested)
+- Visual Studio 2026(with CMake 4.2.1), 2022 (or 2019, untested)
 - Vulkan SDK
 
 ### macOS (Apple Silicon)
