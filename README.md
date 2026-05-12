@@ -41,11 +41,11 @@ The built executable and assets are output to `Build/Debug/` (or `Build/Release/
 ### Editor Launch
 
 ```bash
-# Simple editor (default)
+# editor (default)
 ./Build/Debug/Client
 
-# Advanced editor with full dockspace layout
-./Build/Debug/Client -advanced
+# simple editor (only swapchain rendering with control panel)
+./Build/Debug/Client -simple
 ```
 
 ## Third-Party Libraries
