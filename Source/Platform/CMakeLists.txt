@@ -172,6 +172,7 @@ if(HSMR_USE_SDL)
             "-framework Metal"
             "-framework MetalKit"
             "-framework GameController"
+            "-framework UniformTypeIdentifiers"
             "-framework SDL3"
         )
     endif()
@@ -179,7 +180,7 @@ else()
     if(APPLE)
         target_link_libraries(${TARGET_NAME}
             PRIVATE
-            "-framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController"
+            "-framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework MetalKit -framework GameController -framework UniformTypeIdentifiers"
         )
     endif()
     # On Windows without SDL, no additional link deps needed for Platform.

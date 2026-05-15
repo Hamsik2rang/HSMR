@@ -296,7 +296,7 @@ if(WIN32)
         $<$<BOOL:${HSMR_USE_SDL}>:${HS_SDL3_LIB}>
     )
 else()
-    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController")
+    list(APPEND OSX_FRAMEWORK "-framework OpenGL -framework Foundation -framework CoreFoundation -framework QuartzCore -framework AppKit -framework IOKit -framework Metal -framework GameController -framework UniformTypeIdentifiers")
 
     # For SDL3 on macOS, link against the framework
     if(HSMR_USE_SDL)

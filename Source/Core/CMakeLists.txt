@@ -142,6 +142,7 @@ if(APPLE)
         "-framework Metal"
         "-framework MetalKit"
         "-framework GameController"
+        "-framework UniformTypeIdentifiers"
     )
 
     # Add SDL3 framework support

@@ -8,6 +8,7 @@
 #include "Platform/Mac/MacFileDialog.h"
 
 #import <AppKit/AppKit.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 HS_NS_BEGIN
 
