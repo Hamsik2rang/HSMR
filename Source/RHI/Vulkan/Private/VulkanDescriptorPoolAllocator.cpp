@@ -13,13 +13,6 @@ VulkanDescriptorPoolAllocator::VulkanDescriptorPoolAllocator()
 VulkanDescriptorPoolAllocator::~VulkanDescriptorPoolAllocator()
 {
     Finalize();
-
-    for (auto& p : _readyPools)
-    {
-        vkDestroyDescriptorPool(_device->logicalDevice, p, nullptr);
-        p = nullptr;
-    }
-    _readyPools.clear();
 }
 
 bool VulkanDescriptorPoolAllocator::Initialize(VkInstance instanceVk, VulkanDevice* device, uint32 maxSets, const std::vector<PoolSizeRatio>& poolRatios)
@@ -42,15 +35,30 @@ bool VulkanDescriptorPoolAllocator::Initialize(VkInstance instanceVk, VulkanDevi
 
 void VulkanDescriptorPoolAllocator::Finalize()
 {
+    if (_device == nullptr || _device->logicalDevice == VK_NULL_HANDLE)
+    {
+        _readyPools.clear();
+        _fullPools.clear();
+        return;
+    }
+
     for (auto& p : _readyPools)
     {
-        vkResetDescriptorPool(_device->logicalDevice, p, 0);
+        if (p != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(_device->logicalDevice, p, nullptr);
+            p = VK_NULL_HANDLE;
+        }
     }
     for (auto& p : _fullPools)
     {
-        vkResetDescriptorPool(_device->logicalDevice, p, 0);
-        _readyPools.push_back(p);
+        if (p != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(_device->logicalDevice, p, nullptr);
+            p = VK_NULL_HANDLE;
+        }
     }
+    _readyPools.clear();
     _fullPools.clear();
 }
 

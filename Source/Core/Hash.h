@@ -1,4 +1,4 @@
-﻿//
+//
 //  Hash.h
 //  Core
 //
@@ -67,16 +67,31 @@ HS_FORCEINLINE HS_CORE_API size_t PointerHash(const void* p)
 	return Hash64(reinterpret_cast<uint64>(p));
 }
 
-// ===== constexpr FNV-1a (const char*) =====
+// ===== FNV-1a =====
+
+constexpr uint64 FNV1A64OffsetBasis = 14695981039346656037ULL;
+constexpr uint64 FNV1A64Prime       = 1099511628211ULL;
+
+HS_FORCEINLINE HS_CORE_API uint64 HashBytes64(const void* data, size_t size, uint64 seed = FNV1A64OffsetBasis)
+{
+	uint64 hash = seed;
+	const uint8* bytes = static_cast<const uint8*>(data);
+	for (size_t i = 0; i < size; ++i)
+	{
+		hash ^= static_cast<uint64>(bytes[i]);
+		hash *= FNV1A64Prime;
+	}
+	return hash;
+}
 
 // 64bit FNV-1a hash function (constexpr)
 constexpr uint64 StringHash64(const char* str)
 {
-	uint64 hash = 14695981039346656037ULL;
+	uint64 hash = FNV1A64OffsetBasis;
 	while (*str)
 	{
 		hash ^= static_cast<uint64>(*str);
-		hash *= 1099511628211ULL;
+		hash *= FNV1A64Prime;
 		++str;
 	}
 	return hash;

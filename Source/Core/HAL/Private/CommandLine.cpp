@@ -31,6 +31,13 @@ void CommandLine::Initialize(int argc, char* argv[])
     s_initialized = true;
 }
 
+void CommandLine::Finalize()
+{
+    std::string().swap(s_programPath);
+    std::vector<std::string>().swap(s_args);
+    s_initialized = false;
+}
+
 int CommandLine::GetArgCount()
 {
     return static_cast<int>(s_args.size());

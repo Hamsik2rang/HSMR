@@ -233,6 +233,52 @@ void VulkanSwapchain::destroySwapchainVK()
     RHIContext* rhiContext = RHIContext::Get();
     rhiContext->WaitForIdle();
 
+    if (!_colorTextures.empty())
+    {
+        for (size_t i = 0; i < _colorTextures.size(); i++)
+        {
+            if (_colorTextures[i])
+            {
+                rhiContext->DestroyTexture(_colorTextures[i]);
+                _colorTextures[i] = nullptr;
+            }
+        }
+        _colorTextures.clear();
+    }
+
+    for (uint8 i = 0; i < _maxFrameCount; i++)
+    {
+        if (_commandBufferVKs && _commandBufferVKs[i])
+        {
+            rhiContext->DestroyCommandBuffer(_commandBufferVKs[i]);
+            _commandBufferVKs[i] = nullptr;
+        }
+        if (syncObjects.imageAvailableSemaphores && syncObjects.imageAvailableSemaphores[i] != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(_deviceVulkan->logicalDevice, syncObjects.imageAvailableSemaphores[i], nullptr);
+            syncObjects.imageAvailableSemaphores[i] = VK_NULL_HANDLE;
+        }
+        if (syncObjects.renderFinishedSemaphores && syncObjects.renderFinishedSemaphores[i] != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(_deviceVulkan->logicalDevice, syncObjects.renderFinishedSemaphores[i], nullptr);
+            syncObjects.renderFinishedSemaphores[i] = VK_NULL_HANDLE;
+        }
+        if (syncObjects.inFlightFences && syncObjects.inFlightFences[i] != VK_NULL_HANDLE)
+        {
+            vkDestroyFence(_deviceVulkan->logicalDevice, syncObjects.inFlightFences[i], nullptr);
+            syncObjects.inFlightFences[i] = VK_NULL_HANDLE;
+        }
+    }
+
+    delete[] _commandBufferVKs;
+    _commandBufferVKs = nullptr;
+    delete[] syncObjects.imageAvailableSemaphores;
+    syncObjects.imageAvailableSemaphores = nullptr;
+    delete[] syncObjects.renderFinishedSemaphores;
+    syncObjects.renderFinishedSemaphores = nullptr;
+    delete[] syncObjects.inFlightFences;
+    syncObjects.inFlightFences = nullptr;
+
     for (size_t i = 0; i < imageViewVks.size(); i++)
     {
         if (imageViewVks[i] != VK_NULL_HANDLE)
@@ -249,19 +295,7 @@ void VulkanSwapchain::destroySwapchainVK()
         handle = VK_NULL_HANDLE;
     }
 
-    if (!_colorTextures.empty())
-    {
-        for (size_t i = 0; i < _maxFrameCount; i++)
-        {
-            if (_colorTextures[i])
-            {
-                rhiContext->DestroyTexture(_colorTextures[i]);
-                _colorTextures[i] = nullptr;
-            }
-        }
-        _colorTextures.clear();
-    }
-
+    imageVks.clear();
     _isInitialized = false;
 }
 

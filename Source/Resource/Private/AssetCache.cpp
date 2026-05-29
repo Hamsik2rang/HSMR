@@ -7,6 +7,7 @@
 #include "Resource/Mesh.h"
 #include "Resource/Material.h"
 
+#include "Core/Hash.h"
 #include "Core/Log.h"
 #include "Core/HAL/FileSystem.h"
 
@@ -48,25 +49,16 @@ bool AssetCache::Initialize(const std::string& cacheRootDir)
 
 void AssetCache::Finalize()
 {
+    std::string().swap(s_cacheDir);
     s_initialized = false;
 }
 
-// =====================================================================
-// Hashing
-// =====================================================================
-
-// FNV-1a over (absolute path) ⊕ mtime ⊕ size. mtime/size invalidates cache when
-// the source file changes underneath us.
 uint64 AssetCache::computeSourceHash(const std::string& sourceAbsPath)
 {
-    uint64 hash = 14695981039346656037ull;
-    auto mix = [&](const void* data, size_t len) {
-        const uint8* bytes = static_cast<const uint8*>(data);
-        for (size_t i = 0; i < len; ++i)
-        {
-            hash ^= bytes[i];
-            hash *= 1099511628211ull;
-        }
+    uint64 hash = FNV1A64OffsetBasis;
+    auto mix = [&](const void* data, size_t len)
+    {
+        hash = HashBytes64(data, len, hash);
     };
 
     mix(sourceAbsPath.data(), sourceAbsPath.size());
@@ -236,15 +228,15 @@ static void writeMaterial(std::ofstream& f, const Material& m)
     writeVal(f, static_cast<uint8>(m.IsTwoSided() ? 1 : 0));
 
     // Texture asset path entries (type, path).
-    constexpr uint8 kTypeCount = static_cast<uint8>(EMaterialTextureType::MaxTextureTypes);
+    constexpr uint8 typeCount = static_cast<uint8>(EMaterialTextureType::MaxTextureTypes);
     uint32 entryCount = 0;
-    for (uint8 t = 0; t < kTypeCount; ++t)
+    for (uint8 t = 0; t < typeCount; ++t)
     {
         auto type = static_cast<EMaterialTextureType>(t);
         if (m.HasTextureAssetPath(type)) ++entryCount;
     }
     writeVal(f, entryCount);
-    for (uint8 t = 0; t < kTypeCount; ++t)
+    for (uint8 t = 0; t < typeCount; ++t)
     {
         auto type = static_cast<EMaterialTextureType>(t);
         if (!m.HasTextureAssetPath(type)) continue;

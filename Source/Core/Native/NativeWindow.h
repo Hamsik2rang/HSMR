@@ -110,6 +110,7 @@ void HS_CORE_API PushNativeEvent(const hs::NativeWindow* pWindow, NativeEvent ev
 NativeEvent HS_CORE_API PopNativeEvent(const hs::NativeWindow* pWindow);
 
 void HS_CORE_API SetNativePreEventHandler(void* fnHandler);
+void HS_CORE_API FinalizeNativeWindowSystem();
 
 HS_NS_END
 

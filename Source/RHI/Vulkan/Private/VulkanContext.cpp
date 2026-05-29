@@ -1,4 +1,4 @@
-﻿#include "RHI/Vulkan/VulkanContext.h"
+#include "RHI/Vulkan/VulkanContext.h"
 
 #include "RHI/Vulkan/VulkanCommandHandle.h"
 #include "RHI/Vulkan/VulkanRenderHandle.h"
@@ -17,12 +17,16 @@
 #include <SDL3/SDL_vulkan.h>
 #endif
 
-static const std::vector<const char*> s_validationLayers =
-    {
+#include <array>
+
 #ifdef _DEBUG
-        "VK_LAYER_KHRONOS_validation",
-#endif
+static constexpr std::array<const char*, 1> s_validationLayers =
+{
+    "VK_LAYER_KHRONOS_validation",
 };
+#else
+static constexpr std::array<const char*, 0> s_validationLayers = {};
+#endif
 
 #ifdef _DEBUG
 static constexpr bool s_enableValidationLayers = true;
@@ -130,14 +134,24 @@ void VulkanContext::Finalize()
         return;
     }
 
-    // Cleanup Vulkan resources
+    WaitForIdle();
+
     _renderingCache.Finalize();
+    _descriptorPoolAllocator.Finalize();
 
     if (_defaultCommandPool != VK_NULL_HANDLE)
     {
         vkDestroyCommandPool(_device, _defaultCommandPool, nullptr);
         _defaultCommandPool = VK_NULL_HANDLE;
     }
+    _device.Destroy();
+
+    if (_debugMessenger != VK_NULL_HANDLE)
+    {
+        destroyDebugUtilsMessengerEXT(_instanceVk, _debugMessenger, nullptr);
+        _debugMessenger = VK_NULL_HANDLE;
+    }
+
     if (_instanceVk != VK_NULL_HANDLE)
     {
         vkDestroyInstance(_instanceVk, nullptr);
@@ -233,6 +247,12 @@ void VulkanContext::DestroySwapchain(Swapchain* swapchain)
 {
     VulkanSwapchain* swapchainVK = static_cast<VulkanSwapchain*>(swapchain);
     swapchainVK->destroySwapchainVK(); // 소멸자에서 호출되지만 컨벤션 통일을 위해 명시적 호출함.
+
+    if (swapchainVK->surface != VK_NULL_HANDLE)
+    {
+        vkDestroySurfaceKHR(_instanceVk, swapchainVK->surface, nullptr);
+        swapchainVK->surface = VK_NULL_HANDLE;
+    }
 
     delete swapchainVK;
 }
@@ -1393,8 +1413,6 @@ void VulkanContext::DestroyCommandBuffer(RHICommandBuffer* commandBuffer)
 
 void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, size_t bufferCount)
 {
-    static std::vector<VkCommandBuffer> commandBufferVks;
-
     HS_ASSERT(swapchain != nullptr, "Swapchain is null in VulkanContext::Submit");
     HS_ASSERT(bufferCount > 0, "Buffer count must be greater than 0 in VulkanContext::Submit");
 
@@ -1407,10 +1425,7 @@ void VulkanContext::Submit(Swapchain* swapchain, RHICommandBuffer** buffers, siz
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores    = &swapchainVK->syncObjects.renderFinishedSemaphores[swapchainVK->_curImageIndex];
 
-    if (commandBufferVks.size() < bufferCount)
-    {
-        commandBufferVks.resize(bufferCount);
-    }
+    std::vector<VkCommandBuffer> commandBufferVks(bufferCount);
 
     for (size_t i = 0; i < bufferCount; ++i)
     {
@@ -1473,13 +1488,7 @@ void VulkanContext::CmdEndRendering(VkCommandBuffer commandBuffer, const Renderi
 
 void VulkanContext::cleanup()
 {
-    if (s_enableValidationLayers)
-    {
-        destroyDebugUtilsMessengerEXT(_instanceVk, _debugMessenger, nullptr);
-    }
-    delete _device;
-
-    vkDestroyInstance(_instanceVk, nullptr);
+    Finalize();
 }
 #pragma region>>> Implementation create functions
 
@@ -1558,7 +1567,7 @@ bool VulkanContext::createInstance()
     bool useValidationLayers = s_enableValidationLayers && isLayerFound;
     if (useValidationLayers)
     {
-        instanceCreateInfo.enabledLayerCount   = s_validationLayers.size();
+        instanceCreateInfo.enabledLayerCount   = static_cast<uint32>(s_validationLayers.size());
         instanceCreateInfo.ppEnabledLayerNames = s_validationLayers.data();
     }
 

@@ -62,6 +62,7 @@ public:
 
     // Singleton access
     static EditorContext& Get();
+    void Finalize();
 
     // ===== Scene Management =====
 

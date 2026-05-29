@@ -13,6 +13,7 @@
 #include "Editor/Project/RecentProjects.h"
 #include "Editor/Asset/AssetDatabase.h"
 #include "Scene/SceneSerializer.h"
+#include "Editor/Core/EditorContext.h"
 
 #include "Core/HAL/CommandLine.h"
 
@@ -139,7 +140,7 @@ void EditorApplication::Shutdown()
         ProjectContext::Get().CloseProject();
     }
 
-    if (_window && _window->IsOpened())
+    if (_window)
     {
         _window->Shutdown();
         delete _window;
@@ -160,6 +161,11 @@ void EditorApplication::Shutdown()
         _guiContext = nullptr;
     }
 
+    AssetDatabase::Get().Finalize();
+    SceneSerializer::ClearAssetResolvers();
+    RecentProjects::Get().Finalize();
+    ProjectContext::Get().Finalize();
+    EditorContext::Get().Finalize();
     ObjectManager::Finalize();
 }
 

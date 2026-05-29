@@ -69,9 +69,9 @@ public:
     std::vector<VkImageView> imageViewVks;
     struct
     {
-        VkSemaphore* imageAvailableSemaphores;
-        VkSemaphore* renderFinishedSemaphores;
-        VkFence* inFlightFences;
+        VkSemaphore* imageAvailableSemaphores = nullptr;
+        VkSemaphore* renderFinishedSemaphores = nullptr;
+        VkFence* inFlightFences = nullptr;
     } syncObjects;
 
 private:
@@ -87,7 +87,7 @@ private:
     uint8 _maxFrameCount  = 2;
     uint32 _curImageIndex = static_cast<uint32>(-1);
     VulkanDevice* _deviceVulkan;
-    VulkanCommandBuffer** _commandBufferVKs;
+    VulkanCommandBuffer** _commandBufferVKs = nullptr;
     std::vector<RHITexture*> _colorTextures;
     bool _isSuspended;
     bool _isInitialized = false;

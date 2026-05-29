@@ -15,6 +15,23 @@ EditorContext& EditorContext::Get()
     return instance;
 }
 
+void EditorContext::Finalize()
+{
+    _activeScene = nullptr;
+    _selectedEntity = Entity();
+    std::string().swap(_selectedAssetPath);
+    std::string().swap(_currentAssetFolderPath);
+    std::string().swap(_currentScenePath);
+    _gizmoOperation = GizmoOperation::Translate;
+    _gizmoSpace = GizmoSpace::World;
+    _useSnap = false;
+    _snapValue = 1.0f;
+    _gizmoActive = false;
+    _panelVisibility = PanelVisibility();
+    _debugDrawSettings = DebugDrawSettings();
+    std::vector<SelectionCallback>().swap(_selectionListeners);
+}
+
 void EditorContext::SetActiveScene(Scene* scene)
 {
     _activeScene = scene;

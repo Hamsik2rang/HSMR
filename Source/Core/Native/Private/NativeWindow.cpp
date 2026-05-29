@@ -1,4 +1,4 @@
-﻿#include "Core/Native/NativeWindow.h"
+#include "Core/Native/NativeWindow.h"
 
 // Platform-specific window implementations are in MacWindow.mm (macOS) and WinWindow.cpp (Windows)
 // SDL support is integrated into those files via #ifdef __SDL__
@@ -37,6 +37,7 @@ bool CreateNativeWindow(const char* name, uint16 width, uint16 height, EWindowFl
 void DestroyNativeWindow(NativeWindow& nativeWindow)
 {
     DestroyNativeWindowInternal(nativeWindow);
+    s_eventQueueTable.erase(&nativeWindow);
 }
 
 void ShowNativeWindow(const NativeWindow& nativeWindow)
@@ -62,6 +63,13 @@ void GetNativeWindowSize(uint16& outWidth, uint16& outHeight)
 void SetNativePreEventHandler(void* fnHandler)
 {
     SetNativePreEventHandlerInternal(fnHandler);
+}
+
+void FinalizeNativeWindowSystem()
+{
+    s_eventQueueTable.clear();
+    std::unordered_map<const NativeWindow*, std::queue<NativeEvent>>().swap(s_eventQueueTable);
+    SetNativePreEventHandlerInternal(nullptr);
 }
 
 bool PeekNativeEvent(NativeWindow* pWindow, NativeEvent& outEvent)

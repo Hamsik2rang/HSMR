@@ -230,7 +230,10 @@ void ObjectManager::Finalize()
         s_fallbackMeshSphere = nullptr;
     }
 
-    s_modelCache.clear();
+    std::unordered_map<std::string, Scoped<Model>>().swap(s_modelCache);
+
+    s_resourcePath.clear();
+    s_resourcePath.shrink_to_fit();
 
     s_isInitialize = false;
 }

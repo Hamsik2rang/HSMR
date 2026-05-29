@@ -1,4 +1,4 @@
-﻿#include "Editor/GUI/ImGuiExtension.h"
+#include "Editor/GUI/ImGuiExtension.h"
 
 #include "Core/Log.h"
 #include "Engine/Window.h"
@@ -30,7 +30,7 @@ HS_NS_EDITOR_BEGIN
 
 static VkPipelineCache s_pipelineCacheVk = VK_NULL_HANDLE;
 static VkDescriptorPool s_descriptorPool = VK_NULL_HANDLE;
-static VulkanSampler* s_samplerVK;
+static VulkanSampler* s_samplerVK = nullptr;
 static VkFormat s_swapchainColorFormat = VK_FORMAT_UNDEFINED;
 
 Swapchain* ImGuiExtension::s_currentSwapchain = nullptr;
@@ -262,12 +262,20 @@ void ImGuiExtension::FinalizeBackend()
 {
     VulkanContext* rhiContextVK = static_cast<VulkanContext*>(RHIContext::Get());
     rhiContextVK->WaitForIdle();
+    clearDeletedSwapchainData();
+
     ImGui_ImplVulkan_Shutdown();
 #ifdef __SDL__
     ImGui_ImplSDL3_Shutdown();
 #else
     ImGui_ImplWin32_Shutdown();
 #endif
+
+    if (s_samplerVK)
+    {
+        rhiContextVK->DestroySampler(s_samplerVK);
+        s_samplerVK = nullptr;
+    }
 
     // Destroy the pipeline cache
     if (s_pipelineCacheVk != VK_NULL_HANDLE)
@@ -282,6 +290,15 @@ void ImGuiExtension::FinalizeBackend()
         vkDestroyDescriptorPool(rhiContextVK->GetDevice()->logicalDevice, s_descriptorPool, nullptr);
         s_descriptorPool = VK_NULL_HANDLE;
     }
+
+    for (auto& texturesPerFrame : s_AddedTexturesPerFrame)
+    {
+        std::vector<void*>().swap(texturesPerFrame);
+    }
+    std::vector<std::vector<void*>>().swap(s_AddedTexturesPerFrame);
+    s_currentSwapchain = nullptr;
+    s_currentImageIndex = 0;
+    s_swapchainColorFormat = VK_FORMAT_UNDEFINED;
 }
 
 // TODO: 지금은 매 프레임 이 안에서 N프레임을 시작하기 전에 (N - MaxFrameCount) 프레임의 ImGui::AddTexture() 호출로 추가된 ResourceSet들을 제거함.
@@ -299,10 +316,10 @@ void ImGuiExtension::clearDeletedSwapchainData()
                 ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(rSet));
             }
         }
-        rSetList.clear();
+        std::vector<void*>().swap(rSetList);
     }
 
-    if (s_AddedTexturesPerFrame.size() < s_currentSwapchain->GetMaxFrameCount())
+    if (s_currentSwapchain && s_AddedTexturesPerFrame.size() < s_currentSwapchain->GetMaxFrameCount())
     {
         s_AddedTexturesPerFrame.resize(s_currentSwapchain->GetMaxFrameCount());
     }

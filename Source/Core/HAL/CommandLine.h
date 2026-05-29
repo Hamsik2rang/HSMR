@@ -13,6 +13,7 @@ class HS_CORE_API CommandLine
 {
 public:
     static void Initialize(int argc, char* argv[]);
+    static void Finalize();
 
     static int GetArgCount();
     static const std::string& GetArg(int index);

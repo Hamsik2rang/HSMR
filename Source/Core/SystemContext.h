@@ -27,6 +27,7 @@ public:
     static SystemContext* Get();
 
     static bool Init();
+    static void Destroy();
 
 private:
     SystemContext();

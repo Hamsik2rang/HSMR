@@ -1,4 +1,4 @@
-﻿//
+//
 //  Timer.h
 //  Platform
 //
@@ -18,6 +18,7 @@ class HS_CORE_API Timer
 {
 public:
     static bool Initialize();
+    static void Finalize();
 
     static void Start();
     static double Stop();

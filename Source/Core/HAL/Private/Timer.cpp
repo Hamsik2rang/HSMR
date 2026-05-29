@@ -1,4 +1,4 @@
-﻿#include "Core/HAL/Timer.h"
+#include "Core/HAL/Timer.h"
 
 #include <chrono>
 
@@ -14,6 +14,12 @@ bool Timer::Initialize()
 	_initTime = microseconds.count();
 
 	return true;
+}
+
+void Timer::Finalize()
+{
+	std::stack<double>().swap(_laps);
+	_initTime = 0.0;
 }
 
 void Timer::Start()

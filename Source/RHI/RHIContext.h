@@ -88,6 +88,7 @@ public:
     virtual const RHICapabilities& GetCapabilities() const = 0;
 
 	static RHIContext* Create(ERHIPlatform platform);
+	static void Destroy();
 	static RHIContext* Get();
 };
 

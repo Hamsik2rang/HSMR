@@ -1,14 +1,16 @@
-﻿#include "RHI/Vulkan/VulkanDevice.h"
+#include "RHI/Vulkan/VulkanDevice.h"
 
 #include "RHI/Vulkan/VulkanUtility.h"
 
 #include "Core/Log.h"
 #include <algorithm>
+#include <array>
 #include <utility>
 
 HS_NS_BEGIN
 
-static std::vector<const char*> s_requiredDeviceExtensions = {
+static constexpr std::array<const char*, 1> s_requiredDeviceExtensions =
+{
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -28,7 +30,16 @@ bool VulkanDevice::Create(VkInstance instance)
 
 void VulkanDevice::Destroy()
 {
+    if (logicalDevice == VK_NULL_HANDLE)
+    {
+        return;
+    }
+
     vkDestroyDevice(logicalDevice, nullptr);
+    logicalDevice = VK_NULL_HANDLE;
+    graphicsQueue = VK_NULL_HANDLE;
+    computeQueue = VK_NULL_HANDLE;
+    transferQueue = VK_NULL_HANDLE;
 }
 
 void VulkanDevice::getPhysicalDevice()
@@ -50,7 +61,7 @@ void VulkanDevice::getPhysicalDevice()
         int supportedExtensionCount = 0;
         for (const auto& extension : availableExtensions)
         {
-            for (int j = 0; j < s_requiredDeviceExtensions.size(); j++)
+            for (uint32 j = 0; j < static_cast<uint32>(s_requiredDeviceExtensions.size()); j++)
             {
                 if (strcmp(extension.extensionName, s_requiredDeviceExtensions[j]) == 0)
                 {
@@ -60,7 +71,7 @@ void VulkanDevice::getPhysicalDevice()
             }
         }
 
-        if ((supportedExtensionCount == s_requiredDeviceExtensions.size()) && (maxScore == 0 || maxScore < score))
+        if ((supportedExtensionCount == static_cast<int>(s_requiredDeviceExtensions.size())) && (maxScore == 0 || maxScore < score))
         {
             maxScore       = score;
             physicalDevice = physicalDevices[i];
@@ -156,7 +167,9 @@ void VulkanDevice::createLogicalDevice()
         queueInfos.push_back(queueInfo);
     }
 
-    std::vector<const char*> enabledExtensions = s_requiredDeviceExtensions;
+    std::vector<const char*> enabledExtensions(
+        std::begin(s_requiredDeviceExtensions),
+        std::end(s_requiredDeviceExtensions));
     uint32 apiMajor = (properties.apiVersion >> 22) & 0x3FF;
     uint32 apiMinor = (properties.apiVersion >> 12) & 0x3FF;
     if (_capabilities.renderingPath == ERHIRenderingPath::DynamicRendering &&

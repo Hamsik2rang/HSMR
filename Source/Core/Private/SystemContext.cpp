@@ -29,4 +29,10 @@ bool SystemContext::Init()
 	return false;
 }
 
+void SystemContext::Destroy()
+{
+    delete s_instance;
+    s_instance = nullptr;
+}
+
 HS_NS_END

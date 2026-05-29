@@ -33,7 +33,8 @@ SimpleWindow::SimpleWindow(Application* ownerApp, const char* name, uint32 width
 }
 
 SimpleWindow::~SimpleWindow()
-{}
+{
+}
 
 bool SimpleWindow::onInitialize()
 {

@@ -264,12 +264,29 @@ void ImGuiExtension::EndRender()
 
 void ImGuiExtension::FinalizeBackend()
 {
+#ifdef __SDL__
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    if (s_originalRendererCreateWindow)
+    {
+        platform_io.Renderer_CreateWindow = s_originalRendererCreateWindow;
+        s_originalRendererCreateWindow = nullptr;
+    }
+    if (s_originalRendererRenderWindow)
+    {
+        platform_io.Renderer_RenderWindow = s_originalRendererRenderWindow;
+        s_originalRendererRenderWindow = nullptr;
+    }
+#endif
+
     ImGui_ImplMetal_Shutdown();
 #ifdef __SDL__
     ImGui_ImplSDL3_Shutdown();
 #else
     ImGui_ImplOSX_Shutdown();
 #endif
+
+    s_currentSwapchain = nullptr;
+    s_currentImageIndex = 0;
 }
 
 void ImGuiExtension::SetProcessEventHandler(void** fnHandler)

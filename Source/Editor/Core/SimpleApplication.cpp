@@ -8,6 +8,7 @@
 
 #include "Editor/GUI/GUIContext.h"
 #include "Editor/Core/SimpleWindow.h"
+#include "Editor/Core/EditorContext.h"
 
 #include "ThirdParty/ImGui/imgui.h"
 
@@ -42,7 +43,7 @@ SimpleApplication::~SimpleApplication()
 
 void SimpleApplication::Shutdown()
 {
-    if (_window && _window->IsOpened())
+    if (_window)
     {
         _window->Shutdown();
         delete _window;
@@ -56,6 +57,7 @@ void SimpleApplication::Shutdown()
         _guiContext = nullptr;
     }
 
+    EditorContext::Get().Finalize();
     ObjectManager::Finalize();
 }
 

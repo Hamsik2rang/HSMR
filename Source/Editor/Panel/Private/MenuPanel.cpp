@@ -15,21 +15,21 @@
 
 #include "ImGui/imgui.h"
 
+#include <cstdio>
+
 HS_NS_EDITOR_BEGIN
 
 namespace
 {
 const char* getPrimaryShortcutLabel(const char* suffix)
 {
+    static thread_local char label[64];
 #if defined(__APPLE__)
-    static std::string label;
-    label = std::string("Cmd+") + suffix;
-    return label.c_str();
+    std::snprintf(label, sizeof(label), "Cmd+%s", suffix);
 #else
-    static std::string label;
-    label = std::string("Ctrl+") + suffix;
-    return label.c_str();
+    std::snprintf(label, sizeof(label), "Ctrl+%s", suffix);
 #endif
+    return label;
 }
 
 const char* getRedoShortcutLabel()
