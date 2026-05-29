@@ -408,6 +408,7 @@ bool CreateNativeWindowInternal(const char* name, uint16 width, uint16 height, E
         hInstance,
         NULL // Additional application data
     );
+    delete[] wName;
 
     if (hWnd == nullptr)
     {
@@ -468,7 +469,12 @@ void DestroyNativeWindowInternal(NativeWindow& nativeWindow)
     nativeWindow.graphicsView = nullptr;
     nativeWindow.graphicsLayer = nullptr;
 #else
-    // empty
+    if (nativeWindow.handle)
+    {
+        DestroyWindow((HWND)nativeWindow.handle);
+        nativeWindow.handle = nullptr;
+    }
+    s_boundHsWindow = nullptr;
 #endif
 }
 
@@ -697,7 +703,7 @@ void SetNativePreEventHandlerInternal(void* fnHandler)
 #else
     LRESULT (*func)(HWND, UINT, WPARAM, LPARAM) = (LRESULT (*)(HWND, UINT, WPARAM, LPARAM))fnHandler;
     s_preEventHandler                           = func;
-    if (s_preEventHandler == nullptr)
+    if (fnHandler != nullptr && s_preEventHandler == nullptr)
     {
         HS_DEBUG_BREAK();
     }

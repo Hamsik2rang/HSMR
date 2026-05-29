@@ -21,7 +21,7 @@ class HS_API Application
 {
 public:
 	Application(const char* appName) noexcept;
-	virtual ~Application() = default;
+	virtual ~Application();
 
 	virtual void Run() = 0;
 	virtual void Shutdown() = 0;

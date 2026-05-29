@@ -41,6 +41,18 @@ RHIContext* RHIContext::Create(ERHIPlatform platform)
 	return g_rhiContext;
 }
 
+void RHIContext::Destroy()
+{
+	if (!g_rhiContext)
+	{
+		return;
+	}
+
+	g_rhiContext->Finalize();
+	delete g_rhiContext;
+	g_rhiContext = nullptr;
+}
+
 RHIContext* RHIContext::Get()
 {
 	if (!g_rhiContext)

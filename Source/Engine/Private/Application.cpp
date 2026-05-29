@@ -16,6 +16,14 @@ Application::Application(const char* appName) noexcept
     init();
 }
 
+Application::~Application()
+{
+    if (g_AppIntance == this)
+    {
+        g_AppIntance = nullptr;
+    }
+}
+
 void Application::init()
 {
     if (g_AppIntance != nullptr)

@@ -88,12 +88,19 @@ void Window::Shutdown()
 
     onShutdown();
 
-    DestroyNativeWindow(_nativeWindow);
-
     for (auto& rt : _swapchainRenderTargets)
     {
         rt.Clear();
     }
+    _swapchainRenderTargets.clear();
+
+    if (_swapchain)
+    {
+        _rhiContext->DestroySwapchain(_swapchain);
+        _swapchain = nullptr;
+    }
+
+    DestroyNativeWindow(_nativeWindow);
 
     _isClosed = true;
 }

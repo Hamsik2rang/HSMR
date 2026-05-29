@@ -322,7 +322,19 @@ struct TextureInfo
 
     bool operator==(const TextureInfo& other) const
     {
-        return format == other.format && type == other.type && usage == other.usage && extent.width == other.extent.width && extent.height == other.extent.height && extent.depth == other.extent.depth && mipLevel == other.mipLevel && arrayLength == other.arrayLength && byteSize == other.byteSize && isCompressed == other.isCompressed && isSwapchainTexture == other.isSwapchainTexture && isDepthStencilBuffer == other.isDepthStencilBuffer && useGenerateMipmap == other.useGenerateMipmap;
+        return format == other.format &&
+               type == other.type &&
+               usage == other.usage &&
+               extent.width == other.extent.width &&
+               extent.height == other.extent.height &&
+               extent.depth == other.extent.depth &&
+               mipLevel == other.mipLevel &&
+               arrayLength == other.arrayLength &&
+               byteSize == other.byteSize &&
+               isCompressed == other.isCompressed &&
+               isSwapchainTexture == other.isSwapchainTexture &&
+               isDepthStencilBuffer == other.isDepthStencilBuffer &&
+               useGenerateMipmap == other.useGenerateMipmap;
     }
 };
 

@@ -200,12 +200,8 @@ void VulkanCommandBuffer::BeginRendering(const RenderingInfo& renderingInfo)
     {
         VulkanRenderingCache::LegacyRenderingHandles handles = _rhiContext->GetRenderingCache()->GetLegacyRenderingHandles(renderingInfo);
 
-        static std::vector<VkClearValue> clearValues;
         uint32 attachmentCount = renderingInfo.colorAttachmentCount + static_cast<uint32>(renderingInfo.useDepthStencilAttachment);
-        if (clearValues.size() < attachmentCount)
-        {
-            clearValues.resize(attachmentCount);
-        }
+        std::vector<VkClearValue> clearValues(attachmentCount);
 
         uint32 attachmentIndex = 0;
         for (; attachmentIndex < renderingInfo.colorAttachmentCount; attachmentIndex++)
