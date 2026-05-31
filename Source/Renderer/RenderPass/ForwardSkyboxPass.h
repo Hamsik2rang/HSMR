@@ -14,8 +14,8 @@
 #include <array>
 #include <unordered_map>
 
-namespace hs
-{
+HS_NS_BEGIN
+
 class RHIContext;
 class RHIShader;
 class RHIBuffer;
@@ -26,9 +26,6 @@ class RHIResourceSet;
 class RHIGraphicsPipeline;
 class ShaderLibrary;
 class Image;
-} // namespace hs
-
-HS_NS_BEGIN
 
 // Determines how the skybox texture is sourced.
 // Extend this enum and add a corresponding Configure* method when adding new modes.

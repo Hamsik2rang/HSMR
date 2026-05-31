@@ -67,6 +67,8 @@ public:
     HS_FORCEINLINE ShaderLibrary* GetShaderLibrary() const { return _shaderLibrary; }
 
 protected:
+    RenderingInfo makeRenderingInfo(const Attachment& colorAttachment, bool useDepthStencilAttachment, const Attachment& depthStencilAttachment);
+    
     RHIContext* _rhiContext;
     RHICommandBuffer* _curCommandBuffer; // TODO: Multi-CommandBuffer 구현 필요
     RenderResourceManager* _resourceManager = nullptr;

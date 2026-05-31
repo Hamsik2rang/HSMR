@@ -65,31 +65,6 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
     _currentRenderTarget           = renderTarget;
     const RenderTargetInfo& rtInfo = _currentRenderTarget->GetInfo();
 
-    auto makeRenderingInfo = [&](const Attachment& colorAttachment,
-                                 bool useDepthStencilAttachment,
-                                 const Attachment& depthStencilAttachment) -> RenderingInfo
-    {
-        RenderingInfo renderingInfo{};
-        renderingInfo.colorAttachmentCount       = 1;
-        renderingInfo.useDepthStencilAttachment  = useDepthStencilAttachment;
-        renderingInfo.isSwapchainRendering       = false;
-        renderingInfo.renderArea                 = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
-        renderingInfo.enableAutomaticTransitions = false;
-
-        RenderingAttachmentInfo colorAttachmentInfo{};
-        colorAttachmentInfo.texture    = _currentRenderTarget->GetColorTexture(0);
-        colorAttachmentInfo.attachment = colorAttachment;
-        renderingInfo.colorAttachments.push_back(colorAttachmentInfo);
-
-        if (useDepthStencilAttachment)
-        {
-            renderingInfo.depthStencilAttachment.texture    = _currentRenderTarget->GetDepthStencilTexture();
-            renderingInfo.depthStencilAttachment.attachment = depthStencilAttachment;
-        }
-
-        return renderingInfo;
-    };
-
     Attachment colorAttachment{};
     colorAttachment.format         = rtInfo.colorTextureInfo[0].format;
     colorAttachment.clearValue     = ClearValue(0.33f, 0.33f, 0.33f, 1.0f);
@@ -126,9 +101,9 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
         // Swapchain color는 마지막에 Present 레이아웃으로 가야 하고(SAMPLED_BIT 없음),
         // panel offscreen RT는 ImGui sampling을 위해 ReadOnly(SHADER_READ_ONLY)로 전환되어야 함.
         const ERGTextureAccess colorFinalState = rtInfo.isSwapchainTarget
-            ? ERGTextureAccess::Present
-            : ERGTextureAccess::ReadOnly;
-        RGTexture* colorTex = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0), colorFinalState);
+                                                     ? ERGTextureAccess::Present
+                                                     : ERGTextureAccess::ReadOnly;
+        RGTexture* colorTex                    = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0), colorFinalState);
         builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
 
         if (rtInfo.useDepthStencilTexture)

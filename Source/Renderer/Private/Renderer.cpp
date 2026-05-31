@@ -81,4 +81,27 @@ void Renderer::Shutdown()
     _isInitialized = false;
 }
 
+RenderingInfo Renderer::makeRenderingInfo(const Attachment &colorAttachment, bool useDepthStencilAttachment, const Attachment &depthStencilAttachment)
+{
+    RenderingInfo renderingInfo{};
+    renderingInfo.colorAttachmentCount       = 1;
+    renderingInfo.useDepthStencilAttachment  = useDepthStencilAttachment;
+    renderingInfo.isSwapchainRendering       = false;
+    renderingInfo.renderArea                 = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+    renderingInfo.enableAutomaticTransitions = false;
+    
+    RenderingAttachmentInfo colorAttachmentInfo{};
+    colorAttachmentInfo.texture    = _currentRenderTarget->GetColorTexture(0);
+    colorAttachmentInfo.attachment = colorAttachment;
+    renderingInfo.colorAttachments.push_back(colorAttachmentInfo);
+    
+    if (useDepthStencilAttachment)
+    {
+        renderingInfo.depthStencilAttachment.texture    = _currentRenderTarget->GetDepthStencilTexture();
+        renderingInfo.depthStencilAttachment.attachment = depthStencilAttachment;
+    }
+    
+    return renderingInfo;
+}
+
 HS_NS_END

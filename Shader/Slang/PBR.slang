@@ -99,23 +99,6 @@ float3 fresnelSchlick(float HdotV, float3 F0)
     return F0 + (1.0 - F0) * (t * t * t * t * t);
 }
 
-// Standard sRGB OETF (IEC 61966-2-1 / BT.709 transfer curve). Used here because
-// the swapchain is a UNORM format, so the shader must encode the linear
-// fragment color into sRGB before writing — otherwise the display reads it as
-// already-sRGB and the image looks dim.
-float linearToSrgbChannel(float lin)
-{
-    return (lin <= 0.0031308)
-        ? (lin * 12.92)
-        : (pow(lin, 1.0 / 2.4) * 1.055 - 0.055);
-}
-float3 linearToSrgb(float3 c)
-{
-    return float3(linearToSrgbChannel(c.r),
-                  linearToSrgbChannel(c.g),
-                  linearToSrgbChannel(c.b));
-}
-
 [shader("fragment")]
 float4 FragmentMain(FSInput input) : SV_Target
 {
