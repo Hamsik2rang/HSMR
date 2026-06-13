@@ -493,7 +493,7 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
     for (uint32 i = 0; i < count; i++)
     {
         const RHITextureBarrierDesc& desc = barriers[i];
-        if (desc.texture == nullptr || desc.before == desc.after)
+        if (desc.texture == nullptr)
         {
             continue;
         }
@@ -502,7 +502,14 @@ void VulkanCommandBuffer::TextureBarrier(const RHITextureBarrierDesc* barriers, 
         VulkanTextureStateInfo beforeInfo = getTextureStateInfo(desc.before);
         VulkanTextureStateInfo afterInfo  = getTextureStateInfo(desc.after);
         VkImageLayout oldLayout           = textureVK->layoutVk;
-        if (oldLayout == afterInfo.layout)
+        const bool isStorageAccessSync =
+            desc.before == ERHITextureState::StorageReadWrite &&
+            desc.after == ERHITextureState::StorageReadWrite;
+        if (desc.before == desc.after && !isStorageAccessSync)
+        {
+            continue;
+        }
+        if (oldLayout == afterInfo.layout && !isStorageAccessSync)
         {
             continue;
         }

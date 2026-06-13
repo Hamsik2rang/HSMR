@@ -4,6 +4,7 @@
 #include "Precompile.h"
 
 #include "Renderer/Renderer.h"
+#include "Renderer/RenderPass/AtmospherePass.h"
 #include "Renderer/RenderPass/ForwardSkyboxPass.h"
 #include "Renderer/RenderPass/VolumetricCloudPass.h"
 
@@ -32,6 +33,7 @@ public:
     void ClearSkybox();
 
 private:
+    Scoped<AtmospherePass> _atmospherePass;
     Scoped<ForwardSkyboxPass> _skyboxPass;
     Scoped<VolumetricCloudPass> _volumetricCloudPass;
 };

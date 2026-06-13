@@ -23,6 +23,7 @@ ForwardRenderer::~ForwardRenderer()
 void ForwardRenderer::Shutdown()
 {
     _volumetricCloudPass.reset();
+    _atmospherePass.reset();
     _skyboxPass.reset();
     Renderer::Shutdown();
 }
@@ -165,6 +166,126 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
         commandBuffer.EndRendering();
     });
 
+    const bool hasCamera = !sceneResource.cameraResources.empty();
+    const bool needsAtmosphere = hasCamera && (options.enableAtmosphere || options.enableVolumetricClouds);
+    if (needsAtmosphere)
+    {
+        if (!_atmospherePass)
+        {
+            _atmospherePass = MakeScoped<AtmospherePass>();
+            if (!_atmospherePass->Initialize(_shaderLibrary, _rhiContext))
+            {
+                _atmospherePass.reset();
+            }
+        }
+
+        if (_atmospherePass && _atmospherePass->IsInitialized())
+        {
+            _atmospherePass->UpdateSettings(options.atmosphere);
+
+            struct AtmospherePrecomputePassParameters
+            {
+            } atmospherePrecomputeParams;
+
+            _graphBuilder.AddPass("AtmospherePrecompute", ERGPassFlag::Compute | ERGPassFlag::NeverCull,
+                &atmospherePrecomputeParams,
+                [&](RenderGraphBuilder&, RGPass*, AtmospherePrecomputePassParameters*) -> void
+                {
+                },
+                [&](RHICommandBuffer& commandBuffer) -> void
+                {
+                    float debugColor[4]{0.2f, 0.45f, 1.0f, 1.0f};
+                    commandBuffer.PushDebugMark("Atmosphere Precompute", debugColor);
+                    _atmospherePass->PrecomputeIfNeeded(commandBuffer);
+                    commandBuffer.PopDebugMark();
+                });
+        }
+    }
+
+    if (options.enableAtmosphere && _atmospherePass && _atmospherePass->IsInitialized() && hasCamera)
+    {
+        const ERGTextureAccess colorFinalState = rtInfo.isSwapchainTarget
+                                                     ? ERGTextureAccess::Present
+                                                     : ERGTextureAccess::ReadOnly;
+
+        RenderingInfo skyInfo{};
+        skyInfo.colorAttachmentCount = 1;
+        skyInfo.useDepthStencilAttachment = useDepthStencilAttachment;
+        skyInfo.isSwapchainRendering = false;
+        skyInfo.renderArea = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+        skyInfo.enableAutomaticTransitions = false;
+
+        Attachment skyColor{};
+        skyColor.format = rtInfo.colorTextureInfo[0].format;
+        skyColor.clearValue = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+        skyColor.isDepthStencil = false;
+        skyColor.loadAction = ELoadAction::Load;
+        skyColor.storeAction = EStoreAction::Store;
+
+        RenderingAttachmentInfo skyColorAttachment{};
+        skyColorAttachment.texture = _currentRenderTarget->GetColorTexture(0);
+        skyColorAttachment.attachment = skyColor;
+        skyInfo.colorAttachments.push_back(skyColorAttachment);
+
+        if (useDepthStencilAttachment)
+        {
+            Attachment skyDepth{};
+            skyDepth.format = rtInfo.depthStencilInfo.format;
+            skyDepth.clearValue = ClearValue(1.0f, 0.0f);
+            skyDepth.isDepthStencil = true;
+            skyDepth.loadAction = ELoadAction::Load;
+            skyDepth.storeAction = EStoreAction::Store;
+            skyInfo.depthStencilAttachment.texture = _currentRenderTarget->GetDepthStencilTexture();
+            skyInfo.depthStencilAttachment.attachment = skyDepth;
+        }
+
+        PipelineRenderTargetLayout skyRTLayout = skyInfo.ToRenderTargetLayout();
+
+        struct AtmosphereSkyPassParameters
+        {
+        } atmosphereSkyParams;
+
+        _graphBuilder.AddPass("AtmosphereSky", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &atmosphereSkyParams,
+            [&](RenderGraphBuilder& builder, RGPass* pass, AtmosphereSkyPassParameters*) -> void
+            {
+                RGTexture* colorTex = builder.RegisterExternalTexture(_currentRenderTarget->GetColorTexture(0), colorFinalState);
+                builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+
+                if (useDepthStencilAttachment)
+                {
+                    RGTexture* depthTex = builder.RegisterExternalTexture(
+                        _currentRenderTarget->GetDepthStencilTexture(),
+                        ERGTextureAccess::DepthAttachmentWrite);
+                    builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
+                }
+            },
+            [&, skyRTLayout, skyInfo](RHICommandBuffer& commandBuffer) -> void
+            {
+                RHIGraphicsPipeline* pipeline = _atmospherePass->GetOrCreateSkyPipeline(
+                    skyRTLayout,
+                    sceneResource.cameraResources[0]->perViewBuffer);
+                if (!pipeline || !_atmospherePass->GetSkyResourceSet())
+                {
+                    return;
+                }
+
+                float debugColor[4]{0.2f, 0.45f, 1.0f, 1.0f};
+                commandBuffer.BeginRendering(skyInfo);
+                commandBuffer.PushDebugMark("Atmosphere Sky Pass", debugColor);
+                commandBuffer.SetViewport(Viewport{
+                    0.0f, 0.0f,
+                    static_cast<float>(_currentRenderTarget->GetWidth()),
+                    static_cast<float>(_currentRenderTarget->GetHeight()),
+                    0.0f, 1.0f});
+                commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+                commandBuffer.BindPipeline(pipeline);
+                commandBuffer.BindResourceSet(_atmospherePass->GetSkyResourceSet());
+                commandBuffer.DrawArrays(0, 3, 1);
+                commandBuffer.PopDebugMark();
+                commandBuffer.EndRendering();
+            });
+    }
+
     if (options.enableVolumetricClouds && !sceneResource.cameraResources.empty())
     {
         if (!_volumetricCloudPass)
@@ -237,6 +358,10 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
                 {
                     float timeSeconds = static_cast<float>(Timer::GetElapsedSeconds());
                     _volumetricCloudPass->UpdateSettings(options.volumetricClouds, timeSeconds);
+                    if (_atmospherePass && _atmospherePass->IsInitialized())
+                    {
+                        _volumetricCloudPass->SetAtmosphereResources(_atmospherePass->GetLutResources());
+                    }
 
                     RHIGraphicsPipeline* pipeline = _volumetricCloudPass->GetOrCreatePipeline(
                         cloudRTLayout,

@@ -1,4 +1,5 @@
 #include "Renderer/RenderPass/VolumetricCloudPass.h"
+#include "Renderer/RenderPass/AtmospherePass.h"
 
 #include "Core/Hash.h"
 #include "Core/Log.h"
@@ -269,6 +270,30 @@ void VolumetricCloudPass::UpdateSettings(const VolumetricCloudSettings& settings
     _rhiContext->UpdateBuffer(_settingsBuffer, 0, &ubo, sizeof(ubo));
 }
 
+void VolumetricCloudPass::SetAtmosphereResources(const AtmosphereLutResources& resources)
+{
+    bool changed =
+        _atmosphereSettingsBuffer != resources.settingsBuffer ||
+        _atmosphereTransmittance != resources.transmittanceLut ||
+        _atmosphereIrradiance != resources.irradianceLut ||
+        _atmosphereScattering != resources.scatteringLut ||
+        _atmosphereSampler2D != resources.lutSampler2D ||
+        _atmosphereSampler3D != resources.lutSampler3D;
+
+    _atmosphereSettingsBuffer = resources.settingsBuffer;
+    _atmosphereTransmittance = resources.transmittanceLut;
+    _atmosphereIrradiance = resources.irradianceLut;
+    _atmosphereScattering = resources.scatteringLut;
+    _atmosphereSampler2D = resources.lutSampler2D;
+    _atmosphereSampler3D = resources.lutSampler3D;
+
+    if (changed)
+    {
+        _perViewBuffer = nullptr;
+        invalidatePipelines();
+    }
+}
+
 bool VolumetricCloudPass::createNoiseResources()
 {
     std::vector<uint8> baseNoise = buildBaseNoise(BaseNoiseSize);
@@ -385,6 +410,12 @@ void VolumetricCloudPass::invalidatePipelines()
 
 void VolumetricCloudPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
 {
+    if (!_atmosphereSettingsBuffer || !_atmosphereTransmittance || !_atmosphereIrradiance ||
+        !_atmosphereScattering || !_atmosphereSampler2D || !_atmosphereSampler3D)
+    {
+        return;
+    }
+
     if (_resourceSet)
     {
         _rhiContext->DestroyResourceSet(_resourceSet);
@@ -435,8 +466,49 @@ void VolumetricCloudPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     weatherBinding.resource.textures.push_back(_curlWeather);
     weatherBinding.resource.samplers.push_back(_weatherSampler);
 
-    ResourceBinding bindings[5] = { perViewBinding, settingsBinding, baseBinding, detailBinding, weatherBinding };
-    _resourceLayout = _rhiContext->CreateResourceLayout("VolumetricCloudLayout", bindings, 5);
+    ResourceBinding atmosphereSettingsBinding{};
+    atmosphereSettingsBinding.type = EResourceType::UniformBuffer;
+    atmosphereSettingsBinding.stage = EShaderStage::Fragment;
+    atmosphereSettingsBinding.binding = 5;
+    atmosphereSettingsBinding.arrayCount = 1;
+    atmosphereSettingsBinding.resource.buffers.push_back(_atmosphereSettingsBuffer);
+    atmosphereSettingsBinding.resource.offsets.push_back(0);
+
+    ResourceBinding atmosphereTransBinding{};
+    atmosphereTransBinding.type = EResourceType::CombinedImageSampler;
+    atmosphereTransBinding.stage = EShaderStage::Fragment;
+    atmosphereTransBinding.binding = 6;
+    atmosphereTransBinding.arrayCount = 1;
+    atmosphereTransBinding.resource.textures.push_back(_atmosphereTransmittance);
+    atmosphereTransBinding.resource.samplers.push_back(_atmosphereSampler2D);
+
+    ResourceBinding atmosphereIrradianceBinding = atmosphereTransBinding;
+    atmosphereIrradianceBinding.binding = 7;
+    atmosphereIrradianceBinding.resource.textures.clear();
+    atmosphereIrradianceBinding.resource.samplers.clear();
+    atmosphereIrradianceBinding.resource.textures.push_back(_atmosphereIrradiance);
+    atmosphereIrradianceBinding.resource.samplers.push_back(_atmosphereSampler2D);
+
+    ResourceBinding atmosphereScatteringBinding = atmosphereTransBinding;
+    atmosphereScatteringBinding.binding = 8;
+    atmosphereScatteringBinding.resource.textures.clear();
+    atmosphereScatteringBinding.resource.samplers.clear();
+    atmosphereScatteringBinding.resource.textures.push_back(_atmosphereScattering);
+    atmosphereScatteringBinding.resource.samplers.push_back(_atmosphereSampler3D);
+
+    ResourceBinding bindings[9] =
+    {
+        perViewBinding,
+        settingsBinding,
+        baseBinding,
+        detailBinding,
+        weatherBinding,
+        atmosphereSettingsBinding,
+        atmosphereTransBinding,
+        atmosphereIrradianceBinding,
+        atmosphereScatteringBinding
+    };
+    _resourceLayout = _rhiContext->CreateResourceLayout("VolumetricCloudLayout", bindings, 9);
     if (!_resourceLayout)
     {
         HS_LOG(error, "[VolumetricCloudPass] Failed to create ResourceLayout");

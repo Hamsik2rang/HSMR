@@ -8,6 +8,7 @@
 #define __HS_RENDERER_DEFINITION_H__
 
 #include "Renderer/RenderDefinition.h"
+#include "Renderer/AtmosphereDefinition.h"
 #include "Renderer/VolumetricCloudDefinition.h"
 #include "RHI/RHIDefinition.h"
 #include "Resource/Image.h"
@@ -138,6 +139,8 @@ struct HS_RENDERER_API RenderOptions
 {
     bool enableGrid = false;
     bool enableDebug = false;
+    bool enableAtmosphere = true;
+    AtmosphereSettings atmosphere{};
     bool enableVolumetricClouds = true;
     VolumetricCloudSettings volumetricClouds{};
 };

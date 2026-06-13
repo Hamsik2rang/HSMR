@@ -23,6 +23,7 @@ class RHIResourceLayout;
 class RHIResourceSet;
 class RHIGraphicsPipeline;
 class ShaderLibrary;
+struct AtmosphereLutResources;
 
 class HS_RENDERER_API VolumetricCloudPass
 {
@@ -34,6 +35,7 @@ public:
     void Shutdown();
 
     void UpdateSettings(const VolumetricCloudSettings& settings, float timeSeconds);
+    void SetAtmosphereResources(const AtmosphereLutResources& resources);
 
     RHIGraphicsPipeline* GetOrCreatePipeline(const PipelineRenderTargetLayout& renderTargetLayout,
                                              RHIBuffer* perViewBuffer);
@@ -70,6 +72,12 @@ private:
     RHITexture*        _curlWeather     = nullptr;
     RHISampler*        _volumeSampler   = nullptr;
     RHISampler*        _weatherSampler  = nullptr;
+    RHIBuffer*         _atmosphereSettingsBuffer = nullptr;
+    RHITexture*        _atmosphereTransmittance = nullptr;
+    RHITexture*        _atmosphereIrradiance = nullptr;
+    RHITexture*        _atmosphereScattering = nullptr;
+    RHISampler*        _atmosphereSampler2D = nullptr;
+    RHISampler*        _atmosphereSampler3D = nullptr;
     RHIResourceLayout* _resourceLayout  = nullptr;
     RHIResourceSet*    _resourceSet     = nullptr;
     RHIBuffer*         _perViewBuffer   = nullptr;

@@ -7,6 +7,7 @@
 
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/SimpleInspectorPanel.h"
+#include "Renderer/AtmosphereDefinition.h"
 #include "Renderer/VolumetricCloudDefinition.h"
 
 /*#include "Renderer/Renderer.h"*/ namespace hs { class Renderer; }
@@ -46,6 +47,7 @@ private:
     void processCameraInput(float deltaTime);
     
     void drawHelperOverlayGUI();
+    void drawAtmosphereGUI();
     void drawVolumetricCloudGUI();
     
     Scoped<Renderer> _renderer;
@@ -72,6 +74,7 @@ private:
     std::vector<Scoped<Material>> _ownedMaterials;
 
     Entity _directionalLightEntity;
+    AtmosphereSettings _atmosphereSettings;
     VolumetricCloudSettings _cloudSettings;
 };
 

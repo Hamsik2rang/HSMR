@@ -124,6 +124,10 @@ void SimpleWindow::onRender()
     // Scene primary camera is kept in sync with EditorCamera by syncEditorCameraToScene()
     // in onUpdate, so the standard scene render path produces the correct view.
     RenderOptions renderOptions{};
+    _cloudSettings.sunDirection = _atmosphereSettings.sunDirection;
+    _cloudSettings.sunIntensity = _atmosphereSettings.sunIntensity * 0.09f;
+    renderOptions.enableAtmosphere = _atmosphereSettings.enabled;
+    renderOptions.atmosphere = _atmosphereSettings;
     renderOptions.enableVolumetricClouds = _cloudSettings.enabled;
     renderOptions.volumetricClouds = _cloudSettings;
     _renderer->Render(_scene.get(), curRT, renderOptions);
@@ -357,6 +361,7 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
+    drawAtmosphereGUI();
     drawVolumetricCloudGUI();
     if (_inspectorPanel)
     {
@@ -394,12 +399,60 @@ void SimpleWindow::drawHelperOverlayGUI()
     ImGui::End();
 }
 
-void SimpleWindow::drawVolumetricCloudGUI()
+void SimpleWindow::drawAtmosphereGUI()
 {
     ImGuiViewport* mainViewport = ImGui::GetMainViewport();
     ImVec2 viewportPos = mainViewport->Pos;
 
     ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 160), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Atmosphere");
+
+    ImGui::Checkbox("Enabled", &_atmosphereSettings.enabled);
+    float sunDir[3] =
+    {
+        _atmosphereSettings.sunDirection.x,
+        _atmosphereSettings.sunDirection.y,
+        _atmosphereSettings.sunDirection.z
+    };
+    if (ImGui::SliderFloat3("Sun Dir", sunDir, -1.0f, 1.0f))
+    {
+        _atmosphereSettings.sunDirection = glm::vec3(sunDir[0], sunDir[1], sunDir[2]);
+    }
+    ImGui::SliderFloat("Sun Intensity", &_atmosphereSettings.sunIntensity, 0.0f, 40.0f);
+    ImGui::SliderFloat("Exposure", &_atmosphereSettings.exposure, 0.05f, 4.0f);
+    ImGui::SliderFloat("Rayleigh", &_atmosphereSettings.rayleighMultiplier, 0.0f, 4.0f);
+    ImGui::SliderFloat("Mie", &_atmosphereSettings.mieMultiplier, 0.0f, 4.0f);
+    ImGui::SliderFloat("Ozone", &_atmosphereSettings.ozoneMultiplier, 0.0f, 4.0f);
+    ImGui::SliderFloat("Mie g", &_atmosphereSettings.mieG, 0.0f, 0.95f);
+
+    int order = static_cast<int>(_atmosphereSettings.multipleScatteringOrder);
+    if (ImGui::SliderInt("Multi Order", &order, 1, 8))
+    {
+        _atmosphereSettings.multipleScatteringOrder = static_cast<uint32>(order);
+    }
+
+    const char* debugLabels[] = { "Final", "Transmittance", "Irradiance", "Scattering" };
+    int debugView = static_cast<int>(_atmosphereSettings.debugView);
+    if (ImGui::Combo("Debug View", &debugView, debugLabels, IM_ARRAYSIZE(debugLabels)))
+    {
+        _atmosphereSettings.debugView = static_cast<EAtmosphereDebugView>(debugView);
+    }
+
+    if (ImGui::Button("Reset"))
+    {
+        _atmosphereSettings = AtmosphereSettings{};
+    }
+
+    ImGui::End();
+}
+
+void SimpleWindow::drawVolumetricCloudGUI()
+{
+    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+    ImVec2 viewportPos = mainViewport->Pos;
+
+    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 360, viewportPos.y + 160), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("Volumetric Clouds");
 
@@ -417,13 +470,7 @@ void SimpleWindow::drawVolumetricCloudGUI()
     }
     ImGui::SliderFloat("Wind Speed", &_cloudSettings.windSpeed, 0.0f, 80.0f);
 
-    float sunDir[3] = { _cloudSettings.sunDirection.x, _cloudSettings.sunDirection.y, _cloudSettings.sunDirection.z };
-    if (ImGui::SliderFloat3("Sun Dir", sunDir, -1.0f, 1.0f))
-    {
-        _cloudSettings.sunDirection = glm::vec3(sunDir[0], sunDir[1], sunDir[2]);
-    }
     ImGui::ColorEdit3("Sun Color", &_cloudSettings.sunColor.x);
-    ImGui::SliderFloat("Sun Intensity", &_cloudSettings.sunIntensity, 0.0f, 5.0f);
     ImGui::SliderFloat("Ambient", &_cloudSettings.ambientIntensity, 0.0f, 2.0f);
     ImGui::SliderFloat("HG g", &_cloudSettings.hgG, -0.2f, 0.95f);
     ImGui::SliderFloat("Powder", &_cloudSettings.powderStrength, 0.0f, 2.0f);

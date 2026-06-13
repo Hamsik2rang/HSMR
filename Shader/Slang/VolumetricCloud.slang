@@ -18,6 +18,20 @@ Sampler3D baseNoiseTexture;
 Sampler3D detailNoiseTexture;
 Sampler2D curlWeatherTexture;
 
+struct AtmosphereSettingsUBO
+{
+    float4 planetRadii;
+    float4 densityParams;
+    float4 scatteringParams;
+    float4 sunDirectionIntensity;
+    float4 debugExposureOrder;
+};
+
+ConstantBuffer<AtmosphereSettingsUBO> atmosphereSettings;
+Sampler2D atmosphereTransmittanceLut;
+Sampler2D atmosphereIrradianceLut;
+Sampler3D atmosphereScatteringLut;
+
 struct VSOutput
 {
     float4 positionCS : SV_Position;
@@ -194,15 +208,67 @@ float lightMarch(float3 worldPos, float height01, float baseStep)
     return saturate1(beer * lerp(0.72f, 1.35f, powder));
 }
 
-float3 skyColor(float3 dir)
+float2 atmosphereTransmittanceUv(float heightMeters, float mu)
 {
-    float t = saturate1(dir.y * 0.5f + 0.5f);
-    float3 horizon = float3(0.64f, 0.76f, 0.91f);
-    float3 zenith = float3(0.12f, 0.32f, 0.72f);
-    float3 sky = lerp(horizon, zenith, t);
-    float sunAmount = pow(saturate1(dot(dir, normalize(cloudSettings.sunDirectionIntensity.xyz))), 256.0f);
-    sky += cloudSettings.sunColorAmbient.rgb * sunAmount * 2.2f;
-    return sky;
+    float height01 = saturate1(heightMeters / max(atmosphereSettings.planetRadii.z, 1.0f));
+    return float2(saturate1(mu * 0.5f + 0.5f), height01);
+}
+
+float3 atmosphereScatteringUv(float3 rayOrigin, float3 rayDir)
+{
+    float planetRadius = atmosphereSettings.planetRadii.x;
+    float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
+    float3 up = normalize(rayOrigin - planetCenter);
+    float mu = dot(rayDir, up);
+    float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
+    float height = length(rayOrigin - planetCenter) - planetRadius;
+    return float3(
+        saturate1(mu * 0.5f + 0.5f),
+        saturate1(sunMu * 0.5f + 0.5f),
+        saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)));
+}
+
+float3 tonemapAtmosphere(float3 color)
+{
+    return 1.0f.xxx - exp(-max(color, 0.0f.xxx) * max(atmosphereSettings.debugExposureOrder.y, 0.001f));
+}
+
+float3 skyColor(float3 rayOrigin, float3 dir)
+{
+    float3 uvw = atmosphereScatteringUv(rayOrigin, dir);
+    float3 sky = atmosphereScatteringLut.Sample(uvw).rgb;
+
+    float planetRadius = atmosphereSettings.planetRadii.x;
+    float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
+    float3 up = normalize(rayOrigin - planetCenter);
+    float height = length(rayOrigin - planetCenter) - planetRadius;
+    float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
+    sky += atmosphereIrradianceLut.Sample(float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb * 0.015f;
+
+    float sunAmount = pow(saturate1(dot(dir, normalize(atmosphereSettings.sunDirectionIntensity.xyz))), 1800.0f);
+    float3 sunTrans = atmosphereTransmittanceLut.Sample(atmosphereTransmittanceUv(height, sunMu)).rgb;
+    sky += sunTrans * atmosphereSettings.sunDirectionIntensity.w * sunAmount;
+    return tonemapAtmosphere(sky);
+}
+
+float3 sunTransmittanceAt(float3 worldPos)
+{
+    float planetRadius = atmosphereSettings.planetRadii.x;
+    float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
+    float3 up = normalize(worldPos - planetCenter);
+    float height = length(worldPos - planetCenter) - planetRadius;
+    float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
+    return atmosphereTransmittanceLut.Sample(atmosphereTransmittanceUv(height, sunMu)).rgb;
+}
+
+float3 ambientIrradianceAt(float3 worldPos)
+{
+    float planetRadius = atmosphereSettings.planetRadii.x;
+    float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
+    float3 up = normalize(worldPos - planetCenter);
+    float height = length(worldPos - planetCenter) - planetRadius;
+    float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
+    return atmosphereIrradianceLut.Sample(float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb;
 }
 
 [shader("fragment")]
@@ -222,14 +288,14 @@ float4 FragmentMain(VSOutput input) : SV_Target
     // producing a noisy inverted cloud carpet across the lower screen.
     if (horizonDot < -0.015f)
     {
-        return float4(skyColor(rayDir), 1.0f);
+        return float4(skyColor(rayOrigin, rayDir), 1.0f);
     }
 
     float outerT0;
     float outerT1;
     if (!raySphere(rayOrigin, rayDir, planetCenter, cloudTop, outerT0, outerT1))
     {
-        return float4(skyColor(rayDir), 1.0f);
+        return float4(skyColor(rayOrigin, rayDir), 1.0f);
     }
 
     float innerT0;
@@ -247,7 +313,7 @@ float4 FragmentMain(VSOutput input) : SV_Target
     marchEnd = min(marchEnd, marchStart + 35000.0f);
     if (marchEnd <= marchStart)
     {
-        return float4(skyColor(rayDir), 1.0f);
+        return float4(skyColor(rayOrigin, rayDir), 1.0f);
     }
 
     uint sampleCount = (uint)clamp(cloudSettings.sampleAndLighting.x, 16.0f, 160.0f);
@@ -323,9 +389,10 @@ float4 FragmentMain(VSOutput input) : SV_Target
             float lightEnergy = lightMarch(p, height01, stepSize);
             float phase = henyeyGreenstein(dot(rayDir, normalize(cloudSettings.sunDirectionIntensity.xyz)),
                                            cloudSettings.sampleAndLighting.z);
-            float direct = lightEnergy * phase * cloudSettings.sunDirectionIntensity.w * 6.0f;
+            float3 sunTrans = sunTransmittanceAt(p);
+            float direct = lightEnergy * phase * cloudSettings.sunDirectionIntensity.w * dot(sunTrans, float3(0.3333f)) * 6.0f;
             float ambient = cloudSettings.sunColorAmbient.w * lerp(0.75f, 1.2f, height01);
-            float3 sampleColor = cloudSettings.sunColorAmbient.rgb * direct + skyColor(float3(0.0f, 1.0f, 0.0f)) * ambient;
+            float3 sampleColor = cloudSettings.sunColorAmbient.rgb * direct + tonemapAtmosphere(ambientIrradianceAt(p) * 0.035f) * ambient;
 
             float sampleAlpha = 1.0f - exp(-density * currentStep * 0.0014f);
             sampleAlpha = saturate1(sampleAlpha);
@@ -353,7 +420,7 @@ float4 FragmentMain(VSOutput input) : SV_Target
         return float4(lighting.xxx, 1.0f);
     }
 
-    float3 sky = skyColor(rayDir);
+    float3 sky = skyColor(rayOrigin, rayDir);
     float distanceFade = saturate1((marchEnd - marchStart) / 22000.0f);
     float3 atmosphere = lerp(cloudColor, sky, distanceFade * 0.18f);
     float horizonFade = smoothstep(-0.015f, 0.08f, horizonDot);
