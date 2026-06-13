@@ -50,7 +50,7 @@ private:
     static std::string s_cacheDir;
     static bool s_initialized;
 
-    static constexpr uint32 IMAGE_MAGIC   = 0x58455354;  // 'TSEX' little-endian
+    static constexpr uint32 IMAGE_MAGIC   = 0x58455448;  // 'HTEX' little-endian
     static constexpr uint32 IMAGE_VERSION = 1;
     static constexpr uint32 MODEL_MAGIC   = 0x4C444D48;  // 'HMDL' little-endian
     static constexpr uint32 MODEL_VERSION = 2;
