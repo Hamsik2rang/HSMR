@@ -35,6 +35,7 @@ class HS_CORE_API ProfileDataCollector
 {
 public:
     static ProfileDataCollector& Get();
+    static void Finalize();
 
     void BeginFrame();
     void PushZone(const char* name, uint32 color);

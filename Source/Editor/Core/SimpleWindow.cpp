@@ -20,6 +20,8 @@
 #include "Editor/Core/EditorCamera.h"
 #include "Editor/Core/EditorContext.h"
 
+#include "ThirdParty/ImGui/imgui.h"
+
 #include "Resource/ObjectManager.h"
 #include "Resource/Mesh.h"
 #include "Resource/Material.h"
@@ -121,7 +123,10 @@ void SimpleWindow::onRender()
 
     // Scene primary camera is kept in sync with EditorCamera by syncEditorCameraToScene()
     // in onUpdate, so the standard scene render path produces the correct view.
-    _renderer->Render(_scene.get(), curRT);
+    RenderOptions renderOptions{};
+    renderOptions.enableVolumetricClouds = _cloudSettings.enabled;
+    renderOptions.volumetricClouds = _cloudSettings;
+    _renderer->Render(_scene.get(), curRT, renderOptions);
 
     // ImGui composites on top of the swapchain via Load action.
     onRenderGUI();
@@ -352,6 +357,7 @@ void SimpleWindow::onRenderGUI()
     guiContext->BeginRender(_swapchain);
 
     drawHelperOverlayGUI();
+    drawVolumetricCloudGUI();
     if (_inspectorPanel)
     {
         _inspectorPanel->Draw();
@@ -385,6 +391,67 @@ void SimpleWindow::drawHelperOverlayGUI()
     ImGui::Text("RMB + WASD: Move Camera");
     ImGui::Text("RMB + Mouse: Look Around");
     
+    ImGui::End();
+}
+
+void SimpleWindow::drawVolumetricCloudGUI()
+{
+    ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+    ImVec2 viewportPos = mainViewport->Pos;
+
+    ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 10, viewportPos.y + 160), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(340.0f, 0.0f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Volumetric Clouds");
+
+    ImGui::Checkbox("Enabled", &_cloudSettings.enabled);
+    ImGui::SliderFloat("Coverage", &_cloudSettings.coverage, 0.0f, 1.0f);
+    ImGui::SliderFloat("Cloud Type", &_cloudSettings.cloudType, 0.0f, 1.0f);
+    ImGui::SliderFloat("Precipitation", &_cloudSettings.precipitation, 0.0f, 1.0f);
+    ImGui::SliderFloat("Density", &_cloudSettings.densityMultiplier, 0.0f, 3.0f);
+    ImGui::SliderFloat("Erosion", &_cloudSettings.erosion, 0.0f, 1.0f);
+
+    float windDir[2] = { _cloudSettings.windDirection.x, _cloudSettings.windDirection.y };
+    if (ImGui::SliderFloat2("Wind Dir", windDir, -1.0f, 1.0f))
+    {
+        _cloudSettings.windDirection = glm::vec2(windDir[0], windDir[1]);
+    }
+    ImGui::SliderFloat("Wind Speed", &_cloudSettings.windSpeed, 0.0f, 80.0f);
+
+    float sunDir[3] = { _cloudSettings.sunDirection.x, _cloudSettings.sunDirection.y, _cloudSettings.sunDirection.z };
+    if (ImGui::SliderFloat3("Sun Dir", sunDir, -1.0f, 1.0f))
+    {
+        _cloudSettings.sunDirection = glm::vec3(sunDir[0], sunDir[1], sunDir[2]);
+    }
+    ImGui::ColorEdit3("Sun Color", &_cloudSettings.sunColor.x);
+    ImGui::SliderFloat("Sun Intensity", &_cloudSettings.sunIntensity, 0.0f, 5.0f);
+    ImGui::SliderFloat("Ambient", &_cloudSettings.ambientIntensity, 0.0f, 2.0f);
+    ImGui::SliderFloat("HG g", &_cloudSettings.hgG, -0.2f, 0.95f);
+    ImGui::SliderFloat("Powder", &_cloudSettings.powderStrength, 0.0f, 2.0f);
+
+    int primarySamples = static_cast<int>(_cloudSettings.primarySampleCount);
+    if (ImGui::SliderInt("Primary Samples", &primarySamples, 16, 160))
+    {
+        _cloudSettings.primarySampleCount = static_cast<uint32>(primarySamples);
+    }
+
+    int lightSamples = static_cast<int>(_cloudSettings.lightSampleCount);
+    if (ImGui::SliderInt("Light Samples", &lightSamples, 1, 8))
+    {
+        _cloudSettings.lightSampleCount = static_cast<uint32>(lightSamples);
+    }
+
+    const char* debugLabels[] = { "Final", "Base Noise", "Detail Noise", "Density", "Lighting" };
+    int debugView = static_cast<int>(_cloudSettings.debugView);
+    if (ImGui::Combo("Debug View", &debugView, debugLabels, IM_ARRAYSIZE(debugLabels)))
+    {
+        _cloudSettings.debugView = static_cast<EVolumetricCloudDebugView>(debugView);
+    }
+
+    if (ImGui::Button("Reset"))
+    {
+        _cloudSettings = VolumetricCloudSettings{};
+    }
+
     ImGui::End();
 }
 

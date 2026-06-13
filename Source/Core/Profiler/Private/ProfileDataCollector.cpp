@@ -19,6 +19,16 @@ ProfileDataCollector& ProfileDataCollector::Get()
     return s_instance;
 }
 
+void ProfileDataCollector::Finalize()
+{
+    ProfileDataCollector& collector = Get();
+    collector._currentFrame.clear();
+    collector._lastFrame.clear();
+    collector._zoneStack.clear();
+    collector._statsMap.clear();
+    collector._currentDepth = 0;
+}
+
 void ProfileDataCollector::BeginFrame()
 {
     // Swap: current becomes last, current is cleared for new frame

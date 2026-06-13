@@ -34,6 +34,7 @@ public:
         MaterialPathResolver materialPathResolver,
         MeshResolver meshResolver,
         MaterialResolver materialResolver);
+    static void ClearAssetResolvers();
 
     static MeshPathResolver s_meshPathResolver;
     static MaterialPathResolver s_materialPathResolver;

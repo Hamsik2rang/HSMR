@@ -27,6 +27,7 @@ public:
 
     void Load();
     void Save();
+    void Finalize();
 
     void AddProject(const std::string& projectFilePath, const std::string& name);
     void RemoveProject(const std::string& projectFilePath);

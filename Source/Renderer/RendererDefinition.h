@@ -8,6 +8,7 @@
 #define __HS_RENDERER_DEFINITION_H__
 
 #include "Renderer/RenderDefinition.h"
+#include "Renderer/VolumetricCloudDefinition.h"
 #include "RHI/RHIDefinition.h"
 #include "Resource/Image.h"
 #include "Resource/Shader.h"
@@ -137,6 +138,8 @@ struct HS_RENDERER_API RenderOptions
 {
     bool enableGrid = false;
     bool enableDebug = false;
+    bool enableVolumetricClouds = true;
+    VolumetricCloudSettings volumetricClouds{};
 };
 
 // 씬 전체의 렌더링용 GPU 리소스 집합

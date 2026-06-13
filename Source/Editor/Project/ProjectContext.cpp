@@ -154,6 +154,11 @@ void ProjectContext::CloseProject()
     }
 }
 
+void ProjectContext::Finalize()
+{
+    CloseProject();
+}
+
 std::string ProjectContext::GetAssetPath() const
 {
     if (_projectPath.empty())

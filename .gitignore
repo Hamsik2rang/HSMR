@@ -45,6 +45,7 @@ fastlane/test_output
 
 .DS_Store
 Build
+BuildVS
 Source/.vscode/settings.json
 .claude
 nul

@@ -1,6 +1,7 @@
 module PBR;
 import GlobalUniform;
 import Macros;
+import Color;
 
 ConstantBuffer<PerViewUBO> perView;
 ConstantBuffer<PerDrawUBO> perDraw;
@@ -147,7 +148,7 @@ float4 FragmentMain(FSInput input) : SV_Target
     float3 color   = direct + ambient + emissiveSample;
 
     // Swapchain is UNORM; encode to sRGB so the display sees the right values.
-    float3 colorSrgb = linearToSrgb(max(color, 0.0));
+    float3 colorSrgb = LinearToSrgb(max(color, 0.0));
 
     return float4(colorSrgb, baseSample.a * materialParams.opacity);
 }

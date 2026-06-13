@@ -83,6 +83,7 @@ public:
      * @brief Shutdown and clear all cached resources
      */
     void Shutdown();
+    void Finalize() { Shutdown(); }
 
     /**
      * @brief Refresh the database (rescan for changes)

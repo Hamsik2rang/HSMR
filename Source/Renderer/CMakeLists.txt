@@ -14,6 +14,7 @@ set(RENDERER_HEADERS
     RenderResourceManager.h
     ShaderLibrary.h
     RenderGraph.h
+    VolumetricCloudDefinition.h
 )
 
 source_group("Public" FILES ${RENDERER_HEADERS})
@@ -53,6 +54,7 @@ list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 set(RENDERER_RENDER_PASS_HEADERS
     RenderPass/RenderPass.h
     RenderPass/ForwardSkyboxPass.h
+    RenderPass/VolumetricCloudPass.h
     RenderPass/PostProcessPass.h
 )
 
@@ -61,6 +63,7 @@ list(APPEND TOTAL_FILES ${RENDERER_RENDER_PASS_HEADERS})
 
 set(RENDERER_RENDER_PASS_SOURCES
     RenderPass/Private/ForwardSkyboxPass.cpp
+    RenderPass/Private/VolumetricCloudPass.cpp
     RenderPass/Private/PostProcessPass.cpp
 )
 

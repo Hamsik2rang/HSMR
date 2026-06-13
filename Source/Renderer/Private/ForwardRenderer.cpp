@@ -3,6 +3,8 @@
 #include "RHI/RHIContext.h"
 #include "RHI/RenderHandle.h"
 
+#include "Core/HAL/Timer.h"
+
 #include "Renderer/ShaderLibrary.h"
 
 #include "Resource/Image.h"
@@ -20,6 +22,7 @@ ForwardRenderer::~ForwardRenderer()
 
 void ForwardRenderer::Shutdown()
 {
+    _volumetricCloudPass.reset();
     _skyboxPass.reset();
     Renderer::Shutdown();
 }
@@ -161,6 +164,105 @@ void ForwardRenderer::Render(const RenderSceneSnapshot& snapshot, RenderTarget* 
         commandBuffer.PopDebugMark();
         commandBuffer.EndRendering();
     });
+
+    if (options.enableVolumetricClouds && !sceneResource.cameraResources.empty())
+    {
+        if (!_volumetricCloudPass)
+        {
+            _volumetricCloudPass = MakeScoped<VolumetricCloudPass>();
+            if (!_volumetricCloudPass->Initialize(_shaderLibrary, _rhiContext))
+            {
+                _volumetricCloudPass.reset();
+            }
+        }
+
+        if (_volumetricCloudPass && _volumetricCloudPass->IsInitialized())
+        {
+            const ERGTextureAccess colorFinalState = rtInfo.isSwapchainTarget
+                                                         ? ERGTextureAccess::Present
+                                                         : ERGTextureAccess::ReadOnly;
+
+            RenderingInfo cloudInfo{};
+            cloudInfo.colorAttachmentCount       = 1;
+            cloudInfo.useDepthStencilAttachment  = useDepthStencilAttachment;
+            cloudInfo.isSwapchainRendering       = false;
+            cloudInfo.renderArea                 = Area(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+            cloudInfo.enableAutomaticTransitions = false;
+
+            Attachment cloudColor{};
+            cloudColor.format         = rtInfo.colorTextureInfo[0].format;
+            cloudColor.clearValue     = ClearValue(0.0f, 0.0f, 0.0f, 1.0f);
+            cloudColor.isDepthStencil = false;
+            cloudColor.loadAction     = ELoadAction::Load;
+            cloudColor.storeAction    = EStoreAction::Store;
+
+            RenderingAttachmentInfo cloudColorAttachment{};
+            cloudColorAttachment.texture    = _currentRenderTarget->GetColorTexture(0);
+            cloudColorAttachment.attachment = cloudColor;
+            cloudInfo.colorAttachments.push_back(cloudColorAttachment);
+
+            if (useDepthStencilAttachment)
+            {
+                Attachment cloudDepth{};
+                cloudDepth.format         = rtInfo.depthStencilInfo.format;
+                cloudDepth.clearValue     = ClearValue(1.0f, 0.0f);
+                cloudDepth.isDepthStencil = true;
+                cloudDepth.loadAction     = ELoadAction::Load;
+                cloudDepth.storeAction    = EStoreAction::Store;
+                cloudInfo.depthStencilAttachment.texture    = _currentRenderTarget->GetDepthStencilTexture();
+                cloudInfo.depthStencilAttachment.attachment = cloudDepth;
+            }
+
+            PipelineRenderTargetLayout cloudRTLayout = cloudInfo.ToRenderTargetLayout();
+
+            struct VolumetricCloudPassParameters
+            {
+            } cloudParams;
+
+            _graphBuilder.AddPass("VolumetricCloud", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &cloudParams,
+                [&](RenderGraphBuilder& builder, RGPass* pass, VolumetricCloudPassParameters*) -> void
+                {
+                    RGTexture* colorTex = builder.RegisterExternalTexture(_currentRenderTarget->GetColorTexture(0), colorFinalState);
+                    builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
+
+                    if (useDepthStencilAttachment)
+                    {
+                        RGTexture* depthTex = builder.RegisterExternalTexture(
+                            _currentRenderTarget->GetDepthStencilTexture(),
+                            ERGTextureAccess::DepthAttachmentWrite);
+                        builder.Read(pass, depthTex, ERGTextureAccess::DepthAttachmentRead);
+                    }
+                },
+                [&, cloudRTLayout, cloudInfo](RHICommandBuffer& commandBuffer) -> void
+                {
+                    float timeSeconds = static_cast<float>(Timer::GetElapsedSeconds());
+                    _volumetricCloudPass->UpdateSettings(options.volumetricClouds, timeSeconds);
+
+                    RHIGraphicsPipeline* pipeline = _volumetricCloudPass->GetOrCreatePipeline(
+                        cloudRTLayout,
+                        sceneResource.cameraResources[0]->perViewBuffer);
+                    if (!pipeline || !_volumetricCloudPass->GetResourceSet())
+                    {
+                        return;
+                    }
+
+                    float debugColor[4]{0.45f, 0.62f, 1.0f, 1.0f};
+                    commandBuffer.BeginRendering(cloudInfo);
+                    commandBuffer.PushDebugMark("Volumetric Cloud Pass", debugColor);
+                    commandBuffer.SetViewport(Viewport{
+                        0.0f, 0.0f,
+                        static_cast<float>(_currentRenderTarget->GetWidth()),
+                        static_cast<float>(_currentRenderTarget->GetHeight()),
+                        0.0f, 1.0f});
+                    commandBuffer.SetScissor(0, 0, _currentRenderTarget->GetWidth(), _currentRenderTarget->GetHeight());
+                    commandBuffer.BindPipeline(pipeline);
+                    commandBuffer.BindResourceSet(_volumetricCloudPass->GetResourceSet());
+                    commandBuffer.DrawArrays(0, 3, 1);
+                    commandBuffer.PopDebugMark();
+                    commandBuffer.EndRendering();
+                });
+        }
+    }
 
     // Skybox pass: rendered after opaque so it only fills unwritten (depth==1.0) background pixels.
     // if (_skyboxPass && _skyboxPass->HasSkybox() && !sceneResource.cameraResources.empty())

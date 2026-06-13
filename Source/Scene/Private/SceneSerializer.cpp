@@ -28,6 +28,14 @@ SceneSerializer::MaterialPathResolver SceneSerializer::s_materialPathResolver = 
 SceneSerializer::MeshResolver SceneSerializer::s_meshResolver = nullptr;
 SceneSerializer::MaterialResolver SceneSerializer::s_materialResolver = nullptr;
 
+void SceneSerializer::ClearAssetResolvers()
+{
+    s_meshPathResolver = nullptr;
+    s_materialPathResolver = nullptr;
+    s_meshResolver = nullptr;
+    s_materialResolver = nullptr;
+}
+
 // Helper functions for GLM type serialization
 namespace
 {

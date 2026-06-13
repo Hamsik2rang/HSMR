@@ -112,6 +112,11 @@ void RecentProjects::Save()
     HS_LOG(info, "Saved %zu recent projects", _projects.size());
 }
 
+void RecentProjects::Finalize()
+{
+    _projects.clear();
+}
+
 void RecentProjects::AddProject(const std::string& projectFilePath, const std::string& name)
 {
     if (projectFilePath.empty())

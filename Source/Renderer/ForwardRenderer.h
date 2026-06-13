@@ -5,6 +5,7 @@
 
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderPass/ForwardSkyboxPass.h"
+#include "Renderer/RenderPass/VolumetricCloudPass.h"
 
 #include <array>
 
@@ -32,6 +33,7 @@ public:
 
 private:
     Scoped<ForwardSkyboxPass> _skyboxPass;
+    Scoped<VolumetricCloudPass> _volumetricCloudPass;
 };
 
 HS_NS_END

@@ -31,6 +31,7 @@ public:
     bool CreateProject(const std::string& folderPath, const std::string& name);
     bool OpenProject(const std::string& projectFilePath);
     void CloseProject();
+    void Finalize();
 
     bool IsProjectOpen() const { return _isOpen; }
 
