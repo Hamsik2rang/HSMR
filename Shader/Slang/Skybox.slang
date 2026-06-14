@@ -2,7 +2,8 @@ module Skybox;
 import GlobalUniform;
 
 ConstantBuffer<PerViewUBO> perView;
-SamplerCube skyboxCubemap;
+TextureCube skyboxCubemap : register(t1);
+SamplerState skyboxSampler : register(s2);
 
 struct VSOutput
 {
@@ -35,5 +36,5 @@ VSOutput VertexMain(uint vertexID : SV_VertexID)
 float4 FragmentMain(VSOutput input) : SV_Target
 {
     float3 dir = normalize(input.viewDirWS);
-    return skyboxCubemap.Sample(dir);
+    return skyboxCubemap.Sample(skyboxSampler, dir);
 }

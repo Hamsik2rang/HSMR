@@ -123,6 +123,20 @@ static bool readBytes(std::ifstream& f, std::vector<uint8>& data)
     return f.good() || f.eof();
 }
 
+static void writeNativeBindingSlots(std::ofstream& f, const NativeShaderBindingSlots& slots)
+{
+    writeVal(f, slots.vertexBinding);
+    writeVal(f, slots.fragmentBinding);
+    writeVal(f, slots.computeBinding);
+}
+
+static bool readNativeBindingSlots(std::ifstream& f, NativeShaderBindingSlots& slots)
+{
+    return readVal(f, slots.vertexBinding) &&
+           readVal(f, slots.fragmentBinding) &&
+           readVal(f, slots.computeBinding);
+}
+
 bool ShaderCache::serializeOutput(const std::string& path, uint64 sourceHash, const ShaderCompileOutputEx& output)
 {
     std::ofstream file(path, std::ios::binary);
@@ -161,6 +175,7 @@ bool ShaderCache::serializeOutput(const std::string& path, uint64 sourceHash, co
         writeVal(file, buf.nameHash);
         writeVal(file, buf.set);
         writeVal(file, buf.binding);
+        writeNativeBindingSlots(file, buf.nativeBindingSlots);
         writeVal(file, buf.totalSize);
         writeVal(file, static_cast<uint32>(buf.stages));
         writeVal(file, static_cast<uint8>(buf.resourceType));
@@ -185,6 +200,7 @@ bool ShaderCache::serializeOutput(const std::string& path, uint64 sourceHash, co
         writeVal(file, tex.nameHash);
         writeVal(file, tex.set);
         writeVal(file, tex.binding);
+        writeNativeBindingSlots(file, tex.nativeBindingSlots);
         writeVal(file, static_cast<uint32>(tex.stages));
         writeVal(file, tex.dimension);
     }
@@ -198,6 +214,7 @@ bool ShaderCache::serializeOutput(const std::string& path, uint64 sourceHash, co
         writeVal(file, samp.nameHash);
         writeVal(file, samp.set);
         writeVal(file, samp.binding);
+        writeNativeBindingSlots(file, samp.nativeBindingSlots);
         writeVal(file, static_cast<uint32>(samp.stages));
     }
 
@@ -267,6 +284,7 @@ bool ShaderCache::deserializeOutput(const std::string& path, uint64 sourceHash, 
         if (!readVal(file, buf.nameHash)) return false;
         if (!readVal(file, buf.set)) return false;
         if (!readVal(file, buf.binding)) return false;
+        if (!readNativeBindingSlots(file, buf.nativeBindingSlots)) return false;
         if (!readVal(file, buf.totalSize)) return false;
         uint32 stagesVal;
         if (!readVal(file, stagesVal)) return false;
@@ -299,6 +317,7 @@ bool ShaderCache::deserializeOutput(const std::string& path, uint64 sourceHash, 
         if (!readVal(file, tex.nameHash)) return false;
         if (!readVal(file, tex.set)) return false;
         if (!readVal(file, tex.binding)) return false;
+        if (!readNativeBindingSlots(file, tex.nativeBindingSlots)) return false;
         uint32 stagesVal;
         if (!readVal(file, stagesVal)) return false;
         tex.stages = static_cast<EShaderStage>(stagesVal);
@@ -316,6 +335,7 @@ bool ShaderCache::deserializeOutput(const std::string& path, uint64 sourceHash, 
         if (!readVal(file, samp.nameHash)) return false;
         if (!readVal(file, samp.set)) return false;
         if (!readVal(file, samp.binding)) return false;
+        if (!readNativeBindingSlots(file, samp.nativeBindingSlots)) return false;
         uint32 stagesVal;
         if (!readVal(file, stagesVal)) return false;
         samp.stages = static_cast<EShaderStage>(stagesVal);

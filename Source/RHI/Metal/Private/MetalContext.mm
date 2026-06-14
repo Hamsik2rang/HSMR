@@ -16,18 +16,6 @@
 
 HS_NS_BEGIN
 
-static bool isCPUAccessibleBuffer(EBufferMemoryOption memoryOption)
-{
-    switch (memoryOption)
-    {
-    case EBufferMemoryOption::Dynamic:
-    case EBufferMemoryOption::Mapped:
-        return true;
-    default:
-        return false;
-    }
-}
-
 id<MTLDevice> s_device         = nil;
 id<MTLCommandQueue> s_cmdQueue = nil; // TODO: Mult-CommandQueue로 변경
 
@@ -335,9 +323,9 @@ RHIShader* MetalContext::CreateShader(const char* name, const ShaderInfo& info, 
     break;
     case EShaderStage::Compute:
     {
-        //...
+        func = [library newFunctionWithName:entry];
     }
-        //            break;
+    break;
     default:
     {
         HS_LOG(crash, "This stage is Not supported yet");
@@ -390,7 +378,7 @@ RHIBuffer* MetalContext::CreateBuffer(const char* name, const void* data, size_t
     }
 
     mtlBuffer->handle   = handle;
-    mtlBuffer->byte     = isCPUAccessibleBuffer(info.memoryOption) ? [handle contents] : nullptr;
+    mtlBuffer->byte     = MetalUtility::IsCPUAccessibleBufferOption(info.memoryOption) ? [handle contents] : nullptr;
     mtlBuffer->byteSize = dataSize;
 
     if (data != nullptr)
@@ -472,7 +460,7 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
     desc.height                = info.extent.height;
     desc.depth                 = info.extent.depth;
     desc.arrayLength           = info.arrayLength == 0 ? 1 : info.arrayLength;
-    desc.mipmapLevelCount      = info.mipLevel;
+    desc.mipmapLevelCount      = MetalUtility::GetTextureMipLevelCount(info);
     desc.usage                 = MetalUtility::ToTextureUsage(info.usage);
     desc.sampleCount           = 1;
     desc.pixelFormat           = MetalUtility::ToPixelFormat(info.format);
@@ -527,7 +515,17 @@ RHITexture* MetalContext::CreateTexture(const char* name, void* image, const Tex
                 {0, 0, 0},
                 {info.extent.width, info.extent.height, info.extent.depth}};
 
-            [mtlTexture->handle replaceRegion:region mipmapLevel:0 withBytes:image bytesPerRow:bytesPerRow];
+            if (info.type == ETextureType::Tex3D)
+            {
+                NSUInteger bytesPerImage = info.byteSize / info.extent.depth;
+                // TODO: MipLevel 적용?
+                [mtlTexture->handle replaceRegion:region mipmapLevel:0 slice:0 withBytes:image bytesPerRow:bytesPerRow bytesPerImage:bytesPerImage];
+            }
+            else
+            {
+                // TODO: MipLevel 적용?
+                [mtlTexture->handle replaceRegion:region mipmapLevel:0 withBytes:image bytesPerRow:bytesPerRow];
+            }
         }
     }
     [desc release];

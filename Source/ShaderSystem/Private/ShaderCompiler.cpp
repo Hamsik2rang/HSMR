@@ -7,6 +7,7 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
+#include <algorithm>
 #include <fstream>
 
 HS_NS_BEGIN
@@ -565,6 +566,39 @@ enum class EResourceCategory
     Sampler
 };
 
+static const char* getTypeName(slang::TypeReflection* type)
+{
+    const char* typeName = type ? type->getName() : nullptr;
+    return typeName ? typeName : "";
+}
+
+static bool isSamplerType(slang::TypeReflection* type,
+    slang::TypeReflection::Kind kind,
+    slang::ParameterCategory category)
+{
+    if (kind == slang::TypeReflection::Kind::SamplerState ||
+        category == slang::ParameterCategory::SamplerState)
+    {
+        return true;
+    }
+
+    std::string typeName = getTypeName(type);
+    return typeName.find("SamplerState") != std::string::npos ||
+           typeName.find("SamplerComparisonState") != std::string::npos;
+}
+
+static bool isTextureType(slang::TypeReflection* type,
+    slang::ParameterCategory category)
+{
+    if (category == slang::ParameterCategory::ShaderResource)
+    {
+        return true;
+    }
+
+    std::string typeName = getTypeName(type);
+    return typeName.find("Texture") != std::string::npos;
+}
+
 static uint32 getResourceBinding(slang::VariableLayoutReflection* param,
     EResourceCategory category,
     EShaderLanguage targetLanguage)
@@ -638,6 +672,59 @@ static NativeShaderBindingSlots makeNativeBindingSlots(uint32 binding,
     return slots;
 }
 
+static void mergeNativeBindingSlots(NativeShaderBindingSlots& dst, const NativeShaderBindingSlots& src)
+{
+    if (src.vertexBinding != NativeShaderBindingSlots::Invalid)
+    {
+        dst.vertexBinding = src.vertexBinding;
+    }
+    if (src.fragmentBinding != NativeShaderBindingSlots::Invalid)
+    {
+        dst.fragmentBinding = src.fragmentBinding;
+    }
+    if (src.computeBinding != NativeShaderBindingSlots::Invalid)
+    {
+        dst.computeBinding = src.computeBinding;
+    }
+}
+
+static void mergeDuplicateBufferBindings(std::vector<ShaderBufferBindingInfo>& bindings)
+{
+    std::vector<ShaderBufferBindingInfo> merged;
+    merged.reserve(bindings.size());
+
+    for (ShaderBufferBindingInfo& binding : bindings)
+    {
+        auto it = std::find_if(merged.begin(), merged.end(),
+            [&binding](const ShaderBufferBindingInfo& existing)
+            {
+                return existing.name == binding.name &&
+                       existing.set == binding.set &&
+                       existing.resourceType == binding.resourceType;
+            });
+
+        if (it == merged.end())
+        {
+            merged.push_back(std::move(binding));
+            continue;
+        }
+
+        it->stages |= binding.stages;
+        mergeNativeBindingSlots(it->nativeBindingSlots, binding.nativeBindingSlots);
+
+        if (it->totalSize == 0)
+        {
+            it->totalSize = binding.totalSize;
+        }
+        if (it->members.empty())
+        {
+            it->members = std::move(binding.members);
+        }
+    }
+
+    bindings = std::move(merged);
+}
+
 void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
     const ShaderCompileRequest& request,
     ShaderReflectionDataEx& outReflection)
@@ -665,8 +752,9 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
         auto category                           = typeLayout->getParameterCategory();
 
         // Debug: log all parameters
-        HS_LOG(debug, "[ShaderCompiler] Param '%s': kind=%d, category=%d, binding=%d",
+        HS_LOG(debug, "[ShaderCompiler] Param '%s': type='%s', kind=%d, category=%d, binding=%d",
             param->getName() ? param->getName() : "(null)",
+            getTypeName(type),
             static_cast<int>(kind),
             static_cast<int>(category),
             static_cast<int>(param->getBindingIndex()));
@@ -709,12 +797,24 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
 
             outReflection.bufferBindings.push_back(std::move(bufInfo));
         }
-        else if (kind == slang::TypeReflection::Kind::Resource)
+        else if (kind == slang::TypeReflection::Kind::Resource ||
+                 kind == slang::TypeReflection::Kind::SamplerState)
         {
-            // Could be texture or sampler
+            // Could be texture or sampler. Some Slang targets report SamplerState
+            // as a resource/descriptor-table slot, so classify by actual type too.
             auto bindingType = typeLayout->getParameterCategory();
 
-            if (bindingType == slang::ParameterCategory::ShaderResource)
+            if (isSamplerType(type, kind, bindingType))
+            {
+                ShaderSamplerBindingInfo sampInfo;
+                sampInfo.name               = param->getName() ? param->getName() : "";
+                sampInfo.binding            = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
+                sampInfo.set                = static_cast<uint32>(param->getBindingSpace());
+                sampInfo.stages             = request.requestedStages;
+                sampInfo.nativeBindingSlots = makeNativeBindingSlots(sampInfo.binding, sampInfo.stages, targetLang);
+                outReflection.samplerBindings.push_back(std::move(sampInfo));
+            }
+            else if (isTextureType(type, bindingType))
             {
                 ShaderTextureBindingInfo texInfo;
                 texInfo.name               = param->getName() ? param->getName() : "";
@@ -725,77 +825,6 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
                 texInfo.dimension          = 2; // Default to 2D
                 outReflection.textureBindings.push_back(std::move(texInfo));
             }
-            else if (bindingType == slang::ParameterCategory::SamplerState)
-            {
-                ShaderSamplerBindingInfo sampInfo;
-                sampInfo.name               = param->getName() ? param->getName() : "";
-                sampInfo.binding            = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
-                sampInfo.set                = static_cast<uint32>(param->getBindingSpace());
-                sampInfo.stages             = request.requestedStages;
-                sampInfo.nativeBindingSlots = makeNativeBindingSlots(sampInfo.binding, sampInfo.stages, targetLang);
-                outReflection.samplerBindings.push_back(std::move(sampInfo));
-            }
-            else if (bindingType == slang::ParameterCategory::DescriptorTableSlot)
-            {
-                // Combined image sampler (e.g., Sampler2D in Slang)
-                ShaderTextureBindingInfo texInfo;
-                texInfo.name               = param->getName() ? param->getName() : "";
-                texInfo.binding            = getResourceBinding(param, EResourceCategory::Texture, targetLang);
-                texInfo.set                = static_cast<uint32>(param->getBindingSpace());
-                texInfo.stages             = request.requestedStages;
-                texInfo.nativeBindingSlots = makeNativeBindingSlots(texInfo.binding, texInfo.stages, targetLang);
-                texInfo.dimension          = 2; // Default to 2D
-                outReflection.textureBindings.push_back(std::move(texInfo));
-
-                // On Metal, Sampler2D decomposes into separate texture + sampler
-                if (targetLang == EShaderLanguage::Msl)
-                {
-                    ShaderSamplerBindingInfo sampInfo;
-                    sampInfo.name               = param->getName() ? param->getName() : "";
-                    sampInfo.binding            = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
-                    sampInfo.set                = static_cast<uint32>(param->getBindingSpace());
-                    sampInfo.stages             = request.requestedStages;
-                    sampInfo.nativeBindingSlots = makeNativeBindingSlots(sampInfo.binding, sampInfo.stages, targetLang);
-                    outReflection.samplerBindings.push_back(std::move(sampInfo));
-                }
-
-                HS_LOG(info, "[ShaderCompiler] Combined sampler '%s' at texture binding %u",
-                    texInfo.name.c_str(), texInfo.binding);
-            }
-            else if (bindingType == slang::ParameterCategory::Mixed)
-            {
-                // Mixed category: Sampler2D on Metal decomposes into texture + sampler
-                ShaderTextureBindingInfo texInfo;
-                texInfo.name               = param->getName() ? param->getName() : "";
-                texInfo.binding            = getResourceBinding(param, EResourceCategory::Texture, targetLang);
-                texInfo.set                = static_cast<uint32>(param->getBindingSpace());
-                texInfo.stages             = request.requestedStages;
-                texInfo.nativeBindingSlots = makeNativeBindingSlots(texInfo.binding, texInfo.stages, targetLang);
-                texInfo.dimension          = 2;
-                outReflection.textureBindings.push_back(std::move(texInfo));
-
-                ShaderSamplerBindingInfo sampInfo;
-                sampInfo.name               = param->getName() ? param->getName() : "";
-                sampInfo.binding            = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
-                sampInfo.set                = static_cast<uint32>(param->getBindingSpace());
-                sampInfo.stages             = request.requestedStages;
-                sampInfo.nativeBindingSlots = makeNativeBindingSlots(sampInfo.binding, sampInfo.stages, targetLang);
-                outReflection.samplerBindings.push_back(std::move(sampInfo));
-
-                HS_LOG(info, "[ShaderCompiler] Mixed sampler '%s' tex=%u samp=%u",
-                    (param->getName() ? param->getName() : ""),
-                    texInfo.binding, sampInfo.binding);
-            }
-        }
-        else if (kind == slang::TypeReflection::Kind::SamplerState)
-        {
-            ShaderSamplerBindingInfo sampInfo;
-            sampInfo.name               = param->getName() ? param->getName() : "";
-            sampInfo.binding            = getResourceBinding(param, EResourceCategory::Sampler, targetLang);
-            sampInfo.set                = static_cast<uint32>(param->getBindingSpace());
-            sampInfo.stages             = request.requestedStages;
-            sampInfo.nativeBindingSlots = makeNativeBindingSlots(sampInfo.binding, sampInfo.stages, targetLang);
-            outReflection.samplerBindings.push_back(std::move(sampInfo));
         }
     }
 
@@ -869,6 +898,8 @@ void ShaderCompiler::extractReflection(void* linkedProgramPtr, int targetIndex,
             }
         }
     }
+
+    mergeDuplicateBufferBindings(outReflection.bufferBindings);
 
     // Build lookup tables
     outReflection.BuildLookup();

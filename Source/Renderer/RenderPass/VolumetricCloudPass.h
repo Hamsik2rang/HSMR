@@ -8,6 +8,7 @@
 #include "Precompile.h"
 #include "RHI/RHIDefinition.h"
 #include "Renderer/VolumetricCloudDefinition.h"
+#include "ShaderSystem/ShaderSystemDefinition.h"
 
 #include <unordered_map>
 #include <vector>
@@ -81,6 +82,7 @@ private:
     RHIResourceLayout* _resourceLayout  = nullptr;
     RHIResourceSet*    _resourceSet     = nullptr;
     RHIBuffer*         _perViewBuffer   = nullptr;
+    ShaderReflectionDataEx _reflection{};
 
     std::unordered_map<size_t, RHIGraphicsPipeline*> _pipelineCache;
     bool _isInitialized = false;

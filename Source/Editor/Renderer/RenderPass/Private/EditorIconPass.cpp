@@ -466,26 +466,31 @@ void EditorIconPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     bindings.push_back(std::move(perViewBinding));
 
     ResourceBinding cameraIconBinding{};
-    cameraIconBinding.type = EResourceType::CombinedImageSampler;
+    cameraIconBinding.type = EResourceType::SampledImage;
     cameraIconBinding.stage = EShaderStage::Fragment;
     cameraIconBinding.binding = 1;
-    cameraIconBinding.nativeBindingSlots.fragmentBinding = 0;  // Metal: texture/sampler slot 0
     cameraIconBinding.arrayCount = 1;
     cameraIconBinding.name = "cameraIconSampler";
     cameraIconBinding.resource.textures.push_back(_cameraIconResource->texture);
-    cameraIconBinding.resource.samplers.push_back(_cameraIconResource->sampler);
     bindings.push_back(std::move(cameraIconBinding));
 
     ResourceBinding lightIconBinding{};
-    lightIconBinding.type = EResourceType::CombinedImageSampler;
+    lightIconBinding.type = EResourceType::SampledImage;
     lightIconBinding.stage = EShaderStage::Fragment;
     lightIconBinding.binding = 2;
-    lightIconBinding.nativeBindingSlots.fragmentBinding = 1;  // Metal: texture/sampler slot 1
     lightIconBinding.arrayCount = 1;
     lightIconBinding.name = "lightIconSampler";
     lightIconBinding.resource.textures.push_back(_lightIconResource->texture);
-    lightIconBinding.resource.samplers.push_back(_lightIconResource->sampler);
     bindings.push_back(std::move(lightIconBinding));
+
+    ResourceBinding iconSamplerBinding{};
+    iconSamplerBinding.type = EResourceType::Sampler;
+    iconSamplerBinding.stage = EShaderStage::Fragment;
+    iconSamplerBinding.binding = 3;
+    iconSamplerBinding.arrayCount = 1;
+    iconSamplerBinding.name = "iconSampler";
+    iconSamplerBinding.resource.samplers.push_back(_cameraIconResource->sampler);
+    bindings.push_back(std::move(iconSamplerBinding));
 
     _resourceLayout = _rhiContext->CreateResourceLayout("EditorIconLayout", bindings.data(), static_cast<uint32>(bindings.size()));
     if (!_resourceLayout)

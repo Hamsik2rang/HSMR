@@ -5,9 +5,6 @@ ConstantBuffer<AtmosphereSettingsUBO> atmosphereSettings;
 RWTexture2D<float4> transmittanceLut;
 RWTexture2D<float4> irradianceLut;
 RWTexture3D<float4> scatteringLut;
-Sampler2D transmittanceSampler;
-Sampler2D irradianceSampler;
-Sampler3D scatteringSampler;
 
 [shader("compute")]
 [numthreads(8, 8, 4)]

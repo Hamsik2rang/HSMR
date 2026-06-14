@@ -744,7 +744,6 @@ struct ShaderInfo
 enum class EResourceType : uint8
 {
     Sampler,
-    CombinedImageSampler,
     SampledImage,
     StorageImage,
     UniformTexelBuffer,

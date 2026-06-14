@@ -40,7 +40,7 @@ private:
     bool _initialized = false;
 
     static constexpr uint32 CACHE_MAGIC = 0x48535343;   // "HSSC"
-    static constexpr uint32 CACHE_VERSION = 1;
+    static constexpr uint32 CACHE_VERSION = 3;
 };
 
 HS_NS_END

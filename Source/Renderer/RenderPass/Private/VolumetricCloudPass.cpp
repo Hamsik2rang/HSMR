@@ -142,6 +142,66 @@ uint8 toByte(float value)
 {
     return static_cast<uint8>(std::round(saturate(value) * 255.0f));
 }
+
+const ShaderBufferBindingInfo* findBufferBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderBufferBindingInfo& binding : reflection.bufferBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+const ShaderTextureBindingInfo* findTextureBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderTextureBindingInfo& binding : reflection.textureBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+const ShaderSamplerBindingInfo* findSamplerBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderSamplerBindingInfo& binding : reflection.samplerBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderBufferBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderTextureBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderSamplerBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
 }
 
 VolumetricCloudPass::~VolumetricCloudPass()
@@ -167,6 +227,8 @@ bool VolumetricCloudPass::Initialize(ShaderLibrary* shaderLibrary, RHIContext* r
         HS_LOG(error, "[VolumetricCloudPass] Shader bytecode not found");
         return false;
     }
+
+    _reflection = shader->GetReflection();
 
     ShaderInfo vsInfo{};
     vsInfo.stage = EShaderStage::Vertex;
@@ -432,6 +494,7 @@ void VolumetricCloudPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     perViewBinding.stage = EShaderStage::Vertex | EShaderStage::Fragment;
     perViewBinding.binding = 0;
     perViewBinding.arrayCount = 1;
+    applyNativeBinding(perViewBinding, findBufferBinding(_reflection, "perView"));
     perViewBinding.resource.buffers.push_back(perViewBuffer);
     perViewBinding.resource.offsets.push_back(0);
 
@@ -440,63 +503,94 @@ void VolumetricCloudPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     settingsBinding.stage = EShaderStage::Fragment;
     settingsBinding.binding = 1;
     settingsBinding.arrayCount = 1;
+    applyNativeBinding(settingsBinding, findBufferBinding(_reflection, "cloudSettings"));
     settingsBinding.resource.buffers.push_back(_settingsBuffer);
     settingsBinding.resource.offsets.push_back(0);
 
     ResourceBinding baseBinding{};
-    baseBinding.type = EResourceType::CombinedImageSampler;
+    baseBinding.type = EResourceType::SampledImage;
     baseBinding.stage = EShaderStage::Fragment;
     baseBinding.binding = 2;
     baseBinding.arrayCount = 1;
+    applyNativeBinding(baseBinding, findTextureBinding(_reflection, "baseNoiseTexture"));
     baseBinding.resource.textures.push_back(_baseNoise);
-    baseBinding.resource.samplers.push_back(_volumeSampler);
 
     ResourceBinding detailBinding = baseBinding;
     detailBinding.binding = 3;
+    applyNativeBinding(detailBinding, findTextureBinding(_reflection, "detailNoiseTexture"));
     detailBinding.resource.textures.clear();
-    detailBinding.resource.samplers.clear();
     detailBinding.resource.textures.push_back(_detailNoise);
-    detailBinding.resource.samplers.push_back(_volumeSampler);
 
     ResourceBinding weatherBinding{};
-    weatherBinding.type = EResourceType::CombinedImageSampler;
+    weatherBinding.type = EResourceType::SampledImage;
     weatherBinding.stage = EShaderStage::Fragment;
     weatherBinding.binding = 4;
     weatherBinding.arrayCount = 1;
+    applyNativeBinding(weatherBinding, findTextureBinding(_reflection, "curlWeatherTexture"));
     weatherBinding.resource.textures.push_back(_curlWeather);
-    weatherBinding.resource.samplers.push_back(_weatherSampler);
 
     ResourceBinding atmosphereSettingsBinding{};
     atmosphereSettingsBinding.type = EResourceType::UniformBuffer;
     atmosphereSettingsBinding.stage = EShaderStage::Fragment;
     atmosphereSettingsBinding.binding = 5;
     atmosphereSettingsBinding.arrayCount = 1;
+    applyNativeBinding(atmosphereSettingsBinding, findBufferBinding(_reflection, "atmosphereSettings"));
     atmosphereSettingsBinding.resource.buffers.push_back(_atmosphereSettingsBuffer);
     atmosphereSettingsBinding.resource.offsets.push_back(0);
 
     ResourceBinding atmosphereTransBinding{};
-    atmosphereTransBinding.type = EResourceType::CombinedImageSampler;
+    atmosphereTransBinding.type = EResourceType::SampledImage;
     atmosphereTransBinding.stage = EShaderStage::Fragment;
     atmosphereTransBinding.binding = 6;
     atmosphereTransBinding.arrayCount = 1;
+    applyNativeBinding(atmosphereTransBinding, findTextureBinding(_reflection, "atmosphereTransmittanceLut"));
     atmosphereTransBinding.resource.textures.push_back(_atmosphereTransmittance);
-    atmosphereTransBinding.resource.samplers.push_back(_atmosphereSampler2D);
 
     ResourceBinding atmosphereIrradianceBinding = atmosphereTransBinding;
     atmosphereIrradianceBinding.binding = 7;
+    applyNativeBinding(atmosphereIrradianceBinding, findTextureBinding(_reflection, "atmosphereIrradianceLut"));
     atmosphereIrradianceBinding.resource.textures.clear();
-    atmosphereIrradianceBinding.resource.samplers.clear();
     atmosphereIrradianceBinding.resource.textures.push_back(_atmosphereIrradiance);
-    atmosphereIrradianceBinding.resource.samplers.push_back(_atmosphereSampler2D);
 
     ResourceBinding atmosphereScatteringBinding = atmosphereTransBinding;
     atmosphereScatteringBinding.binding = 8;
+    applyNativeBinding(atmosphereScatteringBinding, findTextureBinding(_reflection, "atmosphereScatteringLut"));
     atmosphereScatteringBinding.resource.textures.clear();
-    atmosphereScatteringBinding.resource.samplers.clear();
     atmosphereScatteringBinding.resource.textures.push_back(_atmosphereScattering);
-    atmosphereScatteringBinding.resource.samplers.push_back(_atmosphereSampler3D);
 
-    ResourceBinding bindings[9] =
+    ResourceBinding volumeSamplerBinding{};
+    volumeSamplerBinding.type = EResourceType::Sampler;
+    volumeSamplerBinding.stage = EShaderStage::Fragment;
+    volumeSamplerBinding.binding = 9;
+    volumeSamplerBinding.arrayCount = 1;
+    applyNativeBinding(volumeSamplerBinding, findSamplerBinding(_reflection, "volumeSampler"));
+    volumeSamplerBinding.resource.samplers.push_back(_volumeSampler);
+
+    ResourceBinding weatherSamplerBinding{};
+    weatherSamplerBinding.type = EResourceType::Sampler;
+    weatherSamplerBinding.stage = EShaderStage::Fragment;
+    weatherSamplerBinding.binding = 10;
+    weatherSamplerBinding.arrayCount = 1;
+    applyNativeBinding(weatherSamplerBinding, findSamplerBinding(_reflection, "weatherSampler"));
+    weatherSamplerBinding.resource.samplers.push_back(_weatherSampler);
+
+    ResourceBinding atmosphereSampler2DBinding{};
+    atmosphereSampler2DBinding.type = EResourceType::Sampler;
+    atmosphereSampler2DBinding.stage = EShaderStage::Fragment;
+    atmosphereSampler2DBinding.binding = 11;
+    atmosphereSampler2DBinding.arrayCount = 1;
+    applyNativeBinding(atmosphereSampler2DBinding, findSamplerBinding(_reflection, "atmosphereSampler2D"));
+    atmosphereSampler2DBinding.resource.samplers.push_back(_atmosphereSampler2D);
+
+    ResourceBinding atmosphereSampler3DBinding{};
+    atmosphereSampler3DBinding.type = EResourceType::Sampler;
+    atmosphereSampler3DBinding.stage = EShaderStage::Fragment;
+    atmosphereSampler3DBinding.binding = 12;
+    atmosphereSampler3DBinding.arrayCount = 1;
+    applyNativeBinding(atmosphereSampler3DBinding, findSamplerBinding(_reflection, "atmosphereSampler3D"));
+    atmosphereSampler3DBinding.resource.samplers.push_back(_atmosphereSampler3D);
+
+    ResourceBinding bindings[13] =
     {
         perViewBinding,
         settingsBinding,
@@ -506,9 +600,13 @@ void VolumetricCloudPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
         atmosphereSettingsBinding,
         atmosphereTransBinding,
         atmosphereIrradianceBinding,
-        atmosphereScatteringBinding
+        atmosphereScatteringBinding,
+        volumeSamplerBinding,
+        weatherSamplerBinding,
+        atmosphereSampler2DBinding,
+        atmosphereSampler3DBinding
     };
-    _resourceLayout = _rhiContext->CreateResourceLayout("VolumetricCloudLayout", bindings, 9);
+    _resourceLayout = _rhiContext->CreateResourceLayout("VolumetricCloudLayout", bindings, 13);
     if (!_resourceLayout)
     {
         HS_LOG(error, "[VolumetricCloudPass] Failed to create ResourceLayout");

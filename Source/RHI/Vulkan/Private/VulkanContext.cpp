@@ -1083,9 +1083,6 @@ RHIResourceLayout* VulkanContext::CreateResourceLayout(const char* name, Resourc
         case EResourceType::Sampler:
             descType = VK_DESCRIPTOR_TYPE_SAMPLER;
             break;
-        case EResourceType::CombinedImageSampler:
-            descType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            break;
         case EResourceType::SampledImage:
             descType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             break;
@@ -1247,25 +1244,6 @@ RHIResourceSet* VulkanContext::CreateResourceSet(const char* name, RHIResourceLa
                 imageInfos.push_back(imgInfo);
 
                 writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-                writeSet.pImageInfo     = &imageInfos.back();
-                descriptorWrites.push_back(writeSet);
-            }
-            break;
-
-        case EResourceType::CombinedImageSampler:
-            if (!binding.resource.textures.empty() && binding.resource.textures[0] &&
-                !binding.resource.samplers.empty() && binding.resource.samplers[0])
-            {
-                VulkanTexture* texVK     = static_cast<VulkanTexture*>(binding.resource.textures[0]);
-                VulkanSampler* samplerVK = static_cast<VulkanSampler*>(binding.resource.samplers[0]);
-                VkDescriptorImageInfo imgInfo{};
-                imgInfo.imageView   = texVK->imageViewVk;
-                // Use the actual current layout of the texture
-                imgInfo.imageLayout = texVK->layoutVk;
-                imgInfo.sampler     = samplerVK->handle;
-                imageInfos.push_back(imgInfo);
-
-                writeSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 writeSet.pImageInfo     = &imageInfos.back();
                 descriptorWrites.push_back(writeSet);
             }

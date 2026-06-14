@@ -245,15 +245,21 @@ void ForwardSkyboxPass::rebuildResourceBindings(RHIBuffer* perViewBuffer)
     perViewBinding.resource.offsets.push_back(0);
 
     ResourceBinding cubemapBinding{};
-    cubemapBinding.type       = EResourceType::CombinedImageSampler;
+    cubemapBinding.type       = EResourceType::SampledImage;
     cubemapBinding.stage      = EShaderStage::Fragment;
     cubemapBinding.binding    = 1;
     cubemapBinding.arrayCount = 1;
     cubemapBinding.resource.textures.push_back(_cubemapTexture);
-    cubemapBinding.resource.samplers.push_back(_cubemapSampler);
 
-    ResourceBinding bindings[2] = { perViewBinding, cubemapBinding };
-    _resourceLayout = _rhiContext->CreateResourceLayout("SkyboxLayout", bindings, 2);
+    ResourceBinding samplerBinding{};
+    samplerBinding.type       = EResourceType::Sampler;
+    samplerBinding.stage      = EShaderStage::Fragment;
+    samplerBinding.binding    = 2;
+    samplerBinding.arrayCount = 1;
+    samplerBinding.resource.samplers.push_back(_cubemapSampler);
+
+    ResourceBinding bindings[3] = { perViewBinding, cubemapBinding, samplerBinding };
+    _resourceLayout = _rhiContext->CreateResourceLayout("SkyboxLayout", bindings, 3);
     if (!_resourceLayout)
     {
         HS_LOG(error, "[ForwardSkyboxPass] Failed to create ResourceLayout");

@@ -133,14 +133,9 @@ void MetalCommandBuffer::BindResourceSet(RHIResourceSet* rSet)
                     bindBuffers(rb);
                 }
                 break;
-                case EResourceType::CombinedImageSampler:
                 case EResourceType::SampledImage:
                 {
                     bindTextures(rb);
-                    if (rb.type == EResourceType::CombinedImageSampler && !rb.resource.samplers.empty())
-                    {
-                        bindSamplers(rb);
-                    }
                 }
                 break;
                 case EResourceType::Sampler:
@@ -309,7 +304,6 @@ void MetalCommandBuffer::BindComputeResourceSet(RHIResourceSet* rSet)
                     }
                 }
                 break;
-                case EResourceType::CombinedImageSampler:
                 case EResourceType::SampledImage:
                 case EResourceType::StorageImage:
                 {

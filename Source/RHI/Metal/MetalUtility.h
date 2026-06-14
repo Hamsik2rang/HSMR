@@ -83,6 +83,9 @@ public:
     
     static MTLClearColor ToClearColor(const float* color);
     static void FromClearColor(MTLClearColor color, float* outColor);
+
+    static bool IsCPUAccessibleBufferOption(EBufferMemoryOption memoryOption);
+    static uint32 GetTextureMipLevelCount(const TextureInfo& info);
 };
 
 

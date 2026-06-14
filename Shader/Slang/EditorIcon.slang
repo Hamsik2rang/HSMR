@@ -2,8 +2,9 @@ module EditorIcon;
 import GlobalUniform;
 
 ConstantBuffer<PerViewUBO> perView;
-Sampler2D cameraIconSampler;
-Sampler2D lightIconSampler;
+Texture2D cameraIconSampler : register(t1);
+Texture2D lightIconSampler : register(t2);
+SamplerState iconSampler : register(s3);
 
 struct VSInput
 {
@@ -46,8 +47,8 @@ FSInput VertexMain(VSInput input)
 float4 FragmentMain(FSInput input) : SV_Target
 {
     float4 sampled = input.iconType > 0.5
-        ? lightIconSampler.Sample(input.uv)
-        : cameraIconSampler.Sample(input.uv);
+        ? lightIconSampler.Sample(iconSampler, input.uv)
+        : cameraIconSampler.Sample(iconSampler, input.uv);
 
     float alpha = sampled.a * input.tintAndAlpha.a;
     return float4(sampled.rgb * input.tintAndAlpha.rgb, alpha);

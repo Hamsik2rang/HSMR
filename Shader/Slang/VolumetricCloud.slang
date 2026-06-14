@@ -14,9 +14,11 @@ struct CloudSettingsUBO
 };
 
 ConstantBuffer<CloudSettingsUBO> cloudSettings;
-Sampler3D baseNoiseTexture;
-Sampler3D detailNoiseTexture;
-Sampler2D curlWeatherTexture;
+Texture3D baseNoiseTexture : register(t2);
+Texture3D detailNoiseTexture : register(t3);
+Texture2D curlWeatherTexture : register(t4);
+SamplerState volumeSampler : register(s9);
+SamplerState weatherSampler : register(s10);
 
 struct AtmosphereSettingsUBO
 {
@@ -28,9 +30,11 @@ struct AtmosphereSettingsUBO
 };
 
 ConstantBuffer<AtmosphereSettingsUBO> atmosphereSettings;
-Sampler2D atmosphereTransmittanceLut;
-Sampler2D atmosphereIrradianceLut;
-Sampler3D atmosphereScatteringLut;
+Texture2D atmosphereTransmittanceLut : register(t6);
+Texture2D atmosphereIrradianceLut : register(t7);
+Texture3D atmosphereScatteringLut : register(t8);
+SamplerState atmosphereSampler2D : register(s11);
+SamplerState atmosphereSampler3D : register(s12);
 
 struct VSOutput
 {
@@ -98,7 +102,7 @@ float cloudHeightGradient(float h, float cloudType)
 
 float2 curlOffset(float2 weatherUv)
 {
-    float2 curl = curlWeatherTexture.Sample(weatherUv).rg * 2.0f - 1.0f;
+    float2 curl = curlWeatherTexture.Sample(weatherSampler, weatherUv).rg * 2.0f - 1.0f;
     return curl * 0.035f;
 }
 
@@ -107,7 +111,7 @@ float sampleBaseDensity(float3 worldPos, float height01)
     float time = cloudSettings.erosionWindDebugTime.w;
     float2 wind = cloudSettings.erosionWindDebugTime.yz;
     float2 weatherUv = worldPos.xz * 0.000025f + wind * time * 0.0000018f;
-    float weather = curlWeatherTexture.Sample(weatherUv).b;
+    float weather = curlWeatherTexture.Sample(weatherSampler, weatherUv).b;
 
     float coverage = saturate1(cloudSettings.coverageTypePrecipDensity.x + (weather - 0.5f) * 0.35f);
     float cloudType = saturate1(cloudSettings.coverageTypePrecipDensity.y + (weather - 0.5f) * 0.25f);
@@ -116,7 +120,7 @@ float sampleBaseDensity(float3 worldPos, float height01)
     float3 noiseUv = float3(
         worldPos.xz * 0.000075f + wind * time * 0.000003f,
         worldPos.y * 0.00016f).xzy;
-    float4 baseNoise = baseNoiseTexture.Sample(noiseUv);
+    float4 baseNoise = baseNoiseTexture.Sample(volumeSampler, noiseUv);
     float worleyFbm = dot(baseNoise.gba, float3(0.625f, 0.25f, 0.125f));
     float baseShape = remap(baseNoise.r, 1.0f - coverage * 0.82f, 1.0f, 0.0f, 1.0f);
     baseShape = saturate1(baseShape - (1.0f - worleyFbm) * 0.18f);
@@ -141,7 +145,7 @@ float sampleDensity(float3 worldPos, float height01, float detailStrength)
         worldPos.xz * 0.00042f + curl + wind * time * 0.000006f,
         worldPos.y * 0.00055f).xzy;
 
-    float3 detail = detailNoiseTexture.Sample(detailUv).rgb;
+    float3 detail = detailNoiseTexture.Sample(volumeSampler, detailUv).rgb;
     float erosionNoise = dot(detail, float3(0.625f, 0.25f, 0.125f));
     float edgeWeight = 1.0f - saturate1(baseDensity * 1.35f);
     float erosion = cloudSettings.erosionWindDebugTime.x * saturate1(detailStrength);
@@ -236,17 +240,17 @@ float3 tonemapAtmosphere(float3 color)
 float3 skyColor(float3 rayOrigin, float3 dir)
 {
     float3 uvw = atmosphereScatteringUv(rayOrigin, dir);
-    float3 sky = atmosphereScatteringLut.Sample(uvw).rgb;
+    float3 sky = atmosphereScatteringLut.Sample(atmosphereSampler3D, uvw).rgb;
 
     float planetRadius = atmosphereSettings.planetRadii.x;
     float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
     float3 up = normalize(rayOrigin - planetCenter);
     float height = length(rayOrigin - planetCenter) - planetRadius;
     float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
-    sky += atmosphereIrradianceLut.Sample(float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb * 0.015f;
+    sky += atmosphereIrradianceLut.Sample(atmosphereSampler2D, float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb * 0.015f;
 
     float sunAmount = pow(saturate1(dot(dir, normalize(atmosphereSettings.sunDirectionIntensity.xyz))), 1800.0f);
-    float3 sunTrans = atmosphereTransmittanceLut.Sample(atmosphereTransmittanceUv(height, sunMu)).rgb;
+    float3 sunTrans = atmosphereTransmittanceLut.Sample(atmosphereSampler2D, atmosphereTransmittanceUv(height, sunMu)).rgb;
     sky += sunTrans * atmosphereSettings.sunDirectionIntensity.w * sunAmount;
     return tonemapAtmosphere(sky);
 }
@@ -258,7 +262,7 @@ float3 sunTransmittanceAt(float3 worldPos)
     float3 up = normalize(worldPos - planetCenter);
     float height = length(worldPos - planetCenter) - planetRadius;
     float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
-    return atmosphereTransmittanceLut.Sample(atmosphereTransmittanceUv(height, sunMu)).rgb;
+    return atmosphereTransmittanceLut.Sample(atmosphereSampler2D, atmosphereTransmittanceUv(height, sunMu)).rgb;
 }
 
 float3 ambientIrradianceAt(float3 worldPos)
@@ -268,7 +272,7 @@ float3 ambientIrradianceAt(float3 worldPos)
     float3 up = normalize(worldPos - planetCenter);
     float height = length(worldPos - planetCenter) - planetRadius;
     float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
-    return atmosphereIrradianceLut.Sample(float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb;
+    return atmosphereIrradianceLut.Sample(atmosphereSampler2D, float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / max(atmosphereSettings.planetRadii.z, 1.0f)))).rgb;
 }
 
 [shader("fragment")]
@@ -332,12 +336,12 @@ float4 FragmentMain(VSOutput input) : SV_Target
     {
         float3 p = rayOrigin + rayDir * marchStart;
         float h = 0.5f;
-        return float4(baseNoiseTexture.Sample(p * 0.00008f).rrr, 1.0f);
+        return float4(baseNoiseTexture.Sample(volumeSampler, p * 0.00008f).rrr, 1.0f);
     }
     if (debugView == 2.0f)
     {
         float3 p = rayOrigin + rayDir * marchStart;
-        return float4(detailNoiseTexture.Sample(p * 0.00042f).rgb, 1.0f);
+        return float4(detailNoiseTexture.Sample(volumeSampler, p * 0.00042f).rgb, 1.0f);
     }
 
     [loop]

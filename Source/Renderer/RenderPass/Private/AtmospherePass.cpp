@@ -31,6 +31,99 @@ bool nearEqual(float a, float b)
 {
     return std::abs(a - b) <= 0.0001f;
 }
+
+const ShaderBufferBindingInfo* findBufferBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderBufferBindingInfo& binding : reflection.bufferBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+const ShaderTextureBindingInfo* findTextureBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderTextureBindingInfo& binding : reflection.textureBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+const ShaderSamplerBindingInfo* findSamplerBinding(const ShaderReflectionDataEx& reflection, const char* name)
+{
+    for (const ShaderSamplerBindingInfo& binding : reflection.samplerBindings)
+    {
+        if (binding.name == name)
+        {
+            return &binding;
+        }
+    }
+    return nullptr;
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderBufferBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderTextureBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
+
+void applyNativeBinding(ResourceBinding& outBinding, const ShaderSamplerBindingInfo* shaderBinding)
+{
+    if (shaderBinding)
+    {
+        outBinding.nativeBindingSlots = shaderBinding->nativeBindingSlots;
+    }
+}
+
+void applyNativeBufferBindings(ResourceBinding& outBinding,
+    const ShaderReflectionDataEx& reflection,
+    const char* name)
+{
+    bool found = false;
+    for (const ShaderBufferBindingInfo& binding : reflection.bufferBindings)
+    {
+        if (binding.name != name)
+        {
+            continue;
+        }
+
+        found = true;
+        if (binding.nativeBindingSlots.HasStageBinding(EShaderStage::Vertex))
+        {
+            outBinding.nativeBindingSlots.vertexBinding = binding.nativeBindingSlots.vertexBinding;
+        }
+        if (binding.nativeBindingSlots.HasStageBinding(EShaderStage::Fragment))
+        {
+            outBinding.nativeBindingSlots.fragmentBinding = binding.nativeBindingSlots.fragmentBinding;
+        }
+        if (binding.nativeBindingSlots.HasStageBinding(EShaderStage::Compute))
+        {
+            outBinding.nativeBindingSlots.computeBinding = binding.nativeBindingSlots.computeBinding;
+        }
+    }
+
+    if (!found)
+    {
+        HS_LOG(warning, "[AtmospherePass] Missing reflected buffer binding for '%s'", name);
+    }
+}
 }
 
 AtmospherePass::~AtmospherePass()
@@ -191,69 +284,6 @@ bool AtmospherePass::createLutResources()
 
 bool AtmospherePass::createComputeResources(ShaderLibrary* shaderLibrary)
 {
-    ResourceBinding settingsBinding{};
-    settingsBinding.type = EResourceType::UniformBuffer;
-    settingsBinding.stage = EShaderStage::Compute;
-    settingsBinding.binding = 0;
-    settingsBinding.arrayCount = 1;
-    settingsBinding.resource.buffers.push_back(_lutResources.settingsBuffer);
-    settingsBinding.resource.offsets.push_back(0);
-
-    ResourceBinding transStorage{};
-    transStorage.type = EResourceType::StorageImage;
-    transStorage.stage = EShaderStage::Compute;
-    transStorage.binding = 1;
-    transStorage.arrayCount = 1;
-    transStorage.resource.textures.push_back(_lutResources.transmittanceLut);
-
-    ResourceBinding irradianceStorage = transStorage;
-    irradianceStorage.binding = 2;
-    irradianceStorage.resource.textures.clear();
-    irradianceStorage.resource.textures.push_back(_lutResources.irradianceLut);
-
-    ResourceBinding scatteringStorage = transStorage;
-    scatteringStorage.binding = 3;
-    scatteringStorage.resource.textures.clear();
-    scatteringStorage.resource.textures.push_back(_lutResources.scatteringLut);
-
-    ResourceBinding transSample{};
-    transSample.type = EResourceType::CombinedImageSampler;
-    transSample.stage = EShaderStage::Compute;
-    transSample.binding = 4;
-    transSample.arrayCount = 1;
-    transSample.resource.textures.push_back(_lutResources.transmittanceLut);
-    transSample.resource.samplers.push_back(_lutResources.lutSampler2D);
-
-    ResourceBinding irradianceSample = transSample;
-    irradianceSample.binding = 5;
-    irradianceSample.resource.textures.clear();
-    irradianceSample.resource.samplers.clear();
-    irradianceSample.resource.textures.push_back(_lutResources.irradianceLut);
-    irradianceSample.resource.samplers.push_back(_lutResources.lutSampler2D);
-
-    ResourceBinding scatteringSample = transSample;
-    scatteringSample.binding = 6;
-    scatteringSample.resource.textures.clear();
-    scatteringSample.resource.samplers.clear();
-    scatteringSample.resource.textures.push_back(_lutResources.scatteringLut);
-    scatteringSample.resource.samplers.push_back(_lutResources.lutSampler3D);
-
-    ResourceBinding bindings[7] =
-    {
-        settingsBinding,
-        transStorage,
-        irradianceStorage,
-        scatteringStorage,
-        transSample,
-        irradianceSample,
-        scatteringSample
-    };
-    _computeResourceLayout = _rhiContext->CreateResourceLayout("AtmosphereComputeLayout", bindings, 7);
-    if (!_computeResourceLayout) return false;
-
-    _computeResourceSet = _rhiContext->CreateResourceSet("AtmosphereComputeSet", _computeResourceLayout);
-    if (!_computeResourceSet) return false;
-
     _computeStages =
     {
         ComputeStage{"AtmosphereTransmittance", nullptr, nullptr, (TransmittanceWidth + 7) / 8, (TransmittanceHeight + 7) / 8, 1},
@@ -264,6 +294,7 @@ bool AtmospherePass::createComputeResources(ShaderLibrary* shaderLibrary)
         ComputeStage{"AtmosphereMultipleScattering", nullptr, nullptr, (ScatteringWidth + 7) / 8, (ScatteringHeight + 7) / 8, (ScatteringDepth + 3) / 4},
     };
 
+    Shader* reflectionShader = nullptr;
     for (ComputeStage& stage : _computeStages)
     {
         Shader* shader = shaderLibrary->GetOrCompile(stage.shaderName, EShaderStage::Compute);
@@ -271,6 +302,11 @@ bool AtmospherePass::createComputeResources(ShaderLibrary* shaderLibrary)
         {
             HS_LOG(error, "[AtmospherePass] Failed to compile compute shader: %s", stage.shaderName);
             return false;
+        }
+
+        if (!reflectionShader)
+        {
+            reflectionShader = shader;
         }
 
         const auto* bytecode = shader->GetByteCode(EShaderStage::Compute);
@@ -289,7 +325,54 @@ bool AtmospherePass::createComputeResources(ShaderLibrary* shaderLibrary)
             reinterpret_cast<const char*>(bytecode->data()),
             bytecode->size());
         if (!stage.shader) return false;
+    }
 
+    const ShaderReflectionDataEx& reflection = reflectionShader->GetReflection();
+
+    ResourceBinding settingsBinding{};
+    settingsBinding.type = EResourceType::UniformBuffer;
+    settingsBinding.stage = EShaderStage::Compute;
+    settingsBinding.binding = 0;
+    settingsBinding.arrayCount = 1;
+    applyNativeBinding(settingsBinding, findBufferBinding(reflection, "atmosphereSettings"));
+    settingsBinding.resource.buffers.push_back(_lutResources.settingsBuffer);
+    settingsBinding.resource.offsets.push_back(0);
+
+    ResourceBinding transStorage{};
+    transStorage.type = EResourceType::StorageImage;
+    transStorage.stage = EShaderStage::Compute;
+    transStorage.binding = 1;
+    transStorage.arrayCount = 1;
+    applyNativeBinding(transStorage, findTextureBinding(reflection, "transmittanceLut"));
+    transStorage.resource.textures.push_back(_lutResources.transmittanceLut);
+
+    ResourceBinding irradianceStorage = transStorage;
+    irradianceStorage.binding = 2;
+    applyNativeBinding(irradianceStorage, findTextureBinding(reflection, "irradianceLut"));
+    irradianceStorage.resource.textures.clear();
+    irradianceStorage.resource.textures.push_back(_lutResources.irradianceLut);
+
+    ResourceBinding scatteringStorage = transStorage;
+    scatteringStorage.binding = 3;
+    applyNativeBinding(scatteringStorage, findTextureBinding(reflection, "scatteringLut"));
+    scatteringStorage.resource.textures.clear();
+    scatteringStorage.resource.textures.push_back(_lutResources.scatteringLut);
+
+    ResourceBinding bindings[4] =
+    {
+        settingsBinding,
+        transStorage,
+        irradianceStorage,
+        scatteringStorage
+    };
+    _computeResourceLayout = _rhiContext->CreateResourceLayout("AtmosphereComputeLayout", bindings, 4);
+    if (!_computeResourceLayout) return false;
+
+    _computeResourceSet = _rhiContext->CreateResourceSet("AtmosphereComputeSet", _computeResourceLayout);
+    if (!_computeResourceSet) return false;
+
+    for (ComputeStage& stage : _computeStages)
+    {
         ComputePipelineInfo pipelineInfo{};
         pipelineInfo.computeShader = stage.shader;
         pipelineInfo.resourceLayout = _computeResourceLayout;
@@ -312,6 +395,8 @@ bool AtmospherePass::createSkyShaders(ShaderLibrary* shaderLibrary)
     const auto* vsBytecode = shader->GetByteCode(EShaderStage::Vertex);
     const auto* fsBytecode = shader->GetByteCode(EShaderStage::Fragment);
     if (!vsBytecode || !fsBytecode) return false;
+
+    _skyReflection = shader->GetReflection();
 
     ShaderInfo vsInfo{};
     vsInfo.stage = EShaderStage::Vertex;
@@ -449,6 +534,7 @@ void AtmospherePass::rebuildSkyResourceBindings(RHIBuffer* perViewBuffer)
     perViewBinding.stage = EShaderStage::Vertex | EShaderStage::Fragment;
     perViewBinding.binding = 0;
     perViewBinding.arrayCount = 1;
+    applyNativeBufferBindings(perViewBinding, _skyReflection, "perView");
     perViewBinding.resource.buffers.push_back(perViewBuffer);
     perViewBinding.resource.offsets.push_back(0);
 
@@ -457,40 +543,57 @@ void AtmospherePass::rebuildSkyResourceBindings(RHIBuffer* perViewBuffer)
     settingsBinding.stage = EShaderStage::Fragment;
     settingsBinding.binding = 1;
     settingsBinding.arrayCount = 1;
+    applyNativeBufferBindings(settingsBinding, _skyReflection, "atmosphereSettings");
     settingsBinding.resource.buffers.push_back(_lutResources.settingsBuffer);
     settingsBinding.resource.offsets.push_back(0);
 
     ResourceBinding transBinding{};
-    transBinding.type = EResourceType::CombinedImageSampler;
+    transBinding.type = EResourceType::SampledImage;
     transBinding.stage = EShaderStage::Fragment;
     transBinding.binding = 2;
     transBinding.arrayCount = 1;
+    applyNativeBinding(transBinding, findTextureBinding(_skyReflection, "transmittanceLut"));
     transBinding.resource.textures.push_back(_lutResources.transmittanceLut);
-    transBinding.resource.samplers.push_back(_lutResources.lutSampler2D);
 
     ResourceBinding irradianceBinding = transBinding;
     irradianceBinding.binding = 3;
+    applyNativeBinding(irradianceBinding, findTextureBinding(_skyReflection, "irradianceLut"));
     irradianceBinding.resource.textures.clear();
-    irradianceBinding.resource.samplers.clear();
     irradianceBinding.resource.textures.push_back(_lutResources.irradianceLut);
-    irradianceBinding.resource.samplers.push_back(_lutResources.lutSampler2D);
 
     ResourceBinding scatteringBinding = transBinding;
     scatteringBinding.binding = 4;
+    applyNativeBinding(scatteringBinding, findTextureBinding(_skyReflection, "scatteringLut"));
     scatteringBinding.resource.textures.clear();
-    scatteringBinding.resource.samplers.clear();
     scatteringBinding.resource.textures.push_back(_lutResources.scatteringLut);
-    scatteringBinding.resource.samplers.push_back(_lutResources.lutSampler3D);
 
-    ResourceBinding bindings[5] =
+    ResourceBinding sampler2DBinding{};
+    sampler2DBinding.type = EResourceType::Sampler;
+    sampler2DBinding.stage = EShaderStage::Fragment;
+    sampler2DBinding.binding = 5;
+    sampler2DBinding.arrayCount = 1;
+    applyNativeBinding(sampler2DBinding, findSamplerBinding(_skyReflection, "lutSampler2D"));
+    sampler2DBinding.resource.samplers.push_back(_lutResources.lutSampler2D);
+
+    ResourceBinding sampler3DBinding{};
+    sampler3DBinding.type = EResourceType::Sampler;
+    sampler3DBinding.stage = EShaderStage::Fragment;
+    sampler3DBinding.binding = 6;
+    sampler3DBinding.arrayCount = 1;
+    applyNativeBinding(sampler3DBinding, findSamplerBinding(_skyReflection, "lutSampler3D"));
+    sampler3DBinding.resource.samplers.push_back(_lutResources.lutSampler3D);
+
+    ResourceBinding bindings[7] =
     {
         perViewBinding,
         settingsBinding,
         transBinding,
         irradianceBinding,
-        scatteringBinding
+        scatteringBinding,
+        sampler2DBinding,
+        sampler3DBinding
     };
-    _skyResourceLayout = _rhiContext->CreateResourceLayout("AtmosphereSkyLayout", bindings, 5);
+    _skyResourceLayout = _rhiContext->CreateResourceLayout("AtmosphereSkyLayout", bindings, 7);
     if (!_skyResourceLayout)
     {
         HS_LOG(error, "[AtmospherePass] Failed to create sky resource layout");

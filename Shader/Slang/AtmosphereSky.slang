@@ -4,9 +4,11 @@ import AtmosphereCommon;
 
 ConstantBuffer<PerViewUBO> perView;
 ConstantBuffer<AtmosphereSettingsUBO> atmosphereSettings;
-Sampler2D transmittanceLut;
-Sampler2D irradianceLut;
-Sampler3D scatteringLut;
+Texture2D transmittanceLut : register(t2);
+Texture2D irradianceLut : register(t3);
+Texture3D scatteringLut : register(t4);
+SamplerState lutSampler2D : register(s5);
+SamplerState lutSampler3D : register(s6);
 
 struct VSOutput
 {
@@ -33,18 +35,18 @@ VSOutput VertexMain(uint vertexID : SV_VertexID)
 float3 sampleAtmosphereSky(float3 rayOrigin, float3 rayDir)
 {
     float3 uvw = scatteringUvFromWorldDir(rayOrigin, rayDir, atmosphereSettings);
-    float3 sky = scatteringLut.Sample(uvw).rgb;
+    float3 sky = scatteringLut.Sample(lutSampler3D, uvw).rgb;
 
     float planetRadius = atmosphereSettings.planetRadii.x;
     float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
     float3 up = normalize(rayOrigin - planetCenter);
     float sunMu = dot(normalize(atmosphereSettings.sunDirectionIntensity.xyz), up);
     float height = length(rayOrigin - planetCenter) - planetRadius;
-    float3 irradiance = irradianceLut.Sample(float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / atmosphereSettings.planetRadii.z))).rgb;
+    float3 irradiance = irradianceLut.Sample(lutSampler2D, float2(saturate1(sunMu * 0.5f + 0.5f), saturate1(height / atmosphereSettings.planetRadii.z))).rgb;
     sky += irradiance * 0.015f;
 
     float sunAmount = pow(saturate1(dot(rayDir, normalize(atmosphereSettings.sunDirectionIntensity.xyz))), 1800.0f);
-    float3 sunTrans = transmittanceLut.Sample(transmittanceUvFromHeightMu(height, sunMu, atmosphereSettings)).rgb;
+    float3 sunTrans = transmittanceLut.Sample(lutSampler2D, transmittanceUvFromHeightMu(height, sunMu, atmosphereSettings)).rgb;
     sky += sunTrans * atmosphereSettings.sunDirectionIntensity.w * sunAmount;
     return tonemapAtmosphere(sky, atmosphereSettings);
 }
@@ -63,7 +65,7 @@ float4 FragmentMain(VSOutput input) : SV_Target
         float3 up = normalize(rayOrigin - planetCenter);
         float height = length(rayOrigin - planetCenter) - planetRadius;
         float mu = dot(rayDir, up);
-        return float4(transmittanceLut.Sample(transmittanceUvFromHeightMu(height, mu, atmosphereSettings)).rgb, 1.0f);
+        return float4(transmittanceLut.Sample(lutSampler2D, transmittanceUvFromHeightMu(height, mu, atmosphereSettings)).rgb, 1.0f);
     }
     if (debugView == 2.0f)
     {
@@ -72,11 +74,11 @@ float4 FragmentMain(VSOutput input) : SV_Target
         float3 planetCenter = float3(0.0f, -planetRadius, 0.0f);
         float3 up = normalize(rayOrigin - planetCenter);
         float height = length(rayOrigin - planetCenter) - planetRadius;
-        return float4(tonemapAtmosphere(irradianceLut.Sample(float2(saturate1(dot(sunDir, up) * 0.5f + 0.5f), saturate1(height / atmosphereSettings.planetRadii.z))).rgb, atmosphereSettings), 1.0f);
+        return float4(tonemapAtmosphere(irradianceLut.Sample(lutSampler2D, float2(saturate1(dot(sunDir, up) * 0.5f + 0.5f), saturate1(height / atmosphereSettings.planetRadii.z))).rgb, atmosphereSettings), 1.0f);
     }
     if (debugView == 3.0f)
     {
-        return float4(tonemapAtmosphere(scatteringLut.Sample(scatteringUvFromWorldDir(rayOrigin, rayDir, atmosphereSettings)).rgb, atmosphereSettings), 1.0f);
+        return float4(tonemapAtmosphere(scatteringLut.Sample(lutSampler3D, scatteringUvFromWorldDir(rayOrigin, rayDir, atmosphereSettings)).rgb, atmosphereSettings), 1.0f);
     }
 
     return float4(sampleAtmosphereSky(rayOrigin, rayDir), 1.0f);

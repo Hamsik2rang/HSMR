@@ -1006,6 +1006,10 @@ MaterialResource RenderResourceManager::createMaterialResources(Material* materi
     {
         HS_LOG(info, "[RenderResourceManager]   Texture: '%s' binding=%u set=%u", tex.name.c_str(), tex.binding, tex.set);
     }
+    for (const auto& samp : reflection.samplerBindings)
+    {
+        HS_LOG(info, "[RenderResourceManager]   Sampler: '%s' binding=%u set=%u", samp.name.c_str(), samp.binding, samp.set);
+    }
 
     // Create RHI shaders from bytecode
     const auto* vsBytecode = shader->GetByteCode(EShaderStage::Vertex);
@@ -1109,21 +1113,6 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
         bindings.push_back(std::move(binding));
     };
 
-    auto appendCombinedBinding = [&bindings](const ShaderTextureBindingInfo& tex, RHITexture* texture, RHISampler* sampler)
-    {
-        ResourceBinding binding{};
-        binding.type               = EResourceType::CombinedImageSampler;
-        binding.stage              = tex.stages;
-        binding.binding            = static_cast<uint8>(tex.binding);
-        binding.arrayCount         = 1;
-        binding.name               = tex.name;
-        binding.nameHash           = tex.nameHash;
-        binding.nativeBindingSlots = tex.nativeBindingSlots;
-        binding.resource.textures.push_back(texture);
-        binding.resource.samplers.push_back(sampler);
-        bindings.push_back(std::move(binding));
-    };
-
     // 1. Buffer bindings (perView, perDraw)
     for (const auto& buf : reflection.bufferBindings)
     {
@@ -1166,6 +1155,7 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
     // Shader reflection describes the pipeline layout contract, not only the resources a material currently has.
     // If a material does not have a texture yet, the descriptor still has to exist in the layout. Bind the engine's
     // 1x1 white image so newly dropped mesh-only models can render until the user assigns a real texture in Inspector.
+    RHISampler* materialSampler = nullptr;
     for (const auto& tex : reflection.textureBindings)
     {
         EMaterialTextureType texType = MapTextureBindingNameToMaterialTextureType(tex.name);
@@ -1189,33 +1179,10 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
             HS_LOG(warning, "[RenderResourceManager] Failed to create ImageResource for '%s'", tex.name.c_str());
             continue;
         }
-        const ShaderSamplerBindingInfo* matchedSampler = nullptr;
-        for (const auto& samp : reflection.samplerBindings)
+        appendTextureBinding(tex, imgRes->texture);
+        if (!materialSampler)
         {
-            if (samp.nameHash == tex.nameHash && samp.stages == tex.stages)
-            {
-                matchedSampler = &samp;
-                break;
-            }
-            if (!matchedSampler && samp.nameHash == tex.nameHash)
-            {
-                matchedSampler = &samp;
-            }
-        }
-
-        if (!matchedSampler && !reflection.samplerBindings.empty())
-        {
-            matchedSampler = &reflection.samplerBindings.front();
-        }
-
-        if (matchedSampler)
-        {
-            appendTextureBinding(tex, imgRes->texture);
-            appendSamplerBinding(*matchedSampler, imgRes->sampler);
-        }
-        else
-        {
-            appendCombinedBinding(tex, imgRes->texture, imgRes->sampler);
+            materialSampler = imgRes->sampler;
         }
 
         HS_LOG(info, "[RenderResourceManager] Bound texture '%s' at binding %u", tex.name.c_str(), tex.binding);
@@ -1226,6 +1193,20 @@ RHIResourceLayout* RenderResourceManager::createResourceLayoutFromReflection(
             static_cast<int>(texType),
             usingFallback ? "fallback" : "material",
             static_cast<const void*>(image));
+    }
+
+    if (materialSampler)
+    {
+        for (const auto& samp : reflection.samplerBindings)
+        {
+            appendSamplerBinding(samp, materialSampler);
+            HS_LOG(info, "[RenderResourceManager] Bound sampler '%s' at binding %u", samp.name.c_str(), samp.binding);
+        }
+    }
+    else if (!reflection.samplerBindings.empty())
+    {
+        HS_LOG(warning, "[RenderResourceManager] Shader has %zu sampler bindings but no material sampler resource was available",
+            reflection.samplerBindings.size());
     }
 
     if (bindings.empty())

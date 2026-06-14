@@ -20,12 +20,13 @@ struct MaterialParams
 
 ConstantBuffer<MaterialParams> materialParams;
 
-Sampler2D baseColorSampler   : register(s0);
-Sampler2D normalSampler      : register(s1);
-Sampler2D metallicSampler    : register(s2);
-Sampler2D roughnessSampler   : register(s3);
-Sampler2D occlusionSampler   : register(s4);
-Sampler2D emissiveSampler    : register(s5);
+Texture2D baseColorSampler   : register(t0);
+Texture2D normalSampler      : register(t1);
+Texture2D metallicSampler    : register(t2);
+Texture2D roughnessSampler   : register(t3);
+Texture2D occlusionSampler   : register(t4);
+Texture2D emissiveSampler    : register(t5);
+SamplerState materialSampler : register(s6);
 
 struct VSInput
 {
@@ -103,19 +104,19 @@ float3 fresnelSchlick(float HdotV, float3 F0)
 [shader("fragment")]
 float4 FragmentMain(FSInput input) : SV_Target
 {
-    float4 baseSample = baseColorSampler.Sample(input.uv) * materialParams.diffuseColor;
+    float4 baseSample = baseColorSampler.Sample(materialSampler, input.uv) * materialParams.diffuseColor;
     float3 albedo     = baseSample.rgb;
 
-    float metallicSample  = metallicSampler.Sample(input.uv).r;
-    float roughnessSample = roughnessSampler.Sample(input.uv).r;
-    float aoSample        = occlusionSampler.Sample(input.uv).r;
-    float3 emissiveSample = emissiveSampler.Sample(input.uv).rgb * materialParams.emissionColor.rgb;
+    float metallicSample  = metallicSampler.Sample(materialSampler, input.uv).r;
+    float roughnessSample = roughnessSampler.Sample(materialSampler, input.uv).r;
+    float aoSample        = occlusionSampler.Sample(materialSampler, input.uv).r;
+    float3 emissiveSample = emissiveSampler.Sample(materialSampler, input.uv).rgb * materialParams.emissionColor.rgb;
 
     float metallic  = saturate(metallicSample * materialParams.metallic);
     float roughness = clamp(roughnessSample * materialParams.roughness, 0.04, 1.0);
 
     // Normal map → world space via TBN.
-    float3 nTex = normalSampler.Sample(input.uv).rgb * 2.0 - 1.0;
+    float3 nTex = normalSampler.Sample(materialSampler, input.uv).rgb * 2.0 - 1.0;
     float3 N    = normalize(input.normalWS);
     float3 T    = normalize(input.tangentWS);
     float3 B    = normalize(input.bitangentWS);

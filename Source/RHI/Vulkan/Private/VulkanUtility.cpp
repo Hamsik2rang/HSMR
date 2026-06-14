@@ -363,7 +363,23 @@ ETextureType VulkanUtility::FromImageViewType(VkImageViewType type)
 
 uint32 VulkanUtility::GetTextureMipLevelCount(const TextureInfo& info)
 {
-    return info.mipLevel == 0 ? 1 : info.mipLevel;
+    if (info.mipLevel > 0)
+    {
+        return info.mipLevel;
+    }
+
+    uint32 maxDim = info.extent.width;
+    maxDim        = maxDim > info.extent.height ? maxDim : info.extent.height;
+    maxDim        = maxDim > info.extent.depth ? maxDim : info.extent.depth;
+
+    uint32 mipLevelCount = 1;
+    while (maxDim > 1)
+    {
+        maxDim >>= 1;
+        ++mipLevelCount;
+    }
+
+    return mipLevelCount;
 }
 
 uint32 VulkanUtility::GetTextureLayerCount(const TextureInfo& info)

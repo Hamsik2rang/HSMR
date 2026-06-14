@@ -9,6 +9,7 @@
 
 #include "Renderer/AtmosphereDefinition.h"
 #include "Renderer/RendererDefinition.h"
+#include "ShaderSystem/ShaderSystemDefinition.h"
 
 #include <array>
 #include <unordered_map>
@@ -105,6 +106,7 @@ private:
 
     RHIShader* _skyVertexShader = nullptr;
     RHIShader* _skyFragmentShader = nullptr;
+    ShaderReflectionDataEx _skyReflection{};
     RHIResourceLayout* _skyResourceLayout = nullptr;
     RHIResourceSet* _skyResourceSet = nullptr;
     RHIBuffer* _perViewBuffer = nullptr;
