@@ -7,8 +7,6 @@ set(EDITOR_CORE_HEADERS
     Core/EditorWindow.h
     Core/EditorCamera.h
     Core/EditorContext.h
-    Core/SimpleApplication.h
-    Core/SimpleWindow.h
 )
 
 source_group("Core\\Public" FILES ${EDITOR_CORE_HEADERS})
@@ -20,8 +18,6 @@ set(EDITOR_CORE_SOURCES
     Core/EditorWindow.cpp
     Core/EditorCamera.cpp
     Core/EditorContext.cpp
-    Core/SimpleApplication.cpp
-    Core/SimpleWindow.cpp
 )
 
 source_group("Core\\Private" FILES ${EDITOR_CORE_SOURCES})
@@ -30,7 +26,6 @@ list(APPEND TOTAL_FILES ${EDITOR_CORE_SOURCES})
 
 set(EDITOR_ENTRY_POINT_HEADERS
     EntryPoint/EditorMain.h
-    EntryPoint/SimpleMain.h
 )
 
 source_group("EntryPoint\\Public" FILES ${EDITOR_ENTRY_POINT_HEADERS})
@@ -40,13 +35,11 @@ list(APPEND TOTAL_FILES ${EDITOR_ENTRY_POINT_HEADERS})
 if(APPLE)
     set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/OSX/EditorMain.mm
-        EntryPoint/OSX/SimpleMain.mm
     )
 
 else()
     set(EDITOR_ENTRY_POINT_SOURCES
         EntryPoint/Windows/EditorMain.cpp
-        EntryPoint/Windows/SimpleMain.cpp
     )
 endif()
 
@@ -113,7 +106,6 @@ set(EDITOR_RENDERER_HEADERS
     Renderer/EditorRenderer.h
     Renderer/RenderPass/EditorGridPass.h
     Renderer/RenderPass/EditorDebugPass.h
-    Renderer/RenderPass/EditorIconPass.h
 )
 
 list(APPEND TOTAL_FILES ${EDITOR_RENDERER_HEADERS})
@@ -123,7 +115,6 @@ set(EDITOR_RENDERER_SOURCES
     Renderer/Private/EditorRenderer.cpp
     Renderer/RenderPass/Private/EditorGridPass.cpp
     Renderer/RenderPass/Private/EditorDebugPass.cpp
-    Renderer/RenderPass/Private/EditorIconPass.cpp
 )
 
 list(APPEND TOTAL_FILES ${EDITOR_RENDERER_SOURCES})
@@ -170,12 +161,8 @@ set(PANEL_HEADERS
     Panel/GamePanel.h
     Panel/InspectorPanel.h
     Panel/MenuPanel.h
-    Panel/ProjectSettingsPanel.h
-    Panel/ResourcePanel.h
-    Panel/SceneStatusPanel.h
     Panel/HierarchyPanel.h
     Panel/ProfilerPanel.h
-    Panel/SimpleInspectorPanel.h
 )
 
 source_group("Panel\\Public" FILES ${PANEL_HEADERS})
@@ -190,12 +177,8 @@ set(PANEL_SOURCES
     Panel/Private/GamePanel.cpp
     Panel/Private/InspectorPanel.cpp
     Panel/Private/MenuPanel.cpp
-    Panel/Private/ProjectSettingsPanel.cpp
-    Panel/Private/ResourcePanel.cpp
-    Panel/Private/SceneStatusPanel.cpp
     Panel/Private/HierarchyPanel.cpp
     Panel/Private/ProfilerPanel.cpp
-    Panel/Private/SimpleInspectorPanel.cpp
 )
 
 source_group("Panel\\Private" FILES ${PANEL_SOURCES})

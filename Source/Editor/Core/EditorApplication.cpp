@@ -161,10 +161,9 @@ void EditorApplication::Shutdown()
         _guiContext = nullptr;
     }
 
-    AssetDatabase::Get().Finalize();
-    SceneSerializer::ClearAssetResolvers();
-    RecentProjects::Get().Finalize();
-    ProjectContext::Get().Finalize();
+    AssetDatabase::Get().Shutdown();
+    SceneSerializer::SetAssetResolvers(nullptr, nullptr, nullptr, nullptr);
+    RecentProjects::Get().Save();
     EditorContext::Get().Finalize();
     ObjectManager::Finalize();
 }

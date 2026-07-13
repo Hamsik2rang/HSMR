@@ -141,12 +141,6 @@ endif()
 
 message(STATUS "[Slang] Include: ${HS_SLANG_INCLUDE_DIR}")
 
-if(HS_ARCH_ARM64)
-    add_compile_definitions(__ARM64__)
-else()
-    add_compile_definitions(__X64__)
-endif()
-
 set(INSTALL_FOLDER "$<TARGET_FILE_DIR:Client>")
 
 set(CMAKE_XCODE_GENERATE_SCHEME TRUE)

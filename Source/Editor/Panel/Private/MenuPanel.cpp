@@ -185,9 +185,6 @@ void MenuPanel::drawWindowMenu()
         ImGui::MenuItem("Game", nullptr, &vis.game);
         ImGui::MenuItem("Hierarchy", nullptr, &vis.hierarchy);
         ImGui::MenuItem("Inspector", nullptr, &vis.inspector);
-        ImGui::MenuItem("Assets", nullptr, &vis.resources);
-        ImGui::MenuItem("Project Settings", nullptr, &vis.projectSettings);
-        ImGui::MenuItem("Scene Status", nullptr, &vis.sceneStatus);
 
         ImGui::Separator();
 

@@ -35,7 +35,6 @@ int hs_editor_main(int argc, char* argv[])
 	RHIContext::Destroy();
 	SystemContext::Destroy();
 	CommandLine::Finalize();
-	ProfileDataCollector::Get().Finalize();
 	Timer::Finalize();
 
 #ifdef _DEBUG

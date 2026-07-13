@@ -29,11 +29,8 @@
 #include "Editor/Panel/MenuPanel.h"
 #include "Editor/Panel/ScenePanel.h"
 #include "Editor/Panel/GamePanel.h"
-#include "Editor/Panel/SceneStatusPanel.h"
 #include "Editor/Panel/HierarchyPanel.h"
 #include "Editor/Panel/InspectorPanel.h"
-#include "Editor/Panel/ProjectSettingsPanel.h"
-#include "Editor/Panel/ResourcePanel.h"
 #include "Editor/Panel/ProfilerPanel.h"
 
 #include "Core/Profiler/ProfileDataCollector.h"
@@ -376,22 +373,11 @@ void EditorWindow::setupPanels()
     _gamePanel = MakeScoped<GamePanel>(this);
     registerPanel(_gamePanel.get(), &visibility.game, _basePanel.get());
 
-    _sceneStatusPanel = MakeScoped<SceneStatusPanel>(this);
-    registerPanel(_sceneStatusPanel.get(), &visibility.sceneStatus, _basePanel.get());
-    static_cast<SceneStatusPanel*>(_sceneStatusPanel.get())->SetScenePanel(
-        static_cast<ScenePanel*>(_scenePanel.get()));
-
-    _projectSettingsPanel = MakeScoped<ProjectSettingsPanel>(this);
-    registerPanel(_projectSettingsPanel.get(), &visibility.projectSettings, _basePanel.get());
-
     _hierarchyPanel = MakeScoped<HierarchyPanel>(this);
     registerPanel(_hierarchyPanel.get(), &visibility.hierarchy, _basePanel.get());
 
     _inspectorPanel = MakeScoped<InspectorPanel>(this);
     registerPanel(_inspectorPanel.get(), &visibility.inspector, _basePanel.get());
-
-    _resourcePanel = MakeScoped<ResourcePanel>(this);
-    registerPanel(_resourcePanel.get(), &visibility.resources, _basePanel.get());
 
     _profilerPanel = MakeScoped<ProfilerPanel>(this);
     registerPanel(_profilerPanel.get(), &visibility.profiler, _basePanel.get());

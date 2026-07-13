@@ -62,11 +62,8 @@ private:
     Scoped<Panel> _menuPanel;
     Scoped<Panel> _scenePanel;
     Scoped<Panel> _gamePanel;
-    Scoped<Panel> _sceneStatusPanel;
     Scoped<Panel> _hierarchyPanel;
     Scoped<Panel> _inspectorPanel;
-    Scoped<Panel> _resourcePanel;
-    Scoped<Panel> _projectSettingsPanel;
     Scoped<Panel> _profilerPanel;
     std::vector<Panel*> _registeredPanels;
 

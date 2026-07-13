@@ -22,7 +22,7 @@ HS_NS_BEGIN
 using ShaderReloadCallback = std::function<void(const std::string& path, RHIShader* newShader)>;
 
 // Watch entry for tracking a shader file
-struct HS_APPLICATION_API ShaderWatchEntry
+struct HS_EDITOR_API ShaderWatchEntry
 {
     std::string path;
     std::string name;
@@ -32,7 +32,7 @@ struct HS_APPLICATION_API ShaderWatchEntry
 };
 
 // Shader watcher for hot reload
-class HS_APPLICATION_API ShaderWatcher
+class HS_EDITOR_API ShaderWatcher
 {
 public:
     ShaderWatcher();

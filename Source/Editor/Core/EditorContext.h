@@ -22,9 +22,6 @@ struct PanelVisibility
     bool game        = true;
     bool hierarchy   = true;
     bool inspector   = true;
-    bool resources   = true;
-    bool sceneStatus = true;
-    bool projectSettings = false;
     bool profiler    = false;
 };
 

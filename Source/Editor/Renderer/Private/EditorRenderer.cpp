@@ -38,7 +38,6 @@ bool EditorRenderer::Initialize(ShaderLibrary* shaderLibrary)
 
 void EditorRenderer::Shutdown()
 {
-    _iconPass.reset();
     _debugPass.reset();
     _gridPass.reset();
     _shaderLibrary = nullptr;
@@ -120,12 +119,6 @@ void EditorRenderer::Render(
         _gridPass->Initialize(_shaderLibrary, _rhiContext);
     }
 
-    if (!_iconPass)
-    {
-        _iconPass = MakeScoped<EditorIconPass>();
-        _iconPass->Initialize(_shaderLibrary, _rhiContext);
-    }
-
     bool hasDebugDrawData = false;
     if (options.enableDebug)
     {
@@ -139,12 +132,6 @@ void EditorRenderer::Render(
         {
             hasDebugDrawData = _debugPass->Prepare(snapshot) && _debugPass->HasDrawData();
         }
-    }
-
-    bool hasIconDrawData = false;
-    if (_iconPass && _iconPass->IsInitialized())
-    {
-        hasIconDrawData = _iconPass->Prepare(resourceManager, snapshot, viewSnapshot) && _iconPass->HasDrawData();
     }
 
     _graphBuilder.Setup(&commandBuffer);
@@ -242,60 +229,6 @@ void EditorRenderer::Render(
                 const RHIBuffer* vertexBuffer = _debugPass->GetVertexBuffer();
                 commandBufferRef.BindVertexBuffers(&vertexBuffer, &vbOffset, 1);
                 commandBufferRef.DrawArrays(0, _debugPass->GetVertexCount(), 1);
-                commandBufferRef.PopDebugMark();
-                commandBufferRef.EndRendering();
-            });
-    }
-
-    if (hasIconDrawData && _iconPass && _iconPass->IsInitialized())
-    {
-        struct IconPassParameters
-        {
-        } iconParams;
-
-        _graphBuilder.AddPass("EditorIcons", ERGPassFlag::Raster | ERGPassFlag::NeverCull, &iconParams,
-            [&](RenderGraphBuilder& builder, RGPass* pass, IconPassParameters*) -> void
-            {
-                RGTexture* colorTex = builder.RegisterExternalTexture(renderTarget->GetColorTexture(0));
-                builder.Write(pass, colorTex, ERGTextureAccess::ColorAttachmentWrite);
-            },
-            [&](RHICommandBuffer& commandBufferRef) -> void
-            {
-                // Icon pass never uses depth — build a color-only layout so the pipeline's
-                // VkPipelineRenderingCreateInfo::depthAttachmentFormat stays VK_FORMAT_UNDEFINED,
-                // matching the BeginRendering call below (which also has no depth attachment).
-                PipelineRenderTargetLayout iconRTLayout = renderTargetLayout;
-                iconRTLayout.useDepthStencilAttachment = false;
-
-                RHIGraphicsPipeline* pipeline = _iconPass->GetOrCreatePipeline(
-                    iconRTLayout,
-                    sceneResource.cameraResources[0]->perViewBuffer);
-                if (!pipeline || !_iconPass->GetResourceSet() || !_iconPass->GetVertexBuffer() || !_iconPass->GetInstanceBuffer())
-                {
-                    return;
-                }
-
-                RenderingInfo iconRenderingInfo = makeRenderingInfo(colorAttachment, false, depthAttachment);
-
-                float debugColor[4]{0.55f, 0.82f, 1.0f, 1.0f};
-                commandBufferRef.BeginRendering(iconRenderingInfo);
-                commandBufferRef.PushDebugMark("Icon Pass", debugColor);
-                commandBufferRef.SetViewport(Viewport{
-                    0.0f, 0.0f,
-                    static_cast<float>(renderTarget->GetWidth()),
-                    static_cast<float>(renderTarget->GetHeight()),
-                    0.0f, 1.0f});
-                commandBufferRef.SetScissor(0, 0, renderTarget->GetWidth(), renderTarget->GetHeight());
-                commandBufferRef.BindPipeline(pipeline);
-                commandBufferRef.BindResourceSet(_iconPass->GetResourceSet());
-
-                const RHIBuffer* vertexBuffers[] = {
-                    _iconPass->GetVertexBuffer(),
-                    _iconPass->GetInstanceBuffer()
-                };
-                uint32 vbOffsets[] = { 0, 0 };
-                commandBufferRef.BindVertexBuffers(vertexBuffers, vbOffsets, 2);
-                commandBufferRef.DrawArrays(0, _iconPass->GetVertexCount(), _iconPass->GetInstanceCount());
                 commandBufferRef.PopDebugMark();
                 commandBufferRef.EndRendering();
             });

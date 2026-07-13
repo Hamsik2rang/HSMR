@@ -7,7 +7,6 @@
 #include "Renderer/RenderGraph/RenderGraphBuilder.h"
 #include "Editor/Renderer/RenderPass/EditorDebugPass.h"
 #include "Editor/Renderer/RenderPass/EditorGridPass.h"
-#include "Editor/Renderer/RenderPass/EditorIconPass.h"
 
 namespace hs
 {
@@ -44,7 +43,6 @@ private:
 
     Scoped<EditorGridPass> _gridPass;
     Scoped<EditorDebugPass> _debugPass;
-    Scoped<EditorIconPass> _iconPass;
     bool _isInitialized = false;
 };
 

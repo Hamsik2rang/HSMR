@@ -10,7 +10,6 @@ set(RENDERER_HEADERS
     RenderTarget.h
     Renderer.h
     ForwardRenderer.h
-    DeferredRenderer.h
     RenderResourceManager.h
     ShaderLibrary.h
     RenderGraph.h
@@ -23,7 +22,6 @@ set(RENDERER_SOURCES
     Private/CoordinateConventionValidation.cpp
     Private/Renderer.cpp
     Private/ForwardRenderer.cpp
-    Private/DeferredRenderer.cpp
     Private/RenderTarget.cpp
     Private/RenderResourceManager.cpp
     Private/ShaderLibrary.cpp
@@ -51,9 +49,7 @@ source_group("RenderGraph\\Private" FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 list(APPEND TOTAL_FILES ${RENDERER_RENDER_GRAPH_SOURCES})
 
 set(RENDERER_RENDER_PASS_HEADERS
-    RenderPass/RenderPass.h
     RenderPass/ForwardSkyboxPass.h
-    RenderPass/PostProcessPass.h
 )
 
 source_group("RenderPass\\Public" FILES ${RENDERER_RENDER_PASS_HEADERS})
@@ -61,7 +57,6 @@ list(APPEND TOTAL_FILES ${RENDERER_RENDER_PASS_HEADERS})
 
 set(RENDERER_RENDER_PASS_SOURCES
     RenderPass/Private/ForwardSkyboxPass.cpp
-    RenderPass/Private/PostProcessPass.cpp
 )
 
 source_group("RenderPass\\Private" FILES ${RENDERER_RENDER_PASS_SOURCES})

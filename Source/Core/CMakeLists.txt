@@ -4,7 +4,6 @@ set(TOTAL_FILES)
 
 set(CORE_HEADERS
     Color.h
-    Event.h
     Exception.h
     Flag.h
     Hash.h
@@ -19,7 +18,6 @@ list(APPEND TOTAL_FILES ${CORE_HEADERS})
 
 set(CORE_SOURCES
     Private/Color.cpp
-    Private/Event.cpp
     Private/Exception.cpp
     Private/Flag.cpp
     Private/Hash.cpp

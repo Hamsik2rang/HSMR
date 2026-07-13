@@ -89,35 +89,6 @@ endif()
 
 # Note: SDL-specific file (SDLPlatform.cpp) has been removed.
 # SDL support is now integrated into MacWindow.mm and WinWindow.cpp via #ifdef __SDL__
-if(HS_ARCH STREQUAL "x64")
-    set(PLATFORM_X64_HEADERS
-        x64/SSESimd.h
-    )
-
-    source_group("x64\\Public" FILES ${PLATFORM_X64_HEADERS})
-    list(APPEND TOTAL_FILES ${PLATFORM_X64_HEADERS})
-
-    set(PLATFORM_X64_SOURCES
-        x64/Private/SSESimd.cpp
-    )
-
-    source_group("x64\\Private" FILES ${PLATFORM_X64_SOURCES})
-    list(APPEND TOTAL_FILES ${PLATFORM_X64_SOURCES})
-else()
-    set(PLATFORM_ARM64_HEADERS
-        Arm64/NeonSimd.h
-    )
-
-    source_group("Arm64\\Public" FILES ${PLATFORM_ARM64_HEADERS})
-    list(APPEND TOTAL_FILES ${PLATFORM_ARM64_HEADERS})
-
-    set(PLATFORM_ARM64_SOURCES
-        Arm64/Private/NeonSimd.cpp
-    )
-
-    source_group("Arm64\\Private" FILES ${PLATFORM_ARM64_SOURCES})
-    list(APPEND TOTAL_FILES ${PLATFORM_ARM64_SOURCES})
-endif()
 
 add_library(${TARGET_NAME}
     STATIC
