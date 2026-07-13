@@ -22,19 +22,18 @@ public:
 
     int Release()
     {
-        int newRef = _refCount - 1;
+        int newRef = --_refCount;
         HS_ASSERT(newRef >= 0, "Over released!");
         if (newRef == 0)
         {
             delete this;
         }
-        _refCount--;
 
         return newRef;
     }
 
 private:
-    int _refCount = 0;
+    std::atomic<int> _refCount = 0;
 };
 
 class HS_CORE_API Object : public Referencable
@@ -56,7 +55,7 @@ public:
     {}
     virtual ~Object()
     {
-        _type = EType::Unknown;
+        _type    = EType::Unknown;
         _isValid = false;
     }
 
